@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **DESIGNED — chưa triển khai.** Đây là skeleton có hợp đồng mục tiêu. Chưa có command khởi động app/API thực tế hoặc endpoint được kiểm chứng.
+> **T01 IMPLEMENTED/VERIFIED — nền tảng Python.** Project Python 3.12, uv lock, typed runtime settings và quality commands đã được kiểm chứng. Chưa có command khởi động app/API thực tế hoặc endpoint được kiểm chứng; phần đó vẫn DESIGNED.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -15,7 +15,8 @@
 
 | Phần | Trạng thái hiện tại | Task chịu trách nhiệm |
 | --- | --- | --- |
-| Setup/Compose | DESIGNED | T01–T02 |
+| Python setup/settings/quality | VERIFIED | T01 |
+| Compose/services | DESIGNED | T02 |
 | Corpus | DESIGNED; chỉ có prompt người dùng | T04–T08 |
 | Auth/session/storage | DESIGNED | T09–T12 |
 | Parsing/OCR/index | DESIGNED | T13–T19 |
@@ -46,16 +47,54 @@ Không import module nội bộ RAG core vào Scarlet, không dùng DB chat củ
 <a id="r02"></a>
 ## R02. Local prerequisites và cấu hình
 
-**DESIGNED; điền commands thật ở T01–T02/T17.**
+**T01 IMPLEMENTED/VERIFIED cho Python/settings/quality; Docker và model runtime vẫn DESIGNED cho T02/T17.**
 
-- Windows, Docker Desktop Linux containers/WSL2, Git; Python 3.12 + uv cho tooling ngoài Docker. Docker là runtime chuẩn của ứng dụng.
+- Windows/PowerShell, Git, Python 3.12 và uv. T01 chạy thật với uv 0.11.16 + CPython 3.12.4; `pyproject.toml`/`uv.lock` khóa interpreter ở `3.12.*`. Docker sẽ là runtime chuẩn của ứng dụng từ T02.
 - RAM 16 GB, GPU NVIDIA 8 GB tùy chọn cho inference; CPU path dùng để xác minh chức năng. Driver/WSL GPU passthrough phải kiểm thực tế.
 - Chừa disk cho source <=1 GB, corpus benchmark, parsed text/index, Docker images và model cache riêng; không dùng 1 GB làm dự báo dung lượng tổng.
-- `.env.example` sẽ chỉ chứa tên biến/example không bí mật. Secrets dùng local env/secret files, không commit hoặc paste vào handoff.
+- `.env.example` chỉ chứa tên biến/default không bí mật. Copy thành `.env`, điền URL bắt buộc, và giữ mọi credential trong `.env`/secret store; không commit hoặc paste vào handoff.
+
+### Bootstrap và quality gate T01
+
+Chạy từ root repository. Trong môi trường bị giới hạn quyền ghi cache user, dùng hai biến local ở đầu; môi trường thường có thể bỏ hai dòng đó.
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'
+$env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'
+uv sync --locked --group dev
+uv run ruff check .
+uv run mypy src
+uv run pytest tests/unit/test_settings.py
+uv run python scripts/check_docs.py
+```
+
+Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; Ruff/mypy/docs check PASS; settings suite có 3 tests PASS. Evidence command/output ở [H-T01-A01](docs/handoffs.md#h-t01-a01). Không đổi `.python-version` sang 3.13 khi host chỉ expose 3.13.
+
+| Dependency group | Trạng thái T01 | Nội dung/phạm vi |
+| --- | --- | --- |
+| base | IMPLEMENTED/VERIFIED | Pydantic v2 + pydantic-settings cho typed config |
+| dev | IMPLEMENTED/VERIFIED | Ruff, mypy, pytest, pytest-asyncio |
+| api | LOCKED/DESIGNED | FastAPI, HTTPX, Uvicorn; chưa có API process |
+| ingestion | LOCKED/DESIGNED | Alembic, boto3, Celery, Qdrant client, Redis, SQLAlchemy; chưa có worker |
+| inference | RESERVED/DESIGNED | Rỗng có chủ đích; T17 pin model runtime/revisions sau capability checks |
+
+### Typed settings đã triển khai
+
+| Biến | Kiểu / mặc định | Bắt buộc | Bí mật / lưu ý |
+| --- | --- | --- | --- |
+| `APP_ENV` | `development\|test\|production`; `development` | Không | Không |
+| `LOG_LEVEL` | `DEBUG\|INFO\|WARNING\|ERROR\|CRITICAL`; `INFO` | Không | Không |
+| `API_BIND` | địa chỉ IPv4/IPv6; `127.0.0.1` | Không | Không |
+| `API_PORT` | integer 1–65535; `8000` | Không | Không |
+| `REQUEST_TIMEOUT_SECONDS` | >0 và <=300; `30` | Không | Không |
+| `DATABASE_URL` | PostgreSQL DSN | Có | Có thể chứa credential; bị loại khỏi repr/error chuẩn hóa |
+| `REDIS_URL` | Redis DSN | Có | Có thể chứa credential; bị loại khỏi repr/error chuẩn hóa |
+
+`rag_core.config.load_settings()` đọc environment rồi `.env`. Thiếu config trả `SettingsError` dạng `Missing required RAG Core configuration: DATABASE_URL, REDIS_URL`; giá trị malformed không được echo qua error/traceback do loader trả. T01 chỉ định nghĩa contract; readiness tới PostgreSQL/Redis thuộc T02.
 
 | Nhóm env mục tiêu | Nội dung | Task |
 | --- | --- | --- |
-| Runtime | APP_ENV, LOG_LEVEL, API_BIND, timeouts/body limits | T01–T02 |
+| Runtime | APP_ENV, LOG_LEVEL, API_BIND/API_PORT, request timeout đã typed; body limits còn DESIGNED | T01–T02 |
 | Metadata/broker | DATABASE_URL, REDIS_URL | T02/T10/T12 |
 | Vector/model | QDRANT_URL/API_KEY, INFERENCE_URL, model IDs/revisions/device/batches | T17–T18 |
 | App identity | cấu hình app_id, service-key hash/reference, JWT issuer/audience/JWKS, algorithms | T09 |
@@ -65,7 +104,7 @@ Không import module nội bộ RAG core vào Scarlet, không dùng DB chat củ
 
 Tên biến chính xác và defaults phải đồng bộ settings/`.env.example` khi implement; bảng này là nhóm contract, không phải danh sách env đã tồn tại.
 
-### Quickstart sẽ được kiểm chứng
+### Quickstart ứng dụng sẽ được kiểm chứng
 
 1. Clone/checkout đúng commit và tạo env từ example.
 2. Khởi tạo local dev app credentials/JWT key; cấu hình read-only storage, provider/admin secrets.
@@ -74,7 +113,7 @@ Tên biến chính xác và defaults phải đồng bộ settings/`.env.example`
 5. Upload fixture bằng app simulator, create session, register, poll ready, query JSON/SSE.
 6. Mở admin UI; stop/start giữ volumes.
 
-Chưa có các command trên ở T00. Khi bổ sung, dùng PowerShell-safe examples; không đưa `docker compose down -v` vào luồng mặc định.
+Chưa có các command ứng dụng trên ở T01. Khi bổ sung, dùng PowerShell-safe examples; không đưa `docker compose down -v` vào luồng mặc định.
 
 <a id="r03"></a>
 ## R03. Auth, app registration và trust boundary

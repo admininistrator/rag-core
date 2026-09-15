@@ -1,0 +1,13 @@
+* text=auto eol=lf
+
+*.py text working-tree-encoding=UTF-8 eol=lf
+*.pyi text working-tree-encoding=UTF-8 eol=lf
+*.toml text working-tree-encoding=UTF-8 eol=lf
+*.md text working-tree-encoding=UTF-8 eol=lf
+*.json text working-tree-encoding=UTF-8 eol=lf
+*.jsonl text working-tree-encoding=UTF-8 eol=lf
+*.yaml text working-tree-encoding=UTF-8 eol=lf
+*.yml text working-tree-encoding=UTF-8 eol=lf
+
+# This user-supplied source prompt must enter Git byte-for-byte as received.
+"corpus-documents/Codex Prompt – Build RAG Evaluation Corpus.md" -text !working-tree-encoding !eol

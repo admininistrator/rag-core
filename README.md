@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: thiết kế / hồ sơ triển khai.** Bộ tài liệu T00 đã được kiểm chứng; T01–T36 chưa làm. Chưa có ứng dụng, Docker image, API hoặc UI hoạt động; các lựa chọn dưới đây là thiết kế mục tiêu.
+> **Trạng thái: nền tảng Python T01 đã triển khai và kiểm chứng.** Project Python 3.12, uv lock, typed settings và quality commands đã có; T02–T36 chưa làm. Chưa có ứng dụng, Docker image, API hoặc UI hoạt động; các lựa chọn còn lại dưới đây là thiết kế mục tiêu.
 
 ## Phạm vi đã chốt
 
@@ -22,14 +22,23 @@ Python 3.12/FastAPI, PostgreSQL metadata, Qdrant, Celery/Redis, Docling/Tesserac
 
 Máy mục tiêu: RAM 16 GB, RTX 4060 Laptop 8 GB VRAM; tài liệu nguồn khoảng <=1 GB; kiểm thử 15–20 người dùng đồng thời. Chưa có số đo RAM/VRAM/độ trễ hoặc benchmark chất lượng.
 
-## Bắt đầu ở trạng thái hiện tại
+## Prerequisites và quality commands
 
-1. Đọc [AGENTS.md](AGENTS.md).
-2. Đọc [kế hoạch](docs/plan.md), [tasks](docs/tasks.md), [handoff](docs/handoffs.md) và [implementation summary](docs/implementation-summary.md).
-3. Mở session Orchestrator GPT-6-Astra, dùng prompt người dùng nhận cùng bộ hồ sơ này; bắt đầu T01 sau khi kiểm T00 đã commit/complete.
-4. Mỗi task dùng một worker mới GPT-5.6-Sol/xhigh; triển khai tuần tự, cập nhật tài liệu và commit mỗi task.
+T01 đã kiểm chứng trên Windows/PowerShell với uv 0.11.16 và CPython 3.12.4. Project chấp nhận Python `3.12.*`; host Python 3.13 không được dùng thay thế. Cài [uv](https://docs.astral.sh/uv/), rồi từ root repository chạy từng lệnh:
 
-Chưa có quickstart chạy ứng dụng. T01–T02 sẽ thêm commands đã kiểm chứng; T19/T26 thêm ingest/query; T28–T29 thêm admin UI; T35 kiểm lại hướng dẫn cho người tích hợp.
+```powershell
+uv sync --locked --group dev
+uv run ruff check .
+uv run mypy src
+uv run pytest tests/unit/test_settings.py
+uv run python scripts/check_docs.py
+```
+
+Trong sandbox hoặc máy không ghi được cache uv của user, đặt `UV_CACHE_DIR` và `UV_PYTHON_INSTALL_DIR` vào `.uv-cache`/`.uv-python` trong repository trước khi chạy; hai thư mục đã được ignore. `uv sync` tạo `.venv` từ lock. Nhóm `api` và `ingestion` đã được resolve trong lock nhưng services vẫn DESIGNED; nhóm `inference` để trống đến T17 để không kéo model runtime nặng vào môi trường API/dev.
+
+Typed settings đọc environment hoặc `.env`: `DATABASE_URL` và `REDIS_URL` là bắt buộc; các field runtime còn lại có default được ghi trong [RUNBOOK R02](RUNBOOK.md#r02). `.env.example` chỉ chứa tên/default không bí mật. Loader báo tên config thiếu và không đưa DSN/credential vào repr hoặc traceback đã chuẩn hóa.
+
+Chưa có quickstart chạy ứng dụng. T02 sẽ thêm Docker start/health đã kiểm chứng; T19/T26 thêm ingest/query; T28–T29 thêm admin UI; T35 kiểm lại hướng dẫn cho người tích hợp.
 
 ## Tài liệu
 
@@ -45,7 +54,7 @@ Chưa có quickstart chạy ứng dụng. T01–T02 sẽ thêm commands đã ki�
 
 ## Các phần sẽ được cập nhật cùng implementation
 
-- **T01–T02:** prerequisites, env setup, Docker start/stop/health.
+- **T01 VERIFIED:** Python prerequisites, env contract và quality commands. **T02 DESIGNED:** Docker start/stop/health.
 - **T04–T08:** corpus setup/validation, source licenses, actual counts.
 - **T09–T12:** authentication, session và storage registration.
 - **T13–T19:** format/OCR matrix, model setup, ingestion commands.

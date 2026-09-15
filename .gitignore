@@ -1,0 +1,55 @@
+# Python bytecode and packaging
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Local Python and uv state
+.venv/
+.uv-cache/
+.uv-python/
+
+# Test, type-check, lint, and coverage state
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Runtime state and logs
+/logs/
+/runtime/
+/var/
+*.log
+*.pid
+*.sqlite
+*.sqlite3
+
+# Database backups and generated reports
+/backups/
+/reports/generated/
+
+# Downloaded or generated evaluation corpus. Scripts, manifests, lightweight
+# metadata, licenses, and the user-supplied source prompt remain trackable.
+corpus-documents/*/raw/
+corpus-documents/*/documents/
+corpus-documents/.downloads/
+
+# Model caches and weights
+/.cache/huggingface/
+/model-cache/
+/models/
+*.ckpt
+*.onnx
+*.pt
+*.pth
+*.safetensors

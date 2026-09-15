@@ -32,7 +32,7 @@
 <a id="t01"></a>
 ### T01 — Python project, cấu trúc và quality commands
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T00.
 - **Tham chiếu kế hoạch:** [P02](plan.md#p02), [P13](plan.md#p13), [P15](plan.md#p15).
 - **Công việc:** Tạo src layout, Python 3.12/uv lock, dependency groups, typed settings, Ruff/mypy/pytest markers, .gitignore/.env.example/.gitattributes (UTF-8, LF); script `scripts/check_docs.py` kiểm links/anchors/task fields/deps. Đưa prompt corpus nguyên bản vào Git ở task này sau kiểm nội dung. README có prerequisites; RUNBOOK có bảng env chưa chứa secret.
@@ -40,7 +40,7 @@
   1. `uv sync --locked --group dev`, `uv run ruff check .`, `uv run mypy src`, `uv run pytest tests/unit/test_settings.py` PASS; settings thiếu secret/config cần thiết báo lỗi có ý nghĩa.
   2. `uv run python scripts/check_docs.py` PASS; raw corpus, .env, model weights và runtime files được ignore; lock thực sự tái tạo env.
 - **Cạm bẫy:** Máy đang có Python 3.13 không thay baseline 3.12 âm thầm; không gom heavyweight ML dependencies vào API; không commit secret; không ghi command Docker đã hoạt động.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `chore(T01): scaffold Python project and quality checks`.
+- **Ghi chú thực thi:** Attempt `T01-A01` | worker/model/effort/context `gpt-5.6-sol`/`xhigh`/fresh (`fork_turns="none"`) | 2026-09-15 22:16–22:35 +07:00. Implemented: Python `3.12.*` src package + `py.typed`, uv lock/groups base/api/ingestion/inference/dev, typed safe settings, Ruff/mypy/pytest markers, docs validator, ignore/UTF-8-LF/env policy; prompt corpus stage nguyên byte. Files: `.python-version`, `.gitattributes`, `.gitignore`, `.env.example`, `pyproject.toml`, `uv.lock`, `src/rag_core/**`, `scripts/check_docs.py`, `tests/unit/test_settings.py`, README/RUNBOOK và ba sổ docs, prompt gốc. DoD-1 PASS: locked sync CPython 3.12.4, Ruff, mypy, 3 settings tests; missing `DATABASE_URL`/`REDIS_URL` báo tên rõ, malformed DSN không lộ input trong repr/traceback. DoD-2 PASS: docs links/anchors/37-task graph; raw/generated corpus, `.env`, root model/runtime artifacts ignored trong khi source model adapter/corpus scripts/prompt vẫn trackable; lock check/Python proof. D1–D5 PASS theo [H-T01-A01](handoffs.md#h-t01-a01); D6 subject `feat(T01): scaffold Python project and quality checks`, COMPLETE hợp lệ sau completion commit thành công và Orchestrator review; hash trả ngoài commit. README/RUNBOOK cập nhật prerequisites, commands, env table và trạng thái VERIFIED/DESIGNED. Giới hạn: chưa có service/Docker/provider/model/corpus data; inference group dành T17 và đang rỗng có chủ đích.
 
 <a id="t02"></a>
 ### T02 — Docker Compose nền tảng
