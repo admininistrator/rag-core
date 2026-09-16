@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: nền tảng Python T01 đã triển khai và kiểm chứng.** Project Python 3.12, uv lock, typed settings và quality commands đã có; T02–T36 chưa làm. Chưa có ứng dụng, Docker image, API hoặc UI hoạt động; các lựa chọn còn lại dưới đây là thiết kế mục tiêu.
+> **Trạng thái: nền tảng Python T01 và Docker T02 đã triển khai, kiểm chứng local.** Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. Chưa có business API, ingestion, retrieval, LLM hoặc UI; T03–T36 vẫn theo backlog.
 
 ## Phạm vi đã chốt
 
@@ -16,29 +16,52 @@ RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp tr
 
 **Tài liệu ngoài session không được tham gia truy vấn, kể cả của cùng người dùng.** Giữ index không cấp quyền cho session mới.
 
-## Kiến trúc dự kiến
+## Kiến trúc hiện tại và dự kiến
 
-Python 3.12/FastAPI, PostgreSQL metadata, Qdrant, Celery/Redis, Docling/Tesseract OCR, BGE-M3 + multilingual reranker, DeepSeek/Anthropic adapters; Docker Compose trên Windows/WSL2. Admin UI dùng Jinja2/CSS/JavaScript trong FastAPI.
+T02 đã có Python 3.12/FastAPI health skeleton, PostgreSQL 17, Qdrant, Redis và MinIO tùy chọn trong Docker Compose trên Windows. Celery/outbox, Docling/Tesseract OCR, BGE-M3 + multilingual reranker, DeepSeek/Anthropic adapters và Admin UI Jinja2/CSS/JavaScript vẫn là thiết kế cho task sau. Compose không khai báo worker/dispatcher/inference khi các process đó chưa được triển khai.
 
 Máy mục tiêu: RAM 16 GB, RTX 4060 Laptop 8 GB VRAM; tài liệu nguồn khoảng <=1 GB; kiểm thử 15–20 người dùng đồng thời. Chưa có số đo RAM/VRAM/độ trễ hoặc benchmark chất lượng.
 
-## Prerequisites và quality commands
+## Prerequisites, quality và local Docker
 
-T01 đã kiểm chứng trên Windows/PowerShell với uv 0.11.16 và CPython 3.12.4. Project chấp nhận Python `3.12.*`; host Python 3.13 không được dùng thay thế. Cài [uv](https://docs.astral.sh/uv/), rồi từ root repository chạy từng lệnh:
+T01/T02 đã kiểm chứng trên Windows/PowerShell với uv 0.11.16, CPython 3.12.4 cho host checks, Docker Desktop Linux containers và Docker server 29.5.2. Project chấp nhận Python `3.12.*`; API image dùng Python 3.12.13 đã pin digest. Cài [uv](https://docs.astral.sh/uv/) và Docker Desktop, rồi từ root repository chạy quality:
 
 ```powershell
-uv sync --locked --group dev
+uv sync --locked --group dev --group api
 uv run ruff check .
 uv run mypy src
-uv run pytest tests/unit/test_settings.py
+uv run pytest tests/unit
 uv run python scripts/check_docs.py
 ```
 
-Trong sandbox hoặc máy không ghi được cache uv của user, đặt `UV_CACHE_DIR` và `UV_PYTHON_INSTALL_DIR` vào `.uv-cache`/`.uv-python` trong repository trước khi chạy; hai thư mục đã được ignore. `uv sync` tạo `.venv` từ lock. Nhóm `api` và `ingestion` đã được resolve trong lock nhưng services vẫn DESIGNED; nhóm `inference` để trống đến T17 để không kéo model runtime nặng vào môi trường API/dev.
+Trong sandbox hoặc máy không ghi được cache uv của user, đặt `UV_CACHE_DIR` và `UV_PYTHON_INSTALL_DIR` vào `.uv-cache`/`.uv-python` trong repository trước khi chạy; hai thư mục đã được ignore. `uv sync` tạo `.venv` từ lock. Nhóm `api` đã IMPLEMENTED cho health skeleton; nhóm `ingestion` mới LOCKED/DESIGNED và nhóm `inference` để trống đến T17 để không kéo model runtime nặng vào API.
 
-Typed settings đọc environment hoặc `.env`: `DATABASE_URL` và `REDIS_URL` là bắt buộc; các field runtime còn lại có default được ghi trong [RUNBOOK R02](RUNBOOK.md#r02). `.env.example` chỉ chứa tên/default không bí mật. Loader báo tên config thiếu và không đưa DSN/credential vào repr hoặc traceback đã chuẩn hóa.
+Typed settings đọc environment hoặc `.env`: `DATABASE_URL`, `REDIS_URL` và `QDRANT_URL` là bắt buộc; `DATABASE_PASSWORD_FILE` cho phép API đọc Docker secret tách khỏi DSN. Biến rỗng trong example được bỏ qua, DSN/credential không xuất hiện trong repr hoặc traceback chuẩn hóa. Bảng đầy đủ nằm ở [RUNBOOK R02](RUNBOOK.md#r02).
 
-Chưa có quickstart chạy ứng dụng. T02 sẽ thêm Docker start/health đã kiểm chứng; T19/T26 thêm ingest/query; T28–T29 thêm admin UI; T35 kiểm lại hướng dẫn cho người tích hợp.
+Bootstrap tạo secret local ngẫu nhiên dưới `.local/secrets/` đã ignore và không in giá trị. Sau đó render/start/check stack:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap_local.ps1
+docker compose config --quiet
+docker compose --profile local-storage up -d --build
+docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
+docker compose --profile local-storage ps --all
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps1
+```
+
+API chỉ bind `http://127.0.0.1:8000`; MinIO API/console tùy chọn bind `127.0.0.1:9000/9001`. PostgreSQL, Qdrant và Redis chỉ ở mạng Compose, không publish host. `/health/live` kiểm process; `/health/ready` chạy `SELECT 1`, Redis `PING` và Qdrant `/readyz`, trả 503 nếu dependency lỗi. MinIO không phải dependency readiness của API health skeleton T02.
+
+Bằng chứng local outage/persistence nằm ở [T02-A02](docs/handoffs.md#h-t02-a02); [T02-A03](docs/handoffs.md#h-t02-a03) tiếp quản candidate chưa commit, kiểm lại quality/stack hiện tại và đối chiếu SHA-256 source với API image cuối trước completion commit.
+
+Dừng/khởi động lại mà giữ named volumes:
+
+```powershell
+docker compose --profile local-storage stop
+docker compose --profile local-storage up -d
+docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
+```
+
+Không dùng `docker compose down -v` trong flow mặc định. T19/T26 sẽ thêm ingest/query; T28–T29 thêm admin UI; T35 kiểm lại hướng dẫn tích hợp.
 
 ## Tài liệu
 
@@ -54,7 +77,7 @@ Chưa có quickstart chạy ứng dụng. T02 sẽ thêm Docker start/health đ�
 
 ## Các phần sẽ được cập nhật cùng implementation
 
-- **T01 VERIFIED:** Python prerequisites, env contract và quality commands. **T02 DESIGNED:** Docker start/stop/health.
+- **T01 VERIFIED:** Python prerequisites và quality nền tảng. **T02 VERIFIED:** Docker start/stop/health, dependency probes, loopback/internal ports và restart persistence.
 - **T04–T08:** corpus setup/validation, source licenses, actual counts.
 - **T09–T12:** authentication, session và storage registration.
 - **T13–T19:** format/OCR matrix, model setup, ingestion commands.

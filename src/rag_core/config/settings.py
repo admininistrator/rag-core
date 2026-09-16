@@ -1,9 +1,10 @@
 """Typed settings shared by RAG Core processes."""
 
 from ipaddress import IPv4Address
+from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, IPvAnyAddress, PostgresDsn, RedisDsn, ValidationError
+from pydantic import AnyHttpUrl, Field, IPvAnyAddress, PostgresDsn, RedisDsn, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,6 +23,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        env_ignore_empty=True,
         case_sensitive=False,
         extra="ignore",
         hide_input_in_errors=True,
@@ -32,8 +34,11 @@ class Settings(BaseSettings):
     api_bind: IPvAnyAddress = IPv4Address("127.0.0.1")
     api_port: int = Field(default=8000, ge=1, le=65535)
     request_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
+    health_timeout_seconds: float = Field(default=2.0, gt=0, le=30)
     database_url: PostgresDsn = Field(repr=False)
+    database_password_file: Path | None = Field(default=None, repr=False)
     redis_url: RedisDsn = Field(repr=False)
+    qdrant_url: AnyHttpUrl = Field(repr=False)
 
 
 def _safe_validation_message(exc: ValidationError) -> str:

@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01 IMPLEMENTED/VERIFIED — nền tảng Python.** Project Python 3.12, uv lock, typed runtime settings và quality commands đã được kiểm chứng. Chưa có command khởi động app/API thực tế hoặc endpoint được kiểm chứng; phần đó vẫn DESIGNED.
+> **T01–T02 IMPLEMENTED/VERIFIED — nền tảng Python và Docker local.** Project Python 3.12, uv lock, typed settings, Compose PG/Qdrant/Redis/API và MinIO profile đã được kiểm chứng. API hiện chỉ có health routes; business API vẫn DESIGNED từ T03 trở đi.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -16,7 +16,7 @@
 | Phần | Trạng thái hiện tại | Task chịu trách nhiệm |
 | --- | --- | --- |
 | Python setup/settings/quality | VERIFIED | T01 |
-| Compose/services | DESIGNED | T02 |
+| Compose/services + health skeleton | VERIFIED local | T02 |
 | Corpus | DESIGNED; chỉ có prompt người dùng | T04–T08 |
 | Auth/session/storage | DESIGNED | T09–T12 |
 | Parsing/OCR/index | DESIGNED | T13–T19 |
@@ -47,34 +47,36 @@ Không import module nội bộ RAG core vào Scarlet, không dùng DB chat củ
 <a id="r02"></a>
 ## R02. Local prerequisites và cấu hình
 
-**T01 IMPLEMENTED/VERIFIED cho Python/settings/quality; Docker và model runtime vẫn DESIGNED cho T02/T17.**
+**T01 IMPLEMENTED/VERIFIED cho Python/settings/quality; T02 IMPLEMENTED/VERIFIED cho Docker local và health; model runtime vẫn DESIGNED cho T17.**
 
-- Windows/PowerShell, Git, Python 3.12 và uv. T01 chạy thật với uv 0.11.16 + CPython 3.12.4; `pyproject.toml`/`uv.lock` khóa interpreter ở `3.12.*`. Docker sẽ là runtime chuẩn của ứng dụng từ T02.
+- Windows/PowerShell, Git, Python 3.12, uv và Docker Desktop chạy Linux containers. T01/T02 chạy thật với uv 0.11.16 + CPython 3.12.4 trên host; `pyproject.toml`/`uv.lock` khóa interpreter ở `3.12.*`. API image dùng Python 3.12.13 pin digest. Docker daemon đã verify server 29.5.2.
 - RAM 16 GB, GPU NVIDIA 8 GB tùy chọn cho inference; CPU path dùng để xác minh chức năng. Driver/WSL GPU passthrough phải kiểm thực tế.
 - Chừa disk cho source <=1 GB, corpus benchmark, parsed text/index, Docker images và model cache riêng; không dùng 1 GB làm dự báo dung lượng tổng.
 - `.env.example` chỉ chứa tên biến/default không bí mật. Copy thành `.env`, điền URL bắt buộc, và giữ mọi credential trong `.env`/secret store; không commit hoặc paste vào handoff.
 
-### Bootstrap và quality gate T01
+### Bootstrap và quality gate T01–T02
 
 Chạy từ root repository. Trong môi trường bị giới hạn quyền ghi cache user, dùng hai biến local ở đầu; môi trường thường có thể bỏ hai dòng đó.
 
 ```powershell
 $env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'
 $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'
-uv sync --locked --group dev
+uv sync --locked --group dev --group api
 uv run ruff check .
 uv run mypy src
-uv run pytest tests/unit/test_settings.py
+uv run pytest tests/unit
 uv run python scripts/check_docs.py
 ```
 
-Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; Ruff/mypy/docs check PASS; settings suite có 3 tests PASS. Evidence command/output ở [H-T01-A01](docs/handoffs.md#h-t01-a01). Không đổi `.python-version` sang 3.13 khi host chỉ expose 3.13.
+Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite PASS tại [H-T01-A01](docs/handoffs.md#h-t01-a01). T02 sync cả `api`, chạy Ruff/mypy/docs và 7 unit tests health/settings; evidence tại [H-T02-A02](docs/handoffs.md#h-t02-a02). Không đổi `.python-version` sang 3.13 khi host chỉ expose 3.13.
+
+[H-T02-A03](docs/handoffs.md#h-t02-a03) ghi việc tiếp quản candidate A02 chưa commit, kiểm lại locked env/quality/current Docker và SHA-256 toàn Python source trong API image cuối. Outage và restart persistence kế thừa evidence A02, không được gọi là đã chạy lại trong A03.
 
 | Dependency group | Trạng thái T01 | Nội dung/phạm vi |
 | --- | --- | --- |
 | base | IMPLEMENTED/VERIFIED | Pydantic v2 + pydantic-settings cho typed config |
 | dev | IMPLEMENTED/VERIFIED | Ruff, mypy, pytest, pytest-asyncio |
-| api | LOCKED/DESIGNED | FastAPI, HTTPX, Uvicorn; chưa có API process |
+| api | IMPLEMENTED/VERIFIED T02 | FastAPI, HTTPX, Uvicorn, psycopg, Redis client; health-only API process, không có business routes |
 | ingestion | LOCKED/DESIGNED | Alembic, boto3, Celery, Qdrant client, Redis, SQLAlchemy; chưa có worker |
 | inference | RESERVED/DESIGNED | Rỗng có chủ đích; T17 pin model runtime/revisions sau capability checks |
 
@@ -87,16 +89,19 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; Ruff/mypy/docs check P
 | `API_BIND` | địa chỉ IPv4/IPv6; `127.0.0.1` | Không | Không |
 | `API_PORT` | integer 1–65535; `8000` | Không | Không |
 | `REQUEST_TIMEOUT_SECONDS` | >0 và <=300; `30` | Không | Không |
+| `HEALTH_TIMEOUT_SECONDS` | >0 và <=30; `2` | Không | Deadline cho từng probe readiness |
 | `DATABASE_URL` | PostgreSQL DSN | Có | Có thể chứa credential; bị loại khỏi repr/error chuẩn hóa |
+| `DATABASE_PASSWORD_FILE` | path; `None` | Không | Docker secret tách khỏi DSN; chuỗi rỗng được bỏ qua |
 | `REDIS_URL` | Redis DSN | Có | Có thể chứa credential; bị loại khỏi repr/error chuẩn hóa |
+| `QDRANT_URL` | HTTP(S) URL | Có | Endpoint vector nội bộ; bị loại khỏi repr |
 
-`rag_core.config.load_settings()` đọc environment rồi `.env`. Thiếu config trả `SettingsError` dạng `Missing required RAG Core configuration: DATABASE_URL, REDIS_URL`; giá trị malformed không được echo qua error/traceback do loader trả. T01 chỉ định nghĩa contract; readiness tới PostgreSQL/Redis thuộc T02.
+`rag_core.config.load_settings()` đọc environment rồi `.env`, bỏ qua giá trị rỗng. Thiếu config trả `SettingsError` dạng `Missing required RAG Core configuration: DATABASE_URL, QDRANT_URL, REDIS_URL`; giá trị malformed không được echo qua error/traceback. T02 readiness dùng PostgreSQL `SELECT 1`, Redis `PING` và Qdrant `/readyz`, mỗi probe có deadline.
 
 | Nhóm env mục tiêu | Nội dung | Task |
 | --- | --- | --- |
 | Runtime | APP_ENV, LOG_LEVEL, API_BIND/API_PORT, request timeout đã typed; body limits còn DESIGNED | T01–T02 |
 | Metadata/broker | DATABASE_URL, REDIS_URL | T02/T10/T12 |
-| Vector/model | QDRANT_URL/API_KEY, INFERENCE_URL, model IDs/revisions/device/batches | T17–T18 |
+| Vector/model | QDRANT_URL đã typed T02; API key, INFERENCE_URL, model IDs/revisions/device/batches còn DESIGNED | T02/T17–T18 |
 | App identity | cấu hình app_id, service-key hash/reference, JWT issuer/audience/JWKS, algorithms | T09 |
 | Source storage | storage alias, endpoint, region, bucket/prefix allowlist, read-only credential reference | T11 |
 | Providers | DEEPSEEK_API_KEY/MODEL, ANTHROPIC_API_KEY/MODEL; base URLs phía server | T23 |
@@ -104,16 +109,41 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; Ruff/mypy/docs check P
 
 Tên biến chính xác và defaults phải đồng bộ settings/`.env.example` khi implement; bảng này là nhóm contract, không phải danh sách env đã tồn tại.
 
-### Quickstart ứng dụng sẽ được kiểm chứng
+### Quickstart Docker health skeleton T02
 
-1. Clone/checkout đúng commit và tạo env từ example.
-2. Khởi tạo local dev app credentials/JWT key; cấu hình read-only storage, provider/admin secrets.
-3. Build/start Compose, migration metadata và readiness checks.
-4. Tải/pin model cache; bật GPU override nếu đã verified.
-5. Upload fixture bằng app simulator, create session, register, poll ready, query JSON/SSE.
-6. Mở admin UI; stop/start giữ volumes.
+Các lệnh sau đã chạy thật từ root repository. Script bootstrap tạo ba file secret local dưới `.local/secrets/` đã ignore, giữ file có sẵn và không in giá trị:
 
-Chưa có các command ứng dụng trên ở T01. Khi bổ sung, dùng PowerShell-safe examples; không đưa `docker compose down -v` vào luồng mặc định.
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap_local.ps1
+docker compose config --quiet
+docker compose --profile local-storage up -d --build
+docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
+docker compose --profile local-storage ps --all
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps1
+```
+
+Expected/verified: `api`, `postgres`, `qdrant`, `redis`, `minio` healthy; `minio-bootstrap` exit 0 sau khi tạo/kiểm fixture. API ở `http://127.0.0.1:8000`, MinIO API/console ở `http://127.0.0.1:9000` và `http://127.0.0.1:9001`. PG 5432, Qdrant 6333/6334 và Redis 6379 chỉ nội bộ. Profile MinIO mô phỏng app storage; API health T02 chưa dùng storage nên MinIO không nằm trong readiness.
+
+Health contract:
+
+```text
+GET /health/live   -> 200 {"status":"ok"} khi process phục vụ HTTP
+GET /health/ready  -> 200 status=ready khi PG/Redis/Qdrant đều đạt
+GET /health/ready  -> 503 status=unavailable + component status khi một dependency lỗi
+```
+
+Stop/start giữ nguyên named volumes và fixtures:
+
+```powershell
+docker compose --profile local-storage stop
+docker compose --profile local-storage up -d
+docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps1
+```
+
+Không dùng `docker compose down -v` trong flow mặc định. Không commit `.local/`, `.env`, key hoặc database files. MinIO/MC dùng release community lịch sử đã pin từ official Quay cho local simulation; server/cloud deployment ngoài scope.
+
+Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` rồi `docker compose logs --no-color <service>`; không render `docker compose config` đầy đủ vào ticket vì có thể lộ config khi operator tự thêm biến. Business quickstart (migration, ingest/query, model, auth/admin) vẫn DESIGNED cho các task sau.
 
 <a id="r03"></a>
 ## R03. Auth, app registration và trust boundary
@@ -169,7 +199,7 @@ Idempotency-Key scope app+owner+session+request hash; cùng key/body trả cùng
 <a id="r05"></a>
 ## R05. Endpoint inventory và lỗi
 
-**Tất cả DESIGNED tại T00.** [P06](docs/plan.md#p06) là hợp đồng đầy đủ; OpenAPI thực được tạo ở T03 và hoàn thiện ở T26.
+**Health routes VERIFIED tại T02; mọi business/admin route còn DESIGNED.** [P06](docs/plan.md#p06) là hợp đồng đầy đủ; OpenAPI business được tạo ở T03 và hoàn thiện ở T26.
 
 | Method / route | Ý nghĩa | Implementation owner |
 | --- | --- | --- |

@@ -1,0 +1,147 @@
+name: rag-core
+
+services:
+  postgres:
+    image: postgres:17.11-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0
+    environment:
+      POSTGRES_DB: rag_core
+      POSTGRES_USER: rag_core
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    networks: [backend]
+
+  redis:
+    image: redis:8.10.1-alpine3.23@sha256:becdda6c7f4b3fb42e42fd7f120bbf5c54c4caaaf16f26da24e4563d2c1f0576
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    networks: [backend]
+
+  qdrant:
+    image: qdrant/qdrant:v1.19.1-unprivileged@sha256:801777072776dc81b2a9dd2007b2ed487571f21ecd30efffd15ddb1671f2193d
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333'"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+    networks: [backend]
+
+  api:
+    image: rag-core-api:t02
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+      target: api-runtime
+    environment:
+      APP_ENV: development
+      API_BIND: 0.0.0.0
+      API_PORT: "8000"
+      DATABASE_URL: postgresql://rag_core@postgres:5432/rag_core
+      DATABASE_PASSWORD_FILE: /run/secrets/postgres_password
+      HEALTH_TIMEOUT_SECONDS: "2"
+      REDIS_URL: redis://redis:6379/0
+      QDRANT_URL: http://qdrant:6333
+    secrets:
+      - postgres_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${RAG_CORE_API_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=2).read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    networks: [backend]
+
+  minio:
+    profiles: [local-storage]
+    image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z@sha256:d249d1fb6966de4d8ad26c04754b545205ff15a62e4fd19ebd0f26fa5baacbc0
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        export MINIO_ROOT_USER="$$(cat /run/secrets/minio_root_user)"
+        export MINIO_ROOT_PASSWORD="$$(cat /run/secrets/minio_root_password)"
+        exec minio server /data --console-address :9001
+    secrets:
+      - minio_root_user
+      - minio_root_password
+    volumes:
+      - minio_data:/data
+    ports:
+      - "127.0.0.1:${RAG_CORE_MINIO_PORT:-9000}:9000"
+      - "127.0.0.1:${RAG_CORE_MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    networks: [backend]
+
+  minio-bootstrap:
+    profiles: [local-storage]
+    image: quay.io/minio/mc:RELEASE.2025-07-21T05-28-08Z@sha256:fb8f773eac8ef9d6da0486d5dec2f42f219358bcb8de579d1623d518c9ebd4cc
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        user="$$(cat /run/secrets/minio_root_user)"
+        password="$$(cat /run/secrets/minio_root_password)"
+        mc alias set local http://minio:9000 "$$user" "$$password" >/dev/null
+        mc mb --ignore-existing local/rag-core-fixtures >/dev/null
+        mc stat local/rag-core-fixtures/t02-persistence.txt >/dev/null 2>&1 || printf 'rag-core-t02-persistence-v1\n' | mc pipe local/rag-core-fixtures/t02-persistence.txt >/dev/null
+        mc stat local/rag-core-fixtures/t02-persistence.txt
+    secrets:
+      - minio_root_user
+      - minio_root_password
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: "no"
+    networks: [backend]
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  redis_data:
+  minio_data:
+
+secrets:
+  postgres_password:
+    file: ./.local/secrets/postgres_password
+  minio_root_user:
+    file: ./.local/secrets/minio_root_user
+  minio_root_password:
+    file: ./.local/secrets/minio_root_password

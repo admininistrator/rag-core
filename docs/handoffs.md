@@ -4,14 +4,13 @@
 
 ## Current checkpoint
 
-- **Giai đoạn:** Phase 0 / T01 / attempt T01-A01 đề nghị COMPLETE; hiệu lực khi completion commit thành công và Orchestrator review evidence.
-- **Dependency:** T00 COMPLETE tại commit `7025eeac080b481c17f7d68f0290b1ee3e3165e9` (`docs(T00): establish RAG core implementation blueprint`).
-- **Branch/starting HEAD:** `main` / `7025eeac080b481c17f7d68f0290b1ee3e3165e9`.
-- **Baseline dirty files:** chỉ `?? corpus-documents/`; prompt gốc SHA-256 byte-level `7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46`, được người dùng giao T01 đưa nguyên bản vào Git.
-- **Runtime worker:** record `turn_context` xác minh `gpt-5.6-sol`, effort `xhigh`, turn ID `01a0a5a1-fedd-7a73-801f-d5afc48b106c`, cwd repo; thread riêng parent, phù hợp `fork_turns="none"`.
-- **Tooling T01:** `uv 0.11.16` tìm thấy CPython 3.12.4 tại Miniconda khi chạy ngoài filesystem sandbox và tạo `.venv` Python 3.12.4; lock yêu cầu `==3.12.*`. Host `python` vẫn 3.13.2 và không được dùng thay baseline. Cache/install dir local `.uv-cache`/`.uv-python` đã ignore.
-- **Implementation:** src package/settings/docs check và quality config đã kiểm chứng; prompt corpus giữ nguyên byte. Chưa chạy app/service/corpus setup. Docker không thuộc T01; Orchestrator preflight daemon riêng và báo server 29.5.2. Không kiểm provider/GPU.
-- **Task tiếp theo:** T02 sau khi Orchestrator xác minh commit/diff/evidence T01; không reuse worker T01.
+- **Giai đoạn:** Phase 0 / T02 / attempt T02-A03 đề nghị COMPLETE tại completion commit `feat(T02): add local Docker infrastructure`, hợp lệ sau commit thành công và Orchestrator review. A03 tiếp quản candidate A02 chưa commit; A01 dừng ở runtime trước mọi repo mutation.
+- **Dependency:** T01 COMPLETE tại commit `ff8069abfd2e41fb9618eb7d35fa22bf220a39d6` (`feat(T01): scaffold Python project and quality checks`) và đã được Orchestrator nghiệm thu; T00 commit `7025eeac080b481c17f7d68f0290b1ee3e3165e9`.
+- **Branch/starting HEAD:** `main` / `ff8069abfd2e41fb9618eb7d35fa22bf220a39d6`; baseline A03 gồm đúng 21 file T02-A02 dirty/untracked trong phạm vi được tiếp quản, không có T02 commit.
+- **Runtime worker:** A03 thread `01a0a9a0-7c47-7b43-bd6c-09b38a8303a8`, turn `01a0a9a0-7cc9-7031-adb0-83aed0d1bcdf`, model `gpt-5.6-sol`, effort `xhigh`, cwd repo; fresh context đúng worker contract.
+- **Phục hồi:** khi người dùng yêu cầu continue, Orchestrator kiểm lifecycle chỉ còn root, không có worker A02 active. Nguyên nhân A02 không còn trong runtime chưa xác định; không quy thành quota/crash. A02 chưa COMPLETE vì chưa có completion commit; giữ nguyên implementation và bằng chứng A02, A03 review/kiểm tra hiện tại/commit.
+- **Checkpoint:** A03 config/up-build/wait/current health/ps/inspect và readonly PG/Qdrant/MinIO fixture PASS; source Python SHA-256 all6 files bằng final API image/container `sha256:64673d7032b879f4a76bcb65b48766fcbd29165802343f664f7133f3e69bba42`, Python3.12.13/non-root10001. Redis outage và controlled PG/Qdrant/MinIO restart persistence kế thừa evidence A02, source/config không đổi. A03 locked sync/Ruff/mypy/7 unit/docs/lock/PowerShell/scope/secrets checks PASS, stage explicit21/cached review PASS. Prompt nguyên SHA-256 `7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46`, blob `81ab3c77530722968d847391d8095284f1a874a9`; Docker daemon29.5.2; không sửa/download corpus.
+- **Task tiếp theo:** resolve completion commit T02 và Orchestrator review hash/diff/DoD/current git status; sau nghiệm thu mới spawn worker/context mới T03. A03 kết thúc sau báo cáo commit, không reuse.
 - **Bất biến cần nhớ:** mọi query session-only; index retained không cấp quyền; app sở hữu source/history; không tích hợp Scarlet trong backlog này.
 - **Orchestrator:** GPT-6-Astra, chỉ điều phối; worker GPT-5.6-Sol/xhigh mới từng task/attempt, không fork history, không song song. Đọc AGENTS trước giao việc.
 - **Quyết định người dùng còn thiếu:** không còn yêu cầu sản phẩm pending. Secrets/môi trường implementation cần kiểm tại task tương ứng, không giả định đã có.
@@ -591,3 +590,482 @@ PASS prompt filter/raw/staged object IDs equal and SHA256 unchanged
 ```
 
 Sau khi thêm chính evidence D6 này, chỉ ba sổ docs được restage explicit; final cached check/docs check chạy lại trước commit. Completion commit chạy sau log này; actual hash/output trả trong báo cáo worker và có thể resolve bằng subject, không tự ghi hash vào commit.
+
+<a id="h-t02-a01"></a>
+## H-T02-A01 — Phase 0 / T02 / attempt T02-A01
+
+Attempt kết thúc trước mọi repo mutation. Bằng chứng do Orchestrator cung cấp là runtime event sau, không phải shell command và không có exit code:
+
+```text
+Agent errored: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at Sep 16th, 2026 3:11 AM.
+```
+
+Không có repo checks/logs/code của A01 để ghi; root xác minh worktree sạch rồi tạo worker/context mới cho A02.
+
+<a id="h-t02-a02"></a>
+## H-T02-A02 — Phase 0 / T02 / attempt T02-A02
+
+### Identity, baseline và kế hoạch
+
+- Started: 2026-09-16 10:08 +07:00. Runtime record: thread `01a0a82f-8df3-7701-8a25-9ceff7d4dce9`, turn `01a0a82f-8e7e-7762-bb12-c2f9c7fd7971`, model `gpt-5.6-sol`, effort `xhigh`, cwd `C:\Users\Admin\Documents\GitHub\rag-core`; thread khác parent, khớp fresh context/`fork_turns="none"`.
+- Baseline command `git status --short; git branch --show-current; git rev-parse HEAD`: exit **0**; stdout status rỗng, branch `main`, HEAD `ff8069abfd2e41fb9618eb7d35fa22bf220a39d6`. Warning không đọc `C:\Users\Admin/.config/git/ignore` có sẵn; không sửa global config.
+- Đã đọc AGENTS; T02 và toàn execution notes T01; P01/P02/P12/P13/P14/P15; handoffs, implementation-summary, README, RUNBOOK; source/settings/lock T01 trước implementation. T01 completion commit đã được Orchestrator nghiệm thu.
+- Allowed scope và kế hoạch đúng task note: chỉ Compose/Docker, dependency/config/API health/test/bootstrap/smoke T02 và tài liệu; pin image tag+digest thật, dependency health thật, persistence thật; không thêm fake worker/dispatcher/inference, business API/schema/migration/T03, provider/GPU hoặc sửa prompt corpus.
+
+### Implementation và evidence
+
+CWD cho mọi command dưới đây: `C:\Users\Admin\Documents\GitHub\rag-core`. Không có provider/model/GPU/live external call trong T02; integration ở đây là local Docker services thật.
+
+- Files/runtime: `compose.yaml`, `.dockerignore`, `docker/api.Dockerfile`; health-only `rag_core.api`; settings/dependency lock; unit tests; bootstrap/smoke/Qdrant fixture helpers; README/RUNBOOK và ba sổ docs. API image non-root, chỉ cài base+`api`, không có OCR/ML/ingestion worker. Compose chỉ có PG/Qdrant/Redis/API và MinIO + bootstrap dưới profile; không fake worker/dispatcher/inference.
+- `powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\scripts\bootstrap_local.ps1'`: exit **0**, tạo ba file ignored `.local/secrets/{postgres_password,minio_root_user,minio_root_password}` và output `Local Docker secret files are ready; values were not printed.` Không in/stage secret.
+- Image manifest resolution dùng `docker buildx imagetools inspect <tag> --format '{{json .Manifest}}'`. Official tag/digest thực: Python `3.12.13-slim-bookworm@sha256:4766d8...`, uv `0.11.16@sha256:440fd6...`, PG `17.11-bookworm@sha256:051f7b...`, Redis `8.10.1-alpine3.23@sha256:becdda...`, Qdrant `v1.19.1-unprivileged@sha256:801777...`, MinIO `RELEASE.2025-07-23T15-54-02Z@sha256:d249d1...`, MC `RELEASE.2025-07-21T05-28-08Z@sha256:fb8f77...`. Lượt Docker Hub MinIO trả exit **1**, `pull access denied ... insufficient_scope`; cùng release resolve thành công từ official `quay.io/minio/*`, không dùng `latest`/digest giả.
+- `uv lock` trong network sandbox: exit **1**, lỗi thật `Failed to fetch: https://pypi.org/simple/pydantic/` / socket permissions `os error 10013`. Rerun approved network cùng command: exit **0**, `Resolved 72 packages in 2.78s`, thêm `psycopg`/`psycopg-binary` 3.3.5. `uv sync --locked --group dev --group api`: exit **0**, cài locked FastAPI 0.141.1, HTTPX 0.28.1, psycopg 3.3.5, Redis client 7.4.1, Uvicorn 0.53.0; API image sync 27 packages trên Python 3.12.13.
+- Initial Ruff exit **1** `SIM117` và mypy exit **1** cho dynamic psycopg kwargs/Redis awaitable; sửa context + typed conninfo/cast, không hạ rule. Initial quoted Qdrant one-liner exit **1** `SyntaxError` trước HTTP/mutation do Windows argument quoting; thay bằng tracked idempotent helper, `docker compose cp ...` + `docker compose exec -T api python /tmp/t02_qdrant_fixture.py seed|verify` đều exit **0**. Helper kiểm collection config và upsert; không delete/recreate; verify sau restart không reseed.
+
+### DoD-1 — Compose build/start và dependency-aware health
+
+Command `docker compose config --quiet`: exit **0**, stdout rỗng. Không render full config/secrets.
+
+Command `docker compose --profile local-storage up -d --build`: exit **0** cả initial pull/build và final rebuild. Final excerpt thật:
+
+```text
+Using CPython 3.12.13 interpreter at: /usr/local/bin/python3
+Resolved 72 packages in 3ms
+Installed 27 packages in 81ms
+exporting manifest list sha256:5d1716913419a968ee8b5f03706cff853a0d86968b476a6d05f883ac98f7f2a5
+Image rag-core-api:t02 Built
+Container rag-core-api-1 Recreated
+Container rag-core-postgres-1 Healthy
+Container rag-core-redis-1 Healthy
+Container rag-core-minio-1 Healthy
+Container rag-core-qdrant-1 Healthy
+Container rag-core-api-1 Started
+```
+
+Command `docker compose --profile local-storage up -d --wait postgres qdrant redis api minio`: exit **0**; final output báo cả năm service `Healthy`. Command `powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\scripts\smoke_local.ps1'`: exit **0**:
+
+```text
+PASS /health/live status=ok
+PASS /health/ready status=ready components=postgres,redis,qdrant
+```
+
+Dependency outage thật: `docker compose stop redis` exit **0**; command `curl.exe --silent --show-error --write-out "`nHTTP=%{http_code}`n" http://127.0.0.1:8000/health/live; curl.exe --silent --show-error --write-out "`nHTTP=%{http_code}`n" http://127.0.0.1:8000/health/ready` exit **0**, output:
+
+```text
+{"status":"ok"}
+HTTP=200
+{"status":"unavailable","components":{"postgres":"ok","redis":"unavailable","qdrant":"ok"}}
+HTTP=503
+```
+
+`docker compose start redis; docker compose up -d --wait postgres qdrant redis api` exit **0** và smoke sau đó lại PASS ready. Actual = expected: live chỉ process; ready phản ánh dependency thật, không stub success.
+
+### DoD-2 — status, ports, inspect và persistence restart
+
+Command `docker compose --profile local-storage ps --all`: exit **0**. Final actual: API/PG/Qdrant/Redis/MinIO `healthy`, `minio-bootstrap` `Exited (0)`; ports hiển thị API `127.0.0.1:8000`, MinIO `127.0.0.1:9000-9001`, PG chỉ `5432/tcp`, Qdrant chỉ `6333-6334/tcp`, Redis chỉ `6379/tcp`.
+
+Redacted inspect command nguyên văn (chỉ chọn image/health/ports/mount type+name+destination, không đọc env/secret value):
+
+```powershell
+$names=@('rag-core-api-1','rag-core-postgres-1','rag-core-qdrant-1','rag-core-redis-1','rag-core-minio-1'); $items=docker inspect $names | ConvertFrom-Json; foreach($item in $items){$ports=@(); foreach($property in $item.NetworkSettings.Ports.PSObject.Properties){$bindings=$property.Value; if($null -eq $bindings){$ports += "$($property.Name)=internal-only"}else{foreach($binding in $bindings){$ports += "$($property.Name)=$($binding.HostIp):$($binding.HostPort)"}}}; $mounts=@($item.Mounts | ForEach-Object {"$($_.Type):$($_.Name)->$($_.Destination)"}); [pscustomobject]@{Name=$item.Name.TrimStart('/'); Image=$item.Config.Image; Health=$item.State.Health.Status; Ports=($ports -join ', '); Mounts=($mounts -join ', ')} | Format-List}
+```
+
+Exit **0**; output excerpt thật đã redacted theo fields:
+
+```text
+Name   : rag-core-api-1
+Image  : rag-core-api:t02
+Health : healthy
+Ports  : 8000/tcp=127.0.0.1:8000
+Mounts : bind:->/run/secrets/postgres_password
+
+Name   : rag-core-postgres-1
+Health : healthy
+Ports  : 5432/tcp=internal-only
+Mounts : volume:rag-core_postgres_data->/var/lib/postgresql/data, bind:->/run/secrets/postgres_password
+
+Name   : rag-core-qdrant-1
+Health : healthy
+Ports  : 6333/tcp=internal-only, 6334/tcp=internal-only
+Mounts : volume:rag-core_qdrant_data->/qdrant/storage
+
+Name   : rag-core-redis-1
+Health : healthy
+Ports  : 6379/tcp=internal-only
+Mounts : volume:rag-core_redis_data->/data
+
+Name   : rag-core-minio-1
+Health : healthy
+Ports  : 9000/tcp=127.0.0.1:9000, 9001/tcp=127.0.0.1:9001
+Mounts : volume:rag-core_minio_data->/data, bind:->/run/secrets/minio_root_password, bind:->/run/secrets/minio_root_user
+```
+
+Actual: PG/Qdrant/Redis use pinned image digests and internal-only ports/named volumes; MinIO uses pinned Quay digest, loopback ports/named volume. Secret mounts chỉ hiện destination, không source/value. Không bind database files NTFS.
+
+Synthetic fixtures trước restart:
+
+- PG command `docker compose exec -T postgres psql -U rag_core -d rag_core -v ON_ERROR_STOP=1 -Atc "CREATE TABLE IF NOT EXISTS t02_persistence_fixture (id integer PRIMARY KEY, marker text NOT NULL); INSERT INTO t02_persistence_fixture (id, marker) VALUES (1, 'rag-core-t02-persistence-v1') ON CONFLICT (id) DO UPDATE SET marker = EXCLUDED.marker; SELECT marker FROM t02_persistence_fixture WHERE id = 1;"`: exit **0**, output `CREATE TABLE`, `INSERT 0 1`, `rag-core-t02-persistence-v1`.
+- Qdrant commands nguyên văn: `docker compose cp scripts/t02_qdrant_fixture.py api:/tmp/t02_qdrant_fixture.py`; `docker compose exec -T api python /tmp/t02_qdrant_fixture.py seed`; `docker compose exec -T api python /tmp/t02_qdrant_fixture.py verify`. Cả ba exit **0**; cp output `rag-core-api-1 Copied scripts/t02_qdrant_fixture.py to rag-core-api-1:/tmp/t02_qdrant_fixture.py`; seed và verify mỗi lệnh output `rag-core-t02-persistence-v1`.
+- `docker compose logs --no-color minio-bootstrap`: exit **0**, object `t02-persistence.txt`, Date `2026-09-16 03:20:12 UTC`, Size `28 B`, ETag `f9eb58fcfbb8e28513335e6d2fcc6b52-1`.
+
+Command `docker compose --profile local-storage restart postgres qdrant minio`: exit **0**. Command `docker compose --profile local-storage up -d --wait postgres qdrant redis api minio`: exit **0**, services healthy.
+
+Verification sau restart, **không reseed** PG/Qdrant:
+
+```powershell
+docker compose exec -T postgres psql -U rag_core -d rag_core -v ON_ERROR_STOP=1 -Atc "SELECT marker FROM t02_persistence_fixture WHERE id = 1;"
+docker compose exec -T api python /tmp/t02_qdrant_fixture.py verify
+docker compose --profile local-storage run --rm minio-bootstrap
+```
+
+Ba command exit **0**. Output thật lần lượt:
+
+```text
+rag-core-t02-persistence-v1
+rag-core-t02-persistence-v1
+Name      : t02-persistence.txt
+Date      : 2026-09-16 03:20:12 UTC
+Size      : 28 B
+ETag      : f9eb58fcfbb8e28513335e6d2fcc6b52-1
+Type      : file
+Checksum  : CRC32C:TNGhSQ==-1
+```
+
+Smoke sau restart exit **0**. Actual = expected: named volumes giữ fixture. Không chạy `down -v`, không xóa volume/source.
+
+### D1–D6, quality, docs và limitations
+
+- **D1:** dependency T01 notes/commit đã đọc; final `git diff --check`/scope review và changed paths ghi ở staged review dưới. Không sửa prompt corpus/AGENTS/plan semantics/T03.
+- **D2:** final commands riêng: `uv run ruff check .` exit **0**, `All checks passed!`; `uv run mypy src` exit **0**, `Success: no issues found in 6 source files`; `uv run pytest tests/unit` exit **0**, 7 tests PASS trên Python 3.12.4. Settings regression chứng minh empty optional secret path thành `None`.
+- **D3:** hai DoD và outage/persistence dùng service thật; output/cwd/exit/config/images ở trên. Không mock integration, provider live hoặc GPU claim.
+- **D4:** README/RUNBOOK có prerequisites/bootstrap/start/wait/stop/ports/health/secrets/persistence boundary; task/handoff/summary cập nhật. Final `uv run python scripts/check_docs.py` exit **0**: `PASS UTF-8/nonempty Markdown: 8 files`, `PASS internal links/anchors: 139`, `PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic`, `DOCUMENTATION CHECK: PASS`.
+- **D5:** `.dockerignore` chặn `.env*` trừ example, key/pem/cache/corpus/runtime; `.gitignore` chặn `.local`; secret values không in/stage. `uv lock --check` exit **0**, `Resolved 72 packages in 1ms`. Không business migration/contract breaking change.
+- **D6:** stage explicit paths và completion commit `feat(T02): add local Docker infrastructure`; actual hash chỉ trả sau commit.
+- **Known limits:** API chỉ health; MinIO chưa là API readiness dependency vì storage adapter thuộc T11. MinIO/MC là pinned historical community releases dùng local simulation. Chưa schema/auth/business routes, worker/dispatcher/inference, provider/GPU/load/cloud/Scarlet.
+
+Final scope/hygiene review trước stage:
+
+- Command `git diff --check; git status --short; git diff --stat; git var GIT_AUTHOR_IDENT`: exit **0**. `git diff --check` stdout rỗng; status chỉ có 21 T02 candidate paths trong allowed scope; Git author đã cấu hình sẵn `Vincent <zayncaster24@gmail.com>`. Warning global ignore permission có sẵn, không sửa config.
+- Ignore assertion command `$paths=@('.env','.local/secrets/postgres_password','.local/secrets/minio_root_user','.local/secrets/minio_root_password'); $matches=@(git check-ignore -v --no-index -- $paths); $matches; if($matches.Count -ne $paths.Count){Write-Error "Expected 4 ignored secret paths, got $($matches.Count)"; exit 1}; Write-Output 'PASS all local secret paths ignored'`: exit **0**, 4/4 match `.gitignore`, output final `PASS all local secret paths ignored`.
+- Explicit 21-file size/tracking/secret-example review: exit **0**, output `PASS candidate_files=21 files_over_1MiB=0 local_secret_paths_tracked=0 secret_example_values=0`. Prompt source check exit **0**, SHA-256 `7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46`, raw blob `81ab3c77530722968d847391d8095284f1a874a9` unchanged.
+
+<a id="h-t02-a03"></a>
+## H-T02-A03 — Phase 0 / T02 / attempt T02-A03
+
+### Phục hồi, identity và baseline
+
+- Started: 2026-09-16 16:51 +07:00; worker `/root/t02_a03`, model `gpt-5.6-sol`, effort `xhigh`, fresh context `fork_turns="none"`. Runtime đọc từ thread `01a0a9a0-7c47-7b43-bd6c-09b38a8303a8`, chỉ chọn model/effort/cwd/turn ID, không dump prompt/reasoning/auth.
+- A02 chưa COMPLETE: không có completion commit T02. Orchestrator báo khi người dùng continue, lifecycle chỉ còn root; nguyên nhân A02 không còn active chưa xác định. Không gán quota/crash; quota event chỉ thuộc A01. Giữ nguyên source và toàn evidence A02.
+- Đã đọc AGENTS; T02 + toàn execution notes T01; P01/P02/P12/P13/P14/P15; current/T01/A01/A02 handoffs, implementation-summary, README/RUNBOOK, toàn diff và newfiles T02 trước implementation. T01 COMPLETE đã được Orchestrator nghiệm thu.
+- Allowed files/baseline: modified `.env.example`, `.gitignore`, README/RUNBOOK, `docs/{tasks,handoffs,implementation-summary}.md`, `pyproject.toml`, `uv.lock`, settings và settings tests; untracked `.dockerignore`, `compose.yaml`, `docker/api.Dockerfile`, ba helpers bootstrap/smoke/Qdrant, ba API files và health tests = **21 files**. Ignored `.local/secrets`, caches, `.venv` giữ nguyên; không đọc giá trị secret. T02 được trả về IN_PROGRESS trước review/verification.
+- CWD mọi command A03: `C:\Users\Admin\Documents\GitHub\rag-core`; provider/model/GPU/live external không áp dụng T02, integration dùng local services thật. A03 sẽ kế thừa outage/persistence A02 nếu source/config liên quan không đổi, ghi riêng phần kiểm current.
+
+Baseline command nguyên văn `git status --short; git branch --show-current; git rev-parse HEAD`: exit **0**; output status đúng paths ở trên, branch/HEAD thật:
+
+```text
+main
+ff8069abfd2e41fb9618eb7d35fa22bf220a39d6
+```
+
+Warning global ignore permission có sẵn, không sửa global config. Runtime metadata command nguyên văn:
+
+```powershell
+$taskThreadId = $env:CODEX_THREAD_ID; Write-Output "thread_id=$taskThreadId"; if ($taskThreadId) { rg --files C:/Users/Admin/.codex/sessions -g "*$taskThreadId*" }
+$runtimePath='C:/Users/Admin/.codex/sessions/2026/09/16/rollout-2026-09-16T16-51-02-01a0a9a0-7c47-7b43-bd6c-09b38a8303a8.jsonl'; Get-Content -Encoding UTF8 -LiteralPath $runtimePath | ForEach-Object { $record=$_ | ConvertFrom-Json; if($record.type -eq 'turn_context'){ [pscustomobject]@{model=$record.payload.model;effort=$record.payload.effort;cwd=$record.payload.cwd;turn_id=$record.payload.turn_id} | ConvertTo-Json -Compress } }
+```
+
+Cả hai exit **0**; output metadata thật:
+
+```text
+thread_id=01a0a9a0-7c47-7b43-bd6c-09b38a8303a8
+{"model":"gpt-5.6-sol","effort":"xhigh","cwd":"C:\\Users\\Admin\\Documents\\GitHub\\rag-core","turn_id":"01a0a9a0-7cc9-7031-adb0-83aed0d1bcdf"}
+```
+
+Expected = actual: model/effort/cwd đúng contract và thread/turn mới.
+
+### Current Docker, DoD-1 và image/source
+
+- Orchestrator báo preflight mới exit **1** do pipe Linux daemon không tồn tại: `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine; check if the path is correct and if the daemon is running: open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.` Đây là observation root, không phải lỗi A03/không phải quota. A03 kiểm lại daemon đã online, không chạy Start-Process, không đổi context/reset hoặc xóa volumes.
+- Command nguyên văn `docker context show; docker context ls; Get-Process -Name 'Docker Desktop','com.docker.backend' -ErrorAction SilentlyContinue | Select-Object ProcessName,Id; Test-Path -LiteralPath 'C:\Program Files\Docker\Docker\Docker Desktop.exe'; docker version --format '{{.Server.Version}}'`: exit **0**. Output excerpt thật: `desktop-linux`, context `desktop-linux *` dùng `npipe:////./pipe/dockerDesktopLinuxEngine`, `29.5.2`, Docker Desktop/backend process list và `True`. Actual daemon hoạt động đúng expected; không cần thay đổi trạng thái Desktop.
+- `docker compose config --quiet`: exit **0**, stdout rỗng; không render secret/config đầy đủ.
+- Current image ban đầu đã khớp SHA-256 cả 6 Python source files, bao gồm `env_ignore_empty=True` ở settings cuối. A03 vẫn chạy lại DoD build/start sau cập nhật README/RUNBOOK evidence links để image mang đúng metadata/source cuối.
+
+Command build/start nguyên văn:
+
+```powershell
+docker compose --profile local-storage up -d --build 2>&1 | Tee-Object -FilePath '.local/t02-a03-build.redacted.log'; $composeExit=$LASTEXITCODE; exit $composeExit
+```
+
+Exit **0** (exec session `87790` hoàn tất); full build log ignored tại `.local/t02-a03-build.redacted.log`, đã review không secret/private content. Build output đầu có PowerShell `NativeCommandError` wrapper vì Docker ghi progress vào stderr; process thực exit 0, không coi wrapper là lỗi build. Output excerpt thật:
+
+```text
+#15 0.352 Using CPython 3.12.13 interpreter at: /usr/local/bin/python3
+#15 0.381 Resolved 72 packages in 13ms
+#15 1.343 Installed 27 packages in 198ms
+#18 exporting manifest list sha256:64673d7032b879f4a76bcb65b48766fcbd29165802343f664f7133f3e69bba42 0.0s done
+ Image rag-core-api:t02 Built
+ Container rag-core-api-1 Recreated
+ Container rag-core-redis-1 Healthy
+ Container rag-core-qdrant-1 Healthy
+ Container rag-core-postgres-1 Healthy
+ Container rag-core-minio-1 Healthy
+ Container rag-core-api-1 Started
+ Container rag-core-minio-bootstrap-1 Started
+```
+
+- `docker compose --profile local-storage up -d --wait postgres qdrant redis api minio`: exit **0**, output thật báo `Container rag-core-postgres-1 Healthy`, `Container rag-core-minio-1 Healthy`, `Container rag-core-api-1 Healthy`, `Container rag-core-qdrant-1 Healthy`, `Container rag-core-redis-1 Healthy` trong final wait; expected đủ năm services healthy đạt.
+- `powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\scripts\smoke_local.ps1'`: exit **0**, output thật:
+
+```text
+PASS /health/live status=ok
+PASS /health/ready status=ready components=postgres,redis,qdrant
+```
+
+Post-build command image/source SHA-256 nguyên văn (không đọc secret; Python chỉ hashes source code đã track):
+
+```powershell
+$hashScript = @'
+import hashlib
+import json
+from pathlib import Path
+import rag_core
+root = Path(rag_core.__file__).parent
+print(json.dumps({path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest().upper() for path in sorted(root.rglob("*.py"))}, sort_keys=True))
+'@
+$imageHashOutput = $hashScript | docker compose exec -T api python -
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$imageHashes = $imageHashOutput | ConvertFrom-Json
+$sourceRoot = (Resolve-Path -LiteralPath 'src/rag_core').Path
+$sourceFiles = @(Get-ChildItem -LiteralPath $sourceRoot -Recurse -File -Filter '*.py')
+if ($sourceFiles.Count -ne @($imageHashes.PSObject.Properties).Count) { throw 'Image/source Python file count differs' }
+foreach ($sourceFile in $sourceFiles) {
+    $relativePath = $sourceFile.FullName.Substring($sourceRoot.Length + 1).Replace('\','/')
+    $sourceHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $sourceFile.FullName).Hash
+    $imageHash = $imageHashes.$relativePath
+    if ($sourceHash -ne $imageHash) { throw "Image/source SHA256 differs: $relativePath" }
+}
+Write-Output "PASS image/source SHA256 equality: $($sourceFiles.Count) Python files, including final settings.py"
+docker image inspect rag-core-api:t02 --format '{{.Id}} {{.Created}} {{.Config.User}}'
+$tagImageId = (docker image inspect rag-core-api:t02 --format '{{.Id}}').Trim()
+$containerImageId = (docker inspect rag-core-api-1 --format '{{.Image}}').Trim()
+if ($tagImageId -ne $containerImageId) { throw 'Running container differs from final image tag' }
+Write-Output "PASS running API container image matches tag: $containerImageId"
+```
+
+Exit **0**; output thật:
+
+```text
+PASS image/source SHA256 equality: 6 Python files, including final settings.py
+sha256:64673d7032b879f4a76bcb65b48766fcbd29165802343f664f7133f3e69bba42 2026-09-16T09:54:55.686026004Z 10001:10001
+PASS running API container image matches tag: sha256:64673d7032b879f4a76bcb65b48766fcbd29165802343f664f7133f3e69bba42
+```
+
+DoD-1 **PASS**: config/up-build/health hiện tại thật; readiness code không đổi A02 và Redis outage 200/503/200 kế thừa [H-T02-A02](#h-t02-a02), không gọi là A03 đã chạy outage lại.
+
+### DoD-2 current status, inspect và fixture còn nguyên
+
+Command nguyên văn `docker compose ps; docker compose --profile local-storage ps --all; docker compose exec -T postgres psql -U rag_core -d rag_core -v ON_ERROR_STOP=1 -Atc "SELECT marker FROM t02_persistence_fixture WHERE id = 1;"; docker compose logs --no-color --tail 12 minio-bootstrap`: exit **0**; ps thực báo API mới `Up 40 seconds (healthy)`, PG/Qdrant/Redis/MinIO `Up 3 minutes (healthy)`, bootstrap `Exited (0) 39 seconds ago`; cả ps commands hiển thị đúng internal PG 5432/Qdrant 6333-6334/Redis 6379 và loopback API 8000/MinIO 9000-9001.
+
+Output excerpt thật của PG readonly và MinIO metadata (prefix log giữ nguyên):
+
+```text
+rag-core-t02-persistence-v1
+minio-bootstrap-1  | Name      : t02-persistence.txt
+minio-bootstrap-1  | Date      : 2026-09-16 03:20:12 UTC
+minio-bootstrap-1  | Size      : 28 B
+minio-bootstrap-1  | ETag      : f9eb58fcfbb8e28513335e6d2fcc6b52-1
+minio-bootstrap-1  | Type      : file
+minio-bootstrap-1  | Checksum  : CRC32C:TNGhSQ==-1
+```
+
+Qdrant helper commands chạy riêng, vì API recreated mất `/tmp` helper cũ (không seed):
+
+```powershell
+docker compose cp scripts/t02_qdrant_fixture.py api:/tmp/t02_qdrant_fixture.py
+docker compose exec -T api python /tmp/t02_qdrant_fixture.py verify
+```
+
+Exit mỗi command **0**; output thật lần lượt:
+
+```text
+ rag-core-api-1 Copying scripts/t02_qdrant_fixture.py to rag-core-api-1:/tmp/t02_qdrant_fixture.py
+ rag-core-api-1 Copied scripts/t02_qdrant_fixture.py to rag-core-api-1:/tmp/t02_qdrant_fixture.py
+rag-core-t02-persistence-v1
+```
+
+Inspect nguyên văn, chỉ output image/health/ports/mount type+name+destination; không output env/secret source/value:
+
+```powershell
+$names=@('rag-core-api-1','rag-core-postgres-1','rag-core-qdrant-1','rag-core-redis-1','rag-core-minio-1'); $items=docker inspect $names | ConvertFrom-Json; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; foreach($item in $items){$ports=@(); foreach($property in $item.NetworkSettings.Ports.PSObject.Properties){$bindings=$property.Value; if($null -eq $bindings){$ports += "$($property.Name)=internal-only"}else{foreach($binding in $bindings){$ports += "$($property.Name)=$($binding.HostIp):$($binding.HostPort)"}}}; $mounts=@($item.Mounts | ForEach-Object {"$($_.Type):$($_.Name)->$($_.Destination)"}); [pscustomobject]@{Name=$item.Name.TrimStart('/'); Image=$item.Config.Image; Health=$item.State.Health.Status; Ports=($ports -join ', '); Mounts=($mounts -join ', ')} | Format-List}
+```
+
+Exit **0**. Output excerpt thật (bỏ blank lines và image dài; full pins nằm ở Compose/source và A02 evidence):
+
+```text
+Name   : rag-core-api-1
+Image  : rag-core-api:t02
+Health : healthy
+Ports  : 8000/tcp=127.0.0.1:8000
+Mounts : bind:->/run/secrets/postgres_password
+
+Name   : rag-core-postgres-1
+Health : healthy
+Ports  : 5432/tcp=internal-only
+Mounts : bind:->/run/secrets/postgres_password, volume:rag-core_postgres_data->/var/lib/postgresql/data
+
+Name   : rag-core-qdrant-1
+Health : healthy
+Ports  : 6333/tcp=internal-only, 6334/tcp=internal-only
+Mounts : volume:rag-core_qdrant_data->/qdrant/storage
+
+Name   : rag-core-redis-1
+Health : healthy
+Ports  : 6379/tcp=internal-only
+Mounts : volume:rag-core_redis_data->/data
+
+Name   : rag-core-minio-1
+Health : healthy
+Ports  : 9000/tcp=127.0.0.1:9000, 9001/tcp=127.0.0.1:9001
+Mounts : bind:->/run/secrets/minio_root_password, bind:->/run/secrets/minio_root_user,
+         volume:rag-core_minio_data->/data
+```
+
+DoD-2 **PASS**: ps/inspect/current fixture hiện tại đạt; controlled restart trước/sau với nguyên fixture kế thừa A02. A03 không restart lần nữa vì persistence source/config không đổi; chỉ kiểm hiện fixture còn nguyên, không reseed PG/Qdrant. Build chạy bootstrap idempotent và MinIO timestamp/size/ETag không đổi. Không `down -v`, reset/xóa volume/source.
+
+### D2/D4 quality và docs commands hiện tại
+
+Mỗi command dưới là một tool/shell invocation riêng; nguyên văn có cache assignments trong workspace. Expected mọi check PASS, lock không drift, Python 3.12.
+
+- Command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv sync --locked --group dev --group api`: exit **0**.
+- Command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run ruff check .`: exit **0**.
+- Command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run mypy src`: exit **0**.
+- Command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run pytest tests/unit`: exit **0**.
+- Command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv lock --check`: exit **0**.
+- Command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run python scripts/check_docs.py`: exit **0**.
+
+Output thật tương ứng (sync, Ruff, mypy, pytest excerpt, lockcheck, final docs trước append evidence này):
+
+```text
+Resolved 72 packages in 2ms
+Checked 39 packages in 101ms
+All checks passed!
+Success: no issues found in 6 source files
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+collected 7 items
+tests\unit\test_health.py ...                                            [ 42%]
+tests\unit\test_settings.py ....                                         [100%]
+============================== 7 passed in 0.80s ==============================
+Resolved 72 packages in 0.95ms
+PASS UTF-8/nonempty Markdown: 8 files
+PASS internal links/anchors: 145
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Tests có injection deterministic chỉ chứng minh unit route/config behavior; Docker smoke/outage/persistence mới là integration thật. Không gọi unit mock là live. Không provider/LLM/model/GPU/cloud claim.
+
+### D1/D5 scope, secrets, lock source và PowerShell
+
+Đã review toàn diff/source/newfiles baseline; A03 chỉ thay README/RUNBOOK và ba sổ docs, không thay source/test/config candidate A02. Không migration/index/schema nghiệp vụ; settings yêu cầu QDRANT_URL và blank optional path giữ contract README/RUNBOOK từ A02.
+
+Command hygiene nguyên văn:
+
+```powershell
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); git diff --check; git diff --name-only; git status --short; git var GIT_AUTHOR_IDENT; $candidate=@('.env.example','.gitignore','.dockerignore','README.md','RUNBOOK.md','docs/handoffs.md','docs/implementation-summary.md','docs/tasks.md','pyproject.toml','uv.lock','compose.yaml','docker/api.Dockerfile','src/rag_core/config/settings.py','src/rag_core/api/__init__.py','src/rag_core/api/app.py','src/rag_core/api/health.py','tests/unit/test_settings.py','tests/unit/test_health.py','scripts/bootstrap_local.ps1','scripts/smoke_local.ps1','scripts/t02_qdrant_fixture.py'); $large=@($candidate | ForEach-Object {Get-Item -LiteralPath $_} | Where-Object Length -gt 1048576); $trackedSecrets=@(git ls-files -- .env .local); $nonEmpty=@(rg -n '^(QDRANT_API_KEY|DEEPSEEK_API_KEY|ANTHROPIC_API_KEY|STORAGE_ACCESS_KEY_ID|STORAGE_SECRET_ACCESS_KEY|ADMIN_SECRET)=.+' -- .env.example); if($large.Count -ne 0 -or $trackedSecrets.Count -ne 0 -or $nonEmpty.Count -ne 0){throw 'Scope/secret/size review failed'}; Write-Output "PASS candidate_files=$($candidate.Count) files_over_1MiB=$($large.Count) local_secret_paths_tracked=$($trackedSecrets.Count) secret_example_values=$($nonEmpty.Count)"; $path='corpus-documents/Codex Prompt – Build RAG Evaluation Corpus.md'; $raw=(git hash-object --no-filters -- "$path").Trim(); $sha=(Get-FileHash -Algorithm SHA256 -LiteralPath $path).Hash; if($raw -ne '81ab3c77530722968d847391d8095284f1a874a9' -or $sha -ne '7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46'){throw 'Prompt bytes changed'}; Write-Output "PASS original prompt blob=$raw SHA256=$sha"; $paths=@('.env','.local/secrets/postgres_password','.local/secrets/minio_root_user','.local/secrets/minio_root_password','.local/t02-a03-build.redacted.log'); $matches=@(git check-ignore -v --no-index -- $paths); $matches; if($matches.Count -ne $paths.Count){throw 'Ignored secret/log path count differs'}; Write-Output 'PASS all local secret/log paths ignored'
+```
+
+Exit **0**; `git diff --check` stdout rỗng, status đúng baseline 21 paths, author đã cấu hình sẵn (không sửa identity). Output excerpt thật:
+
+```text
+PASS candidate_files=21 files_over_1MiB=0 local_secret_paths_tracked=0 secret_example_values=0
+PASS original prompt blob=81ab3c77530722968d847391d8095284f1a874a9 SHA256=7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46
+.gitignore:22:.env	.env
+.gitignore:32:/.local/	.local/secrets/postgres_password
+.gitignore:32:/.local/	.local/secrets/minio_root_user
+.gitignore:32:/.local/	.local/secrets/minio_root_password
+.gitignore:32:/.local/	.local/t02-a03-build.redacted.log
+PASS all local secret/log paths ignored
+```
+
+Command secret-name/lock-source/helper parse nguyên văn:
+
+```powershell
+Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz'; $candidate=@('.env.example','.gitignore','.dockerignore','README.md','RUNBOOK.md','docs/handoffs.md','docs/implementation-summary.md','docs/tasks.md','pyproject.toml','uv.lock','compose.yaml','docker/api.Dockerfile','src/rag_core/config/settings.py','src/rag_core/api/__init__.py','src/rag_core/api/app.py','src/rag_core/api/health.py','tests/unit/test_settings.py','tests/unit/test_health.py','scripts/bootstrap_local.ps1','scripts/smoke_local.ps1','scripts/t02_qdrant_fixture.py'); $matches=@(rg -n -i '(api[_-]?key|secret|password|bearer|private[_-]?key|access[_-]?key|token)' -- $candidate); Write-Output "Sensitive-name matches reviewed in source/docs: $($matches.Count)"; $unexpected=@(rg '^source = ' uv.lock | Sort-Object -Unique | Where-Object {$_ -ne 'source = { registry = "https://pypi.org/simple" }' -and $_ -ne 'source = { editable = "." }'}); if($unexpected.Count -ne 0){throw 'Unexpected lock source'}; Write-Output 'PASS uv.lock sources: local editable project + PyPI registry only'; $parsedScripts=@('scripts/bootstrap_local.ps1','scripts/smoke_local.ps1'); foreach($scriptPath in $parsedScripts){$parseTokens=$null;$parseErrors=$null; [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path -LiteralPath $scriptPath).Path,[ref]$parseTokens,[ref]$parseErrors); if($parseErrors.Count -ne 0){throw "PowerShell parse failed: $scriptPath"}}; Write-Output 'PASS PowerShell helpers parse: 2 files'
+```
+
+Exit **0**; sensitive-name matches kiểm thủ công trên nội dung đã đọc, chỉ docs/placeholders/secret mounts và synthetic unit credentials, không real key/value. Output thật:
+
+```text
+2026-09-16 16:56:48 +07:00
+Sensitive-name matches reviewed in source/docs: 112
+PASS uv.lock sources: local editable project + PyPI registry only
+PASS PowerShell helpers parse: 2 files
+```
+
+### D1–D6 và kết luận trước completion commit
+
+- **D1 PASS:** dependency T01 notes/actual commit đã đọc; diff check/scope baseline đúng 21 T02 files; prompt nguyên byte, AGENTS/plan/T03 không đổi.
+- **D2 PASS:** locked dev/api sync, Ruff, strict mypy và 7 unit tests hiện tại; PowerShell helpers parse PASS.
+- **D3 PASS:** từng DoD-1/2 current command/observation thật ở trên; outage và controlled restart inherited A02 với source/config không đổi.
+- **D4 PASS:** README/RUNBOOK giữ quickstart VERIFIED/DESIGNED và thêm A03 evidence boundary; tasks/handoffs/summary ghi recovery, identity, outputs, interfaces/limits và resolver; final docs check sau append/restage ghi ở D6 dưới.
+- **D5 PASS:** review source/lock/image pins, secrets/ignore/scope/size/prompt; không raw corpus/weights/cache/private data. Không business migration; QDRANT_URL config addition và blank optional value behavior có RUNBOOK/tests.
+- **D6:** stage explicit 21 paths, cached check/docs/commit kiểm ở phần dưới; subject `feat(T02): add local Docker infrastructure`; task COMPLETE chỉ hợp lệ sau commit thành công và Orchestrator review. Actual hash/output post-commit trả root, không tự nhét hash vào commit.
+- **Limitations/blockers:** không còn blocker T02 cần user input. A02 lifecycle nguyên nhân chưa xác định và đã ghi trung thực. API chỉ health; MinIO chưa là API readiness dependency trước T11; chưa business schema/auth/routes/worker/dispatcher/inference/provider/GPU/load/cloud/Scarlet. Outage/restart A03 kế thừa evidence A02, không claim chạy lại.
+- **Next:** completion commit + Orchestrator review rồi worker/context mới T03; A03 kết thúc và không nhận task/retry tiếp.
+
+### D6 staged review và completion commit boundary
+
+Stage command nguyên văn:
+
+```powershell
+git add -- .env.example .gitignore .dockerignore README.md RUNBOOK.md docs/handoffs.md docs/implementation-summary.md docs/tasks.md pyproject.toml uv.lock compose.yaml docker/api.Dockerfile src/rag_core/config/settings.py src/rag_core/api/__init__.py src/rag_core/api/app.py src/rag_core/api/health.py tests/unit/test_settings.py tests/unit/test_health.py scripts/bootstrap_local.ps1 scripts/smoke_local.ps1 scripts/t02_qdrant_fixture.py
+```
+
+Exit **0**, stdout rỗng. Cached review command nguyên văn:
+
+```powershell
+git diff --cached --check; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; git diff --cached --name-status; git diff --cached --stat; $stagedPaths=@(git diff --cached --name-only); if($stagedPaths.Count -ne 21){throw "Expected 21 staged T02 files, found $($stagedPaths.Count)"}; $forbidden=@($stagedPaths | Where-Object {$_ -match '^(.local/|.env$|corpus-documents/|AGENTS.md$|docs/plan.md$|.venv/|.uv-cache/)'}); if($forbidden.Count -ne 0){throw 'Forbidden staged path'}; Write-Output "PASS staged T02 scope: $($stagedPaths.Count) files, no forbidden artifacts"; git status --short
+```
+
+Exit **0**; cached whitespace check stdout rỗng. Output thật name-status và scope assertion (stat đầy đủ không lặp trong excerpt):
+
+```text
+A	.dockerignore
+M	.env.example
+M	.gitignore
+M	README.md
+M	RUNBOOK.md
+A	compose.yaml
+A	docker/api.Dockerfile
+M	docs/handoffs.md
+M	docs/implementation-summary.md
+M	docs/tasks.md
+M	pyproject.toml
+A	scripts/bootstrap_local.ps1
+A	scripts/smoke_local.ps1
+A	scripts/t02_qdrant_fixture.py
+A	src/rag_core/api/__init__.py
+A	src/rag_core/api/app.py
+A	src/rag_core/api/health.py
+M	src/rag_core/config/settings.py
+A	tests/unit/test_health.py
+M	tests/unit/test_settings.py
+M	uv.lock
+ 21 files changed, 1175 insertions(+), 46 deletions(-)
+PASS staged T02 scope: 21 files, no forbidden artifacts
+```
+
+Status chỉ staged đúng 21 paths, không unstaged/untracked path. Global ignore permission warning giữ nguyên, không chỉnh global config. Prompt corpus không thuộc staged changes và đã hash-check nguyên bytes ở D5.
+
+Docs check sau append A03 evidence/task/summary, command nguyên văn `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run python scripts/check_docs.py`: exit **0**, output thật:
+
+```text
+PASS UTF-8/nonempty Markdown: 8 files
+PASS internal links/anchors: 146
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Chỉ ba sổ docs được restage explicit sau bổ sung staged-review/current completion proposal này; cached whitespace/docs checks chạy lại trước commit. Không code/config/test thay đổi sau final Docker image/source proof và quality PASS.
+
+Theo P14, `COMPLETE` trong nội dung completion commit là đề nghị đóng task, chỉ có hiệu lực khi commit thành công và Orchestrator review. Completion command kế tiếp `git commit -m "feat(T02): add local Docker infrastructure"`; actual exit/output/hash/time và post-commit git status trả trong worker report, không tạo vòng self-reference/amend để ghi hash vào chính commit. Nếu commit fail, task chưa COMPLETE và phải báo root với reproduction.

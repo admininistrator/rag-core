@@ -29,6 +29,7 @@ htmlcov/
 /logs/
 /runtime/
 /var/
+/.local/
 *.log
 *.pid
 *.sqlite

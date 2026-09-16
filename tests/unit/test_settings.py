@@ -12,6 +12,7 @@ from rag_core.config import SettingsError, load_settings
 REQUIRED_ENV = {
     "DATABASE_URL": "postgresql://rag_core:local-only@127.0.0.1:5432/rag_core",
     "REDIS_URL": "redis://127.0.0.1:6379/0",
+    "QDRANT_URL": "http://127.0.0.1:6333",
 }
 
 
@@ -42,6 +43,21 @@ def test_load_settings_reads_typed_environment(
 
 
 @pytest.mark.unit
+def test_load_settings_ignores_blank_optional_secret_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    _clear_required_environment(monkeypatch)
+    for name, value in REQUIRED_ENV.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setenv("DATABASE_PASSWORD_FILE", "")
+
+    settings = load_settings()
+
+    assert settings.database_password_file is None
+
+
+@pytest.mark.unit
 def test_load_settings_reports_missing_required_configuration(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -52,7 +68,9 @@ def test_load_settings_reports_missing_required_configuration(
         load_settings()
 
     message = str(caught.value)
-    assert message == "Missing required RAG Core configuration: DATABASE_URL, REDIS_URL"
+    assert message == (
+        "Missing required RAG Core configuration: DATABASE_URL, QDRANT_URL, REDIS_URL"
+    )
     assert caught.value.__cause__ is None
 
 
