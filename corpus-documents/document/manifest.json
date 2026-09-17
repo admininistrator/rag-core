@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "domain": "document",
+  "dataset": "FinanceBench",
+  "source_repository": "patronus-ai/financebench",
+  "dataset_version": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
+  "status": "not_downloaded",
+  "downloaded_at": null,
+  "license": "UNRESOLVED for GitHub files; publisher HF card declares CC-BY-NC-4.0",
+  "document_count": null,
+  "qa_count": null,
+  "languages": [
+    "en"
+  ],
+  "checksum": {},
+  "sources": [
+    {
+      "id": "financebench_open_source",
+      "url": "https://raw.githubusercontent.com/patronus-ai/financebench/cc39aeb4afdf33909ee1412188bf89035950c2eb/data/financebench_open_source.jsonl",
+      "version": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
+      "repository_commit": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
+      "git_blob_sha1": "4aef1d43a443474ba193f158f2baf70550ff528d",
+      "expected_sha256": null
+    },
+    {
+      "id": "financebench_document_information",
+      "url": "https://raw.githubusercontent.com/patronus-ai/financebench/cc39aeb4afdf33909ee1412188bf89035950c2eb/data/financebench_document_information.jsonl",
+      "version": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
+      "repository_commit": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
+      "git_blob_sha1": "decdfa948630f289d05cc0048417b3b9107cfb9f",
+      "expected_sha256": null
+    }
+  ],
+  "artifacts": [],
+  "page_indexing": "zero_based",
+  "notes": "T04 metadata only. No dataset bytes downloaded, counts measured, or corpus accepted. Domain preparation pending T05?T07; clean reproduction T08."
+}

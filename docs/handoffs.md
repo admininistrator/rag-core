@@ -4,10 +4,9 @@
 
 ## Current checkpoint
 
-- **Current:** Phase 0 / T03 / `T03-A02` đề nghị COMPLETE tại completion commit `feat(T03): define versioned API contracts`, chỉ hợp lệ sau commit thành công và Orchestrator review. Worker `/root/t03_a02`, `gpt-5.6-sol`/`xhigh`, context mới `fork_turns="none"`, spawn/runtime được Orchestrator xác minh; bắt đầu 2026-09-17 11:51 +07:00, ended timestamp/hash/output trả root post-commit. Baseline `main`/`851ff1d10b49b6a4d7ae7e1756f2c2a1b8562e96`, đúng 16 candidate files T03 dirty/untracked; completion scope 17 files tại [T03](tasks.md#t03).
-- **Recovery:** A01 đã kết thúc do runtime quota, không có completion commit; đã có contracts/exporter/tests/snapshots/examples và README/RUNBOOK candidate, checkpoint cũ “chưa code/DoD” đã stale. A02 review và thu actual evidence mới; [H-T03-A01](#h-t03-a01) giữ runtime event/report boundary trung thực.
-- **Dependencies accepted:** T02 `851ff1d10b49b6a4d7ae7e1756f2c2a1b8562e96`, T01 `ff8069abfd2e41fb9618eb7d35fa22bf220a39d6`, T00 `7025eeac080b481c17f7d68f0290b1ee3e3165e9`; notes/summary/evidence đã đọc. T02 historical evidence phía dưới giữ nguyên.
-- **Verified boundary/next:** actual A02 locked sync/Ruff/mypy 11 source/unit 7/contract 83/export +drift 13 ops/2 health/48 schemas/37 synthetic examples/docs/scope/secrets/prompt PASS; explicit stage 17/cached review PASS. Evidence [H-T03-A02](#h-t03-a02). Business/auth/ingestion/retrieval/provider/SSE transport/UI vẫn DESIGNED. Resolve completion hash/current status và root review, rồi fresh worker T04; A02 kết thúc, không tự nhận task sau.
+- **Current:** Phase1 / T04 / T04-A01 completion candidate; worker `/root/t04_a01`, requested `gpt-5.6-sol`/`xhigh`, fresh `fork_turns="none"`, started 2026-09-17 12:03 +07:00. Runtime metadata verification/hash/end do root nghiệm thu post-commit. Baseline CLEAN `main`/accepted T03 `e4db5e3203b6c7052caa8943118b1999d84f51d8`; T01 accepted `ff8069abfd2e41fb9618eb7d35fa22bf220a39d6`. Previous attempts/evidence remain below.
+- **Boundary:** 19 files corpus utilities/CLI/schema/inventory/manifests/unit test/docs; setup help/80 synthetic unit/Ruff/mypy14/locked sync/metadata PASS, unavailable full setup exit2/validation exit1 expected. No corpus bytes or domain pipeline/business behavior. [H-T04-A01](#h-t04-a01), [S-T04-A01](implementation-summary.md#s-t04-a01). Completion subject `feat(T04): add reproducible corpus tooling`, COMPLETE only after successful commit/root review.
+- **Next/risks:** root review then fresh worker T05; official CMU Hotpot HEAD HTTP20s/HTTPS15s timed out, no mirror chosen. FinanceBench GitHub/PDF grant unresolved, publisher HF card CC-BY-NC-4.0 recorded separately; user decision required before T06 downloads. Full corpus clean reproduction T08; runtime business/providers/UI still DESIGNED.
 - **Invariants:** mọi query current-session-only, index retained không cấp quyền; app sở hữu source/history. Không sửa prompt corpus/plan/AGENTS, không cloud/server/Scarlet/push/merge. Worker mới từng attempt, chỉ một worker active, Orchestrator read-only.
 
 ## Cách ghi bằng chứng
@@ -1379,3 +1378,395 @@ DOCUMENTATION CHECK: PASS
 ```
 
 Restage docs-only command `git add -- docs/tasks.md docs/handoffs.md`; final cached whitespace/exact-scope/unstaged checks +actual commit output trả root post-commit. Completion commit là bằng chứng D6, resolver theo subject/Task-ID, không sửa history để ghi hash.
+
+<a id="h-t04-a01"></a>
+## H-T04-A01 — Phase 1 / T04 / attempt T04-A01
+
+### Identity, baseline, scope and environment
+
+- Worker `/root/t04_a01`, requested model `gpt-5.6-sol`/effort `xhigh`, fresh `fork_turns="none"`; actual runtime metadata verification is the Orchestrator's acceptance check. No model is inferred from this prompt, no child agent or next task. Started 2026-09-17 12:03 +07:00; ended/hash reported after successful commit.
+- All commands below run at `C:\Users\Admin\Documents\GitHub\rag-core`, Windows PowerShell. Config: uv0.11.16/CPython3.12.4, existing dev/api groups/jsonschema4.26.0; `UV_CACHE_DIR=<repo>\.uv-cache`, `UV_PYTHON_INSTALL_DIR=<repo>\.uv-python`, both ignored. No DSNs/auth/provider/model/inference/storage credentials read; no production DB/index/service use.
+- Read AGENTS, full T03/T01 dependency execution notes, P01/P11/P13/P14, handoffs/implementation-summary/README/RUNBOOK, original corpus prompt (all sections). Baseline command `git status --short; git branch --show-current; git rev-parse HEAD`, exit0, actual output:
+
+```text
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+main
+e4db5e3203b6c7052caa8943118b1999d84f51d8
+```
+
+No dirty/untracked baseline files. Root accepted T03 commit above and T01 `ff8069abfd2e41fb9618eb7d35fa22bf220a39d6`; earlier evidence preserved. Allowed changes: corpus shared scripts/schemas/inventory/manifests/README/license notices, common unit test, README/RUNBOOK/three living docs; ignore/dependency edits only if needed (none needed). Original prompt/API/business/AGENTS/plan/Scarlet unchanged.
+
+<a id="h-t04-a01-sources"></a>
+### DoD-2 — Official source versions, URLs and separate license scopes
+
+Expected: real official upstream versions/license evidence, no invented local corpus measurements. Actual: metadata/readmes/tree/HEAD inspected live; no full corpus or dataset-byte download.
+
+Revision command (first sandbox call exit1 `Invoke-RestMethod : Unable to connect to the remote server`; approved public metadata network escalation then exit0, same command):
+
+```powershell
+$ErrorActionPreference='Stop'; foreach($source in @(@('hotpotqa/hotpot','master'),@('patronus-ai/financebench','main'),@('google-deepmind/xquad','master'))){$uri='https://api.github.com/repos/'+$source[0]+'/commits/'+$source[1]; $reply=Invoke-RestMethod -Uri $uri -TimeoutSec 20; Write-Output ($source[0]+' '+$reply.sha+' '+$reply.commit.committer.date)}
+```
+
+The dates below are upstream commit timestamps, not download timestamps. Actual output:
+
+```text
+hotpotqa/hotpot 3635853403a8735609ee997664e1528f4480762a 2019-02-14T18:01:48Z
+patronus-ai/financebench cc39aeb4afdf33909ee1412188bf89035950c2eb 2024-12-03T17:29:01Z
+google-deepmind/xquad 7d30520c717524000f0d9d2f9c10a069acd9d285 2021-11-12T10:48:06Z
+```
+
+Pinned tree/README/publisher-card metadata command, approved public network read, exit0:
+
+```powershell
+$ErrorActionPreference='Stop'
+foreach($source in @(@('hotpotqa/hotpot','3635853403a8735609ee997664e1528f4480762a'),@('patronus-ai/financebench','cc39aeb4afdf33909ee1412188bf89035950c2eb'),@('google-deepmind/xquad','7d30520c717524000f0d9d2f9c10a069acd9d285'))){
+$tree=Invoke-RestMethod -Uri ('https://api.github.com/repos/'+$source[0]+'/git/trees/'+$source[1]+'?recursive=1') -TimeoutSec 20
+Write-Output ($source[0]+' tree_truncated='+$tree.truncated)
+$tree.tree | Where-Object {$_.path -match '(LICENSE|COPYING|README|financebench_.*jsonl$|xquad.(en|vi).json$)'} | Select-Object path,sha,size | Format-Table -AutoSize
+}
+$hf=Invoke-RestMethod -Uri 'https://huggingface.co/api/datasets/PatronusAI/financebench' -TimeoutSec 20
+Write-Output ('PatronusAI/financebench hf_revision='+$hf.sha+' license='+$hf.cardData.license)
+foreach($readme in @('https://raw.githubusercontent.com/hotpotqa/hotpot/3635853403a8735609ee997664e1528f4480762a/README.md','https://raw.githubusercontent.com/patronus-ai/financebench/cc39aeb4afdf33909ee1412188bf89035950c2eb/README.md','https://raw.githubusercontent.com/google-deepmind/xquad/7d30520c717524000f0d9d2f9c10a069acd9d285/README.md')){
+Write-Output ('SOURCE '+$readme)
+$sourceText=(Invoke-WebRequest -Uri $readme -UseBasicParsing -TimeoutSec 20).Content
+$sourceText -split "`n" | Where-Object {$_ -match '(licen|CC |Creative|ZERO|zero|copyright|http.*hotpot_dev_distractor)'}
+}
+```
+
+Actual output excerpt (all trees `tree_truncated=False`; sizes below are upstream tree metadata, **not local downloaded bytes/counts**):
+
+```text
+hotpotqa/hotpot tree_truncated=False
+LICENSE.txt f3290f572e36d634ffb079fbb11a8acd50f6711a 11338
+README.md   2329f6ae30c4ef5becf3ab57730fbb4860f91e61 6839
+patronus-ai/financebench tree_truncated=False
+README.md                                    bed5639eaeb17f93a818f55b99d03b398a469864 5094
+data/financebench_document_information.jsonl decdfa948630f289d05cc0048417b3b9107cfb9f 88781
+data/financebench_open_source.jsonl          4aef1d43a443474ba193f158f2baf70550ff528d 929848
+vectorstores/README.md                       2d72261b38d5187fb97a42c8f78c10356d34be59 39
+google-deepmind/xquad tree_truncated=False
+README.md     addee0cf67354cbaeb9a7c77470c9b0c2f86b05d 7747
+xquad.en.json cc0e3e8b94910097d29d2e9df5f266e1b30b2810 609383
+xquad.vi.json 2c0b4bfe0f5808424fd353dcaecd388ecab8b87f 911401
+PatronusAI/financebench hf_revision=e04404e3a97f69f79c14d42f24981a1c9c3bcd18 license=cc-by-nc-4.0
+```
+
+Observed pinned Hotpot README explicitly separates datasetCC-BY-SA-4.0 and codeApache-2.0; XQuAD README explicitly grants datasetCC-BY-SA-4.0. FinanceBench tree/README has no LICENSE/explicit dataset or company PDF grant, README says evidence pages ZERO-indexed. No claim is made that HF card terms automatically apply to GitHub/PDFs. Publisher card inspection command, exit0:
+
+```powershell
+$ErrorActionPreference='Stop'
+$uri='https://huggingface.co/datasets/PatronusAI/financebench/raw/e04404e3a97f69f79c14d42f24981a1c9c3bcd18/README.md'
+$card=(Invoke-WebRequest -Uri $uri -UseBasicParsing -TimeoutSec 20).Content
+Write-Output ('SOURCE '+$uri)
+$card -split "`n" | Where-Object {$_ -match '(license:|github.com/patronus-ai/financebench|CC|[Ll]icense|[Cc]opyright)'}
+$uri='https://hotpotqa.github.io/'
+$page=(Invoke-WebRequest -Uri $uri -UseBasicParsing -TimeoutSec 20).Content
+[regex]::Matches($page,'href="([^"]+)"[^>]*>[^<]*(?:[Dd]ev|[Dd]istractor)') | ForEach-Object {Write-Output $_.Value}
+```
+
+Output included `license: cc-by-nc-4.0` and a publisher link to GitHub PDFs, no PDF permission grant. No matches from the first homepage regex; a later line-based official homepage inspection below confirmed the CMU link. FinanceBench local-use rights decision was reported early to root; T06 needs user decision or upstream grant before dataset/PDF downloads. Inventory keeps its license_status unresolved, metadata-only commit policy, company PDF rights separate. This is a next-task dependency risk; T04 uses only public metadata and does not require a data-use decision to finish shared utilities.
+
+HEAD command, approved network read, shell exit0 (per-endpoint failures intentionally reported as observations, not hidden PASS):
+
+```powershell
+$ErrorActionPreference='Stop'
+foreach($uri in @('http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json','https://raw.githubusercontent.com/patronus-ai/financebench/cc39aeb4afdf33909ee1412188bf89035950c2eb/data/financebench_open_source.jsonl','https://raw.githubusercontent.com/patronus-ai/financebench/cc39aeb4afdf33909ee1412188bf89035950c2eb/data/financebench_document_information.jsonl','https://raw.githubusercontent.com/google-deepmind/xquad/7d30520c717524000f0d9d2f9c10a069acd9d285/xquad.en.json','https://raw.githubusercontent.com/google-deepmind/xquad/7d30520c717524000f0d9d2f9c10a069acd9d285/xquad.vi.json')){
+try{$response=Invoke-WebRequest -Method Head -Uri $uri -UseBasicParsing -TimeoutSec 20; Write-Output ('HEAD '+$uri+' status='+$response.StatusCode+' content_type='+$response.Headers['Content-Type'])}catch{Write-Output ('HEAD '+$uri+' failed='+$_.Exception.Message)}
+}
+```
+
+Actual output:
+
+```text
+HEAD http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json failed=The operation has timed out.
+HEAD https://raw.githubusercontent.com/patronus-ai/financebench/cc39aeb4afdf33909ee1412188bf89035950c2eb/data/financebench_open_source.jsonl status=200 content_type=text/plain; charset=utf-8
+HEAD https://raw.githubusercontent.com/patronus-ai/financebench/cc39aeb4afdf33909ee1412188bf89035950c2eb/data/financebench_document_information.jsonl status=200 content_type=text/plain; charset=utf-8
+HEAD https://raw.githubusercontent.com/google-deepmind/xquad/7d30520c717524000f0d9d2f9c10a069acd9d285/xquad.en.json status=200 content_type=text/plain; charset=utf-8
+HEAD https://raw.githubusercontent.com/google-deepmind/xquad/7d30520c717524000f0d9d2f9c10a069acd9d285/xquad.vi.json status=200 content_type=text/plain; charset=utf-8
+```
+
+Same-host HTTPS HEAD command, shell exit0/observed timeout:
+
+```powershell
+$uri='https://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json'; try{$response=Invoke-WebRequest -Method Head -Uri $uri -UseBasicParsing -TimeoutSec 15; Write-Output ('HEAD '+$uri+' status='+$response.StatusCode+' content_type='+$response.Headers['Content-Type'])}catch{Write-Output ('HEAD '+$uri+' failed='+$_.Exception.Message)}
+```
+
+Output `HEAD https://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json failed=The operation has timed out.` Official homepage inspection exit0:
+
+```powershell
+$ErrorActionPreference='Stop'
+$page=(Invoke-WebRequest -Uri 'https://hotpotqa.github.io/' -UseBasicParsing -TimeoutSec 20).Content
+$page -split "`n" | Where-Object {$_ -match '(hotpot_dev|distractor|drive.google|Download|download|datasets/hotpot)'}
+```
+
+Actual output included:
+
+```text
+"contentUrl":"http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json"
+```
+
+T05 must prove actual access/download or report upstream-availability BLOCKED; no unofficial mirror, full JSON fetch or checksum fabrication attempted. No published byte pin in inspected README; first semantic-validated download must record measuredSHA256. HEAD200 only proves endpoint access, not exact bytes.
+
+Inventory/schema/root+domain manifests were reviewed: all three `not_downloaded`, downloaded_at/document_count/qa_count null, checksum{} and artifacts[]; expected_sha256 null. Git commit/blob IDs above are real upstream pins, not claims of local downloads. Existing raw/documents/.downloads ignore policy retained; licensed lightweight metadata/attribution remains trackable, normalized QA only with applicable rights. README/RUNBOOK explicitly say full command completes T08. **DoD-2 PASS for honest verified inventory/no-data manifest state**, with access/rights risks preserved.
+
+<a id="h-t04-a01-dod1"></a>
+### DoD-1 — Setup help and meaningful synthetic fault tests
+
+Command, exit0; expected help only/no mutation/network, actual:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run python corpus-documents/scripts/setup_corpus.py --help 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t04-a01-help.log; exit $LASTEXITCODE
+```
+
+```text
+usage: setup_corpus.py [-h] (--all | --domain {default,document,bilingual})
+
+Reproduce official RAG evaluation corpus (domain preparation pending T05-T07).
+
+options:
+  -h, --help            show this help message and exit
+  --all                 Prepare all domains (complete in T08).
+  --domain {default,document,bilingual}
+                        Prepare one corpus domain.
+```
+
+Command, exit0; expected corrupt/interrupted/retry/idempotency/reference safety, actual **78 PASS/no empty/skipped tests**:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run pytest tests/unit/test_corpus_common.py 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t04-a01-tests-final.log; exit $LASTEXITCODE
+```
+
+Actual output excerpt; full reviewed public/synthetic log at `corpus-documents/.downloads/t04-a01-tests-final.log`, ignored, no private content to redact:
+
+```text
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+collected 78 items
+tests\unit\test_corpus_common.py ....................................... [ 50%]
+.......................................                                  [100%]
+============================= 78 passed in 1.89s ==============================
+```
+
+Coverage: corrupt content pin refusal/no new file/prior preservation; stream interruption/IncompleteRead/retry recovery and bounded attempts/timeouts/backoff; OSError/KeyboardInterrupt during write, fsync/validator/replace failures preserve published bytes; zero/truncated/excess/oversize streams; SHA256+Git blob checks; pinned cache reuse/no network/stable mtime/cache corruption repair; required semantic validator for unpinned content; atomic JSON Unicode/idempotency; traversal/absolute/Windows stream/reserved names/unofficial URLs/redirects; real Windows directory junction escape refusal without deleting target; JSON duplicate/nonfinite/malformed data; invalid/empty references/question/answers/duplicate IDs/empty QA/JSONL records; honest schemas/ready measurement refusal/provenance+aggregate drift; all four setup/validation selections nonzero/nonmutation. Tests use synthetic fixtures and injected network responses only, **not live corpus integrity verification**.
+
+Metadata-only command, exit0, expected source/schema/aggregate consistency without data acceptance:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run python corpus-documents/scripts/validate_corpus.py --metadata-only 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t04-a01-metadata-final.log; exit $LASTEXITCODE
+```
+
+Actual output `CORPUS METADATA: PASS - 3 domain manifests + inventory; corpus data NOT validated.`
+
+Honest unavailable gates, each run separately:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run python corpus-documents/scripts/setup_corpus.py --all 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t04-a01-unavailable-setup.log; exit $LASTEXITCODE
+```
+
+Expected/actual exit **2**; output:
+
+```text
+CORPUS SETUP: UNAVAILABLE - domain preparation not implemented: default, document, bilingual. Required tasks: T05 (default), T06 (document), T07 (bilingual); full acceptance T08.
+```
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run python corpus-documents/scripts/validate_corpus.py --all 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t04-a01-unavailable-validation.log; exit $LASTEXITCODE
+```
+
+Expected/actual exit **1**, output `CORPUS VALIDATION: FAIL - default: corpus is not_downloaded; run domain setup after its implementation`. No setup/full-validation PASS claim. **DoD-1 PASS.**
+
+<a id="h-t04-a01-quality"></a>
+### D2 — Locked environment and code quality
+
+Each command below ran separately, exit0, expected=lockedPython3.12/quality PASS, actual outputs shown; logs below are ignored and reviewed public/synthetic output.
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv sync --locked --group dev --group api 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t04-a01-sync.log; exit $LASTEXITCODE
+```
+
+```text
+Resolved 77 packages in 0.90ms
+Checked 44 packages in 2ms
+```
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run ruff check . 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t04-a01-ruff.log; exit $LASTEXITCODE
+```
+
+Actual output `All checks passed!`.
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run mypy src corpus-documents/scripts 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t04-a01-mypy.log; exit $LASTEXITCODE
+```
+
+Actual output `Success: no issues found in 14 source files`. Includes unchanged11 application source +3new corpus scripts. Existing jsonschema package lacks bundled stubs; two exact `import-untyped` annotations document this third-party boundary, no new dependency or config-wide mypy ignore. Final common unit command/output is above; no requirement to re-run T02/T03 integration when application source/config/contracts unchanged.
+
+### Fixed helper/check failures in this attempt
+
+- First inventory helper had an extra `)` after `foreach($readme in @(...))`, shell exit1 before HTTP calls. Actual error: `Missing statement body in foreach loop.` / `Unexpected token ')' in expression or statement.` Fixed multiline command is recorded above; no fabricated inventory from this failure.
+- Initial `uv run ruff check corpus-documents/scripts tests/unit/test_corpus_common.py --fix` reported B023 closure binding, RUF001/002 en-dashes and one fixed unused import: `Found 8 errors (1 fixed, 7 remaining).` Its combined shell subsequently ran formatter and returned0; this was **not** treated as a quality PASS. Bound advertised length in generator default and replaced ambiguous dashes. An attempted non-ASCII PowerShell-to-Python replacement did not replace en-dashes; subsequent separate `uv run ruff check .` exit1: `Found 5 errors.` Correct UTF-8 patch and import spacing fixes yielded final independent Ruff exit0 above.
+- First `uv run mypy src corpus-documents/scripts`, exit1: `Found 3 errors in 2 files (checked 14 source files)`; actual errors: common QA loop reused a variable previously inferred as str (`Any | None` assignment), and jsonschema/import exceptions lacked stubs. Renamed document-ID loop variable and explicitly documented the two external untyped imports; strict final14-source check PASS. No product/test semantics changed to pass.
+- First metadata output emitted an em-dash that PowerShell native capture rendered U+FFFD; changed CLI status separators to ASCII and re-ran current metadata/unavailable evidence above. No private content was involved.
+- First summary apply_patch failed verification of a mistyped existing source line (`current-session` vs actual `current-scope`); no partial mutation. Re-read exact line and applied correct patch. This did not affect code/tests.
+
+<a id="h-t04-a01-review"></a>
+### D1/D4/D5/D6 — Scope, docs, review and completion boundary
+
+- D1: dependencies notes read, baseline clean, diff check/manual source/schema/inventory/unit review done; final exact19-file scope/prompt proof below.
+- D2: locked sync/Ruff/strictmypy14/commonunit78 PASS; tests no skip/no external datasets.
+- D3: separate help/test/manual official-source/license/no-data manifest DoD commands/expected/actual/exit above; access timeouts and rights decision reported honestly. Metadata-only never substitutes corpus acceptance.
+- D4: README/RUNBOOK and task execution notes/current checkpoint/Phase1-T04-A01 summary append updated. Corpus README/license notices document setup pending T08, unknown counts, source pins/terms, retry/atomic/cache/ref interfaces, raw/documents/qa hygiene and conventions. Final docs-check actual output follows.
+- D5: no secret/raw corpus/PDF/model/cache/runtime artifact staged; original prompt bytes unchanged. No DB/index/API/model/retrieval change or migration. Source/manifest schema is initial corpus metadata v1; later fields/interfaces must update validation and docs in the same domain task. Corpus source download tooling does not ingest production or access app-owned storage; all query scopes remain current session only.
+- D6: exact19 explicit paths, stage/cached scope/whitespace review, completion subject `feat(T04): add reproducible corpus tooling`; COMPLETE only after successful actual commit/root review. Actual hash/end/post-commit status returned to root, not embedded in its own commit.
+- Risks/next: no T04 code blocker; T05 verify official Hotpot access/hash or BLOCKED, T06 user decision/upstreamgrant on local GitHub QA/PDF use. No mock success/live corpus claim. Full setup/validation/gold alignment/actual counts belong T05–T08; no next task run by this worker.
+
+#### D4 actual documentation check
+
+Command, exit0; expected UTF-8/internal links/anchors/task fields/dependencies valid, actual:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run python scripts/check_docs.py 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t04-a01-docs.log; exit $LASTEXITCODE
+```
+
+```text
+PASS UTF-8/nonempty Markdown: 10 files
+PASS internal links/anchors: 186
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+#### D1/D5 actual scope, secrets, prompt and ignore review
+
+Command, exit0; manual diff/source/schema/inventory/test/docs review plus explicit assertions (sensitive matches counted only, not printed):
+
+```powershell
+git diff --check; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; $candidate=@('README.md','RUNBOOK.md','docs/tasks.md','docs/handoffs.md','docs/implementation-summary.md','corpus-documents/README.md','corpus-documents/source-license-inventory.json','corpus-documents/manifest.json','corpus-documents/default/manifest.json','corpus-documents/document/manifest.json','corpus-documents/bilingual/manifest.json','corpus-documents/licenses/README.md','corpus-documents/schemas/domain-manifest.schema.json','corpus-documents/schemas/root-manifest.schema.json','corpus-documents/schemas/source-inventory.schema.json','corpus-documents/scripts/common.py','corpus-documents/scripts/setup_corpus.py','corpus-documents/scripts/validate_corpus.py','tests/unit/test_corpus_common.py'); $changed=@(git diff --name-only)+@(git ls-files --others --exclude-standard); if(@(Compare-Object ($candidate | Sort-Object) ($changed | Sort-Object)).Count -ne 0){throw 'Changed paths differ from exact19file T04 scope'}; $items=@($candidate | ForEach-Object {Get-Item -LiteralPath $_}); if(@($items | Where-Object Length -gt 1048576).Count -ne 0){throw 'Large artifact found'}; $suspicious=@(rg -l '(sk-[A-Za-z0-9_-]{20,}|AKIA[A-Z0-9]{16}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----)' -- $candidate); if($suspicious.Count -ne 0){throw 'Credential marker found; review without exposing values'}; $sensitive=@(rg -n -i '(secret|password|bearer|api[_-]?key|token)' -- $candidate); Write-Output ('Sensitive-name matches manually reviewed: '+$sensitive.Count); $promptPath='corpus-documents/Codex Prompt – Build RAG Evaluation Corpus.md'; $raw=(git hash-object --no-filters -- $promptPath).Trim(); $sha=(Get-FileHash -Algorithm SHA256 -LiteralPath $promptPath).Hash; if($raw -ne '81ab3c77530722968d847391d8095284f1a874a9' -or $sha -ne '7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46'){throw 'Original prompt bytes changed'}; Write-Output ('PASS exact_scope='+$items.Count+' files_over_1MiB=0 credential_markers=0'); Write-Output ('PASS prompt_blob='+$raw+' SHA256='+$sha); $ignored=@('corpus-documents/default/raw/source.json','corpus-documents/document/documents/report.pdf','corpus-documents/.downloads/t04-a01-tests-final.log','.env','.uv-cache/test','.uv-python/test'); $matches=@(git check-ignore -v --no-index -- $ignored); if($matches.Count -ne $ignored.Count){throw 'Expected ignored artifact missing'}; $matches; foreach($path in @('corpus-documents/scripts/common.py','corpus-documents/schemas/domain-manifest.schema.json','corpus-documents/source-license-inventory.json','corpus-documents/licenses/README.md','corpus-documents/default/qa/eval.jsonl')){git check-ignore -q --no-index -- $path; if($LASTEXITCODE -eq 0){throw 'Lightweight source/metadata unexpectedly ignored'}}; Write-Output 'PASS source/license/schema/QA metadata trackable; raw/PDF/log/cache/env ignored'; git diff --stat
+```
+
+Output excerpt (repeated baseline global ignore warnings preserved once):
+
+```text
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+Sensitive-name matches manually reviewed: 111
+PASS exact_scope=19 files_over_1MiB=0 credential_markers=0
+PASS prompt_blob=81ab3c77530722968d847391d8095284f1a874a9 SHA256=7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46
+.gitignore:44:corpus-documents/*/raw/ corpus-documents/default/raw/source.json
+.gitignore:45:corpus-documents/*/documents/ corpus-documents/document/documents/report.pdf
+.gitignore:46:corpus-documents/.downloads/ corpus-documents/.downloads/t04-a01-tests-final.log
+.gitignore:22:.env .env
+.gitignore:10:.uv-cache/ .uv-cache/test
+.gitignore:11:.uv-python/ .uv-python/test
+PASS source/license/schema/QA metadata trackable; raw/PDF/log/cache/env ignored
+```
+
+Diff whitespace stdout empty; candidate exact19, all under1MiB, no raw/model/runtime/credentials. Sensitive terms are policy descriptions/synthetic fixture markers/historical commands, manually reviewed; original user prompt unchanged. No `.gitignore`/pyproject/lock/app/contract changes required. **D1/D2/D3/D4/D5 PASS.** D6 actual cached review/commit boundary appended next.
+
+#### Final finite JSON number review and updated DoD-1 evidence
+
+Final review found that Python's ordinary float parser can turn valid JSON exponent
+syntax such as `1e400` into an infinite float. Added a finite float guard to strict
+JSON parsing plus positive/negative overflow regression cases. An initial patch
+failed verification against the formatter's one-line parametrization before any
+mutation; exact line re-read and patched. This is shared validation correctness,
+not a domain pipeline/gold change. Historical78-test output above is retained;
+**current final source passed80 tests**, no skips, after this last code change.
+
+Command, exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run pytest tests/unit/test_corpus_common.py 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t04-a01-tests-finite-json.log; exit $LASTEXITCODE
+```
+
+Actual output excerpt; full reviewed synthetic log `corpus-documents/.downloads/t04-a01-tests-finite-json.log`:
+
+```text
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+collected 80 items
+tests\unit\test_corpus_common.py ....................................... [ 48%]
+.........................................                                [100%]
+============================= 80 passed in 1.87s ==============================
+```
+
+Separate current-quality commands, each exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run ruff check .; exit $LASTEXITCODE
+```
+
+Actual `All checks passed!`.
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run mypy src corpus-documents/scripts; exit $LASTEXITCODE
+```
+
+Actual `Success: no issues found in 14 source files`.
+
+#### D6 actual explicit stage and cached review
+
+Stage command:
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md corpus-documents/README.md corpus-documents/source-license-inventory.json corpus-documents/manifest.json corpus-documents/default/manifest.json corpus-documents/document/manifest.json corpus-documents/bilingual/manifest.json corpus-documents/licenses/README.md corpus-documents/schemas/domain-manifest.schema.json corpus-documents/schemas/root-manifest.schema.json corpus-documents/schemas/source-inventory.schema.json corpus-documents/scripts/common.py corpus-documents/scripts/setup_corpus.py corpus-documents/scripts/validate_corpus.py tests/unit/test_corpus_common.py
+```
+
+Initial sandbox exit1, actual `fatal: Unable to create 'C:/Users/Admin/Documents/GitHub/rag-core/.git/index.lock': Permission denied`. Approved escalation for exact task paths then exit0/stdoutempty. No push/amend/rebase/reset/history mutation. Initial cached review before the finite-JSON guard ran as:
+
+```powershell
+git diff --cached --check; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; git diff --cached --name-status; git diff --cached --stat; $expected=@('README.md','RUNBOOK.md','docs/tasks.md','docs/handoffs.md','docs/implementation-summary.md','corpus-documents/README.md','corpus-documents/source-license-inventory.json','corpus-documents/manifest.json','corpus-documents/default/manifest.json','corpus-documents/document/manifest.json','corpus-documents/bilingual/manifest.json','corpus-documents/licenses/README.md','corpus-documents/schemas/domain-manifest.schema.json','corpus-documents/schemas/root-manifest.schema.json','corpus-documents/schemas/source-inventory.schema.json','corpus-documents/scripts/common.py','corpus-documents/scripts/setup_corpus.py','corpus-documents/scripts/validate_corpus.py','tests/unit/test_corpus_common.py'); $staged=@(git diff --cached --name-only); if($staged.Count -ne 19 -or @(Compare-Object ($expected | Sort-Object) ($staged | Sort-Object)).Count -ne 0){throw 'Staged scope differs from exact19file T04 scope'}; if(@(git diff --name-only).Count -ne 0 -or @(git ls-files --others --exclude-standard).Count -ne 0){throw 'Unstaged or untracked files remain'}; Write-Output 'PASS staged T04 exact19files; no unstaged/untracked files'; git status --short
+```
+
+Exit0, whitespace stdoutempty, exactly19 staged files (5modify/14add), initial stat
+`19 files changed, 2486 insertions(+), 18 deletions(-)`, output
+`PASS staged T04 exact19files; no unstaged/untracked files`.
+Final common/test +docs-only edits must be restaged explicitly and current
+docs/cached checks run before completion commit below; prior stats are historical,
+not final diff claims. Completion subject `feat(T04): add reproducible corpus tooling`;
+successful actual hash/end/commit output/root review is the COMPLETE boundary.
+
+Final docs command after task COMPLETE proposal and finite-JSON evidence, exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run python scripts/check_docs.py 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t04-a01-docs-final.log; exit $LASTEXITCODE
+```
+
+Actual output:
+
+```text
+PASS UTF-8/nonempty Markdown: 10 files
+PASS internal links/anchors: 186
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Read-only `git diff -- corpus-documents/scripts/common.py tests/unit/test_corpus_common.py; git diff --check; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz'` exit0, diff only math finite-float parser and two overflow test cases, whitespace stdoutempty; actual time `2026-09-17 12:25:02 +07:00`. No remaining code/test concern after final80-test/Ruff/mypy PASS. This final literal evidence adds no new link/anchor. Explicit restage command next:
+
+```powershell
+git add -- corpus-documents/scripts/common.py tests/unit/test_corpus_common.py docs/tasks.md docs/handoffs.md docs/implementation-summary.md
+```
+
+Final cached exact19 scope/whitespace/unstaged check must pass before
+`git commit -m "feat(T04): add reproducible corpus tooling"`. Actual commit/hash/end
+and current clean status returned to Orchestrator post-commit; never amend to embed
+its own hash. If commit fails, not COMPLETE and reproduction/checkpoint must be
+written before handing back. Root verifies model/effort/runtime before acceptance.
+
+Final cached command actually ran after the restage above, exit0:
+
+```powershell
+git diff --cached --check; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; $expected=@('README.md','RUNBOOK.md','docs/tasks.md','docs/handoffs.md','docs/implementation-summary.md','corpus-documents/README.md','corpus-documents/source-license-inventory.json','corpus-documents/manifest.json','corpus-documents/default/manifest.json','corpus-documents/document/manifest.json','corpus-documents/bilingual/manifest.json','corpus-documents/licenses/README.md','corpus-documents/schemas/domain-manifest.schema.json','corpus-documents/schemas/root-manifest.schema.json','corpus-documents/schemas/source-inventory.schema.json','corpus-documents/scripts/common.py','corpus-documents/scripts/setup_corpus.py','corpus-documents/scripts/validate_corpus.py','tests/unit/test_corpus_common.py'); $staged=@(git diff --cached --name-only); if($staged.Count -ne 19 -or @(Compare-Object ($expected | Sort-Object) ($staged | Sort-Object)).Count -ne 0){throw 'Wrong final staged scope'}; if(@(git diff --name-only).Count -ne 0 -or @(git ls-files --others --exclude-standard).Count -ne 0){throw 'Unstaged/untracked files remain'}; git diff --cached --stat; Write-Output 'PASS final staged exact19 T04 files; whitespace clean; no unstaged/untracked paths'
+```
+
+Actual output excerpt before this final evidence-only append:
+
+```text
+19 files changed, 2598 insertions(+), 18 deletions(-)
+PASS final staged exact19 T04 files; whitespace clean; no unstaged/untracked paths
+```
+
+Cached whitespace stdoutempty; final source365lines/test546lines, actual80-test
+evidence above matches the staged source. Restage only this handoff and run cached
+whitespace/19count/no-unstaged assertions once more before the actual task commit;
+this output-only addition changes docs line counts, not code/tests or schema pins.

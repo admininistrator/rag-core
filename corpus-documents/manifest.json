@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "domains": {
+    "default": {
+      "manifest": "default/manifest.json",
+      "status": "not_downloaded",
+      "document_count": null,
+      "qa_count": null
+    },
+    "document": {
+      "manifest": "document/manifest.json",
+      "status": "not_downloaded",
+      "document_count": null,
+      "qa_count": null
+    },
+    "bilingual": {
+      "manifest": "bilingual/manifest.json",
+      "status": "not_downloaded",
+      "document_count": null,
+      "qa_count": null
+    }
+  },
+  "notes": "No corpus data acceptance in T04. Metadata validation is separate from full corpus validation."
+}

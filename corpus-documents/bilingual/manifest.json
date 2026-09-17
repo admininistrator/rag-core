@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "domain": "bilingual",
+  "dataset": "XQuAD",
+  "source_repository": "google-deepmind/xquad",
+  "dataset_version": "7d30520c717524000f0d9d2f9c10a069acd9d285",
+  "status": "not_downloaded",
+  "downloaded_at": null,
+  "license": "CC-BY-SA-4.0",
+  "document_count": null,
+  "qa_count": null,
+  "languages": [
+    "en",
+    "vi"
+  ],
+  "checksum": {},
+  "sources": [
+    {
+      "id": "xquad_en",
+      "url": "https://raw.githubusercontent.com/google-deepmind/xquad/7d30520c717524000f0d9d2f9c10a069acd9d285/xquad.en.json",
+      "version": "7d30520c717524000f0d9d2f9c10a069acd9d285",
+      "repository_commit": "7d30520c717524000f0d9d2f9c10a069acd9d285",
+      "git_blob_sha1": "cc0e3e8b94910097d29d2e9df5f266e1b30b2810",
+      "expected_sha256": null
+    },
+    {
+      "id": "xquad_vi",
+      "url": "https://raw.githubusercontent.com/google-deepmind/xquad/7d30520c717524000f0d9d2f9c10a069acd9d285/xquad.vi.json",
+      "version": "7d30520c717524000f0d9d2f9c10a069acd9d285",
+      "repository_commit": "7d30520c717524000f0d9d2f9c10a069acd9d285",
+      "git_blob_sha1": "2c0b4bfe0f5808424fd353dcaecd388ecab8b87f",
+      "expected_sha256": null
+    }
+  ],
+  "artifacts": [],
+  "page_indexing": "not_applicable",
+  "notes": "T04 metadata only. No dataset bytes downloaded, counts measured, or corpus accepted. Domain preparation pending T05?T07; clean reproduction T08."
+}

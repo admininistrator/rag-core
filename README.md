@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: nền tảng Python T01, Docker T02 và contracts T03 đã triển khai, kiểm chứng local.** Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. T03 có schema/API design và examples đã validate; business API, ingestion, retrieval, LLM, SSE runtime và UI chưa hoạt động. T04–T36 vẫn theo backlog.
+> **Trạng thái: nền tảng Python T01, Docker T02, contracts T03 và corpus tooling T04 đã triển khai, kiểm chứng local.** Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. T03 có schema/API design và examples đã validate; T04 có utilities/source inventory/manifests/schema nhưng chưa tải corpus. Business API, ingestion, retrieval, LLM, SSE runtime và UI chưa hoạt động. T05–T36 vẫn theo backlog.
 
 ## Phạm vi đã chốt
 
@@ -76,6 +76,18 @@ uv run python scripts/export_openapi.py --check
 
 [OpenAPI v1 thiết kế](docs/api/openapi-v1.designed.json) có 13 operations với `x-served`/`x-implementation-status`; [OpenAPI đang serve](docs/api/openapi.served.json) chỉ có 2 health routes. [37 examples](docs/api/examples-v1.json) là dữ liệu synthetic minh họa, không phải response runtime. Export kiểm OpenAPI model, JSON Schema Draft 2020-12 và examples bằng cả JSON Schema/Pydantic; không đọc secret hoặc chạy dependency/provider probes. Hợp đồng và các gate runtime còn thiếu nằm ở [RUNBOOK R05–R08](RUNBOOK.md#r05), actual evidence [H-T03-A02](docs/handoffs.md#h-t03-a02); [H-T03-A01](docs/handoffs.md#h-t03-a01) ghi recovery do runtime quota trước commit.
 
+## Corpus tooling T04
+
+[Corpus README](corpus-documents/README.md) và [source/license inventory](corpus-documents/source-license-inventory.json) ghi official URLs, upstream commit/blob pins và quyền dữ liệu riêng license code. Utilities đã kiểm download hỏng/ngắt, atomic publication giữ prior state, retry hữu hạn, idempotency và reference safety; manifests hiện `not_downloaded`, counts/download timestamps `null`, checksum rỗng. Chạy checks hiện có từ root:
+
+```powershell
+uv run python corpus-documents/scripts/setup_corpus.py --help
+uv run python corpus-documents/scripts/validate_corpus.py --metadata-only
+uv run pytest tests/unit/test_corpus_common.py
+```
+
+`--metadata-only` không nghiệm thu corpus data. Setup `--all`/`--domain` và full validation đang fail rõ vì domain preparation chưa implement; T05–T07 triển khai từng domain, T08 nghiệm thu một command từ clean state. HotpotQA/XQuAD có explicit dataset CC BY-SA 4.0; FinanceBench GitHub/PDF rights chưa được grant rõ dù publisher HF card ghi CC BY-NC 4.0, cần quyết định trước T06. Không tải raw/PDF hoặc đổi RAG API/models/retrieval trong T04. Evidence [H-T04-A01](docs/handoffs.md#h-t04-a01); vận hành [RUNBOOK R11](RUNBOOK.md#r11).
+
 ## Tài liệu
 
 | File | Nội dung |
@@ -92,7 +104,7 @@ uv run python scripts/export_openapi.py --check
 
 - **T01 VERIFIED:** Python prerequisites và quality nền tảng. **T02 VERIFIED:** Docker start/stop/health, dependency probes, loopback/internal ports và restart persistence.
 - **T03 VERIFIED contracts:** schemas, designed/served OpenAPI snapshots và examples; auth/ownership/readiness/tokenizer enforcement/query/SSE runtime vẫn theo task sau.
-- **T04–T08:** corpus setup/validation, source licenses, actual counts.
+- **T04 VERIFIED shared tooling/metadata:** setup help, honest unavailable gates, source/license inventory và schemas; chưa corpus data. **T05–T08 PLANNED:** domain setup/validation, actual counts và clean reproduction.
 - **T09–T12:** authentication, session và storage registration.
 - **T13–T19:** format/OCR matrix, model setup, ingestion commands.
 - **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.

@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "title": "Domain corpus manifest v1",
+  "required": [
+    "schema_version",
+    "domain",
+    "dataset",
+    "source_repository",
+    "dataset_version",
+    "status",
+    "downloaded_at",
+    "license",
+    "document_count",
+    "qa_count",
+    "languages",
+    "checksum",
+    "sources",
+    "artifacts",
+    "page_indexing",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "domain": {
+      "enum": [
+        "default",
+        "document",
+        "bilingual"
+      ]
+    },
+    "dataset": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "source_repository": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "dataset_version": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "status": {
+      "enum": [
+        "not_downloaded",
+        "preparing",
+        "ready"
+      ]
+    },
+    "downloaded_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "document_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "qa_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "languages": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "en",
+          "vi"
+        ]
+      }
+    },
+    "checksum": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "url",
+          "version",
+          "repository_commit",
+          "git_blob_sha1",
+          "expected_sha256"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https?://"
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "repository_commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "git_blob_sha1": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expected_sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "role",
+          "sha256",
+          "bytes"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "role": {
+            "enum": [
+              "raw",
+              "documents",
+              "qa"
+            ]
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "page_indexing": {
+      "enum": [
+        "not_applicable",
+        "zero_based"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "not_downloaded"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "downloaded_at": {
+            "type": "null"
+          },
+          "document_count": {
+            "type": "null"
+          },
+          "qa_count": {
+            "type": "null"
+          },
+          "checksum": {
+            "maxProperties": 0
+          },
+          "artifacts": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ready"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "downloaded_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "document_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "qa_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "checksum": {
+            "minProperties": 1
+          },
+          "artifacts": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "domain": {
+            "const": "document"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "page_indexing": {
+            "const": "zero_based"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "page_indexing": {
+            "const": "not_applicable"
+          }
+        }
+      }
+    }
+  ]
+}

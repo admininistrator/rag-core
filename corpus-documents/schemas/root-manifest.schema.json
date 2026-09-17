@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "title": "Aggregate corpus manifest v1",
+  "required": [
+    "schema_version",
+    "domains",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "domains": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "default",
+        "document",
+        "bilingual"
+      ],
+      "properties": {
+        "default": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manifest",
+            "status",
+            "document_count",
+            "qa_count"
+          ],
+          "properties": {
+            "manifest": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "status": {
+              "enum": [
+                "not_downloaded",
+                "preparing",
+                "ready"
+              ]
+            },
+            "document_count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "qa_count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "document": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manifest",
+            "status",
+            "document_count",
+            "qa_count"
+          ],
+          "properties": {
+            "manifest": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "status": {
+              "enum": [
+                "not_downloaded",
+                "preparing",
+                "ready"
+              ]
+            },
+            "document_count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "qa_count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "bilingual": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manifest",
+            "status",
+            "document_count",
+            "qa_count"
+          ],
+          "properties": {
+            "manifest": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "status": {
+              "enum": [
+                "not_downloaded",
+                "preparing",
+                "ready"
+              ]
+            },
+            "document_count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "qa_count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

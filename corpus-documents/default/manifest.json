@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "domain": "default",
+  "dataset": "HotpotQA",
+  "source_repository": "hotpotqa/hotpot",
+  "dataset_version": "hotpot_dev_distractor_v1",
+  "status": "not_downloaded",
+  "downloaded_at": null,
+  "license": "CC-BY-SA-4.0",
+  "document_count": null,
+  "qa_count": null,
+  "languages": [
+    "en"
+  ],
+  "checksum": {},
+  "sources": [
+    {
+      "id": "hotpot_dev_distractor_v1",
+      "url": "http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json",
+      "version": "v1",
+      "repository_commit": "3635853403a8735609ee997664e1528f4480762a",
+      "git_blob_sha1": null,
+      "expected_sha256": null
+    }
+  ],
+  "artifacts": [],
+  "page_indexing": "not_applicable",
+  "notes": "T04 metadata only. No dataset bytes downloaded, counts measured, or corpus accepted. Domain preparation pending T05?T07; clean reproduction T08."
+}

@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T03 IMPLEMENTED/VERIFIED — Python, Docker local và contracts.** Project Python 3.12, uv lock, typed settings, Compose PG/Qdrant/Redis/API và MinIO profile đã được kiểm chứng. T03 có schema/snapshots/examples đã validate. API hiện chỉ serve health; business/auth/query/SSE runtime vẫn DESIGNED.
+> **T01–T04 IMPLEMENTED/VERIFIED — Python, Docker local, contracts và corpus tooling.** Project Python 3.12, uv lock, typed settings, Compose PG/Qdrant/Redis/API và MinIO profile đã được kiểm chứng. T03 có schema/snapshots/examples đã validate; T04 có shared corpus utilities và metadata checks, chưa corpus data. API hiện chỉ serve health; business/auth/query/SSE runtime vẫn DESIGNED.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -18,7 +18,7 @@
 | Python setup/settings/quality | VERIFIED | T01 |
 | Compose/services + health skeleton | VERIFIED local | T02 |
 | API v1 schemas/design snapshots/examples | VERIFIED structural contracts; business routes chưa mount | T03 |
-| Corpus | DESIGNED; chỉ có prompt người dùng | T04–T08 |
+| Corpus | T04 VERIFIED shared tooling/metadata; domain data/setup vẫn PLANNED | T04–T08 |
 | Auth/session/storage | DESIGNED | T09–T12 |
 | Parsing/OCR/index | DESIGNED | T13–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
@@ -348,7 +348,7 @@ Không xem raw chunks/answers/prompts của user, không xem secrets hoặc xóa
 <a id="r11"></a>
 ## R11. Corpus và quality evaluation
 
-**DESIGNED — T04–T08/T30–T31.**
+**T04 shared tooling/metadata IMPLEMENTED/VERIFIED; domain setup/data PLANNED — T05–T08; evaluation DESIGNED — T30–T31.**
 
 Prompt gốc: [Build RAG Evaluation Corpus](corpus-documents/Codex%20Prompt%20%E2%80%93%20Build%20RAG%20Evaluation%20Corpus.md).
 
@@ -359,14 +359,30 @@ Prompt gốc: [Build RAG Evaluation Corpus](corpus-documents/Codex%20Prompt%20%E
 - Evaluation chỉ ingest documents, không QA/answers/supporting facts/justification. Không lọc gold pages hoặc gold docs để làm đẹp retrieval.
 - XQuAD không có unanswerable; kiểm refusal/insufficient bằng fixture riêng và báo riêng.
 
-Commands mục tiêu **chưa tồn tại tại T00**:
+Prerequisites: Python `3.12.*`, `uv sync --locked --group dev --group api`; corpus utilities dùng stdlib, schema validation dùng existing dev-only `jsonschema`. Không cần DSNs/services/providers/models. Checks hiện có từ root:
 
-```text
-python corpus-documents/scripts/setup_corpus.py --all
-python corpus-documents/scripts/validate_corpus.py --all
+```powershell
+uv run python corpus-documents/scripts/setup_corpus.py --help
+uv run python corpus-documents/scripts/validate_corpus.py --metadata-only
+uv run pytest tests/unit/test_corpus_common.py
 ```
 
-T08 điền output/counts thật và clean reproduction. T30–T31 điền commands eval/splits/models/config, full retrieval + generation sample >=130 QA, metrics từng slice/gates/errors/costs, report locations. Không có điểm số baseline tại T00.
+`--metadata-only` chỉ kiểm inventory/schema/provenance và aggregate/domain status/count consistency; output nói corpus data chưa validate. [Corpus README](corpus-documents/README.md), [inventory](corpus-documents/source-license-inventory.json) và [manifest](corpus-documents/manifest.json) ghi actual state: cả ba `not_downloaded`, counts/download timestamps `null`, checksum/receipts rỗng. Git upstream blob IDs là pin metadata, không local SHA256. Utilities bounded retries/timeout/size, kiểm exact pins/content/length trước atomic replace, bảo toàn bytes bản cũ nếu fail; safe references chặn traversal/Windows alternate streams/symlink/junction. Equal write/cached pinned download idempotent; reuse receipt không tạo download timestamp mới. Caller phải giữ timestamp gốc; atomicity hiện per-file, complete domain publication ở T05–T08.
+
+Setup/full validation selections đã có parser nhưng hiện **fail nonzero** trước download/mutation vì domain chưa implement hoặc corpus chưa ready:
+
+```powershell
+uv run python corpus-documents/scripts/setup_corpus.py --all
+uv run python corpus-documents/scripts/setup_corpus.py --domain default
+uv run python corpus-documents/scripts/setup_corpus.py --domain document
+uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual
+uv run python corpus-documents/scripts/validate_corpus.py --all
+uv run python corpus-documents/scripts/validate_corpus.py --domain default
+```
+
+Domain preparation/validation lần lượt ở T05–T07; setup đầy đủ `--all` và clean reproduction chỉ nghiệm thu T08. Official pins: HotpotQA `3635853403a8735609ee997664e1528f4480762a` +dev distractor v1, FinanceBench `cc39aeb4afdf33909ee1412188bf89035950c2eb`, XQuAD `7d30520c717524000f0d9d2f9c10a069acd9d285`. HotpotQA/XQuAD README grant dataset CC BY-SA 4.0; không suy từ HotpotQA Apache code license. Legacy HotpotQA CMU link là HTTP/version-named, chưa có published checksum trong README đã inspect; T05 phải semantic-validate first bytes và ghi measured SHA256 để pin lần sau. Endpoint HEAD không chứng minh data integrity. FinanceBench GitHub tree/README thiếu explicit license; publisher HF card `e04404e3a97f69f79c14d42f24981a1c9c3bcd18` ghi CC BY-NC 4.0, chưa grant rõ GitHub QA/company PDFs. T06 cần user decision về permitted local evaluation use hoặc upstream grant. Không tự thay nguồn hoặc commit raw/PDF; attribution và quyền PDF riêng ở [licenses](corpus-documents/licenses/README.md).
+
+Troubleshooting hiện có: unavailable setup là T05–T07 chưa triển khai, không chạy legacy baseline; manifest/reference/schema fail cần sửa metadata trong scope, không ghi count/hash giả hoặc ingest QA. Corrupt/truncated download giữ prior bytes và fail rõ; transport/HTTP408/429/selected5xx retry tối đa cấu hình (default3/max5), verification/local-write failures không retry. HEAD pinned GitHub JSON/JSONL bốn endpoints trả200; CMU HotpotQA HTTP20s/HTTPS15s đều timeout dù official homepage vẫn trỏ linkHTTP. T05 phải verify actual access/download hoặc báo upstream availability blocker, không tự đổi mirror. Actual DoD/source/quality evidence [H-T04-A01](docs/handoffs.md#h-t04-a01). T04 không database/index/API migration hoặc corpus ingestion. T08 điền output/counts thật và clean reproduction. T30–T31 điền commands eval/splits/models/config, full retrieval + generation sample >=130 QA, metrics từng slice/gates/errors/costs, report locations; chưa có benchmark score.
 
 <a id="r12"></a>
 ## R12. Hiệu năng và observability

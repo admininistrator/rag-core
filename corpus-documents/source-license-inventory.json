@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-09-17T05:12:00.322179+00:00",
+  "datasets": [
+    {
+      "domain": "default",
+      "dataset": "HotpotQA",
+      "source_repository": "hotpotqa/hotpot",
+      "dataset_version": "hotpot_dev_distractor_v1",
+      "repository_url": "https://github.com/hotpotqa/hotpot",
+      "repository_commit_date": "2019-02-14T18:01:48Z",
+      "data_license": "CC-BY-SA-4.0",
+      "code_license": "Apache-2.0",
+      "license_status": "verified",
+      "license_references": [
+        {
+          "url": "https://github.com/hotpotqa/hotpot/blob/3635853403a8735609ee997664e1528f4480762a/README.md#license",
+          "scope": "dataset",
+          "statement": "The upstream README distinguishes the dataset's CC BY-SA 4.0 terms from Apache 2.0 code terms."
+        },
+        {
+          "url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "scope": "dataset",
+          "statement": "Retain attribution, license link and indication of normalization changes; ShareAlike applies to adaptations."
+        },
+        {
+          "url": "https://github.com/hotpotqa/hotpot/blob/3635853403a8735609ee997664e1528f4480762a/LICENSE.txt",
+          "scope": "code",
+          "statement": "Code license only; not the license used for corpus text or QA."
+        }
+      ],
+      "attribution": "Yang et al. (2018), HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering, https://arxiv.org/abs/1809.09600; retain original Wikipedia titles/provenance.",
+      "sources": [
+        {
+          "id": "hotpot_dev_distractor_v1",
+          "url": "http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json",
+          "version": "v1",
+          "repository_commit": "3635853403a8735609ee997664e1528f4480762a",
+          "git_blob_sha1": null,
+          "expected_sha256": null
+        }
+      ],
+      "data_commit_policy": "lightweight_metadata_and_normalized_qa_with_attribution_only",
+      "limitations": "Dataset bytes not downloaded in T04. The README and current official homepage pin the same link, not immutable data bytes. HTTP HEAD timed out at 20 seconds and HTTPS HEAD on the same CMU host timed out at 15 seconds in this environment. The official legacy link is HTTP and supplies no published checksum in the inspected README; T05 must verify access, validate real content and record measured SHA256 before reusing or claiming a byte pin, or report source availability BLOCKED. Never use an unofficial mirror silently."
+    },
+    {
+      "domain": "document",
+      "dataset": "FinanceBench",
+      "source_repository": "patronus-ai/financebench",
+      "dataset_version": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
+      "repository_url": "https://github.com/patronus-ai/financebench",
+      "repository_commit_date": "2024-12-03T17:29:01Z",
+      "data_license": "UNRESOLVED for GitHub files; publisher HF card declares CC-BY-NC-4.0",
+      "code_license": null,
+      "license_status": "unresolved",
+      "license_references": [
+        {
+          "url": "https://github.com/patronus-ai/financebench/blob/cc39aeb4afdf33909ee1412188bf89035950c2eb/README.md",
+          "scope": "dataset",
+          "statement": "The pinned GitHub tree/README provides public QA and document metadata but no explicit dataset license grant or LICENSE file. Public availability is not a redistribution license."
+        },
+        {
+          "url": "https://huggingface.co/datasets/PatronusAI/financebench/blob/e04404e3a97f69f79c14d42f24981a1c9c3bcd18/README.md",
+          "scope": "publisher_card",
+          "statement": "The publisher's dataset card declares cc-by-nc-4.0 and links GitHub PDFs. Record this as publisher-card evidence, without inferring identical GitHub/PDF licensing."
+        },
+        {
+          "url": "https://github.com/patronus-ai/financebench/tree/cc39aeb4afdf33909ee1412188bf89035950c2eb/pdfs",
+          "scope": "source_pdf",
+          "statement": "Company reports retain their owners' rights. No blanket PDF license grant was found in the inspected GitHub README/tree or publisher card. Preserve company/filename/doc_link attribution; no PDF redistribution or commits."
+        }
+      ],
+      "attribution": "Islam et al. (2023), FinanceBench: A New Benchmark for Financial Question Answering, https://arxiv.org/abs/2311.11944; source company and doc_link belong in document metadata.",
+      "sources": [
+        {
+          "id": "financebench_open_source",
+          "url": "https://raw.githubusercontent.com/patronus-ai/financebench/cc39aeb4afdf33909ee1412188bf89035950c2eb/data/financebench_open_source.jsonl",
+          "version": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
+          "repository_commit": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
+          "git_blob_sha1": "4aef1d43a443474ba193f158f2baf70550ff528d",
+          "expected_sha256": null
+        },
+        {
+          "id": "financebench_document_information",
+          "url": "https://raw.githubusercontent.com/patronus-ai/financebench/cc39aeb4afdf33909ee1412188bf89035950c2eb/data/financebench_document_information.jsonl",
+          "version": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
+          "repository_commit": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
+          "git_blob_sha1": "decdfa948630f289d05cc0048417b3b9107cfb9f",
+          "expected_sha256": null
+        }
+      ],
+      "data_commit_policy": "metadata_only_until_license_decision",
+      "limitations": "T06 requires an explicit user decision on permitted local evaluation use of official GitHub QA/PDFs or an upstream permission grant. No corpus bytes have been downloaded. Keep raw gold/evidence unchanged and zero-based page convention; resolve only PDFs referenced by official QA/metadata, not arbitrary URLs or all repository PDFs."
+    },
+    {
+      "domain": "bilingual",
+      "dataset": "XQuAD",
+      "source_repository": "google-deepmind/xquad",
+      "dataset_version": "7d30520c717524000f0d9d2f9c10a069acd9d285",
+      "repository_url": "https://github.com/google-deepmind/xquad",
+      "repository_commit_date": "2021-11-12T10:48:06Z",
+      "data_license": "CC-BY-SA-4.0",
+      "code_license": null,
+      "license_status": "verified",
+      "license_references": [
+        {
+          "url": "https://github.com/google-deepmind/xquad/blob/7d30520c717524000f0d9d2f9c10a069acd9d285/README.md#license",
+          "scope": "dataset",
+          "statement": "The upstream README explicitly grants dataset use under CC BY-SA 4.0."
+        },
+        {
+          "url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "scope": "dataset",
+          "statement": "Retain attribution, license link and indication of normalization changes; ShareAlike applies to adaptations."
+        }
+      ],
+      "attribution": "Artetxe, Ruder and Yogatama (2019), On the Cross-lingual Transferability of Monolingual Representations, https://arxiv.org/abs/1910.11856; English paragraphs derive from SQuAD v1.1 with professional parallel translations.",
+      "sources": [
+        {
+          "id": "xquad_en",
+          "url": "https://raw.githubusercontent.com/google-deepmind/xquad/7d30520c717524000f0d9d2f9c10a069acd9d285/xquad.en.json",
+          "version": "7d30520c717524000f0d9d2f9c10a069acd9d285",
+          "repository_commit": "7d30520c717524000f0d9d2f9c10a069acd9d285",
+          "git_blob_sha1": "cc0e3e8b94910097d29d2e9df5f266e1b30b2810",
+          "expected_sha256": null
+        },
+        {
+          "id": "xquad_vi",
+          "url": "https://raw.githubusercontent.com/google-deepmind/xquad/7d30520c717524000f0d9d2f9c10a069acd9d285/xquad.vi.json",
+          "version": "7d30520c717524000f0d9d2f9c10a069acd9d285",
+          "repository_commit": "7d30520c717524000f0d9d2f9c10a069acd9d285",
+          "git_blob_sha1": "2c0b4bfe0f5808424fd353dcaecd388ecab8b87f",
+          "expected_sha256": null
+        }
+      ],
+      "data_commit_policy": "lightweight_metadata_and_normalized_qa_with_attribution_only",
+      "limitations": "Dataset bytes not downloaded in T04; Git blob IDs are upstream metadata, not measured local SHA256 checksums. Full EN/VI paragraph/QA alignment and four slices must be validated in T07. XQuAD has no unanswerable questions and cannot establish a complete hallucination/refusal benchmark."
+    }
+  ]
+}
