@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T04 IMPLEMENTED/VERIFIED — Python, Docker local, contracts và corpus tooling.** Project Python 3.12, uv lock, typed settings, Compose PG/Qdrant/Redis/API và MinIO profile đã được kiểm chứng. T03 có schema/snapshots/examples đã validate; T04 có shared corpus utilities và metadata checks, chưa corpus data. API hiện chỉ serve health; business/auth/query/SSE runtime vẫn DESIGNED.
+> **T01–T04 nền tảng và T05 Default corpus IMPLEMENTED/VERIFIED local.** Python3.12/uv, Docker health skeleton, contracts, corpus tooling và default100QA/986documents từ nguồn HF được user phê duyệt đã kiểm chứng. API hiện chỉ serve health; business/auth/query/SSE runtime vẫn DESIGNED.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -18,7 +18,7 @@
 | Python setup/settings/quality | VERIFIED | T01 |
 | Compose/services + health skeleton | VERIFIED local | T02 |
 | API v1 schemas/design snapshots/examples | VERIFIED structural contracts; business routes chưa mount | T03 |
-| Corpus | T04 VERIFIED shared tooling/metadata; domain data/setup vẫn PLANNED | T04–T08 |
+| Corpus | T04 tooling và T05 default data VERIFIED; document/bilingual/full reproduction PLANNED | T04–T08 |
 | Auth/session/storage | DESIGNED | T09–T12 |
 | Parsing/OCR/index | DESIGNED | T13–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
@@ -348,7 +348,7 @@ Không xem raw chunks/answers/prompts của user, không xem secrets hoặc xóa
 <a id="r11"></a>
 ## R11. Corpus và quality evaluation
 
-**T04 shared tooling/metadata IMPLEMENTED/VERIFIED; domain setup/data PLANNED — T05–T08; evaluation DESIGNED — T30–T31.**
+**T04 tooling/T05 default setup + data VERIFIED local; other domains/full reproduction PLANNED — T06–T08; evaluation DESIGNED — T30–T31.**
 
 Prompt gốc: [Build RAG Evaluation Corpus](corpus-documents/Codex%20Prompt%20%E2%80%93%20Build%20RAG%20Evaluation%20Corpus.md).
 
@@ -359,30 +359,35 @@ Prompt gốc: [Build RAG Evaluation Corpus](corpus-documents/Codex%20Prompt%20%E
 - Evaluation chỉ ingest documents, không QA/answers/supporting facts/justification. Không lọc gold pages hoặc gold docs để làm đẹp retrieval.
 - XQuAD không có unanswerable; kiểm refusal/insufficient bằng fixture riêng và báo riêng.
 
-Prerequisites: Python `3.12.*`, `uv sync --locked --group dev --group api`; corpus utilities dùng stdlib, schema validation dùng existing dev-only `jsonschema`. Không cần DSNs/services/providers/models. Checks hiện có từ root:
+Prerequisites: Python `3.12.*`, `uv sync --locked --group dev --group api`; shared utilities stdlib, schema dev-only jsonschema; T05 thêm dev-only pinned `pyarrow==25.0.1` để đọc approved Parquet, không vào API image/model runtime. Không cần DSNs/services/providers/models. Commands từ root:
 
 ```powershell
 uv run python corpus-documents/scripts/setup_corpus.py --help
 uv run python corpus-documents/scripts/validate_corpus.py --metadata-only
 uv run pytest tests/unit/test_corpus_common.py
+uv run python corpus-documents/scripts/setup_corpus.py --domain default
+uv run python corpus-documents/scripts/validate_corpus.py --domain default
+uv run pytest tests/unit/test_corpus_default.py
 ```
 
-`--metadata-only` chỉ kiểm inventory/schema/provenance và aggregate/domain status/count consistency; output nói corpus data chưa validate. [Corpus README](corpus-documents/README.md), [inventory](corpus-documents/source-license-inventory.json) và [manifest](corpus-documents/manifest.json) ghi actual state: cả ba `not_downloaded`, counts/download timestamps `null`, checksum/receipts rỗng. Git upstream blob IDs là pin metadata, không local SHA256. Utilities bounded retries/timeout/size, kiểm exact pins/content/length trước atomic replace, bảo toàn bytes bản cũ nếu fail; safe references chặn traversal/Windows alternate streams/symlink/junction. Equal write/cached pinned download idempotent; reuse receipt không tạo download timestamp mới. Caller phải giữ timestamp gốc; atomicity hiện per-file, complete domain publication ở T05–T08.
+`--metadata-only` chỉ kiểm inventory/schema/provenance/aggregate; không nghiệm thu data. [Corpus README](corpus-documents/README.md), [inventory](corpus-documents/source-license-inventory.json), [manifest](corpus-documents/manifest.json) ghi defaultready100QA/986documents và hai domain not_downloaded/null counts/timestamps. Default source có measured7405rows/27,452,575B; JSON conversion hash và distributions/report tại `default/qa/preparation.json`, document ID/path/hash/source-question map tại `default/qa/documents.json` (evaluator only). Markdown chỉ title/dataset/document ID/original paragraph, toàn distractors được materialize. 996instances dedup còn986; identity dùng title+exact concatenated sentences. Sample seed42 cân bằng available type/level:50bridge/50comparison/allhard; upstream không cómedium. Validator recompute source conversion, sampledIDs, gold/type/level/supporting-only mapping, everydocument/receipt/count và exact file set.
 
-Setup/full validation selections đã có parser nhưng hiện **fail nonzero** trước download/mutation vì domain chưa implement hoặc corpus chưa ready:
+Utilities bounded retries/timeout/size, exact pins/content/length trước atomic replace; references reject traversal/Windows streams/links/junctions. Default setup lock `.downloads/default-setup.lock` ngăn concurrent writers; stage nguyên domain, validate rồi swap + aggregate publication; ordinary failure/interruption rollback giữ last good. Readers/eval phải chờ setup kết thúc (directory rename không là concurrent reader transaction). Equal trees không publish lại, giữ timestamp/mtimes. Source download receipt giữ original downloaded_at khi cache reuse; failed stages/rollback backups nằm ignored `.downloads/default-stage-*`, không tự xóa. Unknown files trong default bị refuse, không overwrite user files. Nếu lock còn sau process crash: kiểm process và stage/backup trước khi operator gỡ lock; không tự bypass lock hoặc xóa dữ liệu.
+
+Các selections còn **fail nonzero** trước download/mutation vì domain chưa implement hoặc corpus chưa ready:
 
 ```powershell
 uv run python corpus-documents/scripts/setup_corpus.py --all
-uv run python corpus-documents/scripts/setup_corpus.py --domain default
 uv run python corpus-documents/scripts/setup_corpus.py --domain document
 uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual
 uv run python corpus-documents/scripts/validate_corpus.py --all
-uv run python corpus-documents/scripts/validate_corpus.py --domain default
 ```
 
-Domain preparation/validation lần lượt ở T05–T07; setup đầy đủ `--all` và clean reproduction chỉ nghiệm thu T08. Official pins: HotpotQA `3635853403a8735609ee997664e1528f4480762a` +dev distractor v1, FinanceBench `cc39aeb4afdf33909ee1412188bf89035950c2eb`, XQuAD `7d30520c717524000f0d9d2f9c10a069acd9d285`. HotpotQA/XQuAD README grant dataset CC BY-SA 4.0; không suy từ HotpotQA Apache code license. Legacy HotpotQA CMU link là HTTP/version-named, chưa có published checksum trong README đã inspect; T05 phải semantic-validate first bytes và ghi measured SHA256 để pin lần sau. Endpoint HEAD không chứng minh data integrity. FinanceBench GitHub tree/README thiếu explicit license; publisher HF card `e04404e3a97f69f79c14d42f24981a1c9c3bcd18` ghi CC BY-NC 4.0, chưa grant rõ GitHub QA/company PDFs. T06 cần user decision về permitted local evaluation use hoặc upstream grant. Không tự thay nguồn hoặc commit raw/PDF; attribution và quyền PDF riêng ở [licenses](corpus-documents/licenses/README.md).
+Default data verified theo ngoại lệ user-approved ngày2026-09-17 tại [P11](docs/plan.md#p11): CMU HTTP/HTTPS GET timeout20s, dùng HF community derivative `hotpotqa/hotpot_qa` distractor/validation revision `1908d6afbbead072334abe2965f91bd2709910ab`. Exact published/downloaded Parquet SHA256 `c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6` và bytes27452575; HTTPS delivery allowlist chỉ exact HF source + inspected `us.aws.cdn.hf.co/xet-bridge-us/`, mandatory pin, signed queries không log. Không claim official author mirror/CMU byte-equivalence; sourceoriginal repository vẫn `3635853403a8735609ee997664e1528f4480762a`, legacy JSON là semantic conversion. Dataset/card CC BY-SA4.0 và attribution/change notices trong [licenses](corpus-documents/licenses/README.md). One full-source annotation anomaly: ID`5ae61bfd5542992663a4f261`, `Jimmy Butler (basketball)`, index902/5sentences; giữ rawgold, report ngoài100subset. Selected sentence ranges/title checks nghiêm; anomaly trong sample fail, không sửa/drop/resample. Không claim toàn7405annotations sạch.
 
-Troubleshooting hiện có: unavailable setup là T05–T07 chưa triển khai, không chạy legacy baseline; manifest/reference/schema fail cần sửa metadata trong scope, không ghi count/hash giả hoặc ingest QA. Corrupt/truncated download giữ prior bytes và fail rõ; transport/HTTP408/429/selected5xx retry tối đa cấu hình (default3/max5), verification/local-write failures không retry. HEAD pinned GitHub JSON/JSONL bốn endpoints trả200; CMU HotpotQA HTTP20s/HTTPS15s đều timeout dù official homepage vẫn trỏ linkHTTP. T05 phải verify actual access/download hoặc báo upstream availability blocker, không tự đổi mirror. Actual DoD/source/quality evidence [H-T04-A01](docs/handoffs.md#h-t04-a01). T04 không database/index/API migration hoặc corpus ingestion. T08 điền output/counts thật và clean reproduction. T30–T31 điền commands eval/splits/models/config, full retrieval + generation sample >=130 QA, metrics từng slice/gates/errors/costs, report locations; chưa có benchmark score.
+Document/bilingual preparation T06–T07; all-domain setup/clean reproduction T08. FinanceBench pin`cc39aeb4afdf33909ee1412188bf89035950c2eb`, rights GitHub/PDF unresolved dù publisher card`e04404e3a97f69f79c14d42f24981a1c9c3bcd18` declaresCC-BY-NC4.0; user decision/upstreamgrant trướcT06. XQuAD pin`7d30520c717524000f0d9d2f9c10a069acd9d285`, datasetCC-BY-SA4.0. Raw/Parquet/convertedJSON/materializeddocuments/PDF ignored, lightweightQA/index/report tracked theo verifiedterms. Không arbitrary source override hoặc mirror khác.
+
+Troubleshooting: unavailable document/bilingual/allsetup đúng pendingtasks; default network failure giữ prior corpus và forensicstage, không coi cache-only là clean download proof. Corrupt/truncated download fail trước publication; shared retries default3/max5, T05 transfer2attempts/30s/128MiB; verification/local-write failures không retry. Source checksum/conversion/gold/file drift fail nonzero, sửa trong scope và giữ origin evidence, không fabricate counts/hash hoặc ingest QA. Actual live setup/validator/rerun và37 syntheticdefaulttests tại [H-T05-A02](docs/handoffs.md#h-t05-a02); historical tooling [H-T04-A01](docs/handoffs.md#h-t04-a01). Không DB/index/API migration/production ingestion. Full clean reproduction T08; evaluation reports/metrics/providercosts T30–T31, chưa benchmark score.
 
 <a id="r12"></a>
 ## R12. Hiệu năng và observability

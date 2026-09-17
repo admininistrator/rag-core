@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "verified_at": "2026-09-17T05:12:00.322179+00:00",
+  "verified_at": "2026-09-17T16:49:45.918980+00:00",
   "datasets": [
     {
       "domain": "default",
       "dataset": "HotpotQA",
       "source_repository": "hotpotqa/hotpot",
-      "dataset_version": "hotpot_dev_distractor_v1",
+      "dataset_version": "hotpot_dev_distractor_v1 / HF distractor-validation 1908d6afbbead072334abe2965f91bd2709910ab",
       "repository_url": "https://github.com/hotpotqa/hotpot",
       "repository_commit_date": "2019-02-14T18:01:48Z",
       "data_license": "CC-BY-SA-4.0",
@@ -27,21 +27,26 @@
           "url": "https://github.com/hotpotqa/hotpot/blob/3635853403a8735609ee997664e1528f4480762a/LICENSE.txt",
           "scope": "code",
           "statement": "Code license only; not the license used for corpus text or QA."
+        },
+        {
+          "url": "https://huggingface.co/datasets/hotpotqa/hotpot_qa/blob/1908d6afbbead072334abe2965f91bd2709910ab/README.md",
+          "scope": "dataset",
+          "statement": "Pinned community/HF-maintained derivative card declares CC BY-SA 4.0 and cites HotpotQA. User explicitly approved this exact distractor/validation source on 2026-09-17 after canonical CMU GET timeouts; it is not claimed to be an official author mirror."
         }
       ],
       "attribution": "Yang et al. (2018), HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering, https://arxiv.org/abs/1809.09600; retain original Wikipedia titles/provenance.",
       "sources": [
         {
-          "id": "hotpot_dev_distractor_v1",
-          "url": "http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json",
-          "version": "v1",
-          "repository_commit": "3635853403a8735609ee997664e1528f4480762a",
+          "id": "hf_hotpotqa_distractor_validation",
+          "url": "https://huggingface.co/datasets/hotpotqa/hotpot_qa/resolve/1908d6afbbead072334abe2965f91bd2709910ab/distractor/validation-00000-of-00001.parquet",
+          "version": "1908d6afbbead072334abe2965f91bd2709910ab",
+          "repository_commit": "1908d6afbbead072334abe2965f91bd2709910ab",
           "git_blob_sha1": null,
-          "expected_sha256": null
+          "expected_sha256": "c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6"
         }
       ],
       "data_commit_policy": "lightweight_metadata_and_normalized_qa_with_attribution_only",
-      "limitations": "Dataset bytes not downloaded in T04. The README and current official homepage pin the same link, not immutable data bytes. HTTP HEAD timed out at 20 seconds and HTTPS HEAD on the same CMU host timed out at 15 seconds in this environment. The official legacy link is HTTP and supplies no published checksum in the inspected README; T05 must verify access, validate real content and record measured SHA256 before reusing or claiming a byte pin, or report source availability BLOCKED. Never use an unofficial mirror silently."
+      "limitations": "T05 source exception approved by user on 2026-09-17: HF community hotpotqa/hotpot_qa distractor/validation revision 1908d6afbbead072334abe2965f91bd2709910ab. Published Parquet SHA256 c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6 and size27452575; T05 independently measured the matching Parquet hash/bytes and 7405 rows; the default manifest/report contain actual receipts, distribution and one unchanged source annotation anomaly outside the strict100-QA subset. Official CMU HTTP/HTTPS bounded GET both timed out. Legacy JSON is a semantic conversion preserving id/question/answer/type/level/context/supporting_facts, not the original CMU bytes; direct CMU byte comparison unavailable. Keep attribution and CC BY-SA 4.0 adaptation notices. No arbitrary mirror override."
     },
     {
       "domain": "document",

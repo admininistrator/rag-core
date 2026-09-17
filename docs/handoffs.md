@@ -4,10 +4,10 @@
 
 ## Current checkpoint
 
-- **Current:** Phase1 / T04 / T04-A01 completion candidate; worker `/root/t04_a01`, requested `gpt-5.6-sol`/`xhigh`, fresh `fork_turns="none"`, started 2026-09-17 12:03 +07:00. Runtime metadata verification/hash/end do root nghiệm thu post-commit. Baseline CLEAN `main`/accepted T03 `e4db5e3203b6c7052caa8943118b1999d84f51d8`; T01 accepted `ff8069abfd2e41fb9618eb7d35fa22bf220a39d6`. Previous attempts/evidence remain below.
-- **Boundary:** 19 files corpus utilities/CLI/schema/inventory/manifests/unit test/docs; setup help/80 synthetic unit/Ruff/mypy14/locked sync/metadata PASS, unavailable full setup exit2/validation exit1 expected. No corpus bytes or domain pipeline/business behavior. [H-T04-A01](#h-t04-a01), [S-T04-A01](implementation-summary.md#s-t04-a01). Completion subject `feat(T04): add reproducible corpus tooling`, COMPLETE only after successful commit/root review.
-- **Next/risks:** root review then fresh worker T05; official CMU Hotpot HEAD HTTP20s/HTTPS15s timed out, no mirror chosen. FinanceBench GitHub/PDF grant unresolved, publisher HF card CC-BY-NC-4.0 recorded separately; user decision required before T06 downloads. Full corpus clean reproduction T08; runtime business/providers/UI still DESIGNED.
-- **Invariants:** mọi query current-session-only, index retained không cấp quyền; app sở hữu source/history. Không sửa prompt corpus/plan/AGENTS, không cloud/server/Scarlet/push/merge. Worker mới từng attempt, chỉ một worker active, Orchestrator read-only.
+- **Current:** Phase1 / T05 / T05-A02 completion candidate; sole worker `/root/t05_a02`, requested `gpt-5.6-sol`/`xhigh`, fresh `fork_turns="none"`; actual runtime/end/hash verified by root post-commit. Started 2026-09-17 23:22 +07:00; baseline CLEAN `main`/accepted T04 `ad49ecc53a1998758f419e00ac5d03bf468ba989`. T05-A01 runtime quota event created no repo changes; all history preserved.
+- **Boundary:** user-approved pinned HF derivative source after actual canonical CMU GET timeouts; real default setup/validator/rerun PASS100QA/986documents,993stablefilehashes/mtimes/100IDs/downloadtimestamp;37syntheticdefault+82commontests/Ruff/mypy15 PASS. [H-T05-A02](#h-t05-a02), [S-T05-A02](implementation-summary.md#s-t05-a02). Completion subject `feat(T05): prepare HotpotQA evaluation corpus`; COMPLETE only after actualcommit/rootreview. No T06/T07/API/model/retrieval work.
+- **Next/risks:** rootreview then freshT06 only after FinanceBench rights decision. HF community/HF-maintained derivative is not claimed official-author mirror or byte-identical CMU JSON; one unchanged full-source sentence annotation anomaly outside deterministic100 recorded, sampled annotations pass. Setup writerlock/rollback protects ordinary errors; readers wait for setup, crash recovery requires inspecting retainedstage/backup. Full clean reproduction T08; business/providers/UI still DESIGNED.
+- **Invariants:** query current-session-only, retained index không cấp quyền; app sở hữu source/history. Prompt corpus/AGENTS nguyên byte; plan chỉ thêm user-approved T05 sourceexception tạiP11. Không cloud/server/Scarlet/push/merge. Worker mới/attempt, một worker active, Orchestrator read-only.
 
 ## Cách ghi bằng chứng
 
@@ -1770,3 +1770,406 @@ Cached whitespace stdoutempty; final source365lines/test546lines, actual80-test
 evidence above matches the staged source. Restage only this handoff and run cached
 whitespace/19count/no-unstaged assertions once more before the actual task commit;
 this output-only addition changes docs line counts, not code/tests or schema pins.
+
+<a id="h-t05-a01"></a>
+## H-T05-A01 — Phase 1 / T05 / runtime quota recovery
+
+Root recovery brief reported worker `/root/t05_a01` ended immediately with this
+runtime event (not a shell command/output):
+
+```text
+Agent errored: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:46 PM.
+```
+
+No repo changes/attempt notes/shell execution/commit were created. Start/end/timezone
+are not inferred from the runtime message. User said continue; root verified only
+root was live, worktree CLEAN, T05 TODO and accepted T04 HEAD. A02 is a fresh worker;
+A01 is never reused and its nonexistent shell logs are not fabricated.
+
+<a id="h-t05-a02"></a>
+## H-T05-A02 — Phase 1 / T05 / attempt T05-A02
+
+### Identity, baseline, scope and configuration
+
+- Sole worker `/root/t05_a02`, requested `gpt-5.6-sol`/`xhigh`, fresh `fork_turns="none"`;
+  actual runtime checked by root, not inferred from prompt. Started2026-09-17 23:22+07:00;
+  end/hash/status returned post-commit. No children/next task.
+- **cwd for every command below:** `C:\Users\Admin\Documents\GitHub\rag-core`, Windows
+  PowerShell, Asia/Bangkok. CPython3.12.4/uv0.11.16, dev+api groups; no DSNs/services,
+  provider/model/productionstorage/index or secrets read. Actual source HF revision
+  `1908d6afbbead072334abe2965f91bd2709910ab`; corpus-only, no live RAG/provider benchmark.
+- Prefix used verbatim by each uv command:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python';
+```
+
+Separate baseline commands `git status --short`, `git branch --show-current`,
+`git rev-parse HEAD`, each exit0; expected CLEAN accepted T04, actual:
+
+```text
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+main
+ad49ecc53a1998758f419e00ac5d03bf468ba989
+```
+
+Read AGENTS/T05/fullT04 execution notes/P01/P11/P13/fulloriginalprompt/T04handoff+summary/
+README/RUNBOOK/corpusREADME before edits. Initially allowed default/sharedtools/QA/
+metadata/common+defaulttests/docs; user source authorization later added only P11
+exception, exact HF source/CDN/Parquetdevdependency.22completionpaths, no other
+domain preparation, API/model/retrieval/Scarlet/storage modification or push/merge.
+
+<a id="h-t05-a02-source"></a>
+### Actual source access failures, explicit source authorization and verified bytes
+
+Initial curl helper with `$ErrorActionPreference='Stop'` and progress stderr exited1
+on PowerShell `NativeCommandError` before useful connection evidence. It is not
+counted as a source timeout. Corrected actual commands:
+
+```powershell
+$ErrorActionPreference='Continue'; curl.exe --silent --show-error --fail --location --max-time 20 --output corpus-documents/.downloads/t05-a02-official-access.json http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t05-a02-access-sandbox-final.log; exit $LASTEXITCODE
+```
+
+Sandbox exit7, actual `curl: (7) Failed to connect to curtis.ml.cmu.edu port 80 after 5 ms: Couldn't connect to server`.
+Same command with approved network and log `t05-a02-access-approved.log` exited28:
+`curl: (28) Connection timed out after 20008 milliseconds`. Same-host HTTPS
+command differed only URL=`https://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json`,
+output=`t05-a02-official-https-access.json`, log=`t05-a02-access-https-approved.log`;
+approved exit28, actual `curl: (28) Connection timed out after 20002 milliseconds`.
+Expected fetch official JSON; actual source unavailable, zero corpus publication.
+
+Primary web inspection: official homepage, pinned Hotpot README and download.sh
+still point to CMUHTTPv1 and designate no alternative in those sources. Root
+researched the specific HF derivative and asked the user; user replied verbatim:
+**“Cho phép bản Hugging Face (đề xuất)”**. Authorization received in this active A02
+on2026-09-17, before any HF dataset download. [P11](plan.md#p11) records exception
+without editing originalprompt or gold/seed/target/DoD. Community/HF-maintained
+derivative, not asserted official-author mirror or byte-identical CMUJSON.
+
+Approved network public metadata command, exit0:
+
+```powershell
+$ErrorActionPreference='Stop'; $uri='https://huggingface.co/api/datasets/hotpotqa/hotpot_qa/tree/1908d6afbbead072334abe2965f91bd2709910ab/distractor?expand=false'; $tree=Invoke-RestMethod -Uri $uri -TimeoutSec 20; $tree | Where-Object {$_.path -eq 'distractor/validation-00000-of-00001.parquet'} | Select-Object path,size,@{Name='published_sha256';Expression={$_.lfs.oid}} | Format-List; $card=(Invoke-WebRequest -UseBasicParsing -Uri 'https://huggingface.co/datasets/hotpotqa/hotpot_qa/raw/1908d6afbbead072334abe2965f91bd2709910ab/README.md' -TimeoutSec 20).Content; $card -split "`n" | Where-Object {$_ -match '(license:|num_examples: 7405|homepage|HotpotQA)' } | Select-Object -First 12
+```
+
+Actual excerpt (metadata count was not claimed measured until downloaded):
+
+```text
+path             : distractor/validation-00000-of-00001.parquet
+size             : 27452575
+published_sha256 : c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6
+    num_examples: 7405
+HotpotQA is distributed under a [CC BY-SA 4.0 License](http://creativecommons.org/licenses/by-sa/4.0/).
+```
+
+Pinned commit page also identifies HF staff Parquetconversion; sourcecard attributes
+Yang etal./originalWikipedia. Originalcode Apache2 does not relicense dataset.
+QA/index/report adaptations CC BY-SA4 with attribution/change notices; rawdatasets/
+Parquet/convertedJSON/materializeddocuments remain ignored, no companyPDFdownload.
+
+First HF CLI run (`--domain default`, approvednetwork), log
+`.downloads/t05-a02-default-setup-live.log`, exit1, actual:
+`CORPUS SETUP: FAIL - default: Download failed after 1 attempt(s): source verification or local publication failure; no data acceptance`.
+Cause: overly narrow delivery-host allowlist, no published corpus. Bounded HEAD
+inspection via inline Python `HTTPRedirectHandler`, `.venv/Scripts/python.exe -`,
+request exact `common.APPROVED_HF_URL` with timeout20, emitted only scheme/hostname/
+path and boolean signed-query presence (never query contents), exit0/log
+`.downloads/t05-a02-hf-delivery-hosts.log`:
+
+```text
+redirect 302 https us.aws.cdn.hf.co /xet-bridge-us/621ffdd236468d709f181e65/6f4264cffe19511caba92594db23f1a32eb76fdeebbb04f7a98a589a3726423e signed_query_present=True
+final status=200 host=us.aws.cdn.hf.co content_length=27452575
+```
+
+Correction scopes redirects to exactapprovedHFstart + observedHTTPSdeliveryhost/
+`/xet-bridge-us/`, mandatorypublishedSHA256, no arbitrary sourceoverride. Next CLI
+run/log`default-setup-live-final.log`, exit1, same genericfailure caused semanticgate.
+Transportpin verification separated from domainsemantic validation so verified
+stagedbytes remain on failure. Diagnostic CLI/log`default-setup-semantic.log`, exit1:
+`CORPUS SETUP: FAIL - default: HotpotQA supporting fact has no valid context sentence; no data acceptance`.
+Last-good state remained unprepared manifest/aggregate; forensic stages retained.
+Private mkdtemp directories from approved process denied sandbox inspection; new
+stages use UUID-named normal mkdir inheriting repositoryACL, not userACL changes.
+
+Real primary-byte diagnostic used inline Python `.venv/Scripts/python.exe -`,
+`parquet_records`+`sha256_file` on retained
+`.downloads/default-stage-622dc0af97b9411cbbb5c04c281cd888/default/raw/hf-hotpotqa-distractor-validation.parquet`,
+checked every sourcefact against title/sentencecount and ambiguous titles, exit0,
+log`.downloads/t05-a02-source-diagnostics.log`; actual:
+
+```text
+actual_sha256=c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6
+actual_bytes=27452575
+actual_rows=7405
+distribution={"by_level": {"hard": 7405}, "by_type": {"bridge": 5918, "comparison": 1487}, "strata": {"bridge/hard": 5918, "comparison/hard": 1487}}
+invalid_facts=1 ambiguous_titles=0
+[{"id": "5ae61bfd5542992663a4f261", "title": "Jimmy Butler (basketball)", "index": 902, "sentence_count": 5}]
+```
+
+Separate inline diagnostic `sample_records(records)` before changing source-range
+handling, exit0/log`source-selection-diagnostics.log`, actual:
+
+```text
+selected_qa=100
+upstream_invalid_fact_selected=False
+selected_distribution={'by_type': {'bridge': 50, 'comparison': 50}, 'by_level': {'hard': 100}, 'strata': {'bridge/hard': 50, 'comparison/hard': 50}}
+```
+
+Root confirmed technicalcorrection withinT05: preserve exactrawannotation and
+unchanged sample; fullsource structure/title checks and explicitanomalyreport,
+strictsample ranges/mapping, no goldbaseddrop/edit/resample. Selectedanomaly would
+fail. This removes an invented allupstream-range gate; all requiredsubset DoD gates
+stay strict. Tests cover anomalyinside/outside sample; no claim7405annotationsclean.
+
+<a id="h-t05-a02-dod1"></a>
+### DoD-1 — Separate real setup and default validation
+
+Commands below use envprefix/cwd/config above; expected realapprovedsourcebytes,
+100uniqueQA, allcontexts/distractors materialized, supporting-only originalgold,
+validmanifests/receipts/strictselectedranges. Actual live setup approvednetwork:
+
+```powershell
+uv run python corpus-documents/scripts/setup_corpus.py --domain default 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t05-a02-default-setup-accepted.log; exit $LASTEXITCODE
+```
+
+Exit0, actual:
+
+```text
+CORPUS SETUP: PASS - default/HotpotQA; documents=986 QA=100 seed=42 source_sha256=c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6
+Selected distribution: {'by_type': {'bridge': 50, 'comparison': 50}, 'by_level': {'hard': 100}, 'strata': {'bridge/hard': 50, 'comparison/hard': 50}}
+```
+
+Separate actual validation command, normal sandbox/read-only:
+
+```powershell
+uv run python corpus-documents/scripts/validate_corpus.py --domain default 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t05-a02-default-validation.log; exit $LASTEXITCODE
+```
+
+Exit0, actual:
+
+```text
+CORPUS VALIDATION: PASS - default; documents=986 QA=100 seed=42 source_sha256=c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6
+```
+
+Validation re-decodes pinnedParquet and compares exactconvertedJSON, regenerated
+sample/gold/type/level/facts, documentbodies/QA/index/report, every991receipt bytehash/
+size/role, measuredcounts and exactmanagedfileset.996paragraphinstances become986
+documents after10duplicateinstances; allcontextparagraphs materialized. Live slice
+has0titleswithdifferenttext collisions; synthetictests prove that edge case.
+No RAG/provider/model benchmark or productioningestion. **DoD-1 PASS** under explicit
+user source exception; canonicalCMUdownload itself remains unavailable.
+
+<a id="h-t05-a02-dod2"></a>
+### DoD-2 — Actual rerun stability and meaningful synthetic tests
+
+Pre-rerun inline command `.venv/Scripts/python.exe -` records sourcefiles as actual
+`sha256_file`+`st_mtime_ns`, aggregate+all defaultfiles, selectedIDlist and original
+downloadtimestamp into ignored`.downloads/t05-a02-repro-before.json`; exit0/log
+`repro-before.log`: `Recorded actual pre-rerun hashes/mtimes for 993 files and 100 unique selected IDs.`
+Separate required rerun, normal sandbox/cache reuse:
+
+```powershell
+uv run python corpus-documents/scripts/setup_corpus.py --domain default 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t05-a02-default-setup-rerun.log; exit $LASTEXITCODE
+```
+
+Exit0, same exact two-linePASS output as acceptedsetup above. Post-rerun inline
+`.venv/Scripts/python.exe -` compares fullfile maps/hash+mtime, IDs/count uniqueness,
+timestamp, actual986MD count and calls`validate_default`; exit0/log`repro-after.log`:
+
+```text
+REPRODUCIBILITY: PASS - 993 file hashes/mtimes unchanged; 100 IDs unchanged and unique; 986 documents; original download timestamp retained; validator rejects duplicate/unmanaged paths.
+downloaded_at=2026-09-17T16:39:41.497557+00:00
+selected_ids_sha256=40045c404f9bc627004e7c48bd2df9ac6165be2342595832ed7590487e436d63
+converted_json_sha256=b09f53f982e5bd22197c5f2e775bc324c087f438592eb6d95fa5fa3338887d27
+```
+
+Actual no-duplicate file sets verified by validator; duplicatepath/content scenarios
+covered in unitfaults. Snapshot includes993paths (986docs+3QA+2raw+defaultmanifest+
+aggregate). ConvertedJSON hash is conversionbytes, not originalCMUrawhash.
+
+Required defaulttests run separately; earlier33/35PASS logs preserved, final37 adds
+two-title multi-hop mapping and existing-ready-data publicationrollback regressions:
+
+```powershell
+uv run pytest tests/unit/test_corpus_default.py 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t05-a02-default-tests-completion.log; exit $LASTEXITCODE
+```
+
+Exit0, actualexcerpt:
+
+```text
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+collected 37 items
+tests\unit\test_corpus_default.py .....................................  [100%]
+============================= 37 passed in 56.53s =============================
+```
+
+Tests are synthetic/no network and never liveacceptance substitutes. Cover supporting
+versus distractors/multiple supporttitles, originalgold/type/level, same-titledifferent
+content and sharedparagraph dedup, no provenance/goldinMD, sourceorder-independent
+seed42sampling/differentseeds/exhaustedstrata/hardonlysource, invalidsource/ambiguous
+withinQA title/boolindex/undersizedsource, exactParquetconversion, anomalyoutside
+sample preservesIDs/gold and inside fails withoutresampling, rerunhashes/mtime/time,
+download/stagedvalidation/directoryrename/aggregate/KeyboardInterrupt rollback including
+existingreadydata, cache/lock/no userfileoverwrite, primarypin/convertedJSON/gold/support/
+document/duplicate/missing/receiptcorruption rejection. **DoD-2 PASS:100realQA and
+stableactualrerun;37meaningfultests,0skip.**
+
+<a id="h-t05-a02-quality"></a>
+### D2 — Locked environment and applicable shared quality checks
+
+Approved public PyPI metadata read `Invoke-RestMethod https://pypi.org/pypi/pyarrow/json
+-TimeoutSec20`, exit0, actual`pyarrow latest=25.0.1 python=>=3.10`; exactpin in existingdevgroup.
+Separate `uv lock` with envprefix/tee`corpus-documents/.downloads/t05-a02-lock.log`,
+approved network, exit0: `Resolved 78 packages in 7.31s` / `Added pyarrow v25.0.1`.
+Separate actual command:
+
+```powershell
+uv sync --locked --group dev --group api 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t05-a02-sync.log; exit $LASTEXITCODE
+```
+
+Approved publicPyPI download, exit0, realexcerpt:
+
+```text
+Resolved 78 packages in 1ms
+Downloading pyarrow (26.7MiB)
+ Downloaded pyarrow
+Prepared 2 packages in 1m 19s
+Uninstalled 1 package in 7ms
+Installed 2 packages in 414ms
+ + pyarrow==25.0.1
+ ~ rag-core==0.1.0 (from file:///C:/Users/Admin/Documents/GitHub/rag-core)
+```
+
+Dev-onlyreader; `docker/api.Dockerfile:14` remains
+`uv sync --locked --no-dev --group api --no-editable`, no pyarrow/API dependency addition.
+
+```powershell
+uv run ruff check . 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t05-a02-ruff-final.log; exit $LASTEXITCODE
+uv run mypy src corpus-documents/scripts 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t05-a02-mypy-final.log; exit $LASTEXITCODE
+uv run pytest tests/unit/test_corpus_common.py 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t05-a02-common-tests-final.log; exit $LASTEXITCODE
+```
+
+Each command ran separately, each exit0, expected relevantquality/stricttyping/no
+regression or liveunitdownload. Actual respectively`All checks passed!`,
+`Success: no issues found in 15 source files`, and:
+
+```text
+collected 82 items
+tests\unit\test_corpus_common.py ....................................... [ 47%]
+...........................................                              [100%]
+============================= 82 passed in 10.48s =============================
+```
+
+Commonunavailable regressions now skip implementeddefaultCLI networkcalls, mock only
+its failure in a unit test; unimplementeddomains/all setup still nonzero/nonmutation.
+Readydefault metadata expected and fabricatednotdownloaded checks constructed from
+explicitsyntheticnotdownloaded state. Added exactHFURL/publishedpin/HTTPSsigneddelivery
+scope tests; existingdownload/path/JSON/schema tests retained. Alllogs public/synthetic,
+ignored`corpus-documents/.downloads/`; no secrets/privatecontent to redact. Signed
+query contents intentionally never emitted (hostdiagnostic prints boolean only).
+
+<a id="h-t05-a02-review"></a>
+### D1/D3/D4/D5/D6 — Completion review boundary
+
+D1 dependency/scope/prompt and D3 eachliveDoD/commands/config/exit/actual evidence
+above; D4 README/RUNBOOK/corpusREADME/licenses/tasks/handoff/summary and user-approved
+P11 exception updated alongsideimplementation. D5 no DB/index/API schema migration:
+threev1corpus schemas unchanged; exactsource provenance differs by explicitlyapproved
+exception. RawParquet/convertedJSON/documents/cache/logs ignored; lightweightnormalized
+QA/index/report withverifiedCC-BY-SA attribution/change notices only. Sourcecomment,
+license/data hygiene/readerrollback/cachestamp limits preserved. Detailed diff/secrets/
+docs/explicitstage/actualcommit checks appended below after execution. Commit subject
+`feat(T05): prepare HotpotQA evaluation corpus`; actualhash/end outside owncommit,
+COMPLETE only if those checks+commit+rootreview succeed. No nexttask assigned.
+
+#### Executed D1/D4/D5 review checks
+
+Separate command`git diff --check; exit $LASTEXITCODE`, exit0/stdoutempty (whitespaceclean).
+Final code diff/read reviewed `common/setup/validate/prepare_default`, default/common
+tests, pyproject/lock, authorizedP11exception and docs/inventory/aggregate/report:
+supporting-only mapping/distractors, faithfulsemanticconversion, goldanomaly handling,
+fixedsource/must-matchpin, safe staging/rollback/no userfileoverwrite, no signedquery
+logging or API/core imports. No unreviewed change outside22candidatepaths.
+
+Separate command with uv envprefix, exit0:
+
+```powershell
+uv run python scripts/check_docs.py 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t05-a02-docs.log; exit $LASTEXITCODE
+```
+
+Actualoutput:
+
+```text
+PASS UTF-8/nonempty Markdown: 10 files
+PASS internal links/anchors: 201
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Final Ruff command uses sameenvprefix/`uv run ruff check .`/tee
+`corpus-documents/.downloads/t05-a02-ruff-completion.log`, exit0, `All checks passed!`.
+Only errorwording/comments/inventory assembly timestamp were clarified after quality;
+no tested behavior changed. Inventory notes now distinguish publishedsourcepin from
+independentlymeasured matchingT05bytes/7405rows; otherdomainentries unchanged.
+
+Actual scope/secrets/artifact/prompt command, exit0:
+
+```powershell
+$candidate=@('README.md','RUNBOOK.md','docs/tasks.md','docs/handoffs.md','docs/implementation-summary.md','docs/plan.md','corpus-documents/README.md','corpus-documents/licenses/README.md','corpus-documents/source-license-inventory.json','corpus-documents/manifest.json','corpus-documents/default/manifest.json','corpus-documents/default/qa/eval.jsonl','corpus-documents/default/qa/documents.json','corpus-documents/default/qa/preparation.json','corpus-documents/scripts/common.py','corpus-documents/scripts/setup_corpus.py','corpus-documents/scripts/validate_corpus.py','corpus-documents/scripts/prepare_default.py','tests/unit/test_corpus_common.py','tests/unit/test_corpus_default.py','pyproject.toml','uv.lock'); $changed=@(git diff --name-only); $untracked=@(git ls-files --others --exclude-standard); if(@(Compare-Object ($candidate | Sort-Object) (($changed+$untracked) | Sort-Object)).Count -ne 0){throw 'Out-of-scope or missing candidate path'}; $items=@($candidate | ForEach-Object {Get-Item -LiteralPath $_}); if(@($items | Where-Object Length -gt 1048576).Count -ne 0){throw 'Candidate file larger than1MiB'}; $suspicious=@(rg -l '(sk-[A-Za-z0-9_-]{20,}|AKIA[A-Z0-9]{16}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|Signature=[A-Za-z0-9_-]{20,})' -- $candidate); if($suspicious.Count -ne 0){throw 'Credential or signed-query marker found; inspect without printing values'}; $trackedSecrets=@(git ls-files -- .env .local); if($trackedSecrets.Count -ne 0){throw 'Unexpected tracked local secret path'}; $promptPath='corpus-documents/Codex Prompt – Build RAG Evaluation Corpus.md'; $blob=(git hash-object --no-filters -- "$promptPath").Trim(); $sha=(Get-FileHash -Algorithm SHA256 -LiteralPath $promptPath).Hash; if($blob -ne '81ab3c77530722968d847391d8095284f1a874a9' -or $sha -ne '7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46'){throw 'Original prompt bytes changed'}; $paths=@('corpus-documents/default/raw/hf-hotpotqa-distractor-validation.parquet','corpus-documents/default/raw/hotpot_dev_distractor_v1.json','corpus-documents/default/documents/sample.md','corpus-documents/.downloads/hf-hotpotqa-download.json','.uv-cache/sample','.env'); $ignored=@(git check-ignore -v --no-index -- $paths); if($ignored.Count -ne $paths.Count){throw 'Corpus/cache/secret ignore mismatch'}; $ignored; Write-Output "PASS candidate22/changed22; out_of_scope0; files_over1MiB0; credential_markers0; tracked_local_secrets0"; Write-Output "PASS original prompt blob=$blob SHA256=$sha"; Write-Output 'PASS raw/Parquet/materializeddocuments/cache/logs/secrets excluded; licensed lightweight QA/metadata permitted'; git diff --check; exit $LASTEXITCODE
+```
+
+Actualexcerpt (baselineglobalignorewarning omitted here, retained atbaseline):
+
+```text
+.gitignore:44:corpus-documents/*/raw/ corpus-documents/default/raw/hf-hotpotqa-distractor-validation.parquet
+.gitignore:44:corpus-documents/*/raw/ corpus-documents/default/raw/hotpot_dev_distractor_v1.json
+.gitignore:45:corpus-documents/*/documents/ corpus-documents/default/documents/sample.md
+.gitignore:46:corpus-documents/.downloads/ corpus-documents/.downloads/hf-hotpotqa-download.json
+.gitignore:10:.uv-cache/ .uv-cache/sample
+.gitignore:22:.env .env
+PASS candidate22/changed22; out_of_scope0; files_over1MiB0; credential_markers0; tracked_local_secrets0
+PASS original prompt blob=81ab3c77530722968d847391d8095284f1a874a9 SHA256=7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46
+PASS raw/Parquet/materializeddocuments/cache/logs/secrets excluded; licensed lightweight QA/metadata permitted
+```
+
+Expected no out-of-scopefiles/secrets/rawdata/weights/cache and promptunchanged,
+actualPASS. LightweightQA sizes measured138452B/index465747B/report5041B; no file
+over1MiB. D1–D5PASS with the evidence above; D6 explicitstaging/cachedscope/commit
+is finalstep. Successfulcommit/rootruntime/diff/DoD acceptance required for COMPLETE.
+
+#### D6 actual stage/cached checks and final commit boundary
+
+Original inline command text is retained verbatim in ignored public/synthetic
+`corpus-documents/.downloads/t05-a02-repro-before.ps1`, `t05-a02-repro-after.ps1`,
+`t05-a02-source-diagnostics.ps1` and `t05-a02-selection-diagnostics.ps1` (same directory).
+These are evidence copies of the earlier commands, not additional reruns or tracked
+scripts; outputs/exits above remain original. The first evidence-artifact patch failed
+on mismatched handoff context and made no changes; corrected patch succeeded.
+
+After evidence append, separate docscheck with sameuvprefix/tee
+`.downloads/t05-a02-docs-completion.log`, exit0, same10Markdown/201links/37tasks/
+81edges acyclic PASS. Separate `uv run python corpus-documents/scripts/validate_corpus.py --metadata-only`
+with sameprefix/tee`.downloads/t05-a02-metadata-completion.log`, exit0, actual
+`CORPUS METADATA: PASS - 3 domain manifests + inventory; corpus data NOT validated.`
+
+Explicit Git staging, approved `.git` mutation, exit0/stdoutempty:
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md docs/plan.md corpus-documents/README.md corpus-documents/licenses/README.md corpus-documents/source-license-inventory.json corpus-documents/manifest.json corpus-documents/default/manifest.json corpus-documents/default/qa/eval.jsonl corpus-documents/default/qa/documents.json corpus-documents/default/qa/preparation.json corpus-documents/scripts/common.py corpus-documents/scripts/setup_corpus.py corpus-documents/scripts/validate_corpus.py corpus-documents/scripts/prepare_default.py tests/unit/test_corpus_common.py tests/unit/test_corpus_default.py pyproject.toml uv.lock
+```
+
+Cached `git diff --cached --check`, exact22pathset assertion against candidatearray,
+no unstaged/untracked assertions and `git diff --cached --stat`, exit0; actualexcerpt
+before this evidence-only append:
+
+```text
+22 files changed, 18725 insertions(+), 87 deletions(-)
+PASS staged exact22 T05 files; whitespace clean; no unstaged/untracked paths
+```
+
+All stagedcode/tests/licensedQA/docs reviewed; raw/weights/cache/secrets absent.
+Restage onlythishandoff; repeat cachedwhitespace/22scope/no-unstaged checks, then
+`git commit -m "feat(T05): prepare HotpotQA evaluation corpus"`. Actualhash/end/output
+returnedpostcommit to root, never amendowncommit. COMPLETE candidate takes effect
+only after actualcommit and rootruntime/diff/DoD review; failure keepswork/blocker.

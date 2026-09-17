@@ -21,6 +21,14 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 DOMAINS = ("default", "document", "bilingual")
 CORPUS_ROOT = Path(__file__).resolve().parents[1]
+APPROVED_HF_REVISION = "1908d6afbbead072334abe2965f91bd2709910ab"
+APPROVED_HF_URL = (
+    "https://huggingface.co/datasets/hotpotqa/hotpot_qa/resolve/"
+    + APPROVED_HF_REVISION
+    + "/distractor/validation-00000-of-00001.parquet"
+)
+APPROVED_HF_SHA256 = "c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6"
+_HF_DELIVERY_HOSTS = frozenset({"us.aws.cdn.hf.co"})
 OFFICIAL_HOSTS = frozenset(
     {"raw.githubusercontent.com", "github.com", "api.github.com", "curtis.ml.cmu.edu"}
 )
@@ -184,7 +192,9 @@ def write_json(
 
 
 def check_url(url: str, allowed_hosts: frozenset[str] = OFFICIAL_HOSTS) -> None:
-    """Allow only official hosts. The legacy CMU dataset endpoint alone permits HTTP."""
+    """Allow official hosts and the exact user-approved HF source; only CMU permits HTTP."""
+    if url == APPROVED_HF_URL:
+        return
     parsed = urlsplit(url)
     if (
         parsed.hostname not in allowed_hosts
@@ -209,8 +219,36 @@ class _OfficialRedirects(HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
+def _check_response_url(url: str, source_url: str) -> None:
+    if source_url != APPROVED_HF_URL or url == APPROVED_HF_URL:
+        check_url(url)
+        return
+    parsed = urlsplit(url)
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname not in _HF_DELIVERY_HOSTS
+        or parsed.username
+        or parsed.password
+        or parsed.port is not None
+        or parsed.fragment
+        or not parsed.path.startswith("/xet-bridge-us/")
+    ):
+        raise CorpusError("Approved HF source redirected outside its HTTPS delivery allowlist")
+    # HF Xet delivery uses temporary signed query strings. Never log these URLs.
+    # The exact starting URL and mandatory published byte pin bound this exception.
+
+
+class _ApprovedHFRedirects(HTTPRedirectHandler):
+    def redirect_request(
+        self, req: Any, fp: Any, code: int, msg: str, headers: Any, newurl: str
+    ) -> Any:
+        _check_response_url(newurl, APPROVED_HF_URL)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def _open_source(url: str, timeout: float) -> Any:
-    opener = build_opener(_OfficialRedirects())
+    redirects = _ApprovedHFRedirects() if url == APPROVED_HF_URL else _OfficialRedirects()
+    opener = build_opener(redirects)
     return opener.open(Request(url, headers={"User-Agent": "rag-core-corpus/1"}), timeout=timeout)
 
 
@@ -243,6 +281,8 @@ def download(
     again (its unchanged bytes still preserve mtime), never silently trusted.
     """
     check_url(url)
+    if url == APPROVED_HF_URL and expected_sha256 != APPROVED_HF_SHA256:
+        raise CorpusError("Approved HF source requires its exact published SHA256 pin")
     for pin, length in ((expected_sha256, 64), (expected_git_blob, 40)):
         if pin is not None and not re.fullmatch(rf"[0-9a-f]{{{length}}}", pin):
             raise CorpusError("Invalid checksum pin")
@@ -274,7 +314,7 @@ def download(
     for attempt in range(1, attempts + 1):
         try:
             with opener(url, timeout) as response:
-                check_url(response.geturl())
+                _check_response_url(response.geturl(), url)
                 if (
                     urlsplit(url).scheme == "https"
                     and urlsplit(response.geturl()).scheme != "https"

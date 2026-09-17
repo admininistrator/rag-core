@@ -20,6 +20,8 @@ SCRIPTS = Path(__file__).resolve().parents[2] / "corpus-documents" / "scripts"
 # The corpus directory is deliberately independent of the application package.
 sys.path.insert(0, str(SCRIPTS))
 import common  # noqa: E402
+import prepare_default  # noqa: E402
+import setup_corpus  # noqa: E402
 import validate_corpus  # noqa: E402
 
 pytestmark = pytest.mark.unit
@@ -360,6 +362,32 @@ def test_unofficial_response_and_redirect_are_rejected(tmp_path: Path) -> None:
     assert not (tmp_path / "source.json").exists()
 
 
+def test_hf_exception_is_exact_url_and_mandatory_published_checksum(tmp_path: Path) -> None:
+    common.check_url(common.APPROVED_HF_URL)
+    with pytest.raises(common.CorpusError):
+        common.check_url(common.APPROVED_HF_URL.replace("distractor", "fullwiki"))
+    for pin in (None, "0" * 64):
+        with pytest.raises(common.CorpusError, match="published SHA256"):
+            common.download(
+                common.APPROVED_HF_URL, tmp_path / "source.parquet", expected_sha256=pin,
+                validate=lambda _path: None, opener=response_opener(),
+            )
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_hf_signed_delivery_is_scoped_and_https_only() -> None:
+    signed = "https://us.aws.cdn.hf.co/xet-bridge-us/synthetic?Policy=SYNTHETIC&Signature=SYNTHETIC"
+    common._check_response_url(signed, common.APPROVED_HF_URL)
+    for url in (
+        signed.replace("https:", "http:"), signed.replace("us.aws.cdn.hf.co", "mirror.example"),
+        signed.replace("https://", "https://user:secret@"),
+    ):
+        with pytest.raises(common.CorpusError):
+            common._check_response_url(url, common.APPROVED_HF_URL)
+    with pytest.raises(common.CorpusError):
+        common._check_response_url(signed, URL)
+
+
 @pytest.mark.parametrize(
     "options",
     [
@@ -473,6 +501,10 @@ def test_committed_metadata_has_no_fabricated_downloads() -> None:
     validate_corpus.validate_metadata()
     for domain in common.DOMAINS:
         manifest = common.read_json(common.CORPUS_ROOT / domain / "manifest.json")
+        if domain == "default" and manifest["status"] == "ready":
+            assert manifest["qa_count"] == 100 and manifest["document_count"] > 0
+            assert manifest["downloaded_at"] and manifest["artifacts"] and manifest["checksum"]
+            continue
         assert manifest["status"] == "not_downloaded"
         assert (
             manifest["document_count"] is manifest["qa_count"] is manifest["downloaded_at"] is None
@@ -491,6 +523,10 @@ def test_committed_metadata_has_no_fabricated_downloads() -> None:
 )
 def test_not_downloaded_schema_refuses_fabricated_measurements(field: str, value: Any) -> None:
     manifest = deepcopy(common.read_json(common.CORPUS_ROOT / "default" / "manifest.json"))
+    manifest.update(
+        status="not_downloaded", document_count=None, qa_count=None, downloaded_at=None,
+        checksum={}, artifacts=[],
+    )
     manifest[field] = value
     with pytest.raises(common.CorpusError, match="Schema violation"):
         validate_corpus.validate_manifest(manifest)
@@ -498,6 +534,7 @@ def test_not_downloaded_schema_refuses_fabricated_measurements(field: str, value
 
 def test_ready_schema_cannot_claim_acceptance_without_measured_receipts() -> None:
     manifest = deepcopy(common.read_json(common.CORPUS_ROOT / "default" / "manifest.json"))
+    manifest.update(document_count=None, qa_count=None, downloaded_at=None, checksum={}, artifacts=[])
     manifest["status"] = "ready"
     with pytest.raises(common.CorpusError, match="Schema violation"):
         validate_corpus.validate_manifest(manifest)
@@ -505,7 +542,7 @@ def test_ready_schema_cannot_claim_acceptance_without_measured_receipts() -> Non
 
 @pytest.mark.parametrize(
     "args",
-    [["--all"], ["--domain", "default"], ["--domain", "document"], ["--domain", "bilingual"]],
+    [["--all"], ["--domain", "document"], ["--domain", "bilingual"]],
 )
 def test_setup_and_validation_unavailable_fail_without_mutation(args: list[str]) -> None:
     before = {
@@ -521,6 +558,18 @@ def test_setup_and_validation_unavailable_fail_without_mutation(args: list[str])
     assert before == {path: common.sha256_file(path) for path in before}
 
 
+def test_default_setup_failure_is_honest_without_unit_network(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def offline() -> Any:
+        raise common.DownloadError("Synthetic official source transport failure")
+
+    monkeypatch.setattr(prepare_default, "prepare_default", offline)
+    assert setup_corpus.main(["--domain", "default"]) == 1
+    captured = capsys.readouterr()
+    assert "PASS" not in captured.out and "FAIL" in captured.err
+
+
 def test_metadata_validator_detects_aggregate_and_provenance_drift(tmp_path: Path) -> None:
     names = [
         "source-license-inventory.json",
@@ -533,11 +582,12 @@ def test_metadata_validator_detects_aggregate_and_provenance_drift(tmp_path: Pat
         destination.write_bytes((common.CORPUS_ROOT / name).read_bytes())
     validate_corpus.validate_metadata(tmp_path)
     aggregate = common.read_json(tmp_path / "manifest.json")
+    original_count = aggregate["domains"]["default"]["qa_count"]
     aggregate["domains"]["default"]["qa_count"] = 0
     common.write_json(tmp_path / "manifest.json", aggregate)
     with pytest.raises(common.CorpusError, match="Aggregate status/count"):
         validate_corpus.validate_metadata(tmp_path)
-    aggregate["domains"]["default"]["qa_count"] = None
+    aggregate["domains"]["default"]["qa_count"] = original_count
     common.write_json(tmp_path / "manifest.json", aggregate)
     domain = common.read_json(tmp_path / "default/manifest.json")
     domain["sources"][0]["repository_commit"] = "0" * 40

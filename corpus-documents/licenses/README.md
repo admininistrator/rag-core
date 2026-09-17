@@ -10,6 +10,13 @@ listed in [source-license-inventory.json](../source-license-inventory.json).
   explicitly separates CC BY-SA 4.0 dataset terms from Apache 2.0 code terms.
   Retain original Wikipedia titles, dataset origin and description of normalization
   changes with permitted materializations.
+  T05 uses the user-approved community/HF-maintained
+  [pinned derivative](https://huggingface.co/datasets/hotpotqa/hotpot_qa/blob/1908d6afbbead072334abe2965f91bd2709910ab/README.md),
+  whose card also declares CC BY-SA 4.0. Normalized QA/index/report adaptations remain
+  under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/): Parquet semantic
+  fields converted to legacy JSON, deterministic100QA subset, content-derived paragraph
+  IDs and separated provenance. Original source answers/type/level/facts/text are
+  preserved. Raw files/documents are local and ignored; no CMU byte-equivalence claim.
 - **FinanceBench:** Islam et al. (2023), *FinanceBench: A New Benchmark for Financial
   Question Answering*, [paper](https://arxiv.org/abs/2311.11944).
   [Pinned GitHub README](https://github.com/patronus-ai/financebench/blob/cc39aeb4afdf33909ee1412188bf89035950c2eb/README.md)
@@ -27,5 +34,5 @@ listed in [source-license-inventory.json](../source-license-inventory.json).
 For datasets with an explicit applicable CC BY-SA 4.0 grant, preserve attribution,
 the [license link](https://creativecommons.org/licenses/by-sa/4.0/) and changes;
 adaptations retain ShareAlike terms. No dataset/PDF license is inferred from code
-licenses. T04 downloaded only official README/metadata for inspection; no corpus
-data or third-party company copyright notices were copied or removed.
+licenses. T04 downloaded only official README/metadata; T05 downloaded the specifically
+approved pinned HF Parquet. No third-party company copyright notice was removed.

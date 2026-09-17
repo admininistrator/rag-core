@@ -1,21 +1,22 @@
 # RAG evaluation corpus
 
-**T04 IMPLEMENTED/VERIFIED: shared tooling, source inventory and metadata schemas.**
-No official corpus bytes have been downloaded or normalized. Setup for each domain
-is implemented in T05–T07; full clean-state reproduction and acceptance belong to T08.
+**T04 shared tooling VERIFIED; T05 default preparation and real data validation VERIFIED.**
+Default uses the exact Hugging Face derivative approved by the user after the
+canonical CMU endpoint timed out. Other domain preparation is pending T06–T07;
+full clean-state reproduction and acceptance belong to T08.
 The [original prompt](Codex%20Prompt%20%E2%80%93%20Build%20RAG%20Evaluation%20Corpus.md)
 remains unchanged.
 
 | Corpus domain | Purpose | Data status | Measured documents / QA |
 | --- | --- | --- | --- |
-| `default` / HotpotQA | Generic multi-hop retrieval with supporting paragraphs and distractors | `not_downloaded` | unknown / unknown |
+| `default` / HotpotQA | Generic multi-hop retrieval with supporting paragraphs and distractors | `ready`; approved HF derivative | 986 / 100 |
 | `document` / FinanceBench | Long financial PDFs, numeric answers, evidence and page-aware citations | `not_downloaded`; license decision pending | unknown / unknown |
 | `bilingual` / XQuAD | Parallel EN/VI QA and cross-lingual retrieval | `not_downloaded` | unknown / unknown |
 
-Targets from the prompt (100 HotpotQA QA; approximately 150 FinanceBench QA;
+Remaining targets from the prompt (approximately 150 FinanceBench QA;
 approximately 240 paragraphs per language and 1190 XQuAD QA per slice) are planned
 targets, **not measured counts**. Manifests store unknown counts and download
-timestamps as JSON `null`, with empty checksum/receipt collections. Inventory
+timestamps as JSON `null` for unprepared domains, with empty checksum/receipt collections. Inventory
 `verified_at` records when source metadata was assembled, not a dataset download.
 
 ## Sources and rights
@@ -28,7 +29,7 @@ on 2026-09-17; actual commands/output are in [H-T04-A01](../docs/handoffs.md#h-t
 
 | Dataset | Pinned upstream | Dataset rights |
 | --- | --- | --- |
-| [HotpotQA](https://github.com/hotpotqa/hotpot) | `3635853403a8735609ee997664e1528f4480762a`; dev distractor `v1` | [README dataset terms](https://github.com/hotpotqa/hotpot/blob/3635853403a8735609ee997664e1528f4480762a/README.md#license): CC BY-SA 4.0. Apache 2.0 is the code license. |
+| [HotpotQA](https://github.com/hotpotqa/hotpot) | Original repository `3635853403a8735609ee997664e1528f4480762a`; approved HF `hotpotqa/hotpot_qa` revision `1908d6afbbead072334abe2965f91bd2709910ab`, distractor/validation | [Original dataset terms](https://github.com/hotpotqa/hotpot/blob/3635853403a8735609ee997664e1528f4480762a/README.md#license) and [pinned HF card](https://huggingface.co/datasets/hotpotqa/hotpot_qa/blob/1908d6afbbead072334abe2965f91bd2709910ab/README.md): CC BY-SA 4.0. Apache 2.0 is the code license. |
 | [FinanceBench](https://github.com/patronus-ai/financebench) | `cc39aeb4afdf33909ee1412188bf89035950c2eb` | GitHub files have no explicit grant in the inspected tree/README. [Publisher HF card](https://huggingface.co/datasets/PatronusAI/financebench/blob/e04404e3a97f69f79c14d42f24981a1c9c3bcd18/README.md) declares CC BY-NC 4.0; GitHub QA/PDF permissions remain unresolved. |
 | [XQuAD](https://github.com/google-deepmind/xquad) | `7d30520c717524000f0d9d2f9c10a069acd9d285` | [README dataset terms](https://github.com/google-deepmind/xquad/blob/7d30520c717524000f0d9d2f9c10a069acd9d285/README.md#license): CC BY-SA 4.0. |
 
@@ -42,8 +43,8 @@ No dataset source is silently substituted. See [license notices](licenses/README
 
 Raw datasets and materialized document/PDF directories are ignored by existing
 repository policy. Scripts, manifests, inventory, schemas and attribution notices
-are tracked. Lightweight normalized QA may be tracked in later tasks only with
-verified applicable rights and attribution; FinanceBench remains metadata-only
+are tracked. T05 tracks lightweight normalized QA, its document index and preparation
+report with CC BY-SA attribution/change notices; FinanceBench remains metadata-only
 until the license decision. No new broad ignore rules hide source or QA metadata.
 
 ## Commands and directory layout
@@ -56,29 +57,31 @@ uv sync --locked --group dev --group api
 uv run python corpus-documents/scripts/setup_corpus.py --help
 uv run python corpus-documents/scripts/validate_corpus.py --metadata-only
 uv run pytest tests/unit/test_corpus_common.py
+uv run pytest tests/unit/test_corpus_default.py
+uv run python corpus-documents/scripts/setup_corpus.py --domain default
+uv run python corpus-documents/scripts/validate_corpus.py --domain default
 ```
 
 `--metadata-only` validates inventory/schema/provenance and aggregate consistency.
 Its success message explicitly states that corpus data was **not validated**.
-The following setup/full-validation selections currently fail nonzero with a
+Default setup and validation PASS with real downloaded bytes. The following
+setup/full-validation selections currently fail nonzero with a
 clear unavailable/not-downloaded message and preserve files:
 
 ```powershell
 uv run python corpus-documents/scripts/setup_corpus.py --all
-uv run python corpus-documents/scripts/setup_corpus.py --domain default
 uv run python corpus-documents/scripts/setup_corpus.py --domain document
 uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual
 uv run python corpus-documents/scripts/validate_corpus.py --all
-uv run python corpus-documents/scripts/validate_corpus.py --domain default
 ```
 
-These become working preparation/validation commands sequentially in T05–T07;
+Other domains become working preparation/validation commands sequentially in T06–T07;
 the one-command, all-domain setup is accepted in T08. There are no hidden manual
 downloads, success stubs or legacy training/model setup calls in T04.
 
 ```text
 corpus-documents/
-  scripts/{common,setup_corpus,validate_corpus}.py
+  scripts/{common,prepare_default,setup_corpus,validate_corpus}.py
   schemas/{domain-manifest,root-manifest,source-inventory}.schema.json
   source-license-inventory.json
   manifest.json
@@ -86,7 +89,7 @@ corpus-documents/
   licenses/README.md
 ```
 
-Each domain will create separate `raw/`, `documents/` and `qa/` directories.
+Default has separate `raw/`, `documents/` and `qa/` directories; others follow later.
 All download/normalization scripts and corpus outputs stay below this directory.
 `documents/` alone contains ingestable content. `qa/`, answers, justification,
 supporting flags and raw source QA are evaluator inputs and must never be ingested
@@ -103,31 +106,71 @@ before replacing a valid prior file. Retries apply only to transport failures an
 selected HTTP 408/429/5xx statuses: default 3 attempts, at most 5, bounded timeout
 and backoff. Corrupt content and local publication failures fail immediately.
 The allowlist permits official GitHub hosts and the legacy CMU HotpotQA host;
-redirects are checked before following and HTTPS downgrades are rejected.
+redirects are checked before following and HTTPS downgrades are rejected. The
+user-approved exception permits exactly the pinned HF Parquet URL with its mandatory
+published SHA256 and inspected HTTPS `us.aws.cdn.hf.co/xet-bridge-us/` delivery.
+Temporary signed queries are accepted only for that transfer and never logged.
 
 A verified cached file is reused only when a byte pin exists and passes; a reuse
 receipt has `downloaded_at=null`, `reused=true` and measured hash/size. Domain
 callers must preserve the original download timestamp rather than overwrite it
 with a reuse time. Equal atomic writes preserve mtime. Failure cleans only the
 call's staged `.part` file, leaving previously published bytes intact. Atomicity
-is per file; complete domain-generation publication belongs to T05–T08.
+is per file; T05 additionally stages and validates the complete default domain before
+directory publication, with an exclusive setup lock and rollback of the domain and
+aggregate on publication errors. Equal complete trees skip publication and retain
+all mtimes. Readers must wait for setup to finish: directory swaps are not a concurrent
+reader transaction. Failed stages and rollback backups stay in ignored `.downloads/`
+for inspection; unknown files and links/junctions cause refusal before replacement.
 
 The legacy HotpotQA URL is version-named but not a content-addressed Git blob.
 No expected SHA256 was found in the inspected official README. Its first download
 must use domain semantic validation and record a measured SHA256; later runs
 must reuse that measured pin. T04 does not claim immutable bytes for this source.
-The four pinned GitHub JSON/JSONL endpoints returned HEAD 200. HotpotQA's official
-CMU HTTP HEAD timed out after 20 seconds; HTTPS on the same host timed out after
-15 seconds. The official homepage still advertises the HTTP link. T05 must verify
-access/download or report an upstream availability blocker; no alternate mirror
-was chosen. Successful HEAD establishes endpoint access only, not byte integrity.
+T05 actual CMU HTTP and same-host HTTPS GET each timed out after 20 seconds.
+On 2026-09-17 the user approved the exact HF source exception recorded in
+[P11](../docs/plan.md#p11). This is a community/HF-maintained Parquet derivative;
+it is not asserted to be an official author mirror or byte-identical CMU JSON.
+The downloaded Parquet is **27,452,575 bytes**, SHA256
+`c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6`, matching
+the pinned repository's published LFS checksum. Its 7405 measured rows are converted
+without rewriting semantic fields to legacy JSON; the converted JSON hash is separate
+in `default/qa/preparation.json`. Dev-only `pyarrow==25.0.1` reads Parquet; it is not
+an API/model dependency. Raw Parquet/converted JSON and Markdown documents stay ignored.
 
 Common QA validation requires unique IDs, nonempty questions/expected answers and
 existing nonempty expected documents. Callers supply a document-ID to safe path
 map relative to `documents/`. References reject traversal, absolute/Windows drive
 or alternate-stream paths, reserved device names and symlink/junction escapes.
-Domain validators will additionally compare original gold, supporting documents,
-PDF/evidence pages and parallel counterpart alignment in T05–T07.
+Default validation compares every generated QA/document/report to the pinned source,
+checks original answers/type/level/supporting mapping, all receipts and exact file sets,
+and reruns the seed42 sampling. PDF/page and parallel-alignment checks follow T06–T07.
+
+## Default measured data and evaluation contract
+
+Source: 7405 rows, 5918 bridge and 1487 comparison, **all hard**; no medium examples
+are available in this split. Sampling sorts source IDs, balances available type/level
+strata with capacity redistribution, samples with `random.Random(42)`, then sorts the
+selected IDs. The unchanged 100-QA subset is 50 bridge + 50 comparison, all hard.
+Selected-ID SHA256: `40045c404f9bc627004e7c48bd2df9ac6165be2342595832ed7590487e436d63`.
+996 context paragraph instances become 986 documents after 10 duplicate instances
+are merged. Identity hashes the exact title and concatenated original sentence text;
+same-title/different-text paragraphs have different IDs. Every distractor is included.
+
+Markdown contains only `document_id`, title, dataset origin and original paragraph
+text. `qa/documents.json` holds source-question provenance and ID-to-path/hash mapping;
+it is evaluator-only metadata. `qa/eval.jsonl` retains source IDs, original question,
+answer/type/level/supporting facts, supporting-only expected documents and context IDs.
+Never use those context/source IDs or expected documents as retrieval hints. Ingest
+all `documents/*.md`, search the materialized corpus and score against QA gold afterward.
+
+The full source has one unchanged annotation anomaly: source ID
+`5ae61bfd5542992663a4f261`, title `Jimmy Butler (basketball)`, sentence index902
+for a 5-sentence paragraph. It is outside the deterministic selected100. The report
+records the anomaly; full-source structural/title checks do not claim every annotation
+is valid. Sampled supporting sentence ranges must pass; an anomaly in the subset fails
+without dropping, editing or resampling the question. Live checks/rerun/37 synthetic
+default tests are recorded in [H-T05-A02](../docs/handoffs.md#h-t05-a02).
 
 Domain manifests use `schema_version=1`, `not_downloaded|preparing|ready`, sources,
 download timestamp, measured counts, languages, path-to-SHA256 map and artifact

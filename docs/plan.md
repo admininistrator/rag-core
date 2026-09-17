@@ -330,6 +330,8 @@ Một command: `python corpus-documents/scripts/setup_corpus.py --all`; hỗ tr�
 
 Ground truth không đi vào ingestion: ingest riêng `documents/`; `qa/`, answer, justification, supporting facts chỉ evaluator đọc. Source question IDs trong metadata không dùng làm retrieval text/filter để biết trước đáp án. FinanceBench document selection được phép ở Document RAG vì người dùng biết tài liệu đã chọn; không lọc sẵn trang evidence. HotpotQA tìm trong corpus materialized, không chỉ gold docs của từng câu. Cross-lingual filter enforce corpus language thật.
 
+**Ngoại lệ nguồn T05 được người dùng phê duyệt ngày 2026-09-17:** sau bounded GET official CMU HTTP/HTTPS đều timeout, user trả lời “Cho phép bản Hugging Face (đề xuất)” cho `hotpotqa/hotpot_qa`, `distractor/validation`, revision `1908d6afbbead072334abe2965f91bd2709910ab`. Chỉ file `distractor/validation-00000-of-00001.parquet`, published SHA256 `c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6` / 27,452,575 bytes. Đây là community/HF-maintained derivative, không claim official author mirror hoặc byte-identical CMU JSON. Verify actual bytes và bảo toàn semantic fields khi chuyển `id/context/supporting_facts`; ghi revision/checksum/conversion/license/attribution/actual distribution và giới hạn chưa đối chiếu CMU. Target100/seed42/gold/supporting-only/distractors/DoD giữ nguyên; không mở arbitrary mirror override. Prompt corpus gốc nguyên byte. Quyết định và evidence tại [H-T05-A02](handoffs.md#h-t05-a02).
+
 ### Evaluation harness
 
 - Bộ fixtures chức năng riêng: scan EN/VI, bảng, unanswerable, prompt injection, 2 users/2 apps/2 sessions cùng owner, detach/delete trong stream. Fixture synthetic phải gắn nhãn, không thay official gold.

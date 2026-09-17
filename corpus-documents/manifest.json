@@ -3,9 +3,9 @@
   "domains": {
     "default": {
       "manifest": "default/manifest.json",
-      "status": "not_downloaded",
-      "document_count": null,
-      "qa_count": null
+      "status": "ready",
+      "document_count": 986,
+      "qa_count": 100
     },
     "document": {
       "manifest": "document/manifest.json",
@@ -20,5 +20,5 @@
       "qa_count": null
     }
   },
-  "notes": "No corpus data acceptance in T04. Metadata validation is separate from full corpus validation."
+  "notes": "Default prepared; other domains remain pending. Full corpus acceptance T08."
 }
