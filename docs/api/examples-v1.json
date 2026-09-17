@@ -1,0 +1,860 @@
+{
+  "examples": [
+    {
+      "name": "default_query",
+      "schema": "QueryRequest",
+      "value": {
+        "question": "What changed?",
+        "session_id": "00000000-0000-4000-8000-000000000002"
+      }
+    },
+    {
+      "name": "document_query",
+      "schema": "QueryRequest",
+      "value": {
+        "document_ids": [
+          "00000000-0000-4000-8000-000000000003"
+        ],
+        "domain": "document",
+        "question": "What changed?",
+        "session_id": "00000000-0000-4000-8000-000000000002"
+      }
+    },
+    {
+      "name": "multilingual_query",
+      "schema": "QueryRequest",
+      "value": {
+        "answer_language": "vi",
+        "corpus_languages": [
+          "en"
+        ],
+        "document_ids": [
+          "00000000-0000-4000-8000-000000000003"
+        ],
+        "domain": "multilingual",
+        "history": [
+          {
+            "content": "Báo cáo 2023.",
+            "role": "user"
+          }
+        ],
+        "question": "Doanh thu tăng thế nào?",
+        "session_id": "00000000-0000-4000-8000-000000000002"
+      }
+    },
+    {
+      "name": "create_session",
+      "schema": "SessionCreateRequest",
+      "value": {
+        "external_session_id": "synthetic-chat-1"
+      }
+    },
+    {
+      "name": "session",
+      "schema": "SessionResponse",
+      "value": {
+        "external_session_id": "synthetic-chat-1",
+        "request_id": "00000000-0000-4000-8000-000000000001",
+        "scope_revision": 0,
+        "session_id": "00000000-0000-4000-8000-000000000002",
+        "status": "active"
+      }
+    },
+    {
+      "name": "registration",
+      "schema": "DocumentRegisterRequest",
+      "value": {
+        "content_type": "application/pdf",
+        "external_upload_id": "synthetic-upload-1",
+        "filename": "synthetic-report.pdf",
+        "source": {
+          "bucket": "allowed-bucket",
+          "key": "allowed-owner-prefix/synthetic-report.pdf",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "storage_alias": "configured-app-storage",
+          "version_id": "opaque-storage-version"
+        }
+      }
+    },
+    {
+      "name": "registration_accepted_design",
+      "schema": "DocumentRegisterResponse",
+      "value": {
+        "document": {
+          "document_id": "00000000-0000-4000-8000-000000000003",
+          "filename": "synthetic-report.pdf",
+          "link_status": "attached",
+          "state": "queued",
+          "version_id": "00000000-0000-4000-8000-000000000004"
+        },
+        "job": {
+          "document_id": "00000000-0000-4000-8000-000000000003",
+          "error": null,
+          "job_id": "00000000-0000-4000-8000-000000000005",
+          "progress": null,
+          "request_id": "00000000-0000-4000-8000-000000000001",
+          "retryable": false,
+          "state": "queued",
+          "version_id": "00000000-0000-4000-8000-000000000004"
+        },
+        "request_id": "00000000-0000-4000-8000-000000000001",
+        "scope_revision": 1,
+        "session_id": "00000000-0000-4000-8000-000000000002"
+      }
+    },
+    {
+      "name": "document_list",
+      "schema": "DocumentListResponse",
+      "value": {
+        "documents": [
+          {
+            "document_id": "00000000-0000-4000-8000-000000000003",
+            "filename": "synthetic-report.pdf",
+            "link_status": "attached",
+            "state": "queued",
+            "version_id": "00000000-0000-4000-8000-000000000004"
+          }
+        ],
+        "next_cursor": null,
+        "request_id": "00000000-0000-4000-8000-000000000001",
+        "scope_revision": 1,
+        "session_id": "00000000-0000-4000-8000-000000000002"
+      }
+    },
+    {
+      "name": "detached",
+      "schema": "DetachResponse",
+      "value": {
+        "document_id": "00000000-0000-4000-8000-000000000003",
+        "link_status": "detached",
+        "request_id": "00000000-0000-4000-8000-000000000001",
+        "scope_revision": 2,
+        "session_id": "00000000-0000-4000-8000-000000000002"
+      }
+    },
+    {
+      "name": "job",
+      "schema": "JobResponse",
+      "value": {
+        "document_id": "00000000-0000-4000-8000-000000000003",
+        "error": null,
+        "job_id": "00000000-0000-4000-8000-000000000005",
+        "progress": null,
+        "request_id": "00000000-0000-4000-8000-000000000001",
+        "retryable": false,
+        "state": "queued",
+        "version_id": "00000000-0000-4000-8000-000000000004"
+      }
+    },
+    {
+      "name": "supported_design",
+      "schema": "QueryResponse",
+      "value": {
+        "answer": "Doanh thu tăng mười phần trăm. [c1]",
+        "answerability": "supported",
+        "citations": [
+          {
+            "chunk_id": "synthetic-chunk-1",
+            "document_id": "00000000-0000-4000-8000-000000000003",
+            "filename": "synthetic-report.pdf",
+            "id": "c1",
+            "locator": {
+              "kind": "pdf",
+              "page": 12
+            },
+            "quote": "Revenue rose by ten percent.",
+            "version_id": "00000000-0000-4000-8000-000000000004"
+          }
+        ],
+        "contexts": [
+          {
+            "chunk_id": "synthetic-chunk-1",
+            "citation_ids": [
+              "c1"
+            ],
+            "document_id": "00000000-0000-4000-8000-000000000003",
+            "text": "Revenue rose by ten percent."
+          }
+        ],
+        "domain": "multilingual",
+        "reason_code": null,
+        "request_id": "00000000-0000-4000-8000-000000000001",
+        "scope_revision": 3,
+        "session_id": "00000000-0000-4000-8000-000000000002",
+        "timings_ms": {
+          "generation": null,
+          "retrieval": null,
+          "total": null
+        },
+        "usage": {
+          "input_tokens": null,
+          "model": null,
+          "output_tokens": null,
+          "provider": null
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "insufficient_design",
+      "schema": "QueryResponse",
+      "value": {
+        "answer": "Chưa có bằng chứng phù hợp.",
+        "answerability": "insufficient_evidence",
+        "citations": [],
+        "contexts": [],
+        "domain": "multilingual",
+        "reason_code": "no_relevant_evidence",
+        "request_id": "00000000-0000-4000-8000-000000000001",
+        "scope_revision": 3,
+        "session_id": "00000000-0000-4000-8000-000000000002",
+        "timings_ms": {
+          "generation": null,
+          "retrieval": null,
+          "total": null
+        },
+        "usage": {
+          "input_tokens": null,
+          "model": null,
+          "output_tokens": null,
+          "provider": null
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "notified_history_truncation",
+      "schema": "QueryResponse",
+      "value": {
+        "answer": "Doanh thu tăng mười phần trăm. [c1]",
+        "answerability": "supported",
+        "citations": [
+          {
+            "chunk_id": "synthetic-chunk-1",
+            "document_id": "00000000-0000-4000-8000-000000000003",
+            "filename": "synthetic-report.pdf",
+            "id": "c1",
+            "locator": {
+              "kind": "pdf",
+              "page": 12
+            },
+            "quote": "Revenue rose by ten percent.",
+            "version_id": "00000000-0000-4000-8000-000000000004"
+          }
+        ],
+        "contexts": [
+          {
+            "chunk_id": "synthetic-chunk-1",
+            "citation_ids": [
+              "c1"
+            ],
+            "document_id": "00000000-0000-4000-8000-000000000003",
+            "text": "Revenue rose by ten percent."
+          }
+        ],
+        "domain": "multilingual",
+        "reason_code": null,
+        "request_id": "00000000-0000-4000-8000-000000000001",
+        "scope_revision": 3,
+        "session_id": "00000000-0000-4000-8000-000000000002",
+        "timings_ms": {
+          "generation": null,
+          "retrieval": null,
+          "total": null
+        },
+        "usage": {
+          "input_tokens": null,
+          "model": null,
+          "output_tokens": null,
+          "provider": null
+        },
+        "warnings": [
+          {
+            "code": "history_truncated",
+            "history": {
+              "received_messages": 21,
+              "received_tokens": 8100,
+              "retained_messages": 20,
+              "retained_tokens": 8000,
+              "truncated": true
+            },
+            "message": "History was truncated to its processing budget."
+          }
+        ]
+      }
+    },
+    {
+      "name": "error",
+      "schema": "ErrorEnvelope",
+      "value": {
+        "error": {
+          "code": "documents_not_ready",
+          "details": [
+            {
+              "field": "document_ids",
+              "reason": "not_ready"
+            }
+          ],
+          "message": "Selected documents are not ready.",
+          "retryable": true
+        },
+        "request_id": "00000000-0000-4000-8000-000000000001"
+      }
+    },
+    {
+      "name": "citation_resolver",
+      "schema": "CitationResolveResponse",
+      "value": {
+        "citation": {
+          "chunk_id": "synthetic-chunk-1",
+          "document_id": "00000000-0000-4000-8000-000000000003",
+          "filename": "synthetic-report.pdf",
+          "id": "c1",
+          "locator": {
+            "kind": "pdf",
+            "page": 12
+          },
+          "quote": "Revenue rose by ten percent.",
+          "version_id": "00000000-0000-4000-8000-000000000004"
+        },
+        "request_id": "00000000-0000-4000-8000-000000000001",
+        "scope_revision": 3,
+        "session_id": "00000000-0000-4000-8000-000000000002"
+      }
+    },
+    {
+      "name": "locator_docx_0",
+      "schema": "Citation",
+      "value": {
+        "chunk_id": "synthetic-chunk-1",
+        "document_id": "00000000-0000-4000-8000-000000000003",
+        "filename": "synthetic-report.pdf",
+        "id": "c1",
+        "locator": {
+          "heading_path": [
+            "Revenue"
+          ],
+          "kind": "docx",
+          "paragraph": 0
+        },
+        "quote": "Revenue rose by ten percent.",
+        "version_id": "00000000-0000-4000-8000-000000000004"
+      }
+    },
+    {
+      "name": "locator_docx_1",
+      "schema": "Citation",
+      "value": {
+        "chunk_id": "synthetic-chunk-1",
+        "document_id": "00000000-0000-4000-8000-000000000003",
+        "filename": "synthetic-report.pdf",
+        "id": "c1",
+        "locator": {
+          "heading_path": [],
+          "kind": "docx",
+          "table": 0
+        },
+        "quote": "Revenue rose by ten percent.",
+        "version_id": "00000000-0000-4000-8000-000000000004"
+      }
+    },
+    {
+      "name": "locator_xlsx_2",
+      "schema": "Citation",
+      "value": {
+        "chunk_id": "synthetic-chunk-1",
+        "document_id": "00000000-0000-4000-8000-000000000003",
+        "filename": "synthetic-report.pdf",
+        "id": "c1",
+        "locator": {
+          "cell_range": "B2:D4",
+          "headers": [
+            "USD"
+          ],
+          "kind": "xlsx",
+          "sheet": "Revenue",
+          "unit": "USD"
+        },
+        "quote": "Revenue rose by ten percent.",
+        "version_id": "00000000-0000-4000-8000-000000000004"
+      }
+    },
+    {
+      "name": "locator_pptx_3",
+      "schema": "Citation",
+      "value": {
+        "chunk_id": "synthetic-chunk-1",
+        "document_id": "00000000-0000-4000-8000-000000000003",
+        "filename": "synthetic-report.pdf",
+        "id": "c1",
+        "locator": {
+          "kind": "pptx",
+          "shape": 0,
+          "slide": 1
+        },
+        "quote": "Revenue rose by ten percent.",
+        "version_id": "00000000-0000-4000-8000-000000000004"
+      }
+    },
+    {
+      "name": "locator_txt_4",
+      "schema": "Citation",
+      "value": {
+        "chunk_id": "synthetic-chunk-1",
+        "document_id": "00000000-0000-4000-8000-000000000003",
+        "filename": "synthetic-report.pdf",
+        "id": "c1",
+        "locator": {
+          "kind": "txt",
+          "line_end": 2,
+          "line_start": 1,
+          "offsets": {
+            "end": 10,
+            "start": 0
+          }
+        },
+        "quote": "Revenue rose by ten percent.",
+        "version_id": "00000000-0000-4000-8000-000000000004"
+      }
+    },
+    {
+      "name": "locator_md_5",
+      "schema": "Citation",
+      "value": {
+        "chunk_id": "synthetic-chunk-1",
+        "document_id": "00000000-0000-4000-8000-000000000003",
+        "filename": "synthetic-report.pdf",
+        "id": "c1",
+        "locator": {
+          "kind": "md",
+          "paragraph": 0
+        },
+        "quote": "Revenue rose by ten percent.",
+        "version_id": "00000000-0000-4000-8000-000000000004"
+      }
+    },
+    {
+      "name": "locator_csv_6",
+      "schema": "Citation",
+      "value": {
+        "chunk_id": "synthetic-chunk-1",
+        "document_id": "00000000-0000-4000-8000-000000000003",
+        "filename": "synthetic-report.pdf",
+        "id": "c1",
+        "locator": {
+          "columns": [
+            "Revenue",
+            "Year"
+          ],
+          "kind": "csv",
+          "row_end": 2,
+          "row_start": 1
+        },
+        "quote": "Revenue rose by ten percent.",
+        "version_id": "00000000-0000-4000-8000-000000000004"
+      }
+    },
+    {
+      "name": "locator_html_7",
+      "schema": "Citation",
+      "value": {
+        "chunk_id": "synthetic-chunk-1",
+        "document_id": "00000000-0000-4000-8000-000000000003",
+        "filename": "synthetic-report.pdf",
+        "id": "c1",
+        "locator": {
+          "block": 0,
+          "heading_path": [
+            "Revenue"
+          ],
+          "kind": "html"
+        },
+        "quote": "Revenue rose by ten percent.",
+        "version_id": "00000000-0000-4000-8000-000000000004"
+      }
+    },
+    {
+      "name": "locator_image_8",
+      "schema": "Citation",
+      "value": {
+        "chunk_id": "synthetic-chunk-1",
+        "document_id": "00000000-0000-4000-8000-000000000003",
+        "filename": "synthetic-report.pdf",
+        "id": "c1",
+        "locator": {
+          "bbox": {
+            "x0": 0,
+            "x1": 100,
+            "y0": 0,
+            "y1": 50
+          },
+          "image_id": "synthetic-image-1",
+          "kind": "image",
+          "ocr_block": 0
+        },
+        "quote": "Revenue rose by ten percent.",
+        "version_id": "00000000-0000-4000-8000-000000000004"
+      }
+    },
+    {
+      "name": "live",
+      "schema": "LiveResponse",
+      "value": {
+        "status": "ok"
+      }
+    },
+    {
+      "name": "ready",
+      "schema": "ReadyResponse",
+      "value": {
+        "components": {
+          "postgres": "ok",
+          "qdrant": "ok",
+          "redis": "ok"
+        },
+        "status": "ready"
+      }
+    },
+    {
+      "name": "limits",
+      "schema": "ContractLimits",
+      "value": {
+        "context_tokens": 8000,
+        "documents_per_session": 50,
+        "file_bytes": 104857600,
+        "history_messages": 20,
+        "history_tokens": 8000,
+        "output_tokens": 1024,
+        "pages_per_file": 1000,
+        "question_characters": 4000
+      }
+    },
+    {
+      "name": "file_boundary",
+      "schema": "FileMeasurements",
+      "value": {
+        "pages": 1000,
+        "size_bytes": 104857600
+      }
+    },
+    {
+      "name": "sse_done_trace_design",
+      "schema": "SSESequence",
+      "value": [
+        {
+          "data": {
+            "domain": "multilingual",
+            "history": {
+              "received_messages": 1,
+              "received_tokens": null,
+              "retained_messages": 1,
+              "retained_tokens": null,
+              "truncated": false
+            },
+            "request_id": "00000000-0000-4000-8000-000000000001",
+            "scope_revision": 3,
+            "session_id": "00000000-0000-4000-8000-000000000002"
+          },
+          "event": "meta",
+          "id": 1
+        },
+        {
+          "data": {
+            "answerability": "supported",
+            "citations": [
+              {
+                "chunk_id": "synthetic-chunk-1",
+                "document_id": "00000000-0000-4000-8000-000000000003",
+                "filename": "synthetic-report.pdf",
+                "id": "c1",
+                "locator": {
+                  "kind": "pdf",
+                  "page": 12
+                },
+                "quote": "Revenue rose by ten percent.",
+                "version_id": "00000000-0000-4000-8000-000000000004"
+              }
+            ],
+            "contexts": [
+              {
+                "chunk_id": "synthetic-chunk-1",
+                "citation_ids": [
+                  "c1"
+                ],
+                "document_id": "00000000-0000-4000-8000-000000000003",
+                "text": "Revenue rose by ten percent."
+              }
+            ]
+          },
+          "event": "evidence",
+          "id": 2
+        },
+        {
+          "data": {
+            "text": "Doanh thu tăng "
+          },
+          "event": "answer_delta",
+          "id": 3
+        },
+        {
+          "data": {
+            "text": "mười phần trăm. [c1]"
+          },
+          "event": "answer_delta",
+          "id": 4
+        },
+        {
+          "data": {
+            "answer": "Doanh thu tăng mười phần trăm. [c1]",
+            "answerability": "supported",
+            "citations": [
+              {
+                "chunk_id": "synthetic-chunk-1",
+                "document_id": "00000000-0000-4000-8000-000000000003",
+                "filename": "synthetic-report.pdf",
+                "id": "c1",
+                "locator": {
+                  "kind": "pdf",
+                  "page": 12
+                },
+                "quote": "Revenue rose by ten percent.",
+                "version_id": "00000000-0000-4000-8000-000000000004"
+              }
+            ],
+            "contexts": [
+              {
+                "chunk_id": "synthetic-chunk-1",
+                "citation_ids": [
+                  "c1"
+                ],
+                "document_id": "00000000-0000-4000-8000-000000000003",
+                "text": "Revenue rose by ten percent."
+              }
+            ],
+            "domain": "multilingual",
+            "reason_code": null,
+            "request_id": "00000000-0000-4000-8000-000000000001",
+            "scope_revision": 3,
+            "session_id": "00000000-0000-4000-8000-000000000002",
+            "timings_ms": {
+              "generation": null,
+              "retrieval": null,
+              "total": null
+            },
+            "usage": {
+              "input_tokens": null,
+              "model": null,
+              "output_tokens": null,
+              "provider": null
+            },
+            "warnings": []
+          },
+          "event": "done",
+          "id": 5
+        }
+      ]
+    },
+    {
+      "name": "sse_early_error_trace_design",
+      "schema": "SSESequence",
+      "value": [
+        {
+          "data": {
+            "domain": "multilingual",
+            "history": {
+              "received_messages": 1,
+              "received_tokens": null,
+              "retained_messages": 1,
+              "retained_tokens": null,
+              "truncated": false
+            },
+            "request_id": "00000000-0000-4000-8000-000000000001",
+            "scope_revision": 3,
+            "session_id": "00000000-0000-4000-8000-000000000002"
+          },
+          "event": "meta",
+          "id": 1
+        },
+        {
+          "data": {
+            "error": {
+              "code": "documents_not_ready",
+              "details": [
+                {
+                  "field": "document_ids",
+                  "reason": "not_ready"
+                }
+              ],
+              "message": "Selected documents are not ready.",
+              "retryable": true
+            },
+            "request_id": "00000000-0000-4000-8000-000000000001"
+          },
+          "event": "error",
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "sse_heartbeat_comment",
+      "schema": "SSEHeartbeat",
+      "value": {
+        "comment": "keep-alive"
+      }
+    },
+    {
+      "name": "sse_meta_1",
+      "schema": "MetaEvent",
+      "value": {
+        "data": {
+          "domain": "multilingual",
+          "history": {
+            "received_messages": 1,
+            "received_tokens": null,
+            "retained_messages": 1,
+            "retained_tokens": null,
+            "truncated": false
+          },
+          "request_id": "00000000-0000-4000-8000-000000000001",
+          "scope_revision": 3,
+          "session_id": "00000000-0000-4000-8000-000000000002"
+        },
+        "event": "meta",
+        "id": 1
+      }
+    },
+    {
+      "name": "sse_evidence_2",
+      "schema": "EvidenceEvent",
+      "value": {
+        "data": {
+          "answerability": "supported",
+          "citations": [
+            {
+              "chunk_id": "synthetic-chunk-1",
+              "document_id": "00000000-0000-4000-8000-000000000003",
+              "filename": "synthetic-report.pdf",
+              "id": "c1",
+              "locator": {
+                "kind": "pdf",
+                "page": 12
+              },
+              "quote": "Revenue rose by ten percent.",
+              "version_id": "00000000-0000-4000-8000-000000000004"
+            }
+          ],
+          "contexts": [
+            {
+              "chunk_id": "synthetic-chunk-1",
+              "citation_ids": [
+                "c1"
+              ],
+              "document_id": "00000000-0000-4000-8000-000000000003",
+              "text": "Revenue rose by ten percent."
+            }
+          ]
+        },
+        "event": "evidence",
+        "id": 2
+      }
+    },
+    {
+      "name": "sse_answer_delta_3",
+      "schema": "AnswerDeltaEvent",
+      "value": {
+        "data": {
+          "text": "Doanh thu tăng "
+        },
+        "event": "answer_delta",
+        "id": 3
+      }
+    },
+    {
+      "name": "sse_answer_delta_4",
+      "schema": "AnswerDeltaEvent",
+      "value": {
+        "data": {
+          "text": "mười phần trăm. [c1]"
+        },
+        "event": "answer_delta",
+        "id": 4
+      }
+    },
+    {
+      "name": "sse_done_5",
+      "schema": "DoneEvent",
+      "value": {
+        "data": {
+          "answer": "Doanh thu tăng mười phần trăm. [c1]",
+          "answerability": "supported",
+          "citations": [
+            {
+              "chunk_id": "synthetic-chunk-1",
+              "document_id": "00000000-0000-4000-8000-000000000003",
+              "filename": "synthetic-report.pdf",
+              "id": "c1",
+              "locator": {
+                "kind": "pdf",
+                "page": 12
+              },
+              "quote": "Revenue rose by ten percent.",
+              "version_id": "00000000-0000-4000-8000-000000000004"
+            }
+          ],
+          "contexts": [
+            {
+              "chunk_id": "synthetic-chunk-1",
+              "citation_ids": [
+                "c1"
+              ],
+              "document_id": "00000000-0000-4000-8000-000000000003",
+              "text": "Revenue rose by ten percent."
+            }
+          ],
+          "domain": "multilingual",
+          "reason_code": null,
+          "request_id": "00000000-0000-4000-8000-000000000001",
+          "scope_revision": 3,
+          "session_id": "00000000-0000-4000-8000-000000000002",
+          "timings_ms": {
+            "generation": null,
+            "retrieval": null,
+            "total": null
+          },
+          "usage": {
+            "input_tokens": null,
+            "model": null,
+            "output_tokens": null,
+            "provider": null
+          },
+          "warnings": []
+        },
+        "event": "done",
+        "id": 5
+      }
+    },
+    {
+      "name": "sse_error",
+      "schema": "ErrorEvent",
+      "value": {
+        "data": {
+          "error": {
+            "code": "documents_not_ready",
+            "details": [
+              {
+                "field": "document_ids",
+                "reason": "not_ready"
+              }
+            ],
+            "message": "Selected documents are not ready.",
+            "retryable": true
+          },
+          "request_id": "00000000-0000-4000-8000-000000000001"
+        },
+        "event": "error",
+        "id": 2
+      }
+    }
+  ],
+  "status": "SYNTHETIC_DESIGN_EXAMPLES_NOT_RUNTIME_OUTPUT"
+}

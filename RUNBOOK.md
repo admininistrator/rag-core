@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T02 IMPLEMENTED/VERIFIED — nền tảng Python và Docker local.** Project Python 3.12, uv lock, typed settings, Compose PG/Qdrant/Redis/API và MinIO profile đã được kiểm chứng. API hiện chỉ có health routes; business API vẫn DESIGNED từ T03 trở đi.
+> **T01–T03 IMPLEMENTED/VERIFIED — Python, Docker local và contracts.** Project Python 3.12, uv lock, typed settings, Compose PG/Qdrant/Redis/API và MinIO profile đã được kiểm chứng. T03 có schema/snapshots/examples đã validate. API hiện chỉ serve health; business/auth/query/SSE runtime vẫn DESIGNED.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -17,6 +17,7 @@
 | --- | --- | --- |
 | Python setup/settings/quality | VERIFIED | T01 |
 | Compose/services + health skeleton | VERIFIED local | T02 |
+| API v1 schemas/design snapshots/examples | VERIFIED structural contracts; business routes chưa mount | T03 |
 | Corpus | DESIGNED; chỉ có prompt người dùng | T04–T08 |
 | Auth/session/storage | DESIGNED | T09–T12 |
 | Parsing/OCR/index | DESIGNED | T13–T19 |
@@ -54,7 +55,7 @@ Không import module nội bộ RAG core vào Scarlet, không dùng DB chat củ
 - Chừa disk cho source <=1 GB, corpus benchmark, parsed text/index, Docker images và model cache riêng; không dùng 1 GB làm dự báo dung lượng tổng.
 - `.env.example` chỉ chứa tên biến/default không bí mật. Copy thành `.env`, điền URL bắt buộc, và giữ mọi credential trong `.env`/secret store; không commit hoặc paste vào handoff.
 
-### Bootstrap và quality gate T01–T02
+### Bootstrap và quality gate T01–T03
 
 Chạy từ root repository. Trong môi trường bị giới hạn quyền ghi cache user, dùng hai biến local ở đầu; môi trường thường có thể bỏ hai dòng đó.
 
@@ -65,6 +66,8 @@ uv sync --locked --group dev --group api
 uv run ruff check .
 uv run mypy src
 uv run pytest tests/unit
+uv run pytest tests/contract/test_api_schema.py
+uv run python scripts/export_openapi.py --check
 uv run python scripts/check_docs.py
 ```
 
@@ -75,7 +78,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | Dependency group | Trạng thái T01 | Nội dung/phạm vi |
 | --- | --- | --- |
 | base | IMPLEMENTED/VERIFIED | Pydantic v2 + pydantic-settings cho typed config |
-| dev | IMPLEMENTED/VERIFIED | Ruff, mypy, pytest, pytest-asyncio |
+| dev | IMPLEMENTED/VERIFIED | Ruff, mypy, pytest, pytest-asyncio; jsonschema 4.26.0 từ T03 để validate exported schemas/examples, không vào API image |
 | api | IMPLEMENTED/VERIFIED T02 | FastAPI, HTTPX, Uvicorn, psycopg, Redis client; health-only API process, không có business routes |
 | ingestion | LOCKED/DESIGNED | Alembic, boto3, Celery, Qdrant client, Redis, SQLAlchemy; chưa có worker |
 | inference | RESERVED/DESIGNED | Rỗng có chủ đích; T17 pin model runtime/revisions sau capability checks |
@@ -199,21 +202,22 @@ Idempotency-Key scope app+owner+session+request hash; cùng key/body trả cùng
 <a id="r05"></a>
 ## R05. Endpoint inventory và lỗi
 
-**Health routes VERIFIED tại T02; mọi business/admin route còn DESIGNED.** [P06](docs/plan.md#p06) là hợp đồng đầy đủ; OpenAPI business được tạo ở T03 và hoàn thiện ở T26.
+**T03 schemas/snapshots/examples VERIFIED; health runtime VERIFIED tại T02; mọi business/admin route còn DESIGNED và chưa mount.** [P06](docs/plan.md#p06) là nguồn thiết kế, modules `rag_core.contracts.v1`/`sse` là nguồn machine-readable hiện tại. T26 sẽ mount business routes sau runtime gates tương ứng.
 
-| Method / route | Ý nghĩa | Implementation owner |
+| Method / route | Contract request → response | Trạng thái runtime / owner |
 | --- | --- | --- |
-| POST `/v1/sessions` | Create/resolve external session | T10 |
-| GET/DELETE `/v1/sessions/{session_id}` | Metadata / tombstone | T10 |
-| POST/GET `/v1/sessions/{session_id}/documents` | Register/list trong session | T12 |
-| DELETE `/v1/sessions/{session_id}/documents/{document_id}` | Detach, giữ source/index | T12 |
-| GET `/v1/jobs/{job_id}` | Job status/progress | T12/T19 |
-| POST `/v1/jobs/{job_id}/retry` | Idempotent allowed retry | T12/T19 |
-| POST `/v1/query` | Final answer JSON | T24/T26 |
-| POST `/v1/query/stream` | SSE | T25/T26 |
-| GET `/v1/sessions/{session_id}/citations/{chunk_id}` | Resolve citation trong current scope | T24 |
-| GET `/health/live`, `/health/ready` | Process/dependency status | T02 |
-| `/admin/*`, `/v1/admin/*`, protected `/metrics` | UI và metadata operations | T27–T29 |
+| POST `/v1/sessions` | SessionCreateRequest → SessionResponse | DESIGNED, chưa mount / T10 |
+| GET/DELETE `/v1/sessions/{session_id}` | path UUID → SessionResponse | DESIGNED, chưa mount / T10 |
+| POST `/v1/sessions/{session_id}/documents` | DocumentRegisterRequest → 202 DocumentRegisterResponse | DESIGNED, chưa mount / T12 |
+| GET `/v1/sessions/{session_id}/documents` | cursor, limit 1–50 → DocumentListResponse | DESIGNED, chưa mount / T12 |
+| DELETE `/v1/sessions/{session_id}/documents/{document_id}` | path UUIDs → DetachResponse | DESIGNED, chưa mount / T12 |
+| GET `/v1/jobs/{job_id}` | path UUID → JobResponse | DESIGNED, chưa mount / T12/T19 |
+| POST `/v1/jobs/{job_id}/retry` | path UUID → JobResponse | DESIGNED, chưa mount / T12/T19 |
+| POST `/v1/query` | QueryRequest → QueryResponse | DESIGNED, chưa mount / T24/T26 |
+| POST `/v1/query/stream` | QueryRequest → SSE frames (parsed SSEEvent contract) | DESIGNED, chưa mount / T25/T26 |
+| GET `/v1/sessions/{session_id}/citations/{chunk_id}` | path UUID/chunk ID → CitationResolveResponse | DESIGNED, chưa mount / T24 |
+| GET `/health/live`, `/health/ready` | LiveResponse / ReadyResponse, ready lỗi 503 | VERIFIED served / T02 |
+| `/admin/*`, `/v1/admin/*`, protected `/metrics` | Deferred metadata/UI/metrics inventory; chưa chốt action schemas | DESIGNED / T27–T29/T32 |
 
 Không có route xóa object nguồn, arbitrary search hoặc user-wide query bỏ session.
 
@@ -230,23 +234,41 @@ Không có route xóa object nguồn, arbitrary search hoặc user-wide query b�
 | Rate limit/queue full | 429 + Retry-After | Backoff có giới hạn, ghi admission failures |
 | Provider/dependency/timeout | 502/503/504 | Hiển thị lỗi kỹ thuật; không coi là insufficient |
 
-Error JSON: `error.code`, `error.message`, `error.retryable`, `request_id`; details không chứa secrets. Exact examples/request schemas sẽ được verify trong T03/T26/T35.
+Error JSON: `error.code`, `error.message`, `error.retryable`, `request_id`; `error.details` là list chỉ gồm allowlisted field/reason, không có raw input/stack. Adapter tương lai phải chọn message public đã redacted, không dump trực tiếp ValidationError/exception. 429 có `Retry-After`. Health 503 giữ body riêng `status/components` của T02. Route chưa mount hiện trả framework 404 `{"detail":"Not Found"}`, chưa là business error envelope đã implement.
+
+### Export và validation T03
+
+```powershell
+uv run python scripts/export_openapi.py
+uv run python scripts/export_openapi.py --check
+uv run pytest tests/contract/test_api_schema.py
+```
+
+Prerequisites: `uv sync --locked --group dev --group api`, Python 3.12; không cần DSN/secrets/services/provider. [Designed snapshot](docs/api/openapi-v1.designed.json) có 13 operations với `x-served`/`x-implementation-status`; [served snapshot](docs/api/openapi.served.json) được inspect từ factory, chỉ 2 health paths. `/openapi.json` của app là served schema, không quảng cáo business routes. [JSON examples](docs/api/examples-v1.json) gồm 37 trường hợp synthetic với `schema` và `value`: default/document/multilingual queries, registration/lifecycle, supported/insufficient response, notified history truncation, đủ locators và SSE done/error traces. Không dùng những examples này làm live result.
+
+Exporter validate OpenAPI qua FastAPI OpenAPI model, refs local và từng schema bằng `jsonschema` Draft 2020-12, mỗi example theo exported component schema có UUID format checker, rồi theo Pydantic và serialization round-trip. `--check` kiểm snapshot drift, không ghi file. Schema biểu diễn domain/subset conditional constraints, enum, lengths/bounds, unique document/language lists, source fingerprint và discriminated locator/event. Quan hệ citation/context, answer IDs/reason, locator range ordering, history count consistency và SSE event sequence là additional Pydantic checks; JSON Schema không thay thế các checks này. Auth, ownership, trusted upload link/allowlist, ready version/generation, measured file parsing, tokenizer budgets, factual quote/support và scope revalidation là runtime gates ở task sau. Actual evidence [H-T03-A02](docs/handoffs.md#h-t03-a02); [H-T03-A01](docs/handoffs.md#h-t03-a01) chỉ ghi recovery/runtime reports, không thay command outputs A02.
+
+Compatibility: đây là design v1 đầu tiên, không có client business/runtime trước đó hoặc DB migration. Khi schema thay đổi, regenerate snapshots/examples và chạy contract/export checks trong cùng task; breaking v1 change cần ghi migration/client impact theo P13, không sửa snapshot riêng để tránh gate.
 
 <a id="r06"></a>
 ## R06. Query, history và languages
 
-**DESIGNED — T20–T26.**
+**T03 structural contracts VERIFIED; retrieval/history processing/generation runtime DESIGNED — T20–T26.**
 
 - Bắt buộc session_id và câu hỏi; `domain` mặc định `default` nếu vắng mặt. Examples gửi rõ domain để người tích hợp dễ đối chiếu.
 - Default: tất cả ready documents của session; không nhận document subset.
 - Document: `document_ids` bắt buộc, nonempty, mọi ID là subset của session.
 - Multilingual: toàn bộ session hoặc subset, optional `corpus_languages`, `answer_language`; chỉ EN/VI được nghiệm thu bản đầu.
 - Empty array là lỗi, không “all”. Tài liệu selected chưa ready không âm thầm bị loại khỏi câu trả lời.
+- Default không nhận `document_ids`, kể cả explicit null; serialization Pydantic tự bỏ `document_ids=None` để request hợp lệ round-trip. Với Multilingual, bỏ/null subset nghĩa toàn bộ tài liệu hợp lệ trong session; `[]` vẫn invalid. `bilingual` là nhãn corpus, không là API domain.
 - App gửi history `user/assistant` trong request, core không lưu transcript mặc định. Giới hạn mục tiêu 20 messages/8.000 tokens; trả metadata khi truncation.
+- Schema chấp nhận history vượt processing budget, không cắt/reject theo token ước lượng. Runtime T20 phải cắt bằng tokenizer thật; SSE `meta.history` và JSON `warnings[{code:history_truncated,message,history}]` báo received/retained message và token counts + `truncated`. Token counts chưa đo dùng cả hai null; không bịa 0. Schema kiểm count consistency, không hứa đã xử lý history.
 - History giúp rewrite câu hỏi nối tiếp; không cung cấp factual evidence từ session/tài liệu khác. Core chỉ trích dẫn passages vừa được xác minh current scope.
 - Default answer language theo câu hỏi; có override cho evaluation/app. Cross-lingual evaluation dùng language của gold answer, không nhầm với default sản phẩm.
 
 Response đầy đủ: `request_id`, `session_id`, `scope_revision`, `domain`, `answer`, `answerability`, `reason_code`, `citations`, `contexts`, `usage`, `timings_ms`, `warnings` theo [P06](docs/plan.md#p06).
+
+`ContractLimits` giữ defaults: 50 documents/session, 104857600 bytes/file (100 MiB), 1000 pages/file, 20 history messages/8000 tokens, question 4000 characters, context 8000/output 1024 tokens. Question/subset/metadata/file measurements có boundary tests; file bytes/pages phải đo từ nguồn và enforce ở ingestion, tổng session docs ở lifecycle, context/output/history tokens bằng tokenizer runtime. Client không override limit/provider/model/system instructions/identity trong body. `usage.provider/model/input_tokens/output_tokens` và `timings_ms.retrieval/generation/total` chưa có dùng null; ví dụ không có measurement giả.
 
 ### App gọi LLM viết lại
 
@@ -255,15 +277,18 @@ Scarlet có thể dùng contexts/citations cùng answer của core làm input LL
 <a id="r07"></a>
 ## R07. Streaming client và cancellation
 
-**DESIGNED — T25/T35.**
+**T03 payload/logical trace contracts VERIFIED; streaming transport/provider/cancel runtime DESIGNED — T25/T35.**
 
 - Dùng HTTPX async stream hoặc fetch streaming cho POST có headers auth; không dựa native EventSource GET.
 - Parse UTF-8 incremental và SSE event frames theo dòng trống; chunk TCP không đồng nghĩa một event hoặc một ký tự hoàn chỉnh.
 - Event order: `meta -> evidence -> answer_delta* -> done|error`; heartbeat comments không là answer text.
+- Retrieval/scope failure sau meta có thể kết thúc `meta -> error` trước evidence. Logical completed trace có đúng một terminal, ID integer dương tăng trong request; final request/session/revision/domain/evidence và history truncation metadata phải khớp meta/evidence. EOF không terminal là incomplete. Whitespace delta hợp lệ.
+- Wire là UTF-8 SSE `id: ...`, `event: ...`, `data: <JSON>` và dòng trống; snapshot `SSEEvent` là representation của event đã parse, không là JSON response body trực tiếp. `SSESequence` là validator của complete event trace; heartbeat `: keep-alive` không có event/id/data và không nằm trong trace.
 - Hiển thị delta là tạm; chỉ lưu transcript final khi nhận `done` hợp lệ. Nhận `error`/EOF không done thì đánh dấu incomplete.
 - `done` chứa final response đã validate; citations/contexts không tự lấy từ một stream trước để bù phần thiếu.
 - UI cancel/disconnect phải đóng upstream HTTP connection; server giải phóng semaphore. Không retry stream đang phát rồi nối thêm answer mới.
 - Detach/delete giữa stream: core kiểm scope revision, phát `session_scope_changed` và dừng. Bytes đã gửi không thể thu hồi; client phải ngừng dùng answer chưa hoàn tất.
+- Runtime phải revalidate trước evidence, mỗi batch delta và done; JSON revalidate trước serialize. T03 chưa thực hiện những checks runtime này và chưa claim query/SSE live verification.
 - Event IDs chỉ trong request; chưa hỗ trợ resume/replay. Heartbeat/idle/total timeout defaults sẽ ghi sau đo thực.
 
 T35 sẽ thêm client FastAPI/HTTPX độc lập chạy thật, xử lý chunk boundaries, lỗi, history và cancellation. Không gọi pseudocode hiện tại là integration đã kiểm chứng.
@@ -271,7 +296,7 @@ T35 sẽ thêm client FastAPI/HTTPX độc lập chạy thật, xử lý chunk b
 <a id="r08"></a>
 ## R08. Citations, xóa chat và retained index
 
-**DESIGNED — T10/T16/T24/T25.**
+**T03 locator structural schemas VERIFIED; parsing/resolver/scope/lifecycle runtime DESIGNED — T10/T16/T24/T25.**
 
 | Format | Vị trí nguồn |
 | --- | --- |
@@ -282,6 +307,8 @@ T35 sẽ thêm client FastAPI/HTTPX độc lập chạy thật, xử lý chunk b
 | TXT/MD/HTML/CSV/image | Lines/paragraphs/rows/OCR block tương ứng |
 
 App hiển thị filename+locator, dùng citation resolver có auth/current session để lấy metadata/quote. Core không phát URL public của object; app tự cấp download link nếu quyền ứng dụng cho phép. Resolver recheck scope; retained chunk UUID không là vé truy cập.
+
+Machine fields: PDF `page` physical one-based + optional `printed_page_label`; DOCX `heading_path` + `paragraph` hoặc `table`; XLSX `sheet/cell_range/headers/unit`; PPTX `slide/shape/block`; TXT/MD `line_start/line_end` hoặc `paragraph`, optional half-open `offsets.start/end`; CSV `row_start/row_end/columns`; HTML `heading_path/block`; image `image_id/ocr_block/bbox` (pixel x0/y0/x1/y1). Lines/rows/slides/pages one-based; paragraph/table/shape/block indices zero-based. DOCX/XLSX/PPTX/text/CSV/HTML/image không nhận page giả. Storage `source.version_id` là chuỗi opaque, còn response/citation `version_id` là UUID DocumentVersion nội bộ; không lẫn hai định danh.
 
 Xóa chat:
 

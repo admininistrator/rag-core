@@ -4,17 +4,11 @@
 
 ## Current checkpoint
 
-- **Giai đoạn:** Phase 0 / T02 / attempt T02-A03 đề nghị COMPLETE tại completion commit `feat(T02): add local Docker infrastructure`, hợp lệ sau commit thành công và Orchestrator review. A03 tiếp quản candidate A02 chưa commit; A01 dừng ở runtime trước mọi repo mutation.
-- **Dependency:** T01 COMPLETE tại commit `ff8069abfd2e41fb9618eb7d35fa22bf220a39d6` (`feat(T01): scaffold Python project and quality checks`) và đã được Orchestrator nghiệm thu; T00 commit `7025eeac080b481c17f7d68f0290b1ee3e3165e9`.
-- **Branch/starting HEAD:** `main` / `ff8069abfd2e41fb9618eb7d35fa22bf220a39d6`; baseline A03 gồm đúng 21 file T02-A02 dirty/untracked trong phạm vi được tiếp quản, không có T02 commit.
-- **Runtime worker:** A03 thread `01a0a9a0-7c47-7b43-bd6c-09b38a8303a8`, turn `01a0a9a0-7cc9-7031-adb0-83aed0d1bcdf`, model `gpt-5.6-sol`, effort `xhigh`, cwd repo; fresh context đúng worker contract.
-- **Phục hồi:** khi người dùng yêu cầu continue, Orchestrator kiểm lifecycle chỉ còn root, không có worker A02 active. Nguyên nhân A02 không còn trong runtime chưa xác định; không quy thành quota/crash. A02 chưa COMPLETE vì chưa có completion commit; giữ nguyên implementation và bằng chứng A02, A03 review/kiểm tra hiện tại/commit.
-- **Checkpoint:** A03 config/up-build/wait/current health/ps/inspect và readonly PG/Qdrant/MinIO fixture PASS; source Python SHA-256 all6 files bằng final API image/container `sha256:64673d7032b879f4a76bcb65b48766fcbd29165802343f664f7133f3e69bba42`, Python3.12.13/non-root10001. Redis outage và controlled PG/Qdrant/MinIO restart persistence kế thừa evidence A02, source/config không đổi. A03 locked sync/Ruff/mypy/7 unit/docs/lock/PowerShell/scope/secrets checks PASS, stage explicit21/cached review PASS. Prompt nguyên SHA-256 `7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46`, blob `81ab3c77530722968d847391d8095284f1a874a9`; Docker daemon29.5.2; không sửa/download corpus.
-- **Task tiếp theo:** resolve completion commit T02 và Orchestrator review hash/diff/DoD/current git status; sau nghiệm thu mới spawn worker/context mới T03. A03 kết thúc sau báo cáo commit, không reuse.
-- **Bất biến cần nhớ:** mọi query session-only; index retained không cấp quyền; app sở hữu source/history; không tích hợp Scarlet trong backlog này.
-- **Orchestrator:** GPT-6-Astra, chỉ điều phối; worker GPT-5.6-Sol/xhigh mới từng task/attempt, không fork history, không song song. Đọc AGENTS trước giao việc.
-- **Quyết định người dùng còn thiếu:** không còn yêu cầu sản phẩm pending. Secrets/môi trường implementation cần kiểm tại task tương ứng, không giả định đã có.
-- **Commit T00:** subject `docs(T00): establish RAG core implementation blueprint`. Resolve bằng `git log -1 --format=%H --grep="^docs(T00):"`; nếu không tồn tại thì T00 còn ở bước commit và không được bắt đầu T01. Hash/output commit trả sau commit trong báo cáo session, tránh tự tham chiếu hash vào chính commit đó.
+- **Current:** Phase 0 / T03 / `T03-A02` đề nghị COMPLETE tại completion commit `feat(T03): define versioned API contracts`, chỉ hợp lệ sau commit thành công và Orchestrator review. Worker `/root/t03_a02`, `gpt-5.6-sol`/`xhigh`, context mới `fork_turns="none"`, spawn/runtime được Orchestrator xác minh; bắt đầu 2026-09-17 11:51 +07:00, ended timestamp/hash/output trả root post-commit. Baseline `main`/`851ff1d10b49b6a4d7ae7e1756f2c2a1b8562e96`, đúng 16 candidate files T03 dirty/untracked; completion scope 17 files tại [T03](tasks.md#t03).
+- **Recovery:** A01 đã kết thúc do runtime quota, không có completion commit; đã có contracts/exporter/tests/snapshots/examples và README/RUNBOOK candidate, checkpoint cũ “chưa code/DoD” đã stale. A02 review và thu actual evidence mới; [H-T03-A01](#h-t03-a01) giữ runtime event/report boundary trung thực.
+- **Dependencies accepted:** T02 `851ff1d10b49b6a4d7ae7e1756f2c2a1b8562e96`, T01 `ff8069abfd2e41fb9618eb7d35fa22bf220a39d6`, T00 `7025eeac080b481c17f7d68f0290b1ee3e3165e9`; notes/summary/evidence đã đọc. T02 historical evidence phía dưới giữ nguyên.
+- **Verified boundary/next:** actual A02 locked sync/Ruff/mypy 11 source/unit 7/contract 83/export +drift 13 ops/2 health/48 schemas/37 synthetic examples/docs/scope/secrets/prompt PASS; explicit stage 17/cached review PASS. Evidence [H-T03-A02](#h-t03-a02). Business/auth/ingestion/retrieval/provider/SSE transport/UI vẫn DESIGNED. Resolve completion hash/current status và root review, rồi fresh worker T04; A02 kết thúc, không tự nhận task sau.
+- **Invariants:** mọi query current-session-only, index retained không cấp quyền; app sở hữu source/history. Không sửa prompt corpus/plan/AGENTS, không cloud/server/Scarlet/push/merge. Worker mới từng attempt, chỉ một worker active, Orchestrator read-only.
 
 ## Cách ghi bằng chứng
 
@@ -1069,3 +1063,319 @@ DOCUMENTATION CHECK: PASS
 Chỉ ba sổ docs được restage explicit sau bổ sung staged-review/current completion proposal này; cached whitespace/docs checks chạy lại trước commit. Không code/config/test thay đổi sau final Docker image/source proof và quality PASS.
 
 Theo P14, `COMPLETE` trong nội dung completion commit là đề nghị đóng task, chỉ có hiệu lực khi commit thành công và Orchestrator review. Completion command kế tiếp `git commit -m "feat(T02): add local Docker infrastructure"`; actual exit/output/hash/time và post-commit git status trả trong worker report, không tạo vòng self-reference/amend để ghi hash vào chính commit. Nếu commit fail, task chưa COMPLETE và phải báo root với reproduction.
+
+<a id="h-t03-a01"></a>
+## H-T03-A01 — Phase 0 / T03 / attempt T03-A01 — Recovery record
+
+- **Status:** attempt kết thúc do runtime quota, chưa COMPLETE/commit. A02 append record này từ recovery brief của Orchestrator; không phải evidence shell đã chạy trong A01.
+- **Runtime:** worker `/root/t03_a01`, `gpt-5.6-sol`/`xhigh`, fresh context; started 2026-09-16 17:05 +07:00, turn `01a0a9ad-1977-7a52-a89d-5c49faa92f74`. Root đã kiểm lifecycle không còn A01 trước spawn A02.
+- **Runtime event nguyên văn:** `Agent errored: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 9:49 PM.` Đây là runtime event, không shell output; không suy ngày/giờ kết thúc từ “9:49 PM”.
+- **Candidate/last good:** HEAD T02 `851ff1d10b49b6a4d7ae7e1756f2c2a1b8562e96`; 16 dirty/untracked T03 files: README/RUNBOOK/tasks/handoffs, pyproject/lock, 3 JSON artifacts, exporter, 5 contract modules, contract tests. Summary chưa ghi T03; checkpoint/links stale. Không có actual shell logs A01 được recovery brief cung cấp, nên không fabricate command/exit/output.
+- **Reports only:** A01 messages báo Ruff PASS, mypy 11 source PASS, 7 unit PASS, 83 contract PASS và export 13 designed operations/2 served health/48 schemas/37 synthetic examples PASS. Những messages này không dùng làm current DoD evidence; A02 chạy checks mới và lưu output thật riêng.
+- **Candidate decisions reported/reviewed:** Default dump bỏ document_ids=None; SSE whitespace delta hợp lệ; bbox finite nonnegative floats; validation qua OpenAPI model + Draft2020-12/UUID format checker + Pydantic/roundtrip. JSON roundtrip fixture tránh shared-object deepcopy làm evidence/done cùng thay đổi. A02 review implementation trước nghiệm thu.
+- **Next:** fresh worker T03-A02 review/actual checks/docs/explicit completion commit. Không đổi semantics hoặc gate để vượt quota.
+
+<a id="h-t03-a02"></a>
+## H-T03-A02 — Phase 0 / T03 / attempt T03-A02
+
+### Identity, recovery, baseline và review
+
+- Worker `/root/t03_a02`, `gpt-5.6-sol`/`xhigh`, fresh context `fork_turns="none"` theo spawn/runtime verification của Orchestrator; started 2026-09-17 11:51 +07:00. Không spawn agent/chạy task tiếp. Local repo không có `.codex`/`.agents` turn_context metadata; read-only `rg --files --hidden .codex .agents -g '*context*' -g '*runtime*' -g '*session*'` báo hai directory không tồn tại, không đọc session/auth ngoài repo hoặc tự đổi model. Runtime verification do Orchestrator cung cấp, không gọi prompt tự đổi model.
+- A01 đã kết thúc do quota, không writer active khác. Event/report boundary/last-good ở [H-T03-A01](#h-t03-a01); không fabricate A01 shell evidence.
+- Đã đọc AGENTS, T03/T01/T02 toàn notes; P01/P03/P04/P05/P06/P07/P09/P13; handoffs/implementation-summary/README/RUNBOOK và source/test/config candidate trước mutation. T01/T02 COMPLETE được root nghiệm thu.
+- CWD mọi commands dưới đây: `C:\Users\Admin\Documents\GitHub\rag-core`. Không cần DSN/secrets/Docker services/provider/model/GPU cho T03. Config: projectPython3.12.*, uv0.11.16, CPython3.12.4, dev+api locked groups; no skip/mock thay live. Unit health có injection; exporter inspect factory không probe service; contract/SSE chỉ structural/logical checks.
+- Baseline command nguyên văn `git status --short; git branch --show-current; git rev-parse HEAD`, exit **0**, output thật:
+
+```text
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+ M README.md
+ M RUNBOOK.md
+ M docs/handoffs.md
+ M docs/tasks.md
+ M pyproject.toml
+ M uv.lock
+?? docs/api/
+?? scripts/export_openapi.py
+?? src/rag_core/contracts/
+?? tests/contract/
+main
+851ff1d10b49b6a4d7ae7e1756f2c2a1b8562e96
+```
+
+Exact untracked inventory read qua `git ls-files --others --exclude-standard` (**0**): 3 docs/api JSON, exporter, 5 contracts modules, `tests/contract/test_api_schema.py`; tổng 16 candidate files. Completion allowed scope thêm summary thành 17 files, không file lạ. Git ignore permission warning baseline giữ nguyên; không sửa global config.
+
+A02 review candidate v1/SSE/OpenAPI/examples/exporter/test và dev dependency/lock; không có code blocker cần đổi semantics, giữ source/test/config. Contracts cấm extra client identity/policy/system roles, quy định subsets/languages/limits/history metadata/locators/error/evidence links; sequence kiểm logical complete trace, không runtime stream. App health source/config giữ nguyên T02, không build/re-run integration liên quan.
+
+### D2 — Locked env, quality và unit regression
+
+Mỗi command riêng, exit **0**, expected = clean locked CPython 3.12 environment và quality/unit PASS, actual như output. Log `.local/` đã ignore và kiểm không private content; không cần redaction giá trị (filename `.redacted.log` là convention, không claim có credential đã được đọc).
+
+Sync command nguyên văn:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv sync --locked --group dev --group api 2>&1 | Tee-Object -FilePath .local/t03-a02-sync.redacted.log; exit $LASTEXITCODE
+```
+
+Output excerpt thật; full output `.local/t03-a02-sync.redacted.log`:
+
+```text
+uv : Resolved 77 packages in 2ms
+Checked 44 packages in 168ms
+```
+
+PowerShell 5 redirection format stderr `Resolved` thành NativeCommandError với command source line/category metadata; actual uv exit 0, không dependency failure. Các checks sau dùng `ForEach-Object { $_.ToString() }` giữ native output string trong log.
+
+Interpreter/lock command nguyên văn:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv --version; uv run python --version; uv lock --check; exit $LASTEXITCODE
+```
+
+Output thật:
+
+```text
+uv 0.11.16 (135a36367 2026-05-21 x86_64-pc-windows-msvc)
+Python 3.12.4
+Resolved 77 packages in 0.88ms
+```
+
+Ruff command nguyên văn:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run ruff check . 2>&1 | ForEach-Object { $_.ToString() } | Tee-Object -FilePath .local/t03-a02-ruff.redacted.log; exit $LASTEXITCODE
+```
+
+Output thật `All checks passed!`.
+
+Mypy command nguyên văn:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run mypy src 2>&1 | ForEach-Object { $_.ToString() } | Tee-Object -FilePath .local/t03-a02-mypy.redacted.log; exit $LASTEXITCODE
+```
+
+Output thật `Success: no issues found in 11 source files`.
+
+Unit command nguyên văn:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run pytest tests/unit 2>&1 | ForEach-Object { $_.ToString() } | Tee-Object -FilePath .local/t03-a02-unit.redacted.log; exit $LASTEXITCODE
+```
+
+Output excerpt thật; full log `.local/t03-a02-unit.redacted.log`:
+
+```text
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+collected 7 items
+
+tests\unit\test_health.py ...                                            [ 42%]
+tests\unit\test_settings.py ....                                         [100%]
+
+============================== 7 passed in 1.20s ==============================
+```
+
+<a id="h-t03-a02-dod1"></a>
+### DoD-1 — Domain/subset/history/language/limits/locator/error/SSE contracts
+
+Command nguyên văn:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run pytest tests/contract/test_api_schema.py 2>&1 | ForEach-Object { $_.ToString() } | Tee-Object -FilePath .local/t03-a02-contract.redacted.log; exit $LASTEXITCODE
+```
+
+Exit **0**, expected = requested validation including client identity/system override refusal, actual **83 PASS, không skip**. Output excerpt thật; full log `.local/t03-a02-contract.redacted.log`:
+
+```text
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+collected 83 items
+
+tests\contract\test_api_schema.py ...................................... [ 45%]
+.............................................                            [100%]
+
+============================= 83 passed in 2.06s ==============================
+```
+
+Coverage thực: Default subset refusal/serialization; Document required nonempty unique <=50; Multilingual optional subset/EN-VI unique languages; banned privileged body/history roles; question 1/4000/4001 +blank, measured file 100 MiB/1000 pages; history above processing budget accepted +counts/warnings consistency; immutable source fingerprint/no arbitrary URL; invalid locators/ranges/page zero/fake page/nonfinite timing; evidence/citation/reason/unknown usage; complete SSE order/terminal/ID/scope/evidence/early error/whitespace delta/heartbeat; snapshots/examples JSON Schema+Pydantic; all 11 designed business ops framework 404, no stub success. Structural validation không auth/owner/query/provider/live/factual verification.
+
+<a id="h-t03-a02-dod2"></a>
+### DoD-2 — Export, snapshot/example validation và served/design boundary
+
+Export command nguyên văn:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run python scripts/export_openapi.py 2>&1 | ForEach-Object { $_.ToString() } | Tee-Object -FilePath .local/t03-a02-export.redacted.log; exit $LASTEXITCODE
+```
+
+Exit **0**, expected = 3 reproducible JSON artifacts, valid schemas/examples and clear health-only served routes, actual = **PASS**. Output thật:
+
+```text
+PASS exported docs/api/openapi-v1.designed.json
+PASS exported docs/api/openapi.served.json
+PASS exported docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+Drift command nguyên văn:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run python scripts/export_openapi.py --check 2>&1 | ForEach-Object { $_.ToString() } | Tee-Object -FilePath .local/t03-a02-export-check.redacted.log; exit $LASTEXITCODE
+```
+
+Exit **0**, expected = existing snapshots equal regenerated machine schemas/examples without writes, actual = **PASS**. Output thật:
+
+```text
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+Designed health ops `x-served=true`/VERIFIED theo T02; 11 business ops `x-served=false`/DESIGNED chưa mount. Served export inspect factory chỉ `/health/live`/`/health/ready`; không có readiness probe hay HTTP call đến Docker/provider. `/metrics`/admin còn deferred inventory. JSON examples có explicit synthetic design status, không endpoint output. Pydantic additional relational checks ghi RUNBOOK, không nói JSON Schema đủ ownership/factual enforcement.
+
+### D1/D5 — Scope, diff, secrets/artifacts/dependency/prompt review
+
+Read-only diff/identity/time command nguyên văn:
+
+```powershell
+git diff --check; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; git diff --stat; git diff --name-only; git ls-files --others --exclude-standard; git var GIT_AUTHOR_IDENT; Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz'
+```
+
+Exit **0**, whitespace check stdout rỗng; tracked 6 +untracked 10 đúng baseline 16 paths trước summary append, không ngoài allowed 17. Git author sẵn có, không cấu hình identity. Output excerpt thật:
+
+```text
+ 6 files changed, 157 insertions(+), 33 deletions(-)
+Vincent <zayncaster24@gmail.com> 1789620815 +0700
+2026-09-17 11:53:35 +07:00
+```
+
+CRLF→LF warning xuất hiện vì PowerShell append vào hai docs; final docs normalize UTF-8/LF theo attributes trước staged review, giữ prompt exception nguyên byte. Không sửa code/test/config T02 hoặc plan/AGENTS.
+
+Review command nguyên văn (sensitive matches chỉ đếm, không in credential; source/docs đã đọc thủ công):
+
+```powershell
+$candidate=@('README.md','RUNBOOK.md','docs/handoffs.md','docs/tasks.md','docs/implementation-summary.md','pyproject.toml','uv.lock','docs/api/examples-v1.json','docs/api/openapi-v1.designed.json','docs/api/openapi.served.json','scripts/export_openapi.py','src/rag_core/contracts/__init__.py','src/rag_core/contracts/examples.py','src/rag_core/contracts/openapi.py','src/rag_core/contracts/sse.py','src/rag_core/contracts/v1.py','tests/contract/test_api_schema.py'); $items=@($candidate | ForEach-Object {Get-Item -LiteralPath $_}); if(@($items | Where-Object Length -gt 1048576).Count -ne 0){throw 'Large artifact found'}; $changed=@(git diff --name-only); $untracked=@(git ls-files --others --exclude-standard); if(@(($changed+$untracked) | Where-Object {$_ -notin $candidate}).Count -ne 0){throw 'Out-of-scope changed path'}; $suspicious=@(rg -l '(sk-[A-Za-z0-9_-]{20,}|AKIA[A-Z0-9]{16}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----)' -- $candidate); if($suspicious.Count -ne 0){throw 'Credential marker found; review without printing values'}; $matches=@(rg -n -i '(api[_-]?key|secret|password|bearer|private[_-]?key|access[_-]?key|token)' -- $candidate); Write-Output "Sensitive-name matches reviewed in source/docs: $($matches.Count)"; $unexpected=@(rg '^source = ' uv.lock | Sort-Object -Unique | Where-Object {$_ -ne 'source = { registry = "https://pypi.org/simple" }' -and $_ -ne 'source = { editable = "." }'}); if($unexpected.Count -ne 0){throw 'Unexpected lock source'}; $promptPath='corpus-documents/Codex Prompt – Build RAG Evaluation Corpus.md'; $raw=(git hash-object --no-filters -- "$promptPath").Trim(); $sha=(Get-FileHash -Algorithm SHA256 -LiteralPath $promptPath).Hash; if($raw -ne '81ab3c77530722968d847391d8095284f1a874a9' -or $sha -ne '7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46'){throw 'Prompt bytes changed'}; Write-Output "PASS candidate_files=$($items.Count) files_over_1MiB=0 changed_paths=$($changed.Count+$untracked.Count) out_of_scope=0 credential_markers=0"; Write-Output 'PASS uv.lock sources: local editable project + PyPI registry only'; Write-Output "PASS original prompt blob=$raw SHA256=$sha"; $paths=@('.env','.local/secrets/postgres_password','.local/secrets/minio_root_user','.local/secrets/minio_root_password','.local/t03-a02-contract.redacted.log','.uv-cache/placeholder','.uv-python/placeholder'); $ignored=@(git check-ignore -v --no-index -- $paths); $ignored; if($ignored.Count -ne $paths.Count){throw 'Ignored path count differs'}; Write-Output 'PASS all local secret/cache/log paths ignored'
+```
+
+Exit **0**, expected = no out-of-scope files/secrets/raw corpus/weights/runtime and prompt bytes unchanged, actual PASS. Output thật (global ignore/CRLF warnings baseline omitted here):
+
+```text
+Sensitive-name matches reviewed in source/docs: 172
+PASS candidate_files=17 files_over_1MiB=0 changed_paths=16 out_of_scope=0 credential_markers=0
+PASS uv.lock sources: local editable project + PyPI registry only
+PASS original prompt blob=81ab3c77530722968d847391d8095284f1a874a9 SHA256=7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46
+.gitignore:22:.env	.env
+.gitignore:32:/.local/	.local/secrets/postgres_password
+.gitignore:32:/.local/	.local/secrets/minio_root_user
+.gitignore:32:/.local/	.local/secrets/minio_root_password
+.gitignore:32:/.local/	.local/t03-a02-contract.redacted.log
+.gitignore:10:.uv-cache/	.uv-cache/placeholder
+.gitignore:11:.uv-python/	.uv-python/placeholder
+PASS all local secret/cache/log paths ignored
+```
+
+Dev-only jsonschema 4.26.0 và 4 transitive packages, PyPI+local editable sources, lock 77; không heavyweight/provider/runtime dependency hoặc migration. Initial v1 DESIGN không có business client cần migration; RUNBOOK future compatibility contract regenerate+checks/client impact ghi cùng schema changes. Không fake author/hook bypass/rebase/reset/amend/push/merge, không original/volume deletes/cloud/Scarlet. History/docs mentions tokens/credentials/secret policies là safe text; JSON UUID/content synthetic, không private data.
+
+### D4 — README/RUNBOOK và implementation memory
+
+README/RUNBOOK có exact export/quality commands, schema/artifact links, R05 matrix mọi business route DESIGNED và health served, R06 subset/history/language/limits/unknown measurements, R07 logical SSE vs transport, R08 format locators/version IDs/lifecycle. Actual evidence links chuyển A02, giữ A01 recovery. Tasks có attempt/files/DoD/D1–D6/commit resolver/limits; summary append Phase 0/T03/A01 recovery và A02 interfaces/decisions/tests/migrations/known limits. Current checkpoint đầu cập nhật khỏi stale A01. Docs check actual output và D6 staged/commit boundary append sau.
+
+### D1–D6 và completion boundary
+
+- **D1 PASS:** dependencies notes/evidence đọc, candidate review và diff check/scope/prompt proof như trên; final staged scope assertion bên dưới.
+- **D2 PASS:** locked dev/api sync, Ruff, strict mypy 11 source, 7 unit và 83 contract tests. Không skip hoặc live provider requirement ở T03.
+- **D3 PASS:** riêng DoD-1 contract 83 và DoD-2 export+drift 13 ops/2 health/48 schemas/37 examples có commands/cwd/exit/expected/actual ở trên.
+- **D4:** docs/summary/evidence cập nhật; docs check current output bên dưới trước completion commit.
+- **D5 PASS:** source/test/design/example/dependency diff manual review, sensitive-name/artifact/ignore/lock/prompt proof; không migrations, future contract compatibility trong RUNBOOK.
+- **D6:** stage explicit 17 paths/cached review/completion commit theo subject `feat(T03): define versioned API contracts`; COMPLETE chỉ hợp lệ sau actual successful commit +root review. Actual hash trả root post-commit, không self-reference/amend.
+- **Blockers/limits:** không blocker T03 cần user input; runtime auth/ownership/current-session/readiness/tokenizers/factual citation/revision checks/provider/transport/cancel/UI chưa implement và không claim VERIFIED. T02 integration không chạy lại khi source/config không đổi. Next: root review rồi worker fresh T04; A02 kết thúc, không nhận task tiếp.
+
+### D4 actual docs check sau append recovery/evidence/summary
+
+Command nguyên văn (chỉ normalize hai docs thuộc scope, prompt không được đụng):
+
+```powershell
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false; foreach($docPath in @('docs/handoffs.md','docs/implementation-summary.md')){$absolutePath=(Resolve-Path -LiteralPath $docPath).Path; $docText=[System.IO.File]::ReadAllText($absolutePath,[System.Text.Encoding]::UTF8).Replace("`r`n","`n"); [System.IO.File]::WriteAllText($absolutePath,$docText,$utf8NoBom)}; Write-Output 'PASS appended docs normalized UTF-8 without BOM / LF: 2 files'; $env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run python scripts/check_docs.py 2>&1 | ForEach-Object { $_.ToString() } | Tee-Object -FilePath .local/t03-a02-docs.redacted.log; exit $LASTEXITCODE
+```
+
+Exit **0**, expected = UTF-8/LF, links including recovered H-T03-A01/current H-T03-A02 + task fields/dependencies valid, actual PASS; output thật:
+
+```text
+PASS appended docs normalized UTF-8 without BOM / LF: 2 files
+PASS UTF-8/nonempty Markdown: 8 files
+PASS internal links/anchors: 163
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+**D4 PASS.** Final execution notes/staged review additions được docs-check lại trước commit ở D6; không chạy lại quality/tests khi source/test/config không thay đổi sau PASS.
+
+<a id="h-t03-a02-d6"></a>
+### D6 — Explicit staging, cached review và final commit boundary
+
+Stage command nguyên văn:
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md pyproject.toml uv.lock docs/api/examples-v1.json docs/api/openapi-v1.designed.json docs/api/openapi.served.json scripts/export_openapi.py src/rag_core/contracts/__init__.py src/rag_core/contracts/examples.py src/rag_core/contracts/openapi.py src/rag_core/contracts/sse.py src/rag_core/contracts/v1.py tests/contract/test_api_schema.py
+```
+
+Exit **0**, stdout rỗng; approved sandbox escalation chỉ ghi `.git` index cho 17 files T03 đã được giao, không push/history changes. Không dùng `git add .`.
+
+Cached review command nguyên văn:
+
+```powershell
+git diff --cached --check; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; git diff --cached --name-status; git diff --cached --stat; $expected=@('README.md','RUNBOOK.md','docs/handoffs.md','docs/tasks.md','docs/implementation-summary.md','pyproject.toml','uv.lock','docs/api/examples-v1.json','docs/api/openapi-v1.designed.json','docs/api/openapi.served.json','scripts/export_openapi.py','src/rag_core/contracts/__init__.py','src/rag_core/contracts/examples.py','src/rag_core/contracts/openapi.py','src/rag_core/contracts/sse.py','src/rag_core/contracts/v1.py','tests/contract/test_api_schema.py'); $staged=@(git diff --cached --name-only); if($staged.Count -ne 17 -or @(Compare-Object ($expected | Sort-Object) ($staged | Sort-Object)).Count -ne 0){throw 'Staged scope differs from exact T03 17 files'}; $unstaged=@(git diff --name-only); $untracked=@(git ls-files --others --exclude-standard); if($unstaged.Count -ne 0 -or $untracked.Count -ne 0){throw 'Unexpected unstaged/untracked paths'}; Write-Output 'PASS staged T03 exact scope=17 files; no unstaged/untracked paths'; git status --short
+```
+
+Exit **0**; cached whitespace check stdout rỗng. Output excerpt thật tại initial staged boundary (trước final docs-only additions):
+
+```text
+M	README.md
+M	RUNBOOK.md
+A	docs/api/examples-v1.json
+A	docs/api/openapi-v1.designed.json
+A	docs/api/openapi.served.json
+M	docs/handoffs.md
+M	docs/implementation-summary.md
+M	docs/tasks.md
+M	pyproject.toml
+A	scripts/export_openapi.py
+A	src/rag_core/contracts/__init__.py
+A	src/rag_core/contracts/examples.py
+A	src/rag_core/contracts/openapi.py
+A	src/rag_core/contracts/sse.py
+A	src/rag_core/contracts/v1.py
+A	tests/contract/test_api_schema.py
+M	uv.lock
+ 17 files changed, 7189 insertions(+), 35 deletions(-)
+PASS staged T03 exact scope=17 files; no unstaged/untracked paths
+```
+
+Global ignore permission warning giữ nguyên; status chỉ staged 17 paths, không file lạ. Manual review source/design/test/dependency/docs và actual D1–D5 evidence hoàn thành. Chỉ tasks/handoffs được restage explicit sau final notes/checkpoint/staged evidence này; code/tests/config/artifacts không đổi sau DoD PASS. Final docs/cached whitespace checks output ghi dưới; completion command kế tiếp `git commit -m "feat(T03): define versioned API contracts"`.
+
+Theo P14, COMPLETE trong candidate commit là đề nghị đóng task và chỉ hợp lệ sau successful actual commit +root review. Actual commit hash/exit/output/end/current status trả trong worker report, không nhét hash vào chính commit hoặc tạo amend/self-reference. Nếu commit fail thì T03 chưa COMPLETE, phải cập nhật reproduction/dirty files/last-good và báo root.
+
+Final docs command nguyên văn:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run python scripts/check_docs.py 2>&1 | ForEach-Object { $_.ToString() } | Tee-Object -FilePath .local/t03-a02-docs-final.redacted.log; exit $LASTEXITCODE
+```
+
+Exit **0**, output thật sau task results/checkpoint/staged evidence/status proposal; literal output append này không thêm link/anchor:
+
+```text
+PASS UTF-8/nonempty Markdown: 8 files
+PASS internal links/anchors: 168
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Restage docs-only command `git add -- docs/tasks.md docs/handoffs.md`; final cached whitespace/exact-scope/unstaged checks +actual commit output trả root post-commit. Completion commit là bằng chứng D6, resolver theo subject/Task-ID, không sửa history để ghi hash.

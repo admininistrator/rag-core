@@ -32,6 +32,7 @@ ingestion = [
 # T17 will add and pin heavyweight model runtimes only after CPU/GPU validation.
 inference = []
 dev = [
+  "jsonschema>=4.25,<5",
   "mypy>=1.17,<2",
   "pytest>=8.4,<10",
   "pytest-asyncio>=1.1,<2",

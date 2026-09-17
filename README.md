@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: nền tảng Python T01 và Docker T02 đã triển khai, kiểm chứng local.** Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. Chưa có business API, ingestion, retrieval, LLM hoặc UI; T03–T36 vẫn theo backlog.
+> **Trạng thái: nền tảng Python T01, Docker T02 và contracts T03 đã triển khai, kiểm chứng local.** Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. T03 có schema/API design và examples đã validate; business API, ingestion, retrieval, LLM, SSE runtime và UI chưa hoạt động. T04–T36 vẫn theo backlog.
 
 ## Phạm vi đã chốt
 
@@ -31,6 +31,8 @@ uv sync --locked --group dev --group api
 uv run ruff check .
 uv run mypy src
 uv run pytest tests/unit
+uv run pytest tests/contract/test_api_schema.py
+uv run python scripts/export_openapi.py --check
 uv run python scripts/check_docs.py
 ```
 
@@ -63,6 +65,17 @@ docker compose --profile local-storage up -d --wait postgres qdrant redis api mi
 
 Không dùng `docker compose down -v` trong flow mặc định. T19/T26 sẽ thêm ingest/query; T28–T29 thêm admin UI; T35 kiểm lại hướng dẫn tích hợp.
 
+## Hợp đồng API v1 T03
+
+Pydantic contracts tại `src/rag_core/contracts/` đã kiểm structural validation cho domain/subset, history roles, EN/VI, initial limits, locators, evidence links, error và logical SSE traces. Export/kiểm lại từ root với dev+api groups:
+
+```powershell
+uv run python scripts/export_openapi.py
+uv run python scripts/export_openapi.py --check
+```
+
+[OpenAPI v1 thiết kế](docs/api/openapi-v1.designed.json) có 13 operations với `x-served`/`x-implementation-status`; [OpenAPI đang serve](docs/api/openapi.served.json) chỉ có 2 health routes. [37 examples](docs/api/examples-v1.json) là dữ liệu synthetic minh họa, không phải response runtime. Export kiểm OpenAPI model, JSON Schema Draft 2020-12 và examples bằng cả JSON Schema/Pydantic; không đọc secret hoặc chạy dependency/provider probes. Hợp đồng và các gate runtime còn thiếu nằm ở [RUNBOOK R05–R08](RUNBOOK.md#r05), actual evidence [H-T03-A02](docs/handoffs.md#h-t03-a02); [H-T03-A01](docs/handoffs.md#h-t03-a01) ghi recovery do runtime quota trước commit.
+
 ## Tài liệu
 
 | File | Nội dung |
@@ -78,6 +91,7 @@ Không dùng `docker compose down -v` trong flow mặc định. T19/T26 sẽ th�
 ## Các phần sẽ được cập nhật cùng implementation
 
 - **T01 VERIFIED:** Python prerequisites và quality nền tảng. **T02 VERIFIED:** Docker start/stop/health, dependency probes, loopback/internal ports và restart persistence.
+- **T03 VERIFIED contracts:** schemas, designed/served OpenAPI snapshots và examples; auth/ownership/readiness/tokenizer enforcement/query/SSE runtime vẫn theo task sau.
 - **T04–T08:** corpus setup/validation, source licenses, actual counts.
 - **T09–T12:** authentication, session và storage registration.
 - **T13–T19:** format/OCR matrix, model setup, ingestion commands.
