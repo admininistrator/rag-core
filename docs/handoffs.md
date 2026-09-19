@@ -4,9 +4,9 @@
 
 ## Current checkpoint
 
-- **Current:** Phase1 / T05 / T05-A02 completion candidate; sole worker `/root/t05_a02`, requested `gpt-5.6-sol`/`xhigh`, fresh `fork_turns="none"`; actual runtime/end/hash verified by root post-commit. Started 2026-09-17 23:22 +07:00; baseline CLEAN `main`/accepted T04 `ad49ecc53a1998758f419e00ac5d03bf468ba989`. T05-A01 runtime quota event created no repo changes; all history preserved.
-- **Boundary:** user-approved pinned HF derivative source after actual canonical CMU GET timeouts; real default setup/validator/rerun PASS100QA/986documents,993stablefilehashes/mtimes/100IDs/downloadtimestamp;37syntheticdefault+82commontests/Ruff/mypy15 PASS. [H-T05-A02](#h-t05-a02), [S-T05-A02](implementation-summary.md#s-t05-a02). Completion subject `feat(T05): prepare HotpotQA evaluation corpus`; COMPLETE only after actualcommit/rootreview. No T06/T07/API/model/retrieval work.
-- **Next/risks:** rootreview then freshT06 only after FinanceBench rights decision. HF community/HF-maintained derivative is not claimed official-author mirror or byte-identical CMU JSON; one unchanged full-source sentence annotation anomaly outside deterministic100 recorded, sampled annotations pass. Setup writerlock/rollback protects ordinary errors; readers wait for setup, crash recovery requires inspecting retainedstage/backup. Full clean reproduction T08; business/providers/UI still DESIGNED.
+- **Current:** Phase1 / T06 / T06-A02 completion candidate; sole worker `/root/t06_a02`, requested `gpt-5.6-sol`/`xhigh`, fresh `fork_turns="none"`; actual runtime/end/hash verified by root post-commit. Started 2026-09-19 16:52 +07:00; baseline CLEAN `main`/accepted T05 `a2a94fbba00ee8c2f6462134af03035a86f524e3`. T06-A01 quota/no-action recovery remains at [H-T06-A01](#h-t06-a01).
+- **Boundary:** real FinanceBench setup/validator PASS: official pin/current main `cc39aeb4afdf33909ee1412188bf89035950c2eb`,150 open QA,84/368 referenced PDFs,189 evidence,165,527,662B/12,013pages, zero-based pages0–303 all in range. Rerun preserves91published+84cache hashes/mtimes/150IDs/downloaded_at with no PDF redownload;19document+81common+37default tests, Ruff/mypy16 PASS. [H-T06-A02](#h-t06-a02), [S-T06-A02](implementation-summary.md#s-t06-a02). No T07/API/model/retrieval work.
+- **Next/risks:** explicit18-file completion commit then root runtime/diff/DoD/hash review; fresh worker may start T07 only after acceptance. Raw/PDF/normalized FinanceBench QA are local/ignored: GitHub has no explicit dataset/PDF grant, publisher card separately declares CC-BY-NC-4.0 and company rights remain separate. Tracked-ready/ignored-payload clean-clone recovery remains T08; hard crash requires operator lock/stage review.
 - **Invariants:** query current-session-only, retained index không cấp quyền; app sở hữu source/history. Prompt corpus/AGENTS nguyên byte; plan chỉ thêm user-approved T05 sourceexception tạiP11. Không cloud/server/Scarlet/push/merge. Worker mới/attempt, một worker active, Orchestrator read-only.
 
 ## Cách ghi bằng chứng
@@ -2173,3 +2173,268 @@ Restage onlythishandoff; repeat cachedwhitespace/22scope/no-unstaged checks, the
 `git commit -m "feat(T05): prepare HotpotQA evaluation corpus"`. Actualhash/end/output
 returnedpostcommit to root, never amendowncommit. COMPLETE candidate takes effect
 only after actualcommit and rootruntime/diff/DoD review; failure keepswork/blocker.
+
+<a id="h-t06-a01"></a>
+## H-T06-A01 — Phase 1 / T06 / runtime quota recovery
+
+Exact runtime event before any task action:
+
+```text
+Agent errored: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 4:19 AM.
+```
+
+Worker `/root/t06_a01` did not execute shell commands, write repo files, run validation,
+or create a commit. No start/end timestamp is invented. User continued on 2026-09-19;
+Orchestrator spawned fresh T06-A02 rather than reusing A01.
+
+<a id="h-t06-a02"></a>
+## H-T06-A02 — Phase 1 / T06 / attempt T06-A02
+
+### Identity, accepted dependency, baseline and scope
+
+- Worker `/root/t06_a02`, requested `gpt-5.6-sol`/`xhigh`, fresh
+  `fork_turns="none"`; actual runtime metadata is an Orchestrator acceptance check.
+  Started 2026-09-19 16:52 +07:00. No child agent or next task.
+- Root accepted T05 commit `a2a94fbba00ee8c2f6462134af03035a86f524e3`
+  (`feat(T05): prepare HotpotQA evaluation corpus`) after source/test/diff/evidence
+  and Sol/xhigh runtime review. Accepted T04 is
+  `ad49ecc53a1998758f419e00ac5d03bf468ba989`.
+- CWD for commands: `C:\Users\Admin\Documents\GitHub\rag-core`, Windows
+  PowerShell, Asia/Bangkok. Task uv config uses `UV_CACHE_DIR=<repo>\.uv-cache`
+  and `UV_PYTHON_INSTALL_DIR=<repo>\.uv-python`; no DSN/provider/model/inference,
+  production storage, DB, index, or service is used.
+- Baseline command `git status --short; git branch --show-current; git rev-parse HEAD;
+  git log -1 --format='%H%n%s'`, exit0. Actual output, aside from the known global
+  Git-ignore permission warning:
+
+```text
+main
+a2a94fbba00ee8c2f6462134af03035a86f524e3
+a2a94fbba00ee8c2f6462134af03035a86f524e3
+feat(T05): prepare HotpotQA evaluation corpus
+```
+
+Worktree was clean. Read AGENTS, complete T05/T04 notes/evidence/interfaces,
+P01/P07/P11/P13/P14, complete original corpus prompt, README/RUNBOOK and corpus
+README/license/inventory/manifests/scripts/tests before code. Allowed scope and plan
+are recorded under T06 in `docs/tasks.md`. Existing authorization covers local
+official FinanceBench QA/PDF downloads and evaluation; it does not resolve upstream
+redistribution/commercial applicability. Raw/PDF and normalized FinanceBench QA will
+remain ignored/local while that applicability remains unresolved.
+
+<a id="h-t06-a02-sources"></a>
+### Official sources, exact PDF selection and rights evidence
+
+Pinned JSONL files were downloaded to the ignored local cache from the two manifest
+URLs. Approved public network command exit0; actual measurements:
+
+```text
+financebench_open_source.jsonl bytes=929848 sha256=a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877
+financebench_document_information.jsonl bytes=88781 sha256=1c69127783879de8cdadb159d2181f39bc3123b8e0ebf74031c3969d69189575
+```
+
+`git hash-object` independently returned upstream blob IDs
+`4aef1d43a443474ba193f158f2baf70550ff528d` and
+`decdfa948630f289d05cc0048417b3b9107cfb9f`, matching the manifest pins.
+Actual strict parse: 150 QA, 361 metadata rows/360 unique names,84 referenced
+document names,189 evidence records, all `OPEN_SOURCE`; no QA/evidence document
+missing metadata. Source pages min0/max303. The raw source has50 null
+`question_reasoning` and50 null `justification` values; normalization preserves null.
+Two metadata rows conflict only for unreferenced `FOOTLOCKER_2023_annualreport`
+(period2023 vs2022 with otherwise same link/identity); report records it and code
+fails if a referenced name is duplicated, without selecting different gold.
+
+Approved read-only official metadata recheck command queried GitHub current main,
+pinned recursive tree/README and pinned publisher HF card, exit0; retained public
+output `.downloads/t06-a02-source-license-check.log`:
+
+```text
+pinned_commit=cc39aeb4afdf33909ee1412188bf89035950c2eb
+current_main=cc39aeb4afdf33909ee1412188bf89035950c2eb
+tree_truncated=False
+tree_pdf_count=368
+qa_referenced_pdf_count=84
+matched_referenced_pdf_count=84
+missing_referenced_pdf_count=0
+repository_license_file_count=0
+publisher_card_revision=e04404e3a97f69f79c14d42f24981a1c9c3bcd18
+publisher_card_license=cc-by-nc-4.0
+pinned_readme_matching_lines=7
+```
+
+Every PDF URL is the exact `raw.githubusercontent.com/patronus-ai/financebench/<pin>/pdfs/<doc_name>.pdf`
+path derived only after QA→metadata resolution. Setup downloaded84 referenced PDFs,
+not the other284. The plan's existing authorization covers this local evaluation;
+it is not a redistribution/commercial grant. GitHub has no explicit dataset/PDF
+grant, the publisher card scope is recorded separately, and company PDF rights remain
+separate. Therefore raw JSONL, PDFs and normalized FinanceBench QA/evidence stay
+ignored/local; tracked manifest receipts contain no source content.
+
+### Implementation failures found and fixed in this attempt
+
+- First real setup command was the DoD setup command below, exit1, actual output
+  `CORPUS SETUP: FAIL - document: Download failed after 1 attempt(s): source verification or local publication failure; no data acceptance`.
+  Direct strict-parser diagnosis exit1 showed `CorpusError: FinanceBench justification
+  must be a nonempty string`. Inspection proved50 official null justifications and50
+  null reasoning labels. Parser/normalizer now accepts only null or nonempty source
+  values and preserves them exactly; no replacement text was invented.
+- Next metadata diagnosis found the unreferenced conflicting pair above. It is preserved
+  in raw, reported, excluded from no QA, and referenced duplicates fail. No row was
+  edited/dropped. Failed stage stayed ignored for forensics; published manifest stayed
+  `not_downloaded`.
+- Second real setup, same command, exit1 during the seventh PDF with actual traceback
+  ending `pypdf.errors.DependencyError: cryptography>=3.1 is required for AES algorithm`.
+  Added exact dev-only `pypdf[crypto]==6.19.0`; locked resolution added
+  cryptography50.0.1/cffi2.1.1/pycparser3.0. Resumable verified receipts reused the
+  six already accepted PDFs; no gate was bypassed. Third setup below passed all84.
+- First final Ruff command exit1 on `I001` for the new test import block. Scoped Ruff
+  `--fix` only organized imports; independent full Ruff below passed. An optional
+  PowerShell aggregate-hash diagnostic used unavailable `.NET SHA256.HashData` and
+  errored after all printed measurements; it was not treated as a check. A portable
+  rerun separately confirmed189 evidence/pages0–303/minimum remaining page1/0 invalid.
+
+<a id="h-t06-a02-dod1"></a>
+### DoD-1 — Separate real setup and Document validation
+
+Setup command, CWD/config as above, approved official public downloads, final exit0.
+Expected: exact pinned open QA→metadata→referenced real PDFs; unchanged gold and
+valid zero-based pages. Actual output retained at `.downloads/t06-a02-setup-third.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run python corpus-documents/scripts/setup_corpus.py --domain document 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t06-a02-setup-third.log; exit $LASTEXITCODE
+```
+
+```text
+CORPUS SETUP: PASS - document/FinanceBench; PDFs=84 QA=150 evidence=189 page_indexing=zero_based source_sha256=a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877
+```
+
+Measured real PDFs:165,527,662 bytes/12,013 physical pages; per-PDF page count
+min4/max549. Evidence pages0–303, minimum one physical page remains after the largest
+referenced zero-based page,0 out-of-range. Normalized QA SHA256
+`7d7dbf4760f7f8f1f2a9ff60216a0a8709cee26d6c9f65773a773441a2768869`;
+document index `089b8f1c132ffd66cc6fb67f9322eedeb10059f4fd5b8d237afa5b178dae871c`;
+89 artifact receipts/checksums. The validator rebuilds these bytes from pinned raw,
+compares every answer/evidence/full-page text/justification/metadata field, opens every
+PDF and checks exact files/receipts. No fake PDF or mock source was used.
+
+Separate validator final command, exit0; output retained at
+`.downloads/t06-a02-validation-final.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run python corpus-documents/scripts/validate_corpus.py --domain document 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t06-a02-validation-final.log; exit $LASTEXITCODE
+```
+
+```text
+CORPUS VALIDATION: PASS - document; PDFs=84 QA=150 evidence=189 page_indexing=zero_based source_sha256=a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877
+```
+
+**DoD-1 PASS.** Product citations remain physical one-based; only a future eval
+adapter converts these preserved zero-based gold pages.
+
+<a id="h-t06-a02-dod2"></a>
+### DoD-2 — Actual rerun stability and meaningful Document tests
+
+Rerun command captured all root aggregate + Document file SHA256/UTC mtime values and
+all84 transport-cache PDF values in memory, invoked the same setup command, then
+compared. Command exit0; setup output as above followed by:
+
+```text
+RERUN published_files=91 changed_hash_or_mtime=0 cache_pdfs=84 changed_cache_hash_or_mtime=0 downloaded_at_stable=True artifacts=89
+```
+
+The 150 normalized IDs and QA content hash also stayed unchanged; verified cache pins
+made every PDF call local reuse, so no duplicate network download or extra PDF file.
+
+Required unit command, final exit0; real PDF byte fixtures use pypdf but all external
+transport is injected, no live-data substitution. Full output at
+`.downloads/t06-a02-document-tests-final.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run pytest tests/unit/test_corpus_document.py 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t06-a02-document-tests-final.log; exit $LASTEXITCODE
+```
+
+```text
+collected 19 items
+tests\unit\test_corpus_document.py ...................                   [100%]
+============================= 19 passed in 13.07s =============================
+```
+
+Coverage: original filename and unambiguous mapping; exact answers/evidence/full-page
+text/justification/null metadata; zero-based last page accepted/out-of-range refused;
+closed/invalid/duplicate IDs and cross-document evidence refused; unreferenced metadata
+anomaly reported/referenced ambiguity refused; real PDF parse/count/non-PDF refusal;
+complete prepare/validate/rerun/no-redownload; gold/evidence/page/PDF/receipt/extra-file
+corruption; unknown user file, writer lock and aggregate publication rollback.
+**DoD-2 PASS.**
+
+### D2 — Locked environment, quality and regressions
+
+Each command ran separately with the task uv env/CWD above and exit0:
+
+```text
+uv sync --locked --group dev --group api
+Resolved 82 packages in 1ms
+Checked 49 packages in 2ms
+
+uv run ruff check .
+All checks passed!
+
+uv run mypy src corpus-documents/scripts
+Success: no issues found in 16 source files
+
+uv run pytest tests/unit/test_corpus_common.py
+collected 81 items; 81 passed in 2.61s
+
+uv run pytest tests/unit/test_corpus_default.py
+collected 37 items; 37 passed in 30.02s
+```
+
+Logs: `.downloads/t06-a02-sync.log`, `t06-a02-ruff-final.log`,
+`t06-a02-mypy.log`, `t06-a02-common-tests.log`, `t06-a02-default-tests.log`.
+No skip marker. T02/T03 integration/contracts were not rerun because application/
+Compose/API contracts are unchanged; default/common are the genuinely affected
+corpus regressions.
+
+<a id="h-t06-a02-review"></a>
+### D1/D3/D4/D5/D6 — Scope, docs, source review and completion boundary
+
+- **D1 PASS:** accepted T05/T04 full notes/evidence/interfaces read; clean baseline;
+  manual implementation/test/manifest/docs diff review. Exact scope is18 files below;
+  no T07/bilingual/API/model/retrieval/Scarlet/server work. Original prompt SHA256
+  `7ec6e58ae4c24db27af4320bcb30222bbf2b67961d99c62980cea4410aee2c46`
+  and Git blob `81ab3c77530722968d847391d8095284f1a874a9` unchanged.
+- **D3 PASS:** both required DoD commands ran separately with actual cwd/config/exit/
+  output above; source checks and two corrected live failures are not hidden. Synthetic
+  tests are not called live verification.
+- **D4 PASS:** root README/RUNBOOK, corpus README/licenses/inventory/manifests,
+  task/handoff/Phase1-T06-A02 summary updated with working commands, hashes/counts,
+  zero/one-based boundary, null/anomaly facts, rights/cache/rollback/crash/T08 limits.
+  `uv run python scripts/check_docs.py`, exit0:10Markdown/210links/37tasks/81edges
+  acyclic PASS. Metadata-only validator separately exit0:
+  `CORPUS METADATA: PASS - 3 domain manifests + inventory; corpus data NOT validated.`
+- **D5 PASS:** official pin/tree/blob/source hashes and current notices reviewed;
+  real manifest has84 PDF +2 raw +3 QA receipts. `.gitignore` proofs show raw/PDF and
+  narrowly DocumentQA ignored; no raw source/PDF/normalized gold/cache/log/secret/model
+  staged. No credentials/query tokens printed. License remains unresolved honestly;
+  no source override. Schema v1 unchanged and validators cover generated receipts.
+- **D6 initial stage/review PASS:** approved exact `git add -- <18 explicit paths>`
+  exit0/stdoutempty. Cached path-set assertion, `git diff --cached --check`, no
+  unstaged/untracked assertion and status/stat command exit0. Actual output:
+
+```text
+PASS staged exact18 T06 files; whitespace clean; no unstaged/untracked paths
+18 files changed, 2198 insertions(+), 82 deletions(-)
+```
+
+  Status contained16 modified +2 added expected paths only. After this evidence append,
+  restage only `docs/handoffs.md`, repeat exact18/whitespace/no-unstaged review, then
+  `git commit -m "feat(T06): prepare FinanceBench evaluation corpus"`. COMPLETE
+  candidate takes effect only after successful commit and root runtime/diff/DoD review;
+  actual hash/end are returned outside the commit, never amended into itself.
+
+Known limits: tracked ready manifests plus ignored data do not yet reproduce from a
+fresh clone; T08 owns clean-state recovery/all-domain setup. Writer rollback covers
+ordinary exceptions/KeyboardInterrupt, while hard termination needs operator inspection
+of retained lock/stage/backup. No benchmark score, provider/model, production ingestion,
+DB/index/API migration or server deployment. Next action is root acceptance, then a
+fresh T07 worker; this attempt does not continue.

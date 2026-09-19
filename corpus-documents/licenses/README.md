@@ -23,8 +23,11 @@ listed in [source-license-inventory.json](../source-license-inventory.json).
   asks users to cite the work but supplies no explicit license in the inspected
   tree/README. The [publisher card](https://huggingface.co/datasets/PatronusAI/financebench/blob/e04404e3a97f69f79c14d42f24981a1c9c3bcd18/README.md)
   declares CC BY-NC 4.0 for its dataset; GitHub/PDF rights remain unresolved.
-  Financial PDFs retain company rights and source attribution. No PDFs/raw gold
-  are redistributed or committed; T06 needs a user decision or upstream grant.
+  Financial PDFs retain company rights and source attribution. The approved project
+  plan authorizes local evaluation download; it is not an upstream redistribution or
+  commercial-use grant. No PDFs, raw gold or normalized FinanceBench QA/evidence are
+  redistributed or committed. The tracked manifest contains non-content hashes,
+  counts and reproduction metadata.
 - **XQuAD:** Artetxe, Ruder and Yogatama (2019), *On the Cross-lingual Transferability
   of Monolingual Representations*, [paper](https://arxiv.org/abs/1910.11856).
   [Pinned README license](https://github.com/google-deepmind/xquad/blob/7d30520c717524000f0d9d2f9c10a069acd9d285/README.md#license)
@@ -35,4 +38,6 @@ For datasets with an explicit applicable CC BY-SA 4.0 grant, preserve attributio
 the [license link](https://creativecommons.org/licenses/by-sa/4.0/) and changes;
 adaptations retain ShareAlike terms. No dataset/PDF license is inferred from code
 licenses. T04 downloaded only official README/metadata; T05 downloaded the specifically
-approved pinned HF Parquet. No third-party company copyright notice was removed.
+approved pinned HF Parquet. T06 downloads the two pinned official JSONL files and only
+the 84 official-repository PDFs referenced by their 150 open QA for local evaluation.
+No third-party company copyright notice was removed.

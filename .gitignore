@@ -43,6 +43,9 @@ htmlcov/
 # metadata, licenses, and the user-supplied source prompt remain trackable.
 corpus-documents/*/raw/
 corpus-documents/*/documents/
+# FinanceBench gold/evidence redistribution terms are unresolved. Keep the
+# locally normalized evaluation records out of Git while retaining manifests.
+corpus-documents/document/qa/
 corpus-documents/.downloads/
 
 # Model caches and weights

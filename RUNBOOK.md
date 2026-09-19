@@ -348,7 +348,7 @@ Không xem raw chunks/answers/prompts của user, không xem secrets hoặc xóa
 <a id="r11"></a>
 ## R11. Corpus và quality evaluation
 
-**T04 tooling/T05 default setup + data VERIFIED local; other domains/full reproduction PLANNED — T06–T08; evaluation DESIGNED — T30–T31.**
+**T04 tooling/T05 Default/T06 Document setup + data VERIFIED local; Bilingual/full reproduction PLANNED — T07–T08; evaluation DESIGNED — T30–T31.**
 
 Prompt gốc: [Build RAG Evaluation Corpus](corpus-documents/Codex%20Prompt%20%E2%80%93%20Build%20RAG%20Evaluation%20Corpus.md).
 
@@ -359,7 +359,7 @@ Prompt gốc: [Build RAG Evaluation Corpus](corpus-documents/Codex%20Prompt%20%E
 - Evaluation chỉ ingest documents, không QA/answers/supporting facts/justification. Không lọc gold pages hoặc gold docs để làm đẹp retrieval.
 - XQuAD không có unanswerable; kiểm refusal/insufficient bằng fixture riêng và báo riêng.
 
-Prerequisites: Python `3.12.*`, `uv sync --locked --group dev --group api`; shared utilities stdlib, schema dev-only jsonschema; T05 thêm dev-only pinned `pyarrow==25.0.1` để đọc approved Parquet, không vào API image/model runtime. Không cần DSNs/services/providers/models. Commands từ root:
+Prerequisites: Python `3.12.*`, `uv sync --locked --group dev --group api`; shared utilities stdlib, schema dev-only jsonschema; T05 thêm `pyarrow==25.0.1`, T06 thêm dev-only `pypdf[crypto]==6.19.0` để đếm trang PDF/AES. Không dependency nào vào API image/model runtime. Không cần DSNs/services/providers/models. Commands từ root:
 
 ```powershell
 uv run python corpus-documents/scripts/setup_corpus.py --help
@@ -368,26 +368,30 @@ uv run pytest tests/unit/test_corpus_common.py
 uv run python corpus-documents/scripts/setup_corpus.py --domain default
 uv run python corpus-documents/scripts/validate_corpus.py --domain default
 uv run pytest tests/unit/test_corpus_default.py
+uv run python corpus-documents/scripts/setup_corpus.py --domain document
+uv run python corpus-documents/scripts/validate_corpus.py --domain document
+uv run pytest tests/unit/test_corpus_document.py
 ```
 
-`--metadata-only` chỉ kiểm inventory/schema/provenance/aggregate; không nghiệm thu data. [Corpus README](corpus-documents/README.md), [inventory](corpus-documents/source-license-inventory.json), [manifest](corpus-documents/manifest.json) ghi defaultready100QA/986documents và hai domain not_downloaded/null counts/timestamps. Default source có measured7405rows/27,452,575B; JSON conversion hash và distributions/report tại `default/qa/preparation.json`, document ID/path/hash/source-question map tại `default/qa/documents.json` (evaluator only). Markdown chỉ title/dataset/document ID/original paragraph, toàn distractors được materialize. 996instances dedup còn986; identity dùng title+exact concatenated sentences. Sample seed42 cân bằng available type/level:50bridge/50comparison/allhard; upstream không cómedium. Validator recompute source conversion, sampledIDs, gold/type/level/supporting-only mapping, everydocument/receipt/count và exact file set.
+`--metadata-only` chỉ kiểm inventory/schema/provenance/aggregate; không nghiệm thu data. [Corpus README](corpus-documents/README.md), [inventory](corpus-documents/source-license-inventory.json), [manifest](corpus-documents/manifest.json) ghi Default ready100QA/986documents, Document ready150QA/84PDF và Bilingual not_downloaded/null counts/timestamp. Default source có measured7405rows/27,452,575B; JSON conversion hash và distributions/report tại `default/qa/preparation.json`, document ID/path/hash/source-question map tại `default/qa/documents.json` (evaluator only). Markdown chỉ title/dataset/document ID/original paragraph, toàn distractors được materialize. 996instances dedup còn986; identity dùng title+exact concatenated sentences. Sample seed42 cân bằng available type/level:50bridge/50comparison/allhard; upstream không cómedium. Default validator recompute source conversion, sampledIDs, gold/type/level/supporting-only mapping, everydocument/receipt/count và exact file set.
 
 Utilities bounded retries/timeout/size, exact pins/content/length trước atomic replace; references reject traversal/Windows streams/links/junctions. Default setup lock `.downloads/default-setup.lock` ngăn concurrent writers; stage nguyên domain, validate rồi swap + aggregate publication; ordinary failure/interruption rollback giữ last good. Readers/eval phải chờ setup kết thúc (directory rename không là concurrent reader transaction). Equal trees không publish lại, giữ timestamp/mtimes. Source download receipt giữ original downloaded_at khi cache reuse; failed stages/rollback backups nằm ignored `.downloads/default-stage-*`, không tự xóa. Unknown files trong default bị refuse, không overwrite user files. Nếu lock còn sau process crash: kiểm process và stage/backup trước khi operator gỡ lock; không tự bypass lock hoặc xóa dữ liệu.
 
-Các selections còn **fail nonzero** trước download/mutation vì domain chưa implement hoặc corpus chưa ready:
+Các selections còn **fail nonzero** trước download/mutation vì Bilingual chưa implement/ready:
 
 ```powershell
 uv run python corpus-documents/scripts/setup_corpus.py --all
-uv run python corpus-documents/scripts/setup_corpus.py --domain document
 uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual
 uv run python corpus-documents/scripts/validate_corpus.py --all
 ```
 
 Default data verified theo ngoại lệ user-approved ngày2026-09-17 tại [P11](docs/plan.md#p11): CMU HTTP/HTTPS GET timeout20s, dùng HF community derivative `hotpotqa/hotpot_qa` distractor/validation revision `1908d6afbbead072334abe2965f91bd2709910ab`. Exact published/downloaded Parquet SHA256 `c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6` và bytes27452575; HTTPS delivery allowlist chỉ exact HF source + inspected `us.aws.cdn.hf.co/xet-bridge-us/`, mandatory pin, signed queries không log. Không claim official author mirror/CMU byte-equivalence; sourceoriginal repository vẫn `3635853403a8735609ee997664e1528f4480762a`, legacy JSON là semantic conversion. Dataset/card CC BY-SA4.0 và attribution/change notices trong [licenses](corpus-documents/licenses/README.md). One full-source annotation anomaly: ID`5ae61bfd5542992663a4f261`, `Jimmy Butler (basketball)`, index902/5sentences; giữ rawgold, report ngoài100subset. Selected sentence ranges/title checks nghiêm; anomaly trong sample fail, không sửa/drop/resample. Không claim toàn7405annotations sạch.
 
-Document/bilingual preparation T06–T07; all-domain setup/clean reproduction T08. FinanceBench pin`cc39aeb4afdf33909ee1412188bf89035950c2eb`, rights GitHub/PDF unresolved dù publisher card`e04404e3a97f69f79c14d42f24981a1c9c3bcd18` declaresCC-BY-NC4.0; user decision/upstreamgrant trướcT06. XQuAD pin`7d30520c717524000f0d9d2f9c10a069acd9d285`, datasetCC-BY-SA4.0. Raw/Parquet/convertedJSON/materializeddocuments/PDF ignored, lightweightQA/index/report tracked theo verifiedterms. Không arbitrary source override hoặc mirror khác.
+Document T06 dùng FinanceBench pin `cc39aeb4afdf33909ee1412188bf89035950c2eb`: 150 `OPEN_SOURCE` QA, 84/368 repository PDFs được reference, 189 evidence; không tải 284 PDF ngoài QA. Hai source SHA256 là `a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877` và `1c69127783879de8cdadb159d2181f39bc3123b8e0ebf74031c3969d69189575`. PDF thực tổng165,527,662B/12,013pages; gold pages0–303 zero-based, 0 out-of-range. Validator reconstruct normalized QA từ raw, giữ exact answer/evidence/full-page text/justification/metadata, mở từng PDF và kiểm exact89artifact receipts. 50 justification/reasoning null giữ null; duplicate metadata `FOOTLOCKER_2023_annualreport` không được QA reference nên report, duplicate referenced sẽ fail. Future eval adapter mới đổi citation sang physical one-based.
 
-Troubleshooting: unavailable document/bilingual/allsetup đúng pendingtasks; default network failure giữ prior corpus và forensicstage, không coi cache-only là clean download proof. Corrupt/truncated download fail trước publication; shared retries default3/max5, T05 transfer2attempts/30s/128MiB; verification/local-write failures không retry. Source checksum/conversion/gold/file drift fail nonzero, sửa trong scope và giữ origin evidence, không fabricate counts/hash hoặc ingest QA. Actual live setup/validator/rerun và37 syntheticdefaulttests tại [H-T05-A02](docs/handoffs.md#h-t05-a02); historical tooling [H-T04-A01](docs/handoffs.md#h-t04-a01). Không DB/index/API migration/production ingestion. Full clean reproduction T08; evaluation reports/metrics/providercosts T30–T31, chưa benchmark score.
+Document writer dùng `.downloads/document-setup.lock`, resumable verified PDF cache, complete-domain stage và rollback domain+aggregate. Rerun giữ91 published hashes/mtimes/150IDs/downloaded_at và84 PDF cache hashes/mtimes, không network download lại. Failed stage giữ ở `.downloads/document-stage-*`; reader/eval chờ setup xong. Existing user plan authorizes local evaluation download nhưng không phải upstream redistribution/commercial grant. GitHub tree/README không có explicit dataset/PDF grant; publisher card `e04404e3a97f69f79c14d42f24981a1c9c3bcd18` riêng khai CC-BY-NC4.0; company PDF rights riêng. Vì vậy raw/PDF/normalized FinanceBench QA đều local ignored, chỉ manifest hashes/counts/attribution track. Bilingual T07/XQuAD pin `7d30520c717524000f0d9d2f9c10a069acd9d285`, datasetCC-BY-SA4.0; all-domain clean reproduction T08. Không arbitrary source override hoặc mirror khác.
+
+Troubleshooting: unavailable bilingual/all setup đúng pending tasks. Default/Document network failure giữ prior corpus và forensic stage; cache-only rerun không thay thế first live download proof. Corrupt/truncated/PDF parse/page-range failure fail trước publication; T06 transfer2attempts, metadata30s/4MiB, PDF60s/32MiB. `pypdf` AES `DependencyError` cần locked crypto extra, không bỏ page gate. Source checksum/gold/evidence/file drift fail nonzero, không sửa/drop/resample source. Actual T06 live setup/validator/rerun và synthetic document tests tại [H-T06-A02](docs/handoffs.md#h-t06-a02); Default tại [H-T05-A02](docs/handoffs.md#h-t05-a02); historical tooling [H-T04-A01](docs/handoffs.md#h-t04-a01). Không DB/index/API migration/production ingestion. Full clean reproduction T08; evaluation reports/metrics/provider costs T30–T31, chưa benchmark score.
 
 <a id="r12"></a>
 ## R12. Hiệu năng và observability

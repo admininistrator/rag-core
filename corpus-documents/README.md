@@ -1,8 +1,9 @@
 # RAG evaluation corpus
 
-**T04 shared tooling VERIFIED; T05 default preparation and real data validation VERIFIED.**
+**T04 shared tooling, T05 Default and T06 Document preparation are VERIFIED locally.**
 Default uses the exact Hugging Face derivative approved by the user after the
-canonical CMU endpoint timed out. Other domain preparation is pending T06–T07;
+canonical CMU endpoint timed out. Document uses the pinned official FinanceBench
+open sample and only its referenced repository PDFs. Bilingual is pending T07;
 full clean-state reproduction and acceptance belong to T08.
 The [original prompt](Codex%20Prompt%20%E2%80%93%20Build%20RAG%20Evaluation%20Corpus.md)
 remains unchanged.
@@ -10,13 +11,12 @@ remains unchanged.
 | Corpus domain | Purpose | Data status | Measured documents / QA |
 | --- | --- | --- | --- |
 | `default` / HotpotQA | Generic multi-hop retrieval with supporting paragraphs and distractors | `ready`; approved HF derivative | 986 / 100 |
-| `document` / FinanceBench | Long financial PDFs, numeric answers, evidence and page-aware citations | `not_downloaded`; license decision pending | unknown / unknown |
+| `document` / FinanceBench | Long financial PDFs, numeric answers, evidence and page-aware citations | `ready` locally; redistribution applicability unresolved | 84 PDFs / 150 QA |
 | `bilingual` / XQuAD | Parallel EN/VI QA and cross-lingual retrieval | `not_downloaded` | unknown / unknown |
 
-Remaining targets from the prompt (approximately 150 FinanceBench QA;
-approximately 240 paragraphs per language and 1190 XQuAD QA per slice) are planned
-targets, **not measured counts**. Manifests store unknown counts and download
-timestamps as JSON `null` for unprepared domains, with empty checksum/receipt collections. Inventory
+The remaining prompt targets (approximately 240 paragraphs per language and 1190
+XQuAD QA per slice) are planned, **not measured counts**. The bilingual manifest
+stores unknown counts/download timestamp as JSON `null` with empty receipts. Inventory
 `verified_at` records when source metadata was assembled, not a dataset download.
 
 ## Sources and rights
@@ -24,8 +24,9 @@ timestamps as JSON `null` for unprepared domains, with empty checksum/receipt co
 [Source/license inventory](source-license-inventory.json) records official URLs,
 upstream commit dates, exact Git commit/blob IDs, attribution and limitations.
 Git blob IDs were read from the official GitHub trees; they are not local SHA256
-measurements. README statements, trees and the publisher card were checked live
-on 2026-09-17; actual commands/output are in [H-T04-A01](../docs/handoffs.md#h-t04-a01).
+measurements. README statements, trees and publisher cards were checked live on
+2026-09-17; FinanceBench pins/notices were rechecked on 2026-09-19. Evidence is in
+[H-T04-A01](../docs/handoffs.md#h-t04-a01) and [H-T06-A02](../docs/handoffs.md#h-t06-a02).
 
 | Dataset | Pinned upstream | Dataset rights |
 | --- | --- | --- |
@@ -37,20 +38,22 @@ Keep dataset/paper attribution, upstream titles/filenames, license links and a
 description of normalization changes in any permitted lightweight outputs.
 CC BY-SA adaptations must preserve the applicable ShareAlike terms. Company
 reports retain their own rights; a QA dataset card does not automatically license
-the PDFs. T06 must obtain a user decision on permitted local evaluation use of
-official GitHub QA/PDFs or an upstream permission grant before downloading them.
+the PDFs. The approved project plan authorizes this local evaluation download but
+does not supply an upstream redistribution or commercial-use grant.
 No dataset source is silently substituted. See [license notices](licenses/README.md).
 
 Raw datasets and materialized document/PDF directories are ignored by existing
 repository policy. Scripts, manifests, inventory, schemas and attribution notices
 are tracked. T05 tracks lightweight normalized QA, its document index and preparation
-report with CC BY-SA attribution/change notices; FinanceBench remains metadata-only
-until the license decision. No new broad ignore rules hide source or QA metadata.
+report with CC BY-SA attribution/change notices. FinanceBench raw JSONL, PDFs and
+normalized gold/evidence QA remain local and ignored while redistribution applicability
+is unresolved; the tracked manifest contains hashes/counts/receipts and attribution.
 
 ## Commands and directory layout
 
-Use Python `3.12.*` from the repository root. Install the existing dev group
-(`jsonschema` is already locked; no new dependency or baseline model is needed):
+Use Python `3.12.*` from the repository root. Install the dev group; it includes
+schema checks, Hotpot Parquet support and pinned PDF page/crypto parsing, with no
+dataset baseline model:
 
 ```powershell
 uv sync --locked --group dev --group api
@@ -60,28 +63,30 @@ uv run pytest tests/unit/test_corpus_common.py
 uv run pytest tests/unit/test_corpus_default.py
 uv run python corpus-documents/scripts/setup_corpus.py --domain default
 uv run python corpus-documents/scripts/validate_corpus.py --domain default
+uv run python corpus-documents/scripts/setup_corpus.py --domain document
+uv run python corpus-documents/scripts/validate_corpus.py --domain document
+uv run pytest tests/unit/test_corpus_document.py
 ```
 
 `--metadata-only` validates inventory/schema/provenance and aggregate consistency.
 Its success message explicitly states that corpus data was **not validated**.
-Default setup and validation PASS with real downloaded bytes. The following
+Default and Document setup/validation PASS with real downloaded bytes. The following
 setup/full-validation selections currently fail nonzero with a
 clear unavailable/not-downloaded message and preserve files:
 
 ```powershell
 uv run python corpus-documents/scripts/setup_corpus.py --all
-uv run python corpus-documents/scripts/setup_corpus.py --domain document
 uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual
 uv run python corpus-documents/scripts/validate_corpus.py --all
 ```
 
-Other domains become working preparation/validation commands sequentially in T06–T07;
+The bilingual domain becomes a working preparation/validation command in T07;
 the one-command, all-domain setup is accepted in T08. There are no hidden manual
 downloads, success stubs or legacy training/model setup calls in T04.
 
 ```text
 corpus-documents/
-  scripts/{common,prepare_default,setup_corpus,validate_corpus}.py
+  scripts/{common,prepare_default,prepare_document,setup_corpus,validate_corpus}.py
   schemas/{domain-manifest,root-manifest,source-inventory}.schema.json
   source-license-inventory.json
   manifest.json
@@ -89,7 +94,8 @@ corpus-documents/
   licenses/README.md
 ```
 
-Default has separate `raw/`, `documents/` and `qa/` directories; others follow later.
+Default and Document have separate `raw/`, `documents/` and `qa/` directories;
+Bilingual follows in T07.
 All download/normalization scripts and corpus outputs stay below this directory.
 `documents/` alone contains ingestable content. `qa/`, answers, justification,
 supporting flags and raw source QA are evaluator inputs and must never be ingested
@@ -116,8 +122,8 @@ receipt has `downloaded_at=null`, `reused=true` and measured hash/size. Domain
 callers must preserve the original download timestamp rather than overwrite it
 with a reuse time. Equal atomic writes preserve mtime. Failure cleans only the
 call's staged `.part` file, leaving previously published bytes intact. Atomicity
-is per file; T05 additionally stages and validates the complete default domain before
-directory publication, with an exclusive setup lock and rollback of the domain and
+is per file; T05/T06 stage and validate a complete domain before directory
+publication, with exclusive per-domain setup locks and rollback of the domain and
 aggregate on publication errors. Equal complete trees skip publication and retain
 all mtimes. Readers must wait for setup to finish: directory swaps are not a concurrent
 reader transaction. Failed stages and rollback backups stay in ignored `.downloads/`
@@ -144,7 +150,9 @@ map relative to `documents/`. References reject traversal, absolute/Windows driv
 or alternate-stream paths, reserved device names and symlink/junction escapes.
 Default validation compares every generated QA/document/report to the pinned source,
 checks original answers/type/level/supporting mapping, all receipts and exact file sets,
-and reruns the seed42 sampling. PDF/page and parallel-alignment checks follow T06–T07.
+and reruns the seed42 sampling. Document validation recomputes every normalized
+FinanceBench field, opens every real PDF, checks every zero-based evidence page against
+its page count and verifies the exact file/receipt set. Parallel alignment follows T07.
 
 ## Default measured data and evaluation contract
 
@@ -172,6 +180,39 @@ is valid. Sampled supporting sentence ranges must pass; an anomaly in the subset
 without dropping, editing or resampling the question. Live checks/rerun/37 synthetic
 default tests are recorded in [H-T05-A02](../docs/handoffs.md#h-t05-a02).
 
+## Document measured data and evaluation contract
+
+Pinned FinanceBench commit `cc39aeb4afdf33909ee1412188bf89035950c2eb`
+provides 150 `OPEN_SOURCE` QA and metadata with 361 rows/360 unique document names.
+The QA reference exactly 84 of the repository's 368 PDFs; setup downloads those 84
+and no others. QA JSONL SHA256 is
+`a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877`;
+metadata SHA256 is `1c69127783879de8cdadb159d2181f39bc3123b8e0ebf74031c3969d69189575`.
+The 84 PDFs total 165,527,662 bytes and 12,013 pages. The 189 evidence entries use
+pages 0–303; all are in range against the real PDFs. Dev-only pinned
+`pypdf[crypto]==6.19.0` handles page counts, including AES-encrypted source files;
+it is not an API/model dependency.
+
+`document/qa/eval.jsonl` retains all source questions, answers, evidence and full-page
+evidence strings, justification, question/reasoning types, company/document/subset
+metadata and domain-question number. Field names are normalized; values and source
+order are unchanged. `document/qa/documents.json` maps each original PDF filename to
+company metadata, immutable repository URL, SHA256, bytes and measured page count.
+`document/qa/preparation.json` records counts/hashes/distributions and anomalies.
+Fifty source rows have null justification and null reasoning labels; they remain null.
+The metadata source contains two conflicting rows for unreferenced
+`FOOTLOCKER_2023_annualreport`; the report records this anomaly, while any duplicate
+for a referenced document fails as ambiguous. No question is dropped, corrected or
+resampled. These QA files remain local/ignored under the rights boundary above.
+
+The document setup uses an exclusive `.downloads/document-setup.lock`, verified
+transport cache, complete-domain staging and aggregate rollback. Its rerun preserved
+all 91 published file hashes/mtimes, 150 IDs and the original download timestamp;
+all 84 cached PDF hashes/mtimes were unchanged, so no PDF was downloaded again.
+Failed stages remain under ignored `.downloads/document-stage-*` for diagnosis.
+Live setup/validator/rerun and synthetic tests are at
+[H-T06-A02](../docs/handoffs.md#h-t06-a02).
+
 Domain manifests use `schema_version=1`, `not_downloaded|preparing|ready`, sources,
 download timestamp, measured counts, languages, path-to-SHA256 map and artifact
 receipts (`path`, `role`, `sha256`, `bytes`). Ready manifests need measured values;
@@ -182,7 +223,7 @@ or ingestion is performed by these independent corpus tools.
 
 ## Evaluation conventions and limits
 
-Planned normalized QA retains `id`, `domain`, `question`, `expected_answers`,
+Normalized QA retains `id`, `domain`, `question`, `expected_answers`,
 `expected_documents`, `answerable` and `source_dataset` plus domain provenance.
 FinanceBench retains original human gold/evidence/justification and **zero-based**
 evidence pages in `document/manifest.json`; converting to product one-based physical

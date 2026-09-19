@@ -501,8 +501,9 @@ def test_committed_metadata_has_no_fabricated_downloads() -> None:
     validate_corpus.validate_metadata()
     for domain in common.DOMAINS:
         manifest = common.read_json(common.CORPUS_ROOT / domain / "manifest.json")
-        if domain == "default" and manifest["status"] == "ready":
-            assert manifest["qa_count"] == 100 and manifest["document_count"] > 0
+        if domain in {"default", "document"} and manifest["status"] == "ready":
+            expected_qa = 100 if domain == "default" else 150
+            assert manifest["qa_count"] == expected_qa and manifest["document_count"] > 0
             assert manifest["downloaded_at"] and manifest["artifacts"] and manifest["checksum"]
             continue
         assert manifest["status"] == "not_downloaded"
@@ -542,7 +543,7 @@ def test_ready_schema_cannot_claim_acceptance_without_measured_receipts() -> Non
 
 @pytest.mark.parametrize(
     "args",
-    [["--all"], ["--domain", "document"], ["--domain", "bilingual"]],
+    [["--all"], ["--domain", "bilingual"]],
 )
 def test_setup_and_validation_unavailable_fail_without_mutation(args: list[str]) -> None:
     before = {

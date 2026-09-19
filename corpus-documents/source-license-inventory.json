@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "verified_at": "2026-09-17T16:49:45.918980+00:00",
+  "verified_at": "2026-09-19T10:13:40.634050+00:00",
   "datasets": [
     {
       "domain": "default",
@@ -83,7 +83,7 @@
           "version": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
           "repository_commit": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
           "git_blob_sha1": "4aef1d43a443474ba193f158f2baf70550ff528d",
-          "expected_sha256": null
+        "expected_sha256": "a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877"
         },
         {
           "id": "financebench_document_information",
@@ -91,11 +91,11 @@
           "version": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
           "repository_commit": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
           "git_blob_sha1": "decdfa948630f289d05cc0048417b3b9107cfb9f",
-          "expected_sha256": null
+        "expected_sha256": "1c69127783879de8cdadb159d2181f39bc3123b8e0ebf74031c3969d69189575"
         }
       ],
       "data_commit_policy": "metadata_only_until_license_decision",
-      "limitations": "T06 requires an explicit user decision on permitted local evaluation use of official GitHub QA/PDFs or an upstream permission grant. No corpus bytes have been downloaded. Keep raw gold/evidence unchanged and zero-based page convention; resolve only PDFs referenced by official QA/metadata, not arbitrary URLs or all repository PDFs."
+      "limitations": "The approved project plan authorizes local evaluation downloads but is not an upstream redistribution or commercial-use grant. GitHub QA/PDF redistribution applicability remains unresolved, the publisher card separately declares CC-BY-NC-4.0, and company PDF rights remain separate. Keep local raw/normalized gold/evidence/PDF bytes ignored; preserve zero-based pages and resolve only PDFs referenced by official QA/metadata."
     },
     {
       "domain": "bilingual",

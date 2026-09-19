@@ -76,9 +76,9 @@ uv run python scripts/export_openapi.py --check
 
 [OpenAPI v1 thiết kế](docs/api/openapi-v1.designed.json) có 13 operations với `x-served`/`x-implementation-status`; [OpenAPI đang serve](docs/api/openapi.served.json) chỉ có 2 health routes. [37 examples](docs/api/examples-v1.json) là dữ liệu synthetic minh họa, không phải response runtime. Export kiểm OpenAPI model, JSON Schema Draft 2020-12 và examples bằng cả JSON Schema/Pydantic; không đọc secret hoặc chạy dependency/provider probes. Hợp đồng và các gate runtime còn thiếu nằm ở [RUNBOOK R05–R08](RUNBOOK.md#r05), actual evidence [H-T03-A02](docs/handoffs.md#h-t03-a02); [H-T03-A01](docs/handoffs.md#h-t03-a01) ghi recovery do runtime quota trước commit.
 
-## Corpus tooling T04 và Default data T05
+## Corpus tooling T04, Default T05 và Document T06
 
-[Corpus README](corpus-documents/README.md) và [source/license inventory](corpus-documents/source-license-inventory.json) ghi URLs/pins/license và ngoại lệ nguồn T05 được user phê duyệt tại [P11](docs/plan.md#p11). Default `ready`: 100QA, 986Markdown từ toàn context gồm distractors, supporting-only gold; 50bridge/50comparison, allhard theo nguồn thật. Utilities kiểm download hỏng/ngắt, rollback publication, retry hữu hạn, idempotency và reference safety. Hai domain còn lại `not_downloaded`, counts/timestamps null. Commands từ root:
+[Corpus README](corpus-documents/README.md) và [source/license inventory](corpus-documents/source-license-inventory.json) ghi URLs/pins/license và ngoại lệ nguồn T05 được user phê duyệt tại [P11](docs/plan.md#p11). Default `ready`: 100QA, 986Markdown từ toàn context gồm distractors, supporting-only gold; 50bridge/50comparison, allhard theo nguồn thật. Document `ready` local: 150 open FinanceBench QA, 84 PDF được reference, 189 evidence giữ zero-based pages. Utilities kiểm download hỏng/ngắt, rollback publication, retry hữu hạn, idempotency và reference safety. Bilingual còn `not_downloaded`, counts/timestamps null. Commands từ root:
 
 ```powershell
 uv run python corpus-documents/scripts/setup_corpus.py --help
@@ -87,9 +87,12 @@ uv run pytest tests/unit/test_corpus_common.py
 uv run python corpus-documents/scripts/setup_corpus.py --domain default
 uv run python corpus-documents/scripts/validate_corpus.py --domain default
 uv run pytest tests/unit/test_corpus_default.py
+uv run python corpus-documents/scripts/setup_corpus.py --domain document
+uv run python corpus-documents/scripts/validate_corpus.py --domain document
+uv run pytest tests/unit/test_corpus_document.py
 ```
 
-`--metadata-only` không nghiệm thu data; default setup/validation đã PASS với real bytes và rerun giữ IDs/hashes/timestamp/mtimes. Source là HF community derivative `hotpotqa/hotpot_qa` distractor/validation, revision `1908d6afbbead072334abe2965f91bd2709910ab`, Parquet SHA256 `c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6`; không claim official author mirror hoặc byte-identical CMU JSON. Dev-only pyarrow25.0.1 chuyển semantic fields nguyên vẹn; một source annotation anomaly ngoài subset được report, không resample. Chỉ `documents/` được ingest sau này; `qa/`/source IDs/gold không là retrieval hints. Setup `--all` và document/bilingual vẫn fail nonzero; T06–T08 pending. HotpotQA/XQuAD CC BY-SA4.0; FinanceBench rights cần quyết định trước T06. Evidence [H-T05-A02](docs/handoffs.md#h-t05-a02), tooling history [H-T04-A01](docs/handoffs.md#h-t04-a01); vận hành [RUNBOOK R11](RUNBOOK.md#r11).
+`--metadata-only` không nghiệm thu data. Default và Document setup/validation PASS với real bytes; rerun giữ IDs/hashes/timestamp/mtimes và không tải lại PDF. FinanceBench pin `cc39aeb4afdf33909ee1412188bf89035950c2eb`, QA SHA256 `a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877`, metadata SHA256 `1c69127783879de8cdadb159d2181f39bc3123b8e0ebf74031c3969d69189575`; 84 PDF thực có 12,013 trang/165,527,662 bytes và mọi page gold trong range. Dev-only `pypdf[crypto]==6.19.0` chỉ dùng cho corpus. Raw/PDF/normalized FinanceBench QA local bị ignore vì redistribution applicability chưa rõ; publisher card riêng khai CC BY-NC4.0 và company PDF rights riêng. Chỉ `documents/` được ingest sau này; `qa/`/source IDs/gold không là retrieval hints. Setup `--all` và bilingual vẫn fail nonzero; T07–T08 pending. Evidence [H-T06-A02](docs/handoffs.md#h-t06-a02), [H-T05-A02](docs/handoffs.md#h-t05-a02); vận hành [RUNBOOK R11](RUNBOOK.md#r11).
 
 ## Tài liệu
 
@@ -107,7 +110,7 @@ uv run pytest tests/unit/test_corpus_default.py
 
 - **T01 VERIFIED:** Python prerequisites và quality nền tảng. **T02 VERIFIED:** Docker start/stop/health, dependency probes, loopback/internal ports và restart persistence.
 - **T03 VERIFIED contracts:** schemas, designed/served OpenAPI snapshots và examples; auth/ownership/readiness/tokenizer enforcement/query/SSE runtime vẫn theo task sau.
-- **T04 VERIFIED shared tooling/metadata; T05 VERIFIED default data:** approved-source setup/validation, measured100QA/986documents, unchanged seed42 sampling và stable rerun. **T06–T08 PLANNED:** other domains/all-domain clean reproduction.
+- **T04 VERIFIED tooling; T05 VERIFIED Default; T06 VERIFIED Document local:** real setup/validation, unchanged gold và stable reruns. **T07–T08 PLANNED:** Bilingual/all-domain clean reproduction.
 - **T09–T12:** authentication, session và storage registration.
 - **T13–T19:** format/OCR matrix, model setup, ingestion commands.
 - **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.

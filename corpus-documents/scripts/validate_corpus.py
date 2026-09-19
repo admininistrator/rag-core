@@ -107,16 +107,28 @@ def main(argv: list[str] | None = None) -> int:
                 raise CorpusError(
                     f"{domain}: corpus is {manifest['status']}; run domain setup after its implementation"
                 )
-            if domain != "default":
+            if domain == "bilingual":
                 raise CorpusError(f"{domain}: domain validation pending its implementation")
         for domain in selected:
-            from prepare_default import validate_default
+            if domain == "default":
+                from prepare_default import validate_default
 
-            report = validate_default(CORPUS_ROOT / domain)
-            print(
-                f"CORPUS VALIDATION: PASS - {domain}; documents={report['document_count']} "
-                f"QA={report['qa_count']} seed={report['seed']} source_sha256={report['source_sha256']}"
-            )
+                report = validate_default(CORPUS_ROOT / domain)
+                detail = (
+                    f"documents={report['document_count']} QA={report['qa_count']} "
+                    f"seed={report['seed']} source_sha256={report['source_sha256']}"
+                )
+            else:
+                from prepare_document import validate_document
+
+                report = validate_document(CORPUS_ROOT / domain)
+                detail = (
+                    f"PDFs={report['document_count']} QA={report['qa_count']} "
+                    f"evidence={report['evidence_count']} "
+                    f"page_indexing={report['page_indexing']} "
+                    f"source_sha256={report['source_sha256']}"
+                )
+            print(f"CORPUS VALIDATION: PASS - {domain}; {detail}")
         return 0
     except (CorpusError, OSError) as exc:
         print(f"CORPUS VALIDATION: FAIL - {exc}", file=sys.stderr)
