@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T04 nền tảng và T05 Default corpus IMPLEMENTED/VERIFIED local.** Python3.12/uv, Docker health skeleton, contracts, corpus tooling và default100QA/986documents từ nguồn HF được user phê duyệt đã kiểm chứng. API hiện chỉ serve health; business/auth/query/SSE runtime vẫn DESIGNED.
+> **T01–T04 nền tảng, T05 Default và T06 Document corpus IMPLEMENTED/VERIFIED local.** Python3.12/uv, Docker health skeleton, contracts, corpus tooling, Default100QA/986documents và Document150QA/84PDF đã kiểm chứng. API hiện chỉ serve health; business/auth/query/SSE runtime vẫn DESIGNED. Theo yêu cầu người dùng, công việc tạm dừng sau khi đóng T06; T07–T36 chưa bắt đầu.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -18,7 +18,7 @@
 | Python setup/settings/quality | VERIFIED | T01 |
 | Compose/services + health skeleton | VERIFIED local | T02 |
 | API v1 schemas/design snapshots/examples | VERIFIED structural contracts; business routes chưa mount | T03 |
-| Corpus | T04 tooling và T05 default data VERIFIED; document/bilingual/full reproduction PLANNED | T04–T08 |
+| Corpus | T04 tooling, T05 Default và T06 Document data VERIFIED local; bilingual/full reproduction PLANNED | T04–T08 |
 | Auth/session/storage | DESIGNED | T09–T12 |
 | Parsing/OCR/index | DESIGNED | T13–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |

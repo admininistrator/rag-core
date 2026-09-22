@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: T01–T04 nền tảng và T05 HotpotQA Default corpus đã triển khai, kiểm chứng local.** Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. T03 có contracts; T04 có tooling; T05 có 100QA/986documents từ nguồn Hugging Face cụ thể được user phê duyệt sau CMU timeout. Business API, ingestion, retrieval, LLM, SSE runtime và UI chưa hoạt động. T06–T36 vẫn theo backlog.
+> **Trạng thái: T01–T04 nền tảng, T05 HotpotQA Default và T06 FinanceBench Document đã triển khai, kiểm chứng local.** Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. T03 có contracts; T04 có tooling; T05 có 100QA/986documents từ nguồn Hugging Face được user phê duyệt; T06 có 150QA/84PDF từ FinanceBench. Business API, ingestion, retrieval, LLM, SSE runtime và UI chưa hoạt động. T07–T36 còn trong backlog; theo yêu cầu người dùng, công việc tạm dừng sau khi đóng T06.
 
 ## Phạm vi đã chốt
 

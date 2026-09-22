@@ -4,9 +4,9 @@
 
 ## Current checkpoint
 
-- **Current:** Phase1 / T06 / T06-A02 completion candidate; sole worker `/root/t06_a02`, requested `gpt-5.6-sol`/`xhigh`, fresh `fork_turns="none"`; actual runtime/end/hash verified by root post-commit. Started 2026-09-19 16:52 +07:00; baseline CLEAN `main`/accepted T05 `a2a94fbba00ee8c2f6462134af03035a86f524e3`. T06-A01 quota/no-action recovery remains at [H-T06-A01](#h-t06-a01).
-- **Boundary:** real FinanceBench setup/validator PASS: official pin/current main `cc39aeb4afdf33909ee1412188bf89035950c2eb`,150 open QA,84/368 referenced PDFs,189 evidence,165,527,662B/12,013pages, zero-based pages0–303 all in range. Rerun preserves91published+84cache hashes/mtimes/150IDs/downloaded_at with no PDF redownload;19document+81common+37default tests, Ruff/mypy16 PASS. [H-T06-A02](#h-t06-a02), [S-T06-A02](implementation-summary.md#s-t06-a02). No T07/API/model/retrieval work.
-- **Next/risks:** explicit18-file completion commit then root runtime/diff/DoD/hash review; fresh worker may start T07 only after acceptance. Raw/PDF/normalized FinanceBench QA are local/ignored: GitHub has no explicit dataset/PDF grant, publisher card separately declares CC-BY-NC-4.0 and company rights remain separate. Tracked-ready/ignored-payload clean-clone recovery remains T08; hard crash requires operator lock/stage review.
+- **Current:** Phase 1 / T06 / T06-A03 documentation and evidence closure on CLEAN `main`/A02 implementation commit `6863abf221db2d387e141656610c710ceac14dff`; root accepted A02 technical DoD and verified actual `gpt-5.6-sol`/`xhigh` runtime. A03 worker `/root/t06_a03`, fresh `fork_turns="none"`, began 2026-09-22 08:43 +07:00. Original A02 results remain at [H-T06-A02](#h-t06-a02); recovered exact historical invocations at [H-T06-A03](#h-t06-a03).
+- **Boundary:** real FinanceBench setup/validator PASS: official pin `cc39aeb4afdf33909ee1412188bf89035950c2eb`, 150 open QA, 84/368 referenced PDFs, 189 evidence, 165,527,662B/12,013pages, zero-based pages0–303 all in range. A02 rerun preserved91published+84cache hashes/mtimes/150IDs/downloaded_at without PDF redownload;19document+81common+37default tests, Ruff/mypy16 PASS. No T07/API/model/retrieval work.
+- **Next/risks:** A03 documentation check passed; closure commit subject is `docs(T06): finalize acceptance evidence and paused checkpoint`, with actual hash returned after commit for root review. Then **USER-PAUSED AFTER T06**. T07 may start only on a new user request. Raw/PDF/normalized FinanceBench QA are local/ignored: GitHub has no explicit dataset/PDF grant, publisher card separately declares CC-BY-NC-4.0 and company rights remain separate. Tracked-ready/ignored-payload clean-clone recovery remains T08; hard crash requires operator lock/stage review.
 - **Invariants:** query current-session-only, retained index không cấp quyền; app sở hữu source/history. Prompt corpus/AGENTS nguyên byte; plan chỉ thêm user-approved T05 sourceexception tạiP11. Không cloud/server/Scarlet/push/merge. Worker mới/attempt, một worker active, Orchestrator read-only.
 
 ## Cách ghi bằng chứng
@@ -2438,3 +2438,242 @@ ordinary exceptions/KeyboardInterrupt, while hard termination needs operator ins
 of retained lock/stage/backup. No benchmark score, provider/model, production ingestion,
 DB/index/API migration or server deployment. Next action is root acceptance, then a
 fresh T07 worker; this attempt does not continue.
+
+<a id="h-t06-a03"></a>
+## H-T06-A03 — Phase 1 / T06 / attempt T06-A03 — Acceptance evidence closure
+
+Root reviewed A02 implementation commit `6863abf221db2d387e141656610c710ceac14dff`,
+technical DoD, and actual Sol/xhigh runtime (thread
+`01a0b914-5327-7d20-866b-6f60b4f65bed`, ended 2026-09-19 17:25:14 +07:00).
+A03 began 2026-09-22 08:43 +07:00 with clean `main`/that HEAD and no dirty or
+untracked files. CWD for all commands is
+`C:\Users\Admin\Documents\GitHub\rag-core`, PowerShell. Historical commands below
+were recovered verbatim from the A02 public runtime `custom_tool_call` inputs in
+`rollout-2026-09-19T16-51-52-01a0b914-5327-7d20-866b-6f60b4f65bed.jsonl`;
+the matching `custom_tool_call_output` blocks gave the excerpts below. This is
+archival recovery, not an A03 rerun. A02 handoff records nested exit0; the preserved
+`functions.exec` wrapper output says `Script completed` but does not separately
+print the nested `exec_command.exit_code`. Original A02 source/DoD failures remain
+unchanged above. No data, code, tests, config, source pins or rights policy changed.
+
+### Recovered A02 DoD-2 rerun command
+
+Runtime call `call_xQeQkQyEM2vutuZdz3KzH6v9`; original uv cache/Python-install
+dirs were `<repo>\.uv-cache`/`<repo>\.uv-python`. The command captured aggregate
++ Document published file SHA256/UTC mtime and all84 cached PDF SHA256/UTC mtime
+before setup, compared them afterward and exited nonzero on drift:
+
+```powershell
+$ErrorActionPreference='Stop'; $env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; $paths=@((Resolve-Path -LiteralPath 'corpus-documents\manifest.json').Path)+@(Get-ChildItem -LiteralPath 'corpus-documents\document' -Recurse -File | ForEach-Object {$_.FullName}); $before=@{}; foreach($p in $paths){$item=Get-Item -LiteralPath $p; $before[$p]=@((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant(),$item.LastWriteTimeUtc.Ticks)}; $cachePaths=@(Get-ChildItem -LiteralPath 'corpus-documents\.downloads\financebench-pdfs' -File | ForEach-Object {$_.FullName}); $cacheBefore=@{}; foreach($p in $cachePaths){$item=Get-Item -LiteralPath $p; $cacheBefore[$p]=@((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant(),$item.LastWriteTimeUtc.Ticks)}; $manifestBefore=Get-Content -LiteralPath 'corpus-documents\document\manifest.json' -Raw | ConvertFrom-Json; & uv run python corpus-documents/scripts/setup_corpus.py --domain document 2>&1 | ForEach-Object {$_.ToString()} | Tee-Object -FilePath corpus-documents/.downloads/t06-a02-setup-rerun.log; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; $changed=@(); foreach($p in $paths){$item=Get-Item -LiteralPath $p; $now=@((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant(),$item.LastWriteTimeUtc.Ticks); if($now[0] -ne $before[$p][0] -or $now[1] -ne $before[$p][1]){$changed+=$p}}; $cacheChanged=@(); foreach($p in $cachePaths){$item=Get-Item -LiteralPath $p; $now=@((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant(),$item.LastWriteTimeUtc.Ticks); if($now[0] -ne $cacheBefore[$p][0] -or $now[1] -ne $cacheBefore[$p][1]){$cacheChanged+=$p}}; $manifestAfter=Get-Content -LiteralPath 'corpus-documents\document\manifest.json' -Raw | ConvertFrom-Json; Write-Output ("RERUN published_files=$($paths.Count) changed_hash_or_mtime=$($changed.Count) cache_pdfs=$($cachePaths.Count) changed_cache_hash_or_mtime=$($cacheChanged.Count) downloaded_at_stable=$($manifestBefore.downloaded_at -eq $manifestAfter.downloaded_at) artifacts=$($manifestAfter.artifacts.Count)"); if($changed.Count -or $cacheChanged.Count -or $manifestBefore.downloaded_at -ne $manifestAfter.downloaded_at){exit 3}; exit 0
+```
+
+Actual preserved output (also setup log `corpus-documents/.downloads/t06-a02-setup-rerun.log`):
+
+```text
+CORPUS SETUP: PASS - document/FinanceBench; PDFs=84 QA=150 evidence=189 page_indexing=zero_based source_sha256=a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877
+RERUN published_files=91 changed_hash_or_mtime=0 cache_pdfs=84 changed_cache_hash_or_mtime=0 downloaded_at_stable=True artifacts=89
+```
+
+DoD-1 setup/validator exact commands, exits and output remain at
+[H-T06-A02 DoD-1](#h-t06-a02-dod1); DoD-2 19-test exact command/output remain at
+[H-T06-A02 DoD-2](#h-t06-a02-dod2). All A02 DoD evidence is **REUSED**, dated
+2026-09-19, from implementation commit `6863abf`.
+
+### Recovered A02 official source/license metadata command
+
+Runtime call `call_wE3ZYzh2qoZMPhCBMwSRaQKb` was an approved read-only official
+GitHub/Hugging Face metadata check, not a rights grant. It printed counts/pins
+only; raw source content was not logged:
+
+```powershell
+$ErrorActionPreference='Stop'; $pin='cc39aeb4afdf33909ee1412188bf89035950c2eb'; $repo=Invoke-RestMethod -Uri 'https://api.github.com/repos/patronus-ai/financebench/commits/main' -TimeoutSec 30; $tree=Invoke-RestMethod -Uri ('https://api.github.com/repos/patronus-ai/financebench/git/trees/'+$pin+'?recursive=1') -TimeoutSec 60; $readme=(Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/patronus-ai/financebench/'+$pin+'/README.md') -UseBasicParsing -TimeoutSec 30).Content; $hf=Invoke-RestMethod -Uri 'https://huggingface.co/api/datasets/PatronusAI/financebench/revision/e04404e3a97f69f79c14d42f24981a1c9c3bcd18' -TimeoutSec 30; $qa=Get-Content -LiteralPath 'corpus-documents\.downloads\financebench_open_source.jsonl'|ForEach-Object {$_|ConvertFrom-Json}; $names=@($qa.doc_name+$qa.evidence.doc_name|Sort-Object -Unique); $pdfs=@($tree.tree|Where-Object {$_.type -eq 'blob' -and $_.path -like 'pdfs/*.pdf'}); $referenced=@($pdfs|Where-Object {[IO.Path]::GetFileNameWithoutExtension($_.path) -in $names}); $missing=@($names|Where-Object {$n=$_; ('pdfs/'+$n+'.pdf') -notin $pdfs.path}); $licenseFiles=@($tree.tree|Where-Object {$_.path -match '(^|/)(LICENSE|COPYING)(\.|$)'}); $openLines=@($readme -split "`n"|Where-Object {$_ -match 'open.source|n=150|Citation|license'}); @("pinned_commit=$pin","current_main=$($repo.sha)","tree_truncated=$($tree.truncated)","tree_pdf_count=$($pdfs.Count)","qa_referenced_pdf_count=$($names.Count)","matched_referenced_pdf_count=$($referenced.Count)","missing_referenced_pdf_count=$($missing.Count)","repository_license_file_count=$($licenseFiles.Count)","publisher_card_revision=$($hf.sha)","publisher_card_license=$($hf.cardData.license)","pinned_readme_matching_lines=$($openLines.Count)") | Tee-Object -FilePath 'corpus-documents\.downloads\t06-a02-source-license-check.log'; exit 0
+```
+
+Actual preserved output, also in ignored
+`corpus-documents/.downloads/t06-a02-source-license-check.log`:
+
+```text
+pinned_commit=cc39aeb4afdf33909ee1412188bf89035950c2eb
+current_main=cc39aeb4afdf33909ee1412188bf89035950c2eb
+tree_truncated=False
+tree_pdf_count=368
+qa_referenced_pdf_count=84
+matched_referenced_pdf_count=84
+missing_referenced_pdf_count=0
+repository_license_file_count=0
+publisher_card_revision=e04404e3a97f69f79c14d42f24981a1c9c3bcd18
+publisher_card_license=cc-by-nc-4.0
+pinned_readme_matching_lines=7
+```
+
+### Recovered A02 D6 explicit staging and scope assertion
+
+Runtime call `call_4zzD46Dm6OrAF23I54FBaWW1`, original staging command:
+
+```powershell
+git add -- .gitignore README.md RUNBOOK.md corpus-documents/README.md corpus-documents/document/manifest.json corpus-documents/licenses/README.md corpus-documents/manifest.json corpus-documents/scripts/prepare_document.py corpus-documents/scripts/setup_corpus.py corpus-documents/scripts/validate_corpus.py corpus-documents/source-license-inventory.json docs/handoffs.md docs/implementation-summary.md docs/tasks.md pyproject.toml tests/unit/test_corpus_common.py tests/unit/test_corpus_document.py uv.lock
+```
+
+Preserved wrapper output: `Script completed`, no stdout; A02 records exit0.
+Runtime call `call_0A6zNmQ9ZMc8EDbNnfdMAxsh`, original exact18 cached
+path assertion/whitespace/no-unstaged-or-untracked review command:
+
+```powershell
+$ErrorActionPreference='Stop'; $expected=@('.gitignore','README.md','RUNBOOK.md','corpus-documents/README.md','corpus-documents/document/manifest.json','corpus-documents/licenses/README.md','corpus-documents/manifest.json','corpus-documents/scripts/prepare_document.py','corpus-documents/scripts/setup_corpus.py','corpus-documents/scripts/validate_corpus.py','corpus-documents/source-license-inventory.json','docs/handoffs.md','docs/implementation-summary.md','docs/tasks.md','pyproject.toml','tests/unit/test_corpus_common.py','tests/unit/test_corpus_document.py','uv.lock')|Sort-Object; $cached=@(git diff --cached --name-only|Sort-Object); $missing=@($expected|Where-Object {$_ -notin $cached}); $extra=@($cached|Where-Object {$_ -notin $expected}); if($missing.Count -or $extra.Count){Write-Output ('missing='+($missing-join ',')); Write-Output ('extra='+($extra-join ',')); exit 2}; git diff --cached --check; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; $unstaged=@(git diff --name-only); $untracked=@(git ls-files --others --exclude-standard); if($unstaged.Count -or $untracked.Count){Write-Output ('unstaged='+($unstaged-join ',')); Write-Output ('untracked='+($untracked-join ',')); exit 3}; Write-Output 'PASS staged exact18 T06 files; whitespace clean; no unstaged/untracked paths'; git diff --cached --stat; git status --short
+```
+
+Actual preserved excerpt:
+
+```text
+PASS staged exact18 T06 files; whitespace clean; no unstaged/untracked paths
+18 files changed, 2198 insertions(+), 82 deletions(-)
+```
+
+These recovered commands replace the `<18 explicit paths>` shorthand as
+provenance; the A02 implementation completion commit remains unchanged.
+
+### A03 D1–D5 actual checks and reused DoD mapping
+
+Environment: Windows PowerShell, CWD `C:\Users\Admin\Documents\GitHub\rag-core`,
+uv0.11.16/CPython3.12.4; `UV_CACHE_DIR=<repo>\.uv-cache`,
+`UV_PYTHON_INSTALL_DIR=<repo>\.uv-python`. No service, DSN, provider, model,
+inference, PDF download, corpus setup, test suite or migration was used in A03.
+At baseline `git status --short --branch`, exit0, returned
+`## main...origin/main [gone]` with no changed paths; `git log -3 --oneline`,
+exit0, began `6863abf feat(T06): prepare FinanceBench evaluation corpus`,
+`a2a94fb feat(T05): prepare HotpotQA evaluation corpus`,
+`ad49ecc feat(T04): add reproducible corpus tooling`. Git emitted the known
+global ignore permission warning without changing exit status.
+
+- **DoD-1 REUSED PASS:** A02's real setup and separate validator, each exit0,
+  output at [H-T06-A02 DoD-1](#h-t06-a02-dod1). The same implementation commit
+  and local corpus are under review; no A03 claim of new live verification.
+- **DoD-2 REUSED PASS:** A02 real rerun command/output recovered above;
+  91 published and84 cached PDF hashes/mtimes unchanged, timestamp stable;
+  A02's19 Document tests exit0 and report real result at
+  [H-T06-A02 DoD-2](#h-t06-a02-dod2).
+- **D1 PASS:** `git diff --name-only`, exit0, returned exactly:
+
+```text
+README.md
+RUNBOOK.md
+docs/handoffs.md
+docs/implementation-summary.md
+docs/tasks.md
+```
+
+  `git diff --name-only -- corpus-documents src tests pyproject.toml uv.lock .gitignore docs/plan.md AGENTS.md`,
+  exit0/stdout empty. `git ls-files --others --exclude-standard`, exit0/no
+  untracked paths (known global ignore warning). `git diff --check`,
+  exit0/stdout empty. Dependencies T04/T05 are accepted and their full task
+  notes/evidence/interfaces plus P01/P07/P11/P13/P14/P15 were read.
+- **D2 PASS (A03 applicable quality):** exact command:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv run python scripts/check_docs.py
+```
+
+  Exit0, actual output:
+
+```text
+PASS UTF-8/nonempty Markdown: 10 files
+PASS internal links/anchors: 217
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+  A02's locked82/49 sync, Ruff, strict mypy16, 81 common/37 Default/
+  19 Document tests are REUSED with 2026-09-19 commands/output at
+  [H-T06-A02 D2](#h-t06-a02-review) and preceding A02 sections; no A03 code
+  changed that warrants rerunning them.
+- **D3 PASS:** exact historical rerun/source/staging/assertion invocations above
+  were matched as full strings against the original A02 runtime inputs;
+  each check yielded `True`. A02 retained exact DoD-1 setup/validator and
+  DoD-2 test commands, CWD/config/output; the archival wrapper's missing
+  numeric nested exit field is disclosed above, not reconstructed.
+- **D4 PASS:** README/RUNBOOK top status and R00 table now include T06 Document
+  VERIFIED local and T07–T36 pending with user pause; task, handoff and
+  Phase1/T06/A03 summary updated. Actual docs check output above.
+- **D5 PASS:** full five-file diff and `git diff --stat`, exit0, reviewed;
+  stat was `5 files changed, 110 insertions(+), 6 deletions(-)` before this
+  evidence append. No raw/PDF/normalized QA, payload, secret, model weight,
+  source, test, config, schema, API or migration file changed. Original prompt
+  `Get-FileHash -LiteralPath 'corpus-documents/Codex Prompt – Build RAG Evaluation Corpus.md' -Algorithm SHA256`,
+  exit0, returned SHA256
+  `7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46`;
+  `git hash-object -- "corpus-documents/Codex Prompt – Build RAG Evaluation Corpus.md"`,
+  exit0, returned `81ab3c77530722968d847391d8095284f1a874a9`.
+
+Historical provenance was verified by a read-only Python scan of exactly the
+four cited `custom_tool_call` inputs.
+
+An A03 documentation recheck after the first evidence append used the same exact
+command, exit0, with `PASS internal links/anchors: 220` and the other three
+output lines unchanged. `git diff --check`, exit0/stdout empty; changed paths
+remained the same five.
+
+Exact read-only transcription verification command, exit0:
+
+```powershell
+python -X utf8 -c "import json,pathlib; p=pathlib.Path('C:/Users/Admin/.codex/sessions/2026/09/19/rollout-2026-09-19T16-51-52-01a0b914-5327-7d20-866b-6f60b4f65bed.jsonl'); h=pathlib.Path('docs/handoffs.md').read_text(encoding='utf-8'); ids={'call_xQeQkQyEM2vutuZdz3KzH6v9','call_wE3ZYzh2qoZMPhCBMwSRaQKb','call_4zzD46Dm6OrAF23I54FBaWW1','call_0A6zNmQ9ZMc8EDbNnfdMAxsh'}; rows=(json.loads(s) for s in p.open(encoding='utf-8')); xs=[r['payload'] for r in rows if r.get('type')=='response_item' and r.get('payload',{}).get('type')=='custom_tool_call' and r.get('payload',{}).get('call_id') in ids]; print([(x['call_id'],json.JSONDecoder().raw_decode(x['input'].split('tools.exec_command(',1)[1])[0]['cmd'] in h) for x in xs])"
+```
+
+Actual output:
+
+Its actual output was:
+
+```text
+[('call_xQeQkQyEM2vutuZdz3KzH6v9', True), ('call_wE3ZYzh2qoZMPhCBMwSRaQKb', True), ('call_4zzD46Dm6OrAF23I54FBaWW1', True), ('call_0A6zNmQ9ZMc8EDbNnfdMAxsh', True)]
+```
+
+D6 exact-five-file stage, cached review and completion commit follow below.
+
+### A03 D6 — Explicit stage, cached review and completion boundary
+
+Final pre-stage `uv run python scripts/check_docs.py` with the uv env above,
+exit0, returned10 Markdown/220 internal links/37 tasks/81 dependencies acyclic
+and `DOCUMENTATION CHECK: PASS`; `git diff --check`, exit0/stdout empty;
+`git diff --name-only`, exit0, still showed exactly the five permitted files.
+
+First attempted exact stage command, exit1 because this sandbox denies `.git/index.lock`:
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md
+```
+
+```text
+fatal: Unable to create 'C:/Users/Admin/Documents/GitHub/rag-core/.git/index.lock': Permission denied
+```
+
+The same exact command was then auto-reviewed with `require_escalated` and
+`prefix_rule=["git","add"]`; approved execution exit0/stdout empty. No
+identity/config was changed and no hook bypassed. Exact cached review command:
+
+```powershell
+$ErrorActionPreference='Stop'; $expected=@('README.md','RUNBOOK.md','docs/handoffs.md','docs/implementation-summary.md','docs/tasks.md')|Sort-Object; $cached=@(git diff --cached --name-only|Sort-Object); $missing=@($expected|Where-Object {$_ -notin $cached}); $extra=@($cached|Where-Object {$_ -notin $expected}); if($missing.Count -or $extra.Count){Write-Output ('missing='+($missing-join ',')); Write-Output ('extra='+($extra-join ',')); exit 2}; git diff --cached --check; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; $unstaged=@(git diff --name-only); $untracked=@(git ls-files --others --exclude-standard); if($unstaged.Count -or $untracked.Count){Write-Output ('unstaged='+($unstaged-join ',')); Write-Output ('untracked='+($untracked-join ',')); exit 3}; Write-Output 'PASS staged exact5 T06 documentation files; whitespace clean; no unstaged/untracked paths'; git diff --cached --stat; git status --short; exit 0
+```
+
+Exit0; actual excerpt (aside from the pre-existing global Git-ignore warning):
+
+```text
+PASS staged exact5 T06 documentation files; whitespace clean; no unstaged/untracked paths
+ README.md                      |   2 +-
+ RUNBOOK.md                     |   4 +-
+ docs/handoffs.md               | 195 ++++++++++++++++++++++++++++++++++++++++-
+ docs/implementation-summary.md |   7 ++
+ docs/tasks.md                  |   4 +
+ 5 files changed, 206 insertions(+), 6 deletions(-)
+M  README.md
+M  RUNBOOK.md
+M  docs/handoffs.md
+M  docs/implementation-summary.md
+M  docs/tasks.md
+```
+
+After this evidence append, restage only `docs/handoffs.md`, repeat exact-five
+cached scope/whitespace/no-unstaged review, then commit
+`docs(T06): finalize acceptance evidence and paused checkpoint`. This is a
+documentation supplement to existing T06 implementation commit `6863abf`,
+not a second implementation. Formal T06 acceptance follows successful
+documentation commit and root review. Actual A03 hash/end/status are reported
+outside this self-referential commit; no T07 work is authorized.
