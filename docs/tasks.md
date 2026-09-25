@@ -13,6 +13,10 @@
 - Sau mỗi attempt ghi **dưới đúng task**: agent/model/effort, start/end, files, việc thực hiện, DoD IDs + evidence links, README/RUNBOOK changes hoặc lý do N/A, commit subject/hash resolver, blockers/next action. Chi tiết dài ở handoffs/summary.
 - Không sửa DoD/mark COMPLETE để vượt blocker. Xem [handoffs.md](handoffs.md) để biết worktree/attempt hiện tại.
 
+## Human Task — Hermes Git author identity (2026-09-26)
+
+- **T-H1 — cấu hình Git author cho repo:** COMPLETE theo người dùng xác nhận và Orchestrator kiểm `git var GIT_AUTHOR_IDENT` exit 0 (không in identity). Trước đó exit 128: `Author identity unknown`; không tạo danh tính giả hoặc thay đổi Git config bằng agent. Completion commits T07 trở đi không còn bị chặn bởi identity. Giữ T00–T36 và các trạng thái task chuẩn nguyên vẹn.
+
 ## Phase 0 — Hồ sơ và nền tảng
 
 <a id="t00"></a>
