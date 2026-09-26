@@ -160,7 +160,7 @@
 <a id="t08"></a>
 ### T08 — Nghiệm thu corpus có thể tái tạo
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T07, T05, T06.
 - **Tham chiếu kế hoạch:** [P11](plan.md#p11); toàn bộ acceptance §11 của prompt corpus.
 - **Công việc:** Hoàn thiện root setup/manifest/README/licenses; CLI hỗ trợ `--output-root` nằm dưới corpus-documents để kiểm clean reproduction trong thư mục tạm đã ignore; strict missing/error nonzero.
@@ -168,7 +168,9 @@
   1. `uv run python corpus-documents/scripts/setup_corpus.py --all`, `uv run python corpus-documents/scripts/validate_corpus.py --all` PASS; kiểm đủ từng dòng acceptance prompt, lưu actual summary.
   2. Setup vào clean output root rồi rerun: content/IDs/counts giống corpus chuẩn, timestamps tách khỏi content hash; validator cố tình thiếu file trả nonzero. README/RUNBOOK có command reproduce đã thử, giới hạn XQuAD và license rõ.
 - **Cạm bẫy:** Không xóa nguồn người dùng để tạo clean state; output path phải kiểm nằm trong workspace; network blocked là BLOCKED, không coi cache-only là clean download proof.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `test(T08): verify complete corpus reproduction`.
+- **Ghi chú thực thi:** T08-A01, direct Codex agent; model/effort not exposed by this runtime, no subagents. Started 2026-09-26; baseline `main`/`1d36c0906c918106eafaecc42e457c1a1ae3827b`, remote matches. T07/T05/T06 COMPLETE; dependency notes, P01/P11/P13, full corpus prompt and execution docs read. Existing T07 scratch retained. Allowed: corpus setup/validation/shared preparation glue, reproduction tests/helper, manifests/ignore, README/RUNBOOK/corpus notices and task/handoffs/summary. Plan: safe isolated output root and metadata-only clone recovery, all-domain summary/validation, real clean downloads + rerun/comparison + missing-file rejection, each DoD and D1–D6; commit/push current branch then stop. Commit dự kiến `test(T08): verify complete corpus reproduction`.
+
+- **T08-A01 results:** COMPLETE effective after the inspected completion commit. DoD-1 **PASS**: separate real canonical setup/validator plus all12 original acceptance rows [H-T08-A01 DoD-1](handoffs.md#h-t08-a01-dod1). DoD-2 **PASS**: final cold download `.repro/a2` with own cache, separate validator,1574published/92cache fingerprints equal to standard corpus, stable rerun and deliberate missing QA exit1 with exact restoration [H-T08-A01 DoD-2](handoffs.md#h-t08-a01-dod2). D1 scope/dependencies/diff/prompt PASS; D2 locked82/49,268unit+contract then21focused tests, Ruff/mypy19 PASS; D3 actual commands/output PASS; D4 README/RUNBOOK/corpus/licenses/tasks/handoffs/summary and docs check PASS; D5 exact20file review/no secrets/raw/scratch/schema/API migration PASS; D6 explicit stage/commit with subject `test(T08): verify complete corpus reproduction`, actual hash returned post-commit and verified against origin/main after authorized push. Interfaces/files [S-T08-A01](implementation-summary.md#s-t08-a01). Counts remain986Default/100QA,84PDF/150QA,240EN+240VI/1190QA per four slices. README/RUNBOOK now document working all-domain/isolated reproduction, strict paths/metadata-only checkout recovery, fingerprints/locks/error handling and inherited licensing/XQuAD limits. No blocker remains; no benchmark/provider/production/Scarlet work. T09 depends on T08/T03 and is ready after completion; **STOP after T08**, do not start T09.
 
 ## Phase 2 — Identity, metadata và vòng đời tài liệu
 

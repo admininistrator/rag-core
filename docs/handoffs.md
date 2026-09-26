@@ -6,7 +6,10 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
-- **Current 2026-09-26 / T07-A06 COMPLETE after inspected completion commit:** `feat(T07): prepare XQuAD bilingual evaluation slices`, resolve actual hash with `git log -1 --format=%H --grep="^feat(T07):"`. User authorized commit/push GitHub and stop; confirmed direct one-task/session workflow. Runtime `gpt-6-sol`/`xhigh`; no subagents. Base `main`/`7696f83`; inherited candidate completed, old scratch retained local. Real setup/validator,21bilingual+138regression tests, Ruff/mypy17 and deterministic491published+3cache rerun PASS; [evidence](#h-t07-a06). Push result/actual hash reported post-commit. **STOP AFTER T07**; T08 TODO/dependencies ready, only start on a new user request. AGENTS/P14 replace historical Hermes workflow below. No scratch deletion or skipped path-length diagnostic executed.
+- **Current 2026-09-26 / T08-A01 COMPLETE after inspected completion commit:** `test(T08): verify complete corpus reproduction`; actual hash returned post-commit, resolve with `git log -1 --format=%H --grep="^test(T08):"`. Canonical all-domain setup/validator, final cold a2 setup/validator,1574published/92cache equality/stable rerun and missing-file exit1 all PASS.268full unit+contract then21focused tests, Ruff/mypy19/docs PASS. Direct agent, model/effort not exposed, no subagents; inherited T07 scratch preserved. User authorized origin/main push; actual remote equality reported post-push. [T08 evidence](#h-t08-a01). T09 dependencies T08/T03 ready after completion; **STOP AFTER T08**, no T09 implementation.
+
+
+- **Previous checkpoint 2026-09-26 / T07-A06 COMPLETE after inspected completion commit:** `feat(T07): prepare XQuAD bilingual evaluation slices`, resolve actual hash with `git log -1 --format=%H --grep="^feat(T07):"`. User authorized commit/push GitHub and stop; confirmed direct one-task/session workflow. Runtime `gpt-6-sol`/`xhigh`; no subagents. Base `main`/`7696f83`; inherited candidate completed, old scratch retained local. Real setup/validator,21bilingual+138regression tests, Ruff/mypy17 and deterministic491published+3cache rerun PASS; [evidence](#h-t07-a06). Push result/actual hash reported post-commit. **STOP AFTER T07**; T08 TODO/dependencies ready, only start on a new user request. AGENTS/P14 replace historical Hermes workflow below. No scratch deletion or skipped path-length diagnostic executed.
 
 ### Lịch sử checkpoint Hermes (không còn workflow hiện hành)
 
@@ -3092,3 +3095,580 @@ print("downloaded_at=" + snapshot["downloaded_at"])
 for name in snapshot["ids"]:
     print(name + "_sha256=" + hashlib.sha256((domain / "qa" / (name + ".jsonl")).read_bytes()).hexdigest())
 ```
+
+
+<a id="h-t08-a01"></a>
+## H-T08-A01 - Complete corpus reproduction
+
+- **Task/runtime:** Phase1/T08/A01, direct Codex agent; model/effort not exposed by runtime, no subagents. First recorded implementation timestamp `2026-09-26T17:35:06.9735939+07:00`; reading/preflight preceded it. User explicitly authorizes task-only changes, commit/push to origin/current branch, then stop. No merge/force/deploy.
+- **Baseline:** `main` HEAD `1d36c0906c918106eafaecc42e457c1a1ae3827b`; `git ls-remote origin refs/heads/main` returned the same hash (exit0 after approved network escalation). Initial restricted-network invocation failed to connect (exit128); this was network sandboxing, not a changed remote. Git author preflight exit0, no identity printed/changed. `git status --short` showed only inherited `.ptmp-t07-a02/` and `.tmp-t07-a02/`; inaccessible `.pytmp-t07-a02/`, `.tmp-t07-a02/pytest-tmp/`, `UsersAdminAppDataLocalTempt07a03/` and global-ignore warnings preserved. No scratch deletion, no historical denied optional diagnostic repeated.
+- **Read/dependencies:** AGENTS/task-session-prompt, full T07/T05/T06 and shared T04 notes, P01/P11/P13, entire original corpus prompt, handoffs/summary/README/RUNBOOK. T07 `1d36c09`, T06 closure `7d40fc4` + implementation `6863abf`, T05 `a2a94fb`, T04 `ad49ecc` COMPLETE. Original prompt SHA256 `7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46` unchanged.
+- **Environment for all commands below:** cwd `C:\Users\Admin\Documents\GitHub\rag-core`, Windows PowerShell, CPython3.12.4, uv0.11.16, pytest9.1.1. Environment prelude used before uv commands: `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'`. Pytest basetemps are listed with commands. stdout/stderr captured to ignored `.local/t08-a01/*.log`; PowerShell wrapper saves `$LASTEXITCODE`, prints log and exits with that code. Logged commands below are the exact native process invocations with their redirects, independent gates executed separately. No DB/broker/inference/provider/model services needed; real source download is explicit live upstream I/O, unit fixtures are synthetic and never substitute for live DoD.
+- **Config/sources:** inherited approved HF `hotpotqa/hotpot_qa` revision `1908d6afbbead072334abe2965f91bd2709910ab`, published Parquet SHA256 `c20b638ca82b21d04fe12e14ff417ad05153d4d215a65de54497fca4e972f7c6`; official FinanceBench `cc39aeb4afdf33909ee1412188bf89035950c2eb`; official XQuAD `7d30520c717524000f0d9d2f9c10a069acd9d285`, immutable source blob/SHA pins unchanged. Bounded transfer policies inherited; no new mirror/source override, no credentials needed, no LLM/model call or benchmark. License statements retained from dependency verification; no new redistribution/legal grant asserted.
+- **Implementation/scope:** `corpus_root.py`, setup/validator, minimal three-domain preparation glue, generic aggregate notes, fingerprint helper, reproduction/common/bilingual tests, `.gitignore`/docs traversal, README/RUNBOOK/corpus/license notices and three execution documents. No schemas, dependency lock, API, DB/index, production ingestion, source prompt, source gold or model change. Isolated `.repro/` roots and legacy scratch excluded from commit.
+
+<a id="h-t08-a01-dod1"></a>
+### DoD-1 - all-domain setup, validation and prompt acceptance
+
+Expected: canonical setup and standalone validator exit0 against real corpus; summary derived from validated reports. Actual: Default986docs/100QA, Document84PDF/150QA/189evidence with zero-based pages, Bilingual240EN+240VI/240groups/1190QA per four slices. Detailed outputs below.
+
+| Prompt acceptance | Result and evidence |
+| --- | --- |
+| 1. Directory with three domains | PASS: canonical and isolated root manifests/data validated for default/document/bilingual. |
+| 2. One setup command from clean state | PASS: absent `.repro/a2` checked before final cold setup; independent cache, live downloads, no manual source copying. Initial a1 diagnostic/fix preserved below. |
+| 3. Hotpot documents and normalized QA | PASS: Default validator recomputes pinned source conversion, seed42 selection, all contexts/distractors and supporting-only gold;986docs/100QA. |
+| 4. FinanceBench PDFs and human QA/evidence | PASS:84 real PDFs,150QA,189evidence; full exact source fields and page ranges validated. |
+| 5. XQuAD EN and VI corpus | PASS:240 language-specific documents each,240 aligned groups. |
+| 6. Four bilingual slices | PASS: en_en/vi_vi/vi_en/en_vi each1190, exact target-language counterpart answers/evidence. |
+| 7. Every QA has valid document references | PASS: all three existing semantic validators reconstruct artifacts and validate references, unique IDs/nonempty values/gold/page/alignment. QA remains evaluator-only. |
+| 8. Validator PASS | PASS: separate canonical and isolated `--all` invocations; missing-file negative control exits1. |
+| 9. README source/license/counts/use | PASS: root README/RUNBOOK and corpus README/licenses updated; sources/pins, actual counts, QA/language/page policies, reproduction and limits documented. |
+| 10. No hidden manual source steps | PASS: locked Python/dev dependencies plus one final clean setup; only runtime network approval required. No baseline training, auth workaround, cache seeding or restricted payload commit. |
+| 11. Rerun no duplicates | PASS: all published/cache hashes/mtimes/IDs/counts/download timestamps unchanged; strict exact artifact sets. |
+| 12. Final measured summary | PASS: setup/validator print validated per-domain counts/distribution/evidence/language slices and Validation: PASS. |
+
+<a id="h-t08-a01-dod2"></a>
+### DoD-2 - clean equality, rerun and missing-file failure
+
+`verify_reproduction.py` compares 1574 published files, all normalized QA IDs/counts and exact payload hashes with the canonical corpus. Domain manifests compare canonical JSON excluding only downloaded_at. New download timestamps remain separate; rerun checks all published/cache byte hashes, sizes, mtimes and timestamps against its ignored baseline.92 cache files. Content digest `79a34f80d7e80995f519d2e0224beb0d891de28274b4628af2f36fa7a1f51646`; QA IDs digest `0b7e36c079dd013cceeccb1c8f65860f2e88163c51f10a392849877b7210f9f8`.
+
+Deliberate missing-file test moved only the fresh a1 Default QA file to a checked backup path inside that same isolated root, invoked the real all-domain validator, expected/observed exit1, then restored in finally. Post-restore fingerprint check PASS proves hashes/mtimes/IDs/counts/receipts retained. No canonical file or user source deleted.
+
+### Attempt diagnostics retained
+
+- Initial apply_patch rejected duplicate operations on setup_corpus.py before mutation; split patch/write succeeded.
+- First reproduction+bilingual run:40passed/1failed; Windows abspath erased trailing dot and let `.repro/a.` pass. Fixed by lexical rejection before normalization; final path tests pass. Ruff nested-with warning fixed.
+- First fingerprint mypy found mixed list element inference; replaced repeated heterogeneous indexing with named string byte hash. Strict mypy19 later PASS.
+- First record failed with `KeyError: 'id'`: bilingual paragraph indexes are JSONL document metadata, not QA rows. Helper now hashes every index as content and collects IDs only from question slice files; regression added.
+- Next record correctly found inventory bytes differed while parsed JSON values were equal: bootstrap write_json reserialized provenance. Fixed initialization to copy exact inventory bytes. a1 diagnostic copy was corrected only after asserting semantic equality; no source/cache bytes copied. Final a2 cold setup uses corrected code with no manual repair, superseding a1 as one-command cold proof. Initial errors are not reported as PASS or discarded.
+- Broad Ruff root scan emits inherited inaccessible-scratch warnings but exits0/All checks passed. Explicit src/tests/scripts/corpus scripts scan covers all code changed. No files excluded merely to hide a new failure.
+
+### D1-D6 closure and limits
+
+- **D1:** dependency scope and prompt read, changed-path review, `git diff --check`; baseline scratch preserved, T08 only.
+- **D2:** locked sync resolved82/checked49;268 unit+contract PASS, final focused reproduction21 PASS (includes added fingerprint case); strict mypy19 and Ruff PASS. Failed interim runs retained below.
+- **D3:** separate real canonical setup/validator, final cold setup/validator, fingerprint and rerun, negative control, and 12 prompt rows above. No mock-as-live substitution.
+- **D4:** README/RUNBOOK/corpus README/license notices/tasks/handoffs/phase-task-attempt summary; docs links/UTF-8/dependency graph checked. No N/A docs waiver.
+- **D5:** explicit diff/secrets/ignore/prompt review; raw/PDF/QA output copies/cache/scratch not staged. No migration/schema/contract breaking change or source pin/license expansion.
+- **D6:** explicit task paths, staged diff check and commit `test(T08): verify complete corpus reproduction`; COMPLETE effective only after successful inspected commit. User allows push origin/main; actual commit and remote hash reported post-commit, no hash inserted into its own commit.
+- **Known limits:** HF derivative not asserted CMU byte-equivalent; FinanceBench redistribution/company rights unresolved/local only; XQuAD has no unanswerable questions. All-domain publication is sequential; late failure retains earlier valid domains, returns nonzero and stops. Partial initialization/stale locks need operator inspection, no auto bypass. Fingerprints are not semantic validation. No benchmark/provider/model/GPU/deploy/Scarlet result claimed. T09/T03 dependency readiness only; stop after T08.
+
+### Actual command outputs
+
+#### Canonical setup / DoD-1
+
+Command, exit **0**; local log `.local/t08-a01/setup-all.log`:
+
+```powershell
+uv run python corpus-documents/scripts/setup_corpus.py --all *> .local/t08-a01/setup-all.log
+```
+
+```text
+Preparing default...
+Preparing document...
+Preparing bilingual...
+RAG Evaluation Corpus
+Default / HotpotQA: documents=986 QA=100
+  seed=42 distribution={'by_type': {'bridge': 50, 'comparison': 50}, 'by_level': {'hard': 100}, 'strata': {'bridge/hard': 50, 'comparison/hard': 50}}
+Document / FinanceBench: PDFs=84 QA=150
+  evidence=189 page_indexing=zero_based
+Bilingual / XQuAD: documents={'en': 240, 'vi': 240}
+  QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240
+Validation: PASS
+CORPUS SETUP: PASS
+```
+
+#### Canonical standalone validator / DoD-1
+
+Command, exit **0**; local log `.local/t08-a01/validate-all.log`:
+
+```powershell
+uv run python corpus-documents/scripts/validate_corpus.py --all *> .local/t08-a01/validate-all.log
+```
+
+```text
+RAG Evaluation Corpus
+Default / HotpotQA: documents=986 QA=100
+  seed=42 distribution={'by_type': {'bridge': 50, 'comparison': 50}, 'by_level': {'hard': 100}, 'strata': {'bridge/hard': 50, 'comparison/hard': 50}}
+Document / FinanceBench: PDFs=84 QA=150
+  evidence=189 page_indexing=zero_based
+Bilingual / XQuAD: documents={'en': 240, 'vi': 240}
+  QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240
+Validation: PASS
+CORPUS VALIDATION: PASS
+```
+
+#### First clean setup a1 / diagnostic run
+
+Command, exit **0**; local log `.local/t08-a01/clean-setup.log`:
+
+```powershell
+if (Test-Path -LiteralPath corpus-documents/.repro/a1) { throw 'Clean output root already exists' }; uv run python corpus-documents/scripts/setup_corpus.py --all --output-root corpus-documents/.repro/a1 *> .local/t08-a01/clean-setup.log
+```
+
+```text
+Preparing default...
+Preparing document...
+Preparing bilingual...
+RAG Evaluation Corpus
+Default / HotpotQA: documents=986 QA=100
+  seed=42 distribution={'by_type': {'bridge': 50, 'comparison': 50}, 'by_level': {'hard': 100}, 'strata': {'bridge/hard': 50, 'comparison/hard': 50}}
+Document / FinanceBench: PDFs=84 QA=150
+  evidence=189 page_indexing=zero_based
+Bilingual / XQuAD: documents={'en': 240, 'vi': 240}
+  QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240
+Validation: PASS
+CORPUS SETUP: PASS
+```
+
+#### First clean standalone validator
+
+Command, exit **0**; local log `.local/t08-a01/clean-validate.log`:
+
+```powershell
+uv run python corpus-documents/scripts/validate_corpus.py --all --output-root corpus-documents/.repro/a1 *> .local/t08-a01/clean-validate.log
+```
+
+```text
+RAG Evaluation Corpus
+Default / HotpotQA: documents=986 QA=100
+  seed=42 distribution={'by_type': {'bridge': 50, 'comparison': 50}, 'by_level': {'hard': 100}, 'strata': {'bridge/hard': 50, 'comparison/hard': 50}}
+Document / FinanceBench: PDFs=84 QA=150
+  evidence=189 page_indexing=zero_based
+Bilingual / XQuAD: documents={'en': 240, 'vi': 240}
+  QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240
+Validation: PASS
+CORPUS VALIDATION: PASS
+```
+
+#### First fixture/path failure
+
+Command, exit **1**; local log `.local/t08-a01/tests1.log`:
+
+```powershell
+$env:PYTEST_ADDOPTS = '--basetemp=.local/p8a'; uv run pytest tests/unit/test_corpus_reproduction.py tests/unit/test_corpus_bilingual.py *> .local/t08-a01/tests1.log
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 41 items
+
+tests\unit\test_corpus_reproduction.py ........F...........              [ 48%]
+tests\unit\test_corpus_bilingual.py .....................                [100%]
+
+================================== FAILURES ===================================
+__________ test_output_refuses_unsafe_or_protected_paths[.repro/a.] ___________
+
+metadata_root = WindowsPath('C:/Users/Admin/Documents/GitHub/rag-core/.local/p8a/test_output_refuses_unsafe_or_8/c')
+relative = '.repro/a.'
+
+    @pytest.mark.parametrize("relative", ["..", "default", "scripts", ".downloads/x", ".repro", ".repro/a/b", ".repro/CON", ".repro/a:stream", ".repro/a.", ".repro/../outside"])
+    def test_output_refuses_unsafe_or_protected_paths(metadata_root: Path, relative: str) -> None:
+>       with pytest.raises(common.CorpusError):
+E       Failed: DID NOT RAISE CorpusError
+
+tests\unit\test_corpus_reproduction.py:38: Failed
+=========================== short test summary info ===========================
+FAILED tests/unit/test_corpus_reproduction.py::test_output_refuses_unsafe_or_protected_paths[.repro/a.]
+======================== 1 failed, 40 passed in 21.11s ========================
+```
+
+#### Initial fingerprint index error
+
+Command, exit **1**; local log `.local/t08-a01/record.log`:
+
+```powershell
+uv run python corpus-documents/scripts/verify_reproduction.py record --output-root corpus-documents/.repro/a1 *> .local/t08-a01/record.log
+```
+
+```text
+uv : Traceback (most recent call last):
+At line:2 char:127
++ ... uv-python'; uv run python corpus-documents/scripts/verify_reproductio ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+  File "C:\Users\Admin\Documents\GitHub\rag-core\corpus-documents\scripts\verify_reproduction.py", line 101, in
+<module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\Admin\Documents\GitHub\rag-core\corpus-documents\scripts\verify_reproduction.py", line 80, in main
+    candidate = snapshot(root)
+                ^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Documents\GitHub\rag-core\corpus-documents\scripts\verify_reproduction.py", line 42, in snapshot
+    identifiers = [item["id"] for item in read_jsonl(path)]
+                   ~~~~^^^^^^
+KeyError: 'id'
+```
+
+#### Inventory byte equality diagnostic
+
+Command, exit **1**; local log `.local/t08-a01/record2.log`:
+
+```powershell
+uv run python corpus-documents/scripts/verify_reproduction.py record --output-root corpus-documents/.repro/a1 *> .local/t08-a01/record2.log
+```
+
+```text
+uv : REPRODUCTION: FAIL - Reproduction differs from standard corpus: content
+At line:2 char:127
++ ... uv-python'; uv run python corpus-documents/scripts/verify_reproductio ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (REPRODUCTION: F...corpus: content:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+```
+
+#### a1 fingerprint after bootstrap correction
+
+Command, exit **0**; local log `.local/t08-a01/record3.log`:
+
+```powershell
+uv run python corpus-documents/scripts/verify_reproduction.py record --output-root corpus-documents/.repro/a1 *> .local/t08-a01/record3.log
+```
+
+```text
+REPRODUCTION record: PASS
+published_files=1574 cache_files=92
+content_sha256=79a34f80d7e80995f519d2e0224beb0d891de28274b4628af2f36fa7a1f51646 IDs_sha256=0b7e36c079dd013cceeccb1c8f65860f2e88163c51f10a392849877b7210f9f8
+counts={'default': [986, 100], 'document': [84, 150], 'bilingual': [480, 4760]}
+downloaded_at={'default': '2026-09-26T10:38:52.979498+00:00', 'document': '2026-09-26T10:39:11.741202+00:00', 'bilingual': '2026-09-26T10:41:54.153313+00:00'}
+```
+
+#### a1 rerun
+
+Command, exit **0**; local log `.local/t08-a01/clean-rerun.log`:
+
+```powershell
+uv run python corpus-documents/scripts/setup_corpus.py --all --output-root corpus-documents/.repro/a1 *> .local/t08-a01/clean-rerun.log
+```
+
+```text
+Preparing default...
+Preparing document...
+Preparing bilingual...
+RAG Evaluation Corpus
+Default / HotpotQA: documents=986 QA=100
+  seed=42 distribution={'by_type': {'bridge': 50, 'comparison': 50}, 'by_level': {'hard': 100}, 'strata': {'bridge/hard': 50, 'comparison/hard': 50}}
+Document / FinanceBench: PDFs=84 QA=150
+  evidence=189 page_indexing=zero_based
+Bilingual / XQuAD: documents={'en': 240, 'vi': 240}
+  QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240
+Validation: PASS
+CORPUS SETUP: PASS
+```
+
+#### a1 rerun fingerprint
+
+Command, exit **0**; local log `.local/t08-a01/rerun-check.log`:
+
+```powershell
+uv run python corpus-documents/scripts/verify_reproduction.py check --output-root corpus-documents/.repro/a1 *> .local/t08-a01/rerun-check.log
+```
+
+```text
+REPRODUCTION check: PASS
+published_files=1574 cache_files=92
+content_sha256=79a34f80d7e80995f519d2e0224beb0d891de28274b4628af2f36fa7a1f51646 IDs_sha256=0b7e36c079dd013cceeccb1c8f65860f2e88163c51f10a392849877b7210f9f8
+counts={'default': [986, 100], 'document': [84, 150], 'bilingual': [480, 4760]}
+downloaded_at={'default': '2026-09-26T10:38:52.979498+00:00', 'document': '2026-09-26T10:39:11.741202+00:00', 'bilingual': '2026-09-26T10:41:54.153313+00:00'}
+```
+
+#### Full unit and contract regression
+
+Command, exit **0**; local log `.local/t08-a01/tests2.log`:
+
+```powershell
+$env:PYTEST_ADDOPTS = '--basetemp=.local/p8b'; uv run pytest tests/unit tests/contract/test_api_schema.py *> .local/t08-a01/tests2.log
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 268 items
+
+tests\unit\test_corpus_bilingual.py ......................               [  8%]
+tests\unit\test_corpus_common.py ....................................... [ 22%]
+.........................................                                [ 38%]
+tests\unit\test_corpus_default.py .....................................  [ 51%]
+tests\unit\test_corpus_document.py ...................                   [ 58%]
+tests\unit\test_corpus_reproduction.py ....................              [ 66%]
+tests\unit\test_health.py ...                                            [ 67%]
+tests\unit\test_settings.py ....                                         [ 69%]
+tests\contract\test_api_schema.py ...................................... [ 83%]
+.............................................                            [100%]
+
+======================= 268 passed in 73.89s (0:01:13) ========================
+```
+
+#### Final focused reproduction regression
+
+Command, exit **0**; local log `.local/t08-a01/tests-final.log`:
+
+```powershell
+$env:PYTEST_ADDOPTS = '--basetemp=.local/p8c'; uv run pytest tests/unit/test_corpus_reproduction.py *> .local/t08-a01/tests-final.log
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 21 items
+
+tests\unit\test_corpus_reproduction.py .....................             [100%]
+
+============================= 21 passed in 3.88s ==============================
+```
+
+#### Final cold setup a2 / DoD-2
+
+Command, exit **0**; local log `.local/t08-a01/final-clean-setup.log`:
+
+```powershell
+if (Test-Path -LiteralPath corpus-documents/.repro/a2) { throw 'Clean output root already exists' }; uv run python corpus-documents/scripts/setup_corpus.py --all --output-root corpus-documents/.repro/a2 *> .local/t08-a01/final-clean-setup.log
+```
+
+```text
+Preparing default...
+Preparing document...
+Preparing bilingual...
+RAG Evaluation Corpus
+Default / HotpotQA: documents=986 QA=100
+  seed=42 distribution={'by_type': {'bridge': 50, 'comparison': 50}, 'by_level': {'hard': 100}, 'strata': {'bridge/hard': 50, 'comparison/hard': 50}}
+Document / FinanceBench: PDFs=84 QA=150
+  evidence=189 page_indexing=zero_based
+Bilingual / XQuAD: documents={'en': 240, 'vi': 240}
+  QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240
+Validation: PASS
+CORPUS SETUP: PASS
+```
+
+#### Final standalone clean validator
+
+Command, exit **0**; local log `.local/t08-a01/final-clean-validate.log`:
+
+```powershell
+uv run python corpus-documents/scripts/validate_corpus.py --all --output-root corpus-documents/.repro/a2 *> .local/t08-a01/final-clean-validate.log
+```
+
+```text
+RAG Evaluation Corpus
+Default / HotpotQA: documents=986 QA=100
+  seed=42 distribution={'by_type': {'bridge': 50, 'comparison': 50}, 'by_level': {'hard': 100}, 'strata': {'bridge/hard': 50, 'comparison/hard': 50}}
+Document / FinanceBench: PDFs=84 QA=150
+  evidence=189 page_indexing=zero_based
+Bilingual / XQuAD: documents={'en': 240, 'vi': 240}
+  QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240
+Validation: PASS
+CORPUS VALIDATION: PASS
+```
+
+#### Final clean fingerprint baseline
+
+Command, exit **0**; local log `.local/t08-a01/final-record.log`:
+
+```powershell
+uv run python corpus-documents/scripts/verify_reproduction.py record --output-root corpus-documents/.repro/a2 *> .local/t08-a01/final-record.log
+```
+
+```text
+REPRODUCTION record: PASS
+published_files=1574 cache_files=92
+content_sha256=79a34f80d7e80995f519d2e0224beb0d891de28274b4628af2f36fa7a1f51646 IDs_sha256=0b7e36c079dd013cceeccb1c8f65860f2e88163c51f10a392849877b7210f9f8
+counts={'default': [986, 100], 'document': [84, 150], 'bilingual': [480, 4760]}
+downloaded_at={'default': '2026-09-26T10:48:40.607938+00:00', 'document': '2026-09-26T10:48:57.865950+00:00', 'bilingual': '2026-09-26T10:50:39.594444+00:00'}
+```
+
+#### Final root Ruff
+
+Command, exit **0**; local log `.local/t08-a01/ruff-all.log`:
+
+```powershell
+uv run ruff check . *> .local/t08-a01/ruff-all.log
+```
+
+```text
+uv : warning: Encountered error: Access is denied. (os error 5)
+At line:25 char:127
++ ... uv-python'; uv run ruff check . *> .local/t08-a01/ruff-all.log; $resu ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: Encoun...d. (os error 5):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+warning: Encountered error: Access is denied. (os error 5)
+warning: Encountered error: Access is denied. (os error 5)
+All checks passed!
+```
+
+#### Final strict types
+
+Command, exit **0**; local log `.local/t08-a01/mypy-final2.log`:
+
+```powershell
+uv run mypy src corpus-documents/scripts *> .local/t08-a01/mypy-final2.log
+```
+
+```text
+Success: no issues found in 19 source files
+```
+
+
+#### Missing-file negative control and restoration
+
+Exact PowerShell command after the common uv environment prelude, overall exit **0**;
+inner validator exit **1** as expected, fingerprint after restoration exit **0**:
+
+```powershell
+$probeRoot = (Resolve-Path -LiteralPath corpus-documents/.repro/a1).Path; $probeSource = [IO.Path]::GetFullPath((Join-Path $probeRoot 'default/qa/eval.jsonl')); $probeBackup = [IO.Path]::GetFullPath((Join-Path $probeRoot '.missing-eval.jsonl')); if (-not $probeSource.StartsWith($probeRoot + '\') -or -not $probeBackup.StartsWith($probeRoot + '\') -or (Test-Path -LiteralPath $probeBackup)) { throw 'Unsafe probe paths' }; Move-Item -LiteralPath $probeSource -Destination $probeBackup; try { uv run python corpus-documents/scripts/validate_corpus.py --all --output-root corpus-documents/.repro/a1 *> .local/t08-a01/missing-file.log; $probeExit = $LASTEXITCODE; Get-Content .local/t08-a01/missing-file.log; Write-Output "missing-file validator exit=$probeExit (expected 1)"; if ($probeExit -ne 1) { throw 'Missing-file gate failed' } } finally { Move-Item -LiteralPath $probeBackup -Destination $probeSource }; uv run python corpus-documents/scripts/verify_reproduction.py check --output-root corpus-documents/.repro/a1 *> .local/t08-a01/restored-check.log; $result = $LASTEXITCODE; Get-Content .local/t08-a01/restored-check.log; exit $result
+```
+
+Actual excerpt (PowerShell stderr decoration omitted; full local log
+`.local/t08-a01/missing-file.log`):
+
+```text
+uv : CORPUS VALIDATION: FAIL - Default corpus has missing, duplicate, or unmanaged artifacts
+missing-file validator exit=1 (expected 1)
+```
+
+Restoration output, `.local/t08-a01/restored-check.log`:
+
+```text
+REPRODUCTION check: PASS
+published_files=1574 cache_files=92
+content_sha256=79a34f80d7e80995f519d2e0224beb0d891de28274b4628af2f36fa7a1f51646 IDs_sha256=0b7e36c079dd013cceeccb1c8f65860f2e88163c51f10a392849877b7210f9f8
+counts={'default': [986, 100], 'document': [84, 150], 'bilingual': [480, 4760]}
+downloaded_at={'default': '2026-09-26T10:38:52.979498+00:00', 'document': '2026-09-26T10:39:11.741202+00:00', 'bilingual': '2026-09-26T10:41:54.153313+00:00'}
+```
+
+#### Initial environment and review checks
+
+Commands `uv sync --locked --group dev --group api`, `git var GIT_AUTHOR_IDENT | Out-Null`
+and `Get-FileHash -Algorithm SHA256 -LiteralPath 'corpus-documents/Codex Prompt – Build RAG Evaluation Corpus.md'`
+ran with the stated cwd; exits0.
+Actual sync output: `Resolved 82 packages in 2ms` / `Checked 49 packages in 57ms`.
+Author preflight emitted no identity. Prompt hash as recorded above.
+
+`git check-ignore corpus-documents/.repro/a2/document/qa/eval.jsonl corpus-documents/.repro/a2/document/documents/3M_2018_10K.pdf corpus-documents/.repro/a2/.verification.json corpus-documents/.downloads/xquad.en.json`
+exit0 returned every path, proving payload/QA/verification/cache exclusion. Existing global-ignore
+permission warning remained. Initial `git diff --check` detected trailing whitespace only in
+newly pasted PowerShell error excerpts; removed trailing display whitespace from the new
+T08 section, preserving historical evidence and substantive output. Final check recorded below.
+
+
+#### Final a2 rerun
+
+Command, exit **0**; local log `.local/t08-a01/final-rerun.log`:
+
+```powershell
+uv run python corpus-documents/scripts/setup_corpus.py --all --output-root corpus-documents/.repro/a2 *> .local/t08-a01/final-rerun.log
+```
+
+```text
+Preparing default...
+Preparing document...
+Preparing bilingual...
+RAG Evaluation Corpus
+Default / HotpotQA: documents=986 QA=100
+  seed=42 distribution={'by_type': {'bridge': 50, 'comparison': 50}, 'by_level': {'hard': 100}, 'strata': {'bridge/hard': 50, 'comparison/hard': 50}}
+Document / FinanceBench: PDFs=84 QA=150
+  evidence=189 page_indexing=zero_based
+Bilingual / XQuAD: documents={'en': 240, 'vi': 240}
+  QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240
+Validation: PASS
+CORPUS SETUP: PASS
+```
+
+
+#### Final a2 rerun equality
+
+Command, exit **0**; local log `.local/t08-a01/final-rerun-check.log`:
+
+```powershell
+uv run python corpus-documents/scripts/verify_reproduction.py check --output-root corpus-documents/.repro/a2 *> .local/t08-a01/final-rerun-check.log
+```
+
+```text
+REPRODUCTION check: PASS
+published_files=1574 cache_files=92
+content_sha256=79a34f80d7e80995f519d2e0224beb0d891de28274b4628af2f36fa7a1f51646 IDs_sha256=0b7e36c079dd013cceeccb1c8f65860f2e88163c51f10a392849877b7210f9f8
+counts={'default': [986, 100], 'document': [84, 150], 'bilingual': [480, 4760]}
+downloaded_at={'default': '2026-09-26T10:48:40.607938+00:00', 'document': '2026-09-26T10:48:57.865950+00:00', 'bilingual': '2026-09-26T10:50:39.594444+00:00'}
+```
+
+
+#### Explicit source Ruff
+
+Command, exit **0**; local log `.local/t08-a01/ruff-explicit.log`:
+
+```powershell
+uv run ruff check src tests scripts corpus-documents/scripts *> .local/t08-a01/ruff-explicit.log
+```
+
+```text
+All checks passed!
+```
+
+
+#### Documentation validation
+
+Command, exit **0**; local log `.local/t08-a01/docs1.log`:
+
+```powershell
+uv run python scripts/check_docs.py *> .local/t08-a01/docs1.log
+```
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 247
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+
+### Final D1/D4/D5/D6 review boundary
+
+`git diff --check` exit0 (no whitespace errors). `uv --version` exit0:
+`uv 0.11.16 (135a36367 2026-05-21 x86_64-pc-windows-msvc)`.
+Explicit path/UTF-8/size/credential-pattern/original-prompt inspection output:
+
+```text
+D1/D5 review: PASS; 20 explicit task files, UTF-8/size/credential-pattern/prompt checks; no unexpected tracked changes.
+No raw/PDF/QA copies, weights, cache, scratch, source prompt, API, schema or dependency lock in scope.
+```
+
+Actual stage command, exit0 after user-authorized Git write escalation:
+
+```powershell
+git add -- .gitignore README.md RUNBOOK.md corpus-documents/README.md corpus-documents/licenses/README.md corpus-documents/manifest.json corpus-documents/scripts/corpus_root.py corpus-documents/scripts/verify_reproduction.py corpus-documents/scripts/setup_corpus.py corpus-documents/scripts/validate_corpus.py corpus-documents/scripts/prepare_default.py corpus-documents/scripts/prepare_document.py corpus-documents/scripts/prepare_bilingual.py docs/tasks.md docs/handoffs.md docs/implementation-summary.md scripts/check_docs.py tests/unit/test_corpus_common.py tests/unit/test_corpus_bilingual.py tests/unit/test_corpus_reproduction.py
+```
+
+`git diff --cached --check` exit0/no output; `git diff --cached --stat` reported
+`20 files changed, 1156 insertions(+), 157 deletions(-)` before this final evidence append.
+Cached name list matched all20 explicit paths; no raw/corpus QA/cache/scratch. Added this
+review evidence, then restaged only handoffs and reran cached/docs checks before commit.
+`uv run python scripts/check_docs.py *> .local/t08-a01/docs-final.log` exit0:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 250
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Completion command: `git commit -m "test(T08): verify complete corpus reproduction"`.
+Actual commit output/hash and authorized `git push origin main` result are returned to the
+user after commit, together with `git ls-remote origin refs/heads/main` equality. No self hash
+or claimed push success is embedded before execution. Completion status is valid only after
+the successful inspected commit; failure would require a new checkpoint, not COMPLETE.

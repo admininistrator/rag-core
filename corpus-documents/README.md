@@ -1,11 +1,11 @@
 # RAG evaluation corpus
 
-**T04 shared tooling, T05 Default, T06 Document and T07 Bilingual preparation are VERIFIED locally.**
+**T04–T08 shared tooling, all three domains and clean reproduction are VERIFIED locally.**
 Default uses the exact Hugging Face derivative approved by the user after the
 canonical CMU endpoint timed out. Document uses the pinned official FinanceBench
 open sample and only its referenced repository PDFs. Bilingual uses the official
-pinned XQuAD EN/VI 1.1 sources; full clean-state reproduction and acceptance belong
-to T08.
+pinned XQuAD EN/VI 1.1 sources. T08 verifies fresh downloads into an isolated root,
+content/ID/count equality, stable reruns and missing-file rejection.
 The [original prompt](Codex%20Prompt%20%E2%80%93%20Build%20RAG%20Evaluation%20Corpus.md)
 remains unchanged.
 
@@ -79,17 +79,51 @@ uv run pytest tests/unit/test_corpus_bilingual.py
 `--metadata-only` validates inventory/schema/provenance and aggregate consistency.
 Its success message explicitly states that corpus data was **not validated**.
 Default, Document, and Bilingual setup/validation PASS with real downloaded bytes.
-The following all-domain selections remain reserved for T08 and fail nonzero without
-claiming all-domain acceptance:
+The all-domain commands are verified in [T08 evidence](../docs/handoffs.md#h-t08-a01):
 
 ```powershell
 uv run python corpus-documents/scripts/setup_corpus.py --all
 uv run python corpus-documents/scripts/validate_corpus.py --all
 ```
 
-The bilingual domain setup and validation are implemented; the one-command,
-all-domain setup is accepted in T08. There are no hidden manual
-downloads, success stubs or legacy training/model setup calls in T04.
+The one-command setup downloads, verifies, materializes and validates all domains.
+There are no hidden manual downloads or legacy training/model setup calls.
+
+For a cold reproduction, choose a new short output name. T08 ran `a1` and `a2`;
+reuse a name only to resume or check idempotency:
+
+```powershell
+uv run python corpus-documents/scripts/setup_corpus.py --all --output-root corpus-documents/.repro/a2
+uv run python corpus-documents/scripts/validate_corpus.py --all --output-root corpus-documents/.repro/a2
+uv run python corpus-documents/scripts/verify_reproduction.py record --output-root corpus-documents/.repro/a2
+uv run python corpus-documents/scripts/setup_corpus.py --all --output-root corpus-documents/.repro/a2
+uv run python corpus-documents/scripts/verify_reproduction.py check --output-root corpus-documents/.repro/a2
+```
+
+Only direct children of ignored `.repro/` are valid isolated roots. Paths are cwd-relative
+or absolute; traversal, links/junctions, Windows reserved/ambiguous names and existing
+unrecognized files are refused. Scripts and schemas stay in the standard corpus root;
+each output has its own provenance, manifests, data and download cache. New roots copy
+only provenance with `not_downloaded` status and null measurements, then measure downloads.
+The standard corpus is never deleted to create clean state. Initial setup may need network
+approval in a sandbox; upstream downloads require no authentication for these pinned files.
+
+A fresh checkout with ready manifests but no `raw/` or `documents/` can rebuild after
+checking every retained QA file against its receipt. A partially missing payload or edited
+QA fails; setup does not repair or erase user changes. The validator never bootstraps files.
+
+Fingerprint checks require an already prepared standard corpus. They compare all published
+payload bytes, canonical manifest JSON (excluding only `downloaded_at`), QA IDs and counts.
+The ignored `.verification.json` baseline cannot be overwritten by `record`; `check` also
+requires unchanged published/cache hashes, sizes, mtimes and download timestamps.
+Use full validation separately for semantic/gold/page/alignment checks. T08 measured
+1574 published files and 92 cache files, matching content and IDs across roots.
+
+All/domain CLI calls take a root setup lock as well as domain locks. All-domain publication
+is sequential: completed domains remain valid if a later domain fails, and the command
+returns nonzero without claiming full acceptance. Rerun resumes verified caches; inspect
+stale locks, interrupted initialization and retained stages before operator recovery.
+Readers must wait until setup exits. No automatic lock bypass or source deletion occurs.
 
 ```text
 corpus-documents/

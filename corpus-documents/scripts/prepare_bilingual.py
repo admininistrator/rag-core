@@ -412,6 +412,7 @@ def _publish(stage: Path, root: Path) -> None:
 
 
 def prepare_bilingual(root: Path = CORPUS_ROOT) -> dict[str, Any]:
+    from corpus_root import AGGREGATE_NOTES, preparation_manifest
     from validate_corpus import validate_metadata
 
     root = root.resolve(strict=True)
@@ -429,10 +430,10 @@ def prepare_bilingual(root: Path = CORPUS_ROOT) -> dict[str, Any]:
     try:
         validate_metadata(root)
         prior_root = safe_path(root, "bilingual")
-        prior = read_json(prior_root / "manifest.json")
+        prior, metadata_checkout = preparation_manifest(prior_root)
         if prior["status"] == "ready":
             validate_bilingual(prior_root)
-        elif set(_tree_files(prior_root)) != {"manifest.json"}:
+        elif not metadata_checkout and set(_tree_files(prior_root)) != {"manifest.json"}:
             raise CorpusError("Refuse to replace unrecognized bilingual corpus files")
         stage = cache / ("bilingual-stage-" + uuid.uuid4().hex)
         stage.mkdir()
@@ -533,9 +534,7 @@ def prepare_bilingual(root: Path = CORPUS_ROOT) -> dict[str, Any]:
             "document_count": manifest["document_count"],
             "qa_count": manifest["qa_count"],
         }
-        aggregate["notes"] = (
-            "Default, Document and Bilingual corpora prepared; clean all-domain reproduction and acceptance T08."
-        )
+        aggregate["notes"] = AGGREGATE_NOTES
         write_json(stage / "manifest.json", aggregate)
         shutil.copy2(
             root / "source-license-inventory.json", stage / "source-license-inventory.json"

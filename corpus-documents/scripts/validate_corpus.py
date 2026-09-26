@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from common import CORPUS_ROOT, DOMAINS, CorpusError, check_url, read_json, safe_path
+from corpus_root import output_root, print_summary
 
 # The existing dev-only jsonschema package has no bundled typing stubs.
 from jsonschema import Draft202012Validator, FormatChecker  # type: ignore[import-untyped]
@@ -80,63 +81,38 @@ def validate_metadata(root: Path = CORPUS_ROOT) -> None:
             safe_path(root / domain, reference)
 
 
+def validate_data(root: Path, selected: tuple[str, ...] = DOMAINS) -> dict[str, dict[str, Any]]:
+    from prepare_bilingual import validate_bilingual
+    from prepare_default import validate_default
+    from prepare_document import validate_document
+
+    validate_metadata(root)
+    validators = {"default": validate_default, "document": validate_document, "bilingual": validate_bilingual}
+    reports = {}
+    for domain in selected:
+        if read_json(root / domain / "manifest.json")["status"] != "ready":
+            raise CorpusError(f"{domain}: corpus is not ready; run setup")
+        reports[domain] = validators[domain](safe_path(root, domain))
+    return reports
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Validate corpus metadata or a prepared domain.")
+    parser = argparse.ArgumentParser(description="Validate corpus metadata or prepared data.")
     selection = parser.add_mutually_exclusive_group(required=True)
-    selection.add_argument(
-        "--metadata-only",
-        action="store_true",
-        help="Check schemas/pins/manifest consistency; no corpus acceptance.",
-    )
-    selection.add_argument(
-        "--all", action="store_true", help="Validate all domains (all-domain acceptance is in T08)."
-    )
-    selection.add_argument("--domain", choices=DOMAINS, help="Validate a prepared domain.")
+    selection.add_argument("--metadata-only", action="store_true", help="Check metadata only; no data acceptance.")
+    selection.add_argument("--all", action="store_true", help="Validate every domain.")
+    selection.add_argument("--domain", choices=DOMAINS)
+    parser.add_argument("--output-root", help="Isolated output: corpus-documents/.repro/<name>.")
     args = parser.parse_args(argv)
     try:
-        validate_metadata()
+        root = output_root(args.output_root)
         if args.metadata_only:
-            print(
-                "CORPUS METADATA: PASS - 3 domain manifests + inventory; corpus data NOT validated."
-            )
-            return 0
-        if args.all:
-            raise CorpusError("All-domain data validation and acceptance are reserved for T08")
-        selected = (args.domain,)
-        for domain in selected:
-            manifest = read_json(CORPUS_ROOT / domain / "manifest.json")
-            if manifest["status"] != "ready":
-                raise CorpusError(
-                    f"{domain}: corpus is {manifest['status']}; run domain setup after its implementation"
-                )
-            if domain == "default":
-                from prepare_default import validate_default
-
-                report = validate_default(CORPUS_ROOT / domain)
-                detail = (
-                    f"documents={report['document_count']} QA={report['qa_count']} "
-                    f"seed={report['seed']} source_sha256={report['source_sha256']}"
-                )
-            elif domain == "document":
-                from prepare_document import validate_document
-
-                report = validate_document(CORPUS_ROOT / domain)
-                detail = (
-                    f"PDFs={report['document_count']} QA={report['qa_count']} "
-                    f"evidence={report['evidence_count']} "
-                    f"page_indexing={report['page_indexing']} "
-                    f"source_sha256={report['source_sha256']}"
-                )
-            else:
-                from prepare_bilingual import validate_bilingual
-
-                report = validate_bilingual(CORPUS_ROOT / domain)
-                detail = (
-                    f"paragraphs={report['paragraph_count_by_language']} "
-                    f"QA_slices={report['qa_count_by_slice']} "
-                    f"parallel_groups={report['parallel_group_count']}"
-                )
-            print(f"CORPUS VALIDATION: PASS - {domain}; {detail}")
+            validate_metadata(root)
+            print("CORPUS METADATA: PASS - 3 domain manifests + inventory; corpus data NOT validated.")
+        else:
+            reports = validate_data(root, DOMAINS if args.all else (args.domain,))
+            print_summary(reports)
+            print("CORPUS VALIDATION: PASS")
         return 0
     except (CorpusError, OSError) as exc:
         print(f"CORPUS VALIDATION: FAIL - {exc}", file=sys.stderr)

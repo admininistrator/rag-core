@@ -541,26 +541,12 @@ def test_ready_schema_cannot_claim_acceptance_without_measured_receipts() -> Non
         validate_corpus.validate_manifest(manifest)
 
 
-@pytest.mark.parametrize("name", ["setup_corpus.py", "validate_corpus.py"])
-def test_all_domain_command_remains_reserved_for_t08_without_mutation(name: str) -> None:
-    before = {
-        path: common.sha256_file(path) for path in common.CORPUS_ROOT.glob("**/manifest.json")
-    }
-    result = subprocess.run(
-        [sys.executable, str(SCRIPTS / name), "--all"], capture_output=True, check=False
-    )
-    assert result.returncode != 0
-    assert b"PASS" not in result.stdout
-    assert result.stderr
-    assert before == {path: common.sha256_file(path) for path in before}
-
-
 def test_bilingual_setup_failure_is_honest_without_unit_network(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     import prepare_bilingual
 
-    def offline() -> Any:
+    def offline(root: Path) -> Any:
         raise common.DownloadError("Synthetic official source transport failure")
 
     monkeypatch.setattr(prepare_bilingual, "prepare_bilingual", offline)
@@ -572,7 +558,7 @@ def test_bilingual_setup_failure_is_honest_without_unit_network(
 def test_default_setup_failure_is_honest_without_unit_network(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    def offline() -> Any:
+    def offline(root: Path) -> Any:
         raise common.DownloadError("Synthetic official source transport failure")
 
     monkeypatch.setattr(prepare_default, "prepare_default", offline)

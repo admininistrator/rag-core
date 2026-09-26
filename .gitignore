@@ -47,6 +47,7 @@ corpus-documents/*/documents/
 # locally normalized evaluation records out of Git while retaining manifests.
 corpus-documents/document/qa/
 corpus-documents/.downloads/
+corpus-documents/.repro/
 
 # Model caches and weights
 /.cache/huggingface/

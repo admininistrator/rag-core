@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T04 nền tảng, T05 Default và T06 Document corpus IMPLEMENTED/VERIFIED local.** Python3.12/uv, Docker health skeleton, contracts, corpus tooling, Default100QA/986documents và Document150QA/84PDF đã kiểm chứng. API hiện chỉ serve health; business/auth/query/SSE runtime vẫn DESIGNED. Theo yêu cầu người dùng, công việc tạm dừng sau khi đóng T06; T07–T36 chưa bắt đầu.
+> **T01–T08 nền tảng và corpus IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. API hiện chỉ serve health; business/auth/query/SSE runtime vẫn DESIGNED. Dừng sau T08 theo workflow một task/session; T09–T36 chưa bắt đầu.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -18,7 +18,7 @@
 | Python setup/settings/quality | VERIFIED | T01 |
 | Compose/services + health skeleton | VERIFIED local | T02 |
 | API v1 schemas/design snapshots/examples | VERIFIED structural contracts; business routes chưa mount | T03 |
-| Corpus | T04 tooling, T05 Default và T06 Document data VERIFIED local; bilingual/full reproduction PLANNED | T04–T08 |
+| Corpus | Ba domain và all-domain clean reproduction VERIFIED local | T04–T08 |
 | Auth/session/storage | DESIGNED | T09–T12 |
 | Parsing/OCR/index | DESIGNED | T13–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
@@ -348,7 +348,7 @@ Không xem raw chunks/answers/prompts của user, không xem secrets hoặc xóa
 <a id="r11"></a>
 ## R11. Corpus và quality evaluation
 
-**T04 tooling/T05 Default/T06 Document/T07 Bilingual setup + data VERIFIED locally; all-domain clean reproduction PLANNED — T08; evaluation DESIGNED — T30–T31.**
+**T04–T08 tooling, ba domain và all-domain clean reproduction VERIFIED local; evaluation DESIGNED — T30–T31.**
 
 Prompt gốc: [Build RAG Evaluation Corpus](corpus-documents/Codex%20Prompt%20%E2%80%93%20Build%20RAG%20Evaluation%20Corpus.md).
 
@@ -383,7 +383,7 @@ Utilities bounded retries/timeout/size, exact pins/content/length trước atomi
 T07-A06: [evidence](docs/handoffs.md#h-t07-a06) records separate real setup/validation,
 491 published files plus 3 cache receipts/files unchanged on rerun (hashes, mtimes,
 slice IDs and downloaded_at), and isolated synthetic unit tests. This verifies the
-existing local corpus; it does not establish fresh-clone downloads, reserved for T08.
+existing local corpus; fresh downloads are verified separately in T08 below.
 
 Windows tests can use a fresh short ignored basetemp to avoid inherited TEMP ACLs:
 set `$env:PYTEST_ADDOPTS='--basetemp=.local/<fresh-run-name>'` before pytest. Use a
@@ -398,7 +398,7 @@ failure. Corrupt published data, unknown files or an existing lock cause refusal
 inspect the relevant process and retained stage before operator recovery. No
 automatic lock bypass, source deletion or concurrent-reader transaction is provided.
 
-The all-domain selections remain **fail nonzero** until T08 implements and accepts complete clean-state setup/validation:
+All-domain setup and validation are **VERIFIED in T08**:
 
 ```powershell
 uv run python corpus-documents/scripts/setup_corpus.py --all
@@ -409,9 +409,48 @@ Default data verified theo ngoại lệ user-approved ngày2026-09-17 tại [P11
 
 Document T06 dùng FinanceBench pin `cc39aeb4afdf33909ee1412188bf89035950c2eb`: 150 `OPEN_SOURCE` QA, 84/368 repository PDFs được reference, 189 evidence; không tải 284 PDF ngoài QA. Hai source SHA256 là `a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877` và `1c69127783879de8cdadb159d2181f39bc3123b8e0ebf74031c3969d69189575`. PDF thực tổng165,527,662B/12,013pages; gold pages0–303 zero-based, 0 out-of-range. Validator reconstruct normalized QA từ raw, giữ exact answer/evidence/full-page text/justification/metadata, mở từng PDF và kiểm exact89artifact receipts. 50 justification/reasoning null giữ null; duplicate metadata `FOOTLOCKER_2023_annualreport` không được QA reference nên report, duplicate referenced sẽ fail. Future eval adapter mới đổi citation sang physical one-based.
 
-Document writer dùng `.downloads/document-setup.lock`, resumable verified PDF cache, complete-domain stage và rollback domain+aggregate. Rerun giữ91 published hashes/mtimes/150IDs/downloaded_at và84 PDF cache hashes/mtimes, không network download lại. Failed stage giữ ở `.downloads/document-stage-*`; reader/eval chờ setup xong. Existing user plan authorizes local evaluation download nhưng không phải upstream redistribution/commercial grant. GitHub tree/README không có explicit dataset/PDF grant; publisher card `e04404e3a97f69f79c14d42f24981a1c9c3bcd18` riêng khai CC-BY-NC4.0; company PDF rights riêng. Vì vậy raw/PDF/normalized FinanceBench QA đều local ignored, chỉ manifest hashes/counts/attribution track. Bilingual T07/XQuAD pin `7d30520c717524000f0d9d2f9c10a069acd9d285`, datasetCC-BY-SA4.0; all-domain clean reproduction T08. Không arbitrary source override hoặc mirror khác.
+Document writer dùng `.downloads/document-setup.lock`, resumable verified PDF cache, complete-domain stage và rollback domain+aggregate. Rerun giữ91 published hashes/mtimes/150IDs/downloaded_at và84 PDF cache hashes/mtimes, không network download lại. Failed stage giữ ở `.downloads/document-stage-*`; reader/eval chờ setup xong. Existing user plan authorizes local evaluation download nhưng không phải upstream redistribution/commercial grant. GitHub tree/README không có explicit dataset/PDF grant; publisher card `e04404e3a97f69f79c14d42f24981a1c9c3bcd18` riêng khai CC-BY-NC4.0; company PDF rights riêng. Vì vậy raw/PDF/normalized FinanceBench QA đều local ignored, chỉ manifest hashes/counts/attribution track. Bilingual T07/XQuAD pin `7d30520c717524000f0d9d2f9c10a069acd9d285`, datasetCC-BY-SA4.0; all-domain clean reproduction verified in T08. Không arbitrary source override hoặc mirror khác.
 
-Troubleshooting: chỉ all-domain setup/validation còn unavailable theo T08; bilingual đã hoạt động. Default/Document network failure giữ prior corpus và forensic stage; cache-only rerun không thay thế first live download proof. Corrupt/truncated/PDF parse/page-range failure fail trước publication; T06 transfer2attempts, metadata30s/4MiB, PDF60s/32MiB. `pypdf` AES `DependencyError` cần locked crypto extra, không bỏ page gate. Source checksum/gold/evidence/file drift fail nonzero, không sửa/drop/resample source. Actual T06 live setup/validator/rerun và synthetic document tests tại [H-T06-A02](docs/handoffs.md#h-t06-a02); Default tại [H-T05-A02](docs/handoffs.md#h-t05-a02); historical tooling [H-T04-A01](docs/handoffs.md#h-t04-a01). Không DB/index/API migration/production ingestion. Full clean reproduction T08; evaluation reports/metrics/provider costs T30–T31, chưa benchmark score.
+Troubleshooting: all-domain setup/validation đã hoạt động từ T08. Default/Document network failure giữ prior corpus và forensic stage; cache-only rerun không thay thế first live download proof. Corrupt/truncated/PDF parse/page-range failure fail trước publication; T06 transfer2attempts, metadata30s/4MiB, PDF60s/32MiB. `pypdf` AES `DependencyError` cần locked crypto extra, không bỏ page gate. Source checksum/gold/evidence/file drift fail nonzero, không sửa/drop/resample source. Actual T06 live setup/validator/rerun và synthetic document tests tại [H-T06-A02](docs/handoffs.md#h-t06-a02); Default tại [H-T05-A02](docs/handoffs.md#h-t05-a02); historical tooling [H-T04-A01](docs/handoffs.md#h-t04-a01). Không DB/index/API migration/production ingestion. Full clean reproduction verified in T08; evaluation reports/metrics/provider costs T30–T31, chưa benchmark score.
+
+### T08 clean reproduction and deterministic rerun
+
+Use a new short output name for a cold download. Paths are relative to the current
+working directory (repository root in these commands), or absolute. Only direct
+children of `corpus-documents/.repro/` are accepted; traversal, reserved Windows names,
+trailing dots/spaces, symlinks/junctions and source/script/domain directories are refused.
+The directory is ignored in Git and documentation scanning. No canonical corpus is deleted.
+
+```powershell
+uv run python corpus-documents/scripts/setup_corpus.py --all --output-root corpus-documents/.repro/a1
+uv run python corpus-documents/scripts/validate_corpus.py --all --output-root corpus-documents/.repro/a1
+uv run python corpus-documents/scripts/verify_reproduction.py record --output-root corpus-documents/.repro/a1
+uv run python corpus-documents/scripts/setup_corpus.py --all --output-root corpus-documents/.repro/a1
+uv run python corpus-documents/scripts/verify_reproduction.py check --output-root corpus-documents/.repro/a1
+```
+
+The standard corpus must already exist for the fingerprint comparison. `record` writes
+one ignored `.verification.json`, refuses to overwrite it, and compares all published
+files/QA IDs/counts with the standard corpus. Manifest JSON is compared canonically,
+excluding only `downloaded_at`; payload bytes are compared exactly. `check` additionally
+requires every published/cache hash, byte count, mtime and download timestamp to match
+that baseline. It is a fingerprint check, not a replacement for `validate_corpus.py`.
+T08 measured 1574 published files and 92 cache files; content/IDs/counts match the standard
+corpus, with new download timestamps. Evidence and every prompt acceptance row:
+[H-T08-A01](docs/handoffs.md#h-t08-a01).
+
+A fresh checkout retains ready manifests and some licensed QA but lacks ignored raw/docs.
+Setup recognizes this case only when both payload directories are absent and every retained
+QA file matches its receipt. It reconstructs via complete domain staging, with measured
+new download timestamps. It never silently resets partially missing data or changed QA.
+The validator does not bootstrap or repair files; missing or corrupt artifacts fail nonzero.
+
+All/domain CLI runs use `.downloads/corpus-setup.lock`; each domain retains its own lock,
+verified transport cache, staging and rollback. An all-domain run publishes domains
+sequentially; a failure preserves completed domains, returns nonzero and stops before the
+next domain. Rerun can resume verified downloads. Readers must wait until setup finishes.
+Inspect interrupted initialization, retained stages and stale locks before operator recovery;
+no automatic deletion or lock bypass. Network failures remain failures, never synthetic success.
 
 <a id="r12"></a>
 ## R12. Hiệu năng và observability

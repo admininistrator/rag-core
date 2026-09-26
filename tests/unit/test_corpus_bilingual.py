@@ -14,6 +14,7 @@ SCRIPTS = Path(__file__).resolve().parents[2] / "corpus-documents" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import common  # noqa: E402
+import corpus_root as roots  # noqa: E402
 import prepare_bilingual as bilingual  # noqa: E402
 import setup_corpus  # noqa: E402
 import validate_corpus  # noqa: E402
@@ -239,6 +240,23 @@ def corpus_root(
     return root
 
 
+def test_metadata_only_checkout_can_rebuild_without_changing_qa(
+    corpus_root: Path, download_calls: list[bool],
+) -> None:
+    expected = bilingual.prepare_bilingual(corpus_root)
+    clone = corpus_root.parent / (corpus_root.name + "c")
+    clone.mkdir()
+    for name in ["manifest.json", "source-license-inventory.json", *[f"{d}/manifest.json" for d in common.DOMAINS]]:
+        target = clone / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(corpus_root / name, target)
+    shutil.copytree(corpus_root / "bilingual/qa", clone / "bilingual/qa")
+    assert not (clone / ".downloads").exists()
+    assert bilingual.prepare_bilingual(clone) == expected
+    assert bilingual.validate_bilingual(clone / "bilingual") == expected
+    assert download_calls == [False, False, False, False]
+
+
 def test_prepare_validate_and_rerun_preserves_hashes_mtimes_ids_and_timestamp(
     corpus_root: Path,
     download_calls: list[bool],
@@ -375,9 +393,7 @@ def test_domain_commands_dispatch_to_synthetic_corpus_and_report_failure(
     corpus_root: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     shutil.copytree(common.CORPUS_ROOT / "schemas", corpus_root / "schemas")
-    prepare = bilingual.prepare_bilingual
-    monkeypatch.setattr(bilingual, "prepare_bilingual", lambda: prepare(corpus_root))
-    monkeypatch.setattr(validate_corpus, "CORPUS_ROOT", corpus_root)
+    monkeypatch.setattr(roots, "CORPUS_ROOT", corpus_root)
     assert setup_corpus.main(["--domain", "bilingual"]) == 0
     assert "CORPUS SETUP: PASS" in capsys.readouterr().out
     assert validate_corpus.main(["--domain", "bilingual"]) == 0

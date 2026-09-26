@@ -48,3 +48,8 @@ licenses. T04 downloaded only official README/metadata; T05 downloaded the speci
 approved pinned HF Parquet. T06 downloads the two pinned official JSONL files and only
 the 84 official-repository PDFs referenced by their 150 open QA for local evaluation.
 No third-party company copyright notice was removed.
+
+T08 reproduces the same pinned sources into ignored `.repro/` outputs and keeps all
+isolated payloads, QA copies, caches and verification records local. It does not introduce
+a new source, modify gold, redistribute FinanceBench payloads or expand any license grant.
+See [reproduction instructions](../README.md) and [T08 evidence](../../docs/handoffs.md#h-t08-a01).

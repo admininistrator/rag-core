@@ -62,7 +62,9 @@ def _ignored_directory(path: Path) -> bool:
         return True
     if len(relative.parts) == 1 and path.name in IGNORED_ROOT_DIRECTORIES:
         return True
-    if relative.parts[:2] == ("corpus-documents", ".downloads"):
+    if relative.parts[:2] in {
+        ("corpus-documents", ".downloads"), ("corpus-documents", ".repro"),
+    }:
         return True
     return (
         len(relative.parts) >= 3

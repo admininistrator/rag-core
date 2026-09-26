@@ -20,5 +20,5 @@
       "qa_count": 4760
     }
   },
-  "notes": "Default, Document and Bilingual corpora prepared; clean all-domain reproduction and acceptance T08."
+  "notes": "Per-domain status/counts describe validated local artifacts. Run setup_corpus.py --all and validate_corpus.py --all for complete corpus acceptance."
 }

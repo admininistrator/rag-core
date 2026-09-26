@@ -488,6 +488,7 @@ def _cache_pin(entry: Any, url: str) -> str | None:
 
 
 def prepare_document(root: Path = CORPUS_ROOT) -> dict[str, Any]:
+    from corpus_root import AGGREGATE_NOTES, preparation_manifest
     from validate_corpus import validate_metadata
 
     root = root.resolve(strict=True)
@@ -503,11 +504,11 @@ def prepare_document(root: Path = CORPUS_ROOT) -> dict[str, Any]:
     try:
         validate_metadata(root)
         prior_root = safe_path(root, "document")
-        prior = read_json(prior_root / "manifest.json")
+        prior, metadata_checkout = preparation_manifest(prior_root)
         prior_ready = prior["status"] == "ready"
         if prior_ready:
             validate_document(prior_root)
-        elif set(_tree_files(prior_root)) != {"manifest.json"}:
+        elif not metadata_checkout and set(_tree_files(prior_root)) != {"manifest.json"}:
             raise CorpusError("Refuse to replace unrecognized existing document corpus files")
         stage = cache / ("document-stage-" + uuid.uuid4().hex)
         stage.mkdir()
@@ -645,9 +646,7 @@ def prepare_document(root: Path = CORPUS_ROOT) -> dict[str, Any]:
             "document_count": report["document_count"],
             "qa_count": report["qa_count"],
         }
-        aggregate["notes"] = (
-            "Default and Document prepared; bilingual remains pending. Full corpus acceptance T08."
-        )
+        aggregate["notes"] = AGGREGATE_NOTES
         write_json(stage / "manifest.json", aggregate)
         shutil.copy2(root / "source-license-inventory.json", stage / "source-license-inventory.json")
         for domain in ("default", "bilingual"):
