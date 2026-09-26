@@ -7,13 +7,13 @@
 
 | Hạng mục | Trạng thái thật |
 | --- | --- |
-| Bối cảnh/kiến trúc/backlog/agent workflow | Đã viết và kiểm chứng T00; completion commit là bằng chứng đóng task |
+| Bối cảnh/kiến trúc/backlog/agent workflow | T00 baseline; user chuyển sang một task/session tại T07-A06, agent trực tiếp làm và dừng |
 | Python project/config/quality | T01 implemented + verified trên CPython 3.12.4; completion commit là bằng chứng đóng task |
-| README/RUNBOOK | Có prerequisites, quality, Docker health quickstart, contract export T01–T03 và corpus tooling T04 đã kiểm; business/full corpus quickstart chưa tồn tại |
+| README/RUNBOOK | T01–T03 health/contracts, T04 tooling và T05–T07 setup/validation từng domain đã kiểm; business/all-domain clean reproduction chưa triển khai |
 | Runtime/API/Docker | T02 Compose + health-only API implemented/verified local; không có business API/worker/inference |
 | API contracts | T03 schemas/design inventory/served snapshot/37 synthetic examples structural validation PASS trong A02; chỉ health được mount |
 | UI | Chưa triển khai |
-| Corpus | T04 shared corpus utilities + honest CLI gates + official source inventory/metadata schemas; cả ba domain not_downloaded, chưa corpus data acceptance |
+| Corpus | T05 Default:100QA/986docs; T06 Document:150QA/84PDF; T07 Bilingual:240EN+240VI docs/1190QA mỗi slice, cả ba ready/verified local; T08 clean reproduction TODO |
 | LLM/OCR/embedding/retrieval | Chưa chạy |
 | Evaluation/load/restore | Chưa đo hoặc kiểm thử |
 | Scarlet integration | Ngoài phạm vi backlog hiện tại |
@@ -35,6 +35,17 @@
 - **Commit reference:** `docs(T00): establish RAG core implementation blueprint`; actual hash resolve từ Git sau commit.
 - **Giới hạn:** chưa có app/API/services/corpus/model/live tests; chưa có số đo hiệu năng/chất lượng; chưa kiểm provider credentials/GPU runtime.
 - **Next:** T01 khởi tạo Python structure/checks rồi T02 Docker, theo tasks; không thực thi tự động ở session lập hồ sơ này.
+
+<a id="s-t07-a06"></a>
+## Phase 1 / T07 / Attempt T07-A06 — XQuAD completion
+
+- **Recovery/workflow:** inherited Hermes A01–A05 candidate at `main`/`7696f83`; historical failures retained. User authorized direct one-task/session execution, commit/push and stop. Root Codex `gpt-6-sol`/`xhigh`, no worker. AGENTS/P14/state record this explicit override; protocol remains a historical artifact. No T08 implementation or cleanup of old scratch.
+- **Interfaces:** `prepare_bilingual.py` parses strict SQuAD v1.1, validates original answer spans, pairs paragraphs by article title plus exact QA-ID set independently of array position, then assigns SHA256-based parallel groups and language-specific document IDs. `prepare_bilingual`/`validate_bilingual` exposed by individual-domain setup/validation CLI; `--all` still fails pending T08. No schema/dependency/API migration.
+- **Gold/content:** all official EN/VI at revision `7d30520c717524000f0d9d2f9c10a069acd9d285`, 240 groups/480 retrieval documents; original1190QA preserved in each of en_en,vi_vi,vi_en,en_vi. Question comes from question language; answer/evidence and expected document come from corpus-language counterpart. No translation/quick subset. Raw/gold separated from ingestable documents; metadata IDs never authorize production retrieval.
+- **Provenance/publication:** source EN SHA256 `e4c57d1c9143aaa1c5d265ba5987a65f4e69528d2a98f29d6e75019b10344f29`, VI `f619a1eb11fb42d3ab0834259e488a65f585447ef6154437bfb7199d85161a04`; upstream Git blob pins also checked. Manifest489 artifacts; exclusive lock, bounded verified download/cache, full staged validation and rollback of domain+aggregate on failure. Unknown files/lock/corruption fail closed; retained stage supports recovery. Hard crash/concurrent readers still require operator coordination.
+- **Validation:** separate real setup/validator PASS; actual491published+3cache hashes/mtimes/IDs/downloaded_at unchanged across rerun.21synthetic bilingual tests,82common+37default+19document regressions PASS; Ruff/strictmypy17 PASS. Common unit no longer executes live setup; compact fixture root and ignored .local docs traversal solve Windows test-state issues. Broad optional mypy including unchanged export script still finds missing jsonschema stub; not a T07 type failure. [H-T07-A06](handoffs.md#h-t07-a06) has real output and failures.
+- **Docs/rights/limits:** README/RUNBOOK/corpus/license/inventory/manifests and execution docs updated; XQuAD QA/index/report adaptations remain CC-BY-SA4.0 with attribution/change notices. Raw/materialized docs, FinanceBench QA, caches and scratch not committed. Fresh clone/download reproduction remains T08; XQuAD does not establish refusal behavior, no benchmark/provider result. Original corpus prompt unchanged.
+- **Commit/next:** `feat(T07): prepare XQuAD bilingual evaluation slices`; actual hash after commit, COMPLETE only with successful inspected completion commit. Push user-authorized to origin/main. Stop after T07; T08 dependencies ready, user opens a new session using [prompt mẫu](task-session-prompt.md).
 
 ## Mẫu entry bắt buộc cho task tiếp theo
 

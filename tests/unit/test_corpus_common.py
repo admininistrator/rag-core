@@ -501,8 +501,8 @@ def test_committed_metadata_has_no_fabricated_downloads() -> None:
     validate_corpus.validate_metadata()
     for domain in common.DOMAINS:
         manifest = common.read_json(common.CORPUS_ROOT / domain / "manifest.json")
-        if domain in {"default", "document"} and manifest["status"] == "ready":
-            expected_qa = 100 if domain == "default" else 150
+        if manifest["status"] == "ready":
+            expected_qa = {"default": 100, "document": 150, "bilingual": 4760}[domain]
             assert manifest["qa_count"] == expected_qa and manifest["document_count"] > 0
             assert manifest["downloaded_at"] and manifest["artifacts"] and manifest["checksum"]
             continue
@@ -541,22 +541,32 @@ def test_ready_schema_cannot_claim_acceptance_without_measured_receipts() -> Non
         validate_corpus.validate_manifest(manifest)
 
 
-@pytest.mark.parametrize(
-    "args",
-    [["--all"], ["--domain", "bilingual"]],
-)
-def test_setup_and_validation_unavailable_fail_without_mutation(args: list[str]) -> None:
+@pytest.mark.parametrize("name", ["setup_corpus.py", "validate_corpus.py"])
+def test_all_domain_command_remains_reserved_for_t08_without_mutation(name: str) -> None:
     before = {
         path: common.sha256_file(path) for path in common.CORPUS_ROOT.glob("**/manifest.json")
     }
-    for name in ("setup_corpus.py", "validate_corpus.py"):
-        result = subprocess.run(
-            [sys.executable, str(SCRIPTS / name), *args], capture_output=True, check=False
-        )
-        assert result.returncode != 0
-        assert b"PASS" not in result.stdout
-        assert result.stderr
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS / name), "--all"], capture_output=True, check=False
+    )
+    assert result.returncode != 0
+    assert b"PASS" not in result.stdout
+    assert result.stderr
     assert before == {path: common.sha256_file(path) for path in before}
+
+
+def test_bilingual_setup_failure_is_honest_without_unit_network(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import prepare_bilingual
+
+    def offline() -> Any:
+        raise common.DownloadError("Synthetic official source transport failure")
+
+    monkeypatch.setattr(prepare_bilingual, "prepare_bilingual", offline)
+    assert setup_corpus.main(["--domain", "bilingual"]) == 1
+    captured = capsys.readouterr()
+    assert "PASS" not in captured.out and "FAIL" in captured.err
 
 
 def test_default_setup_failure_is_honest_without_unit_network(

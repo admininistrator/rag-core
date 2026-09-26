@@ -15,10 +15,10 @@
     },
     "bilingual": {
       "manifest": "bilingual/manifest.json",
-      "status": "not_downloaded",
-      "document_count": null,
-      "qa_count": null
+      "status": "ready",
+      "document_count": 480,
+      "qa_count": 4760
     }
   },
-  "notes": "Default and Document prepared; bilingual remains pending. Full corpus acceptance T08."
+  "notes": "Default, Document and Bilingual corpora prepared; clean all-domain reproduction and acceptance T08."
 }

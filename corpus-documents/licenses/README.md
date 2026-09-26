@@ -33,6 +33,13 @@ listed in [source-license-inventory.json](../source-license-inventory.json).
   [Pinned README license](https://github.com/google-deepmind/xquad/blob/7d30520c717524000f0d9d2f9c10a069acd9d285/README.md#license)
   explicitly states CC BY-SA 4.0 for the dataset. Retain SQuAD v1.1 origin,
   professional translation provenance and descriptions of normalization changes.
+  T07 normalizes the full pinned EN/VI sources into 240 aligned paragraph pairs,
+  two evaluator document indexes and four full QA slices. These adaptations retain
+  [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) terms; questions,
+  answers and paragraph text are preserved, with deterministic IDs and explicit
+  language metadata added. Cross-lingual slices use the original target-language
+  counterpart gold without translation. Raw sources/materialized documents stay
+  local and ignored; attributed lightweight QA/index/report artifacts are tracked.
 
 For datasets with an explicit applicable CC BY-SA 4.0 grant, preserve attribution,
 the [license link](https://creativecommons.org/licenses/by-sa/4.0/) and changes;

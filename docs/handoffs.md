@@ -1,10 +1,16 @@
 # Handoffs — Bàn giao giữa các session
 
+T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
+
 > Current checkpoint ở đầu; lịch sử attempt/evidence append ở dưới. Không xóa output cũ để che lỗi.
 
 ## Current checkpoint
 
-- **Hermes handover 2026-09-26:** Người dùng chấm dứt `USER-PAUSED AFTER T06`, phê duyệt dùng model/reasoning hiện tại của profile. Baseline `main` CLEAN, HEAD `7d40fc4affbb009dbdda51d6d659cdf2371915d6` (T06-A03 đã được Codex accept), Python 3.12.4, uv 0.11.16. Board mới `2026-09-26-0058-rag-core-corpus-drain` xác minh 0 card khi tạo; Hermes Reviewer Phase 0 về sau đã PASS tại card `t_9dfeffd9` (xem dưới). Ghi chú cũ dưới đây là lịch sử, không là pause/blocker hiện tại. Phase 0 T00–T03 chỉ review hồi tố, không implement lại; sau đó T07-A01, T08, review toàn Phase 1 T04–T08, tiếp tục tuần tự đến T36 và final cross-phase review. Task T07/T08 vẫn TODO đến lúc dispatch/accept.
+- **Current 2026-09-26 / T07-A06 COMPLETE after inspected completion commit:** `feat(T07): prepare XQuAD bilingual evaluation slices`, resolve actual hash with `git log -1 --format=%H --grep="^feat(T07):"`. User authorized commit/push GitHub and stop; confirmed direct one-task/session workflow. Runtime `gpt-6-sol`/`xhigh`; no subagents. Base `main`/`7696f83`; inherited candidate completed, old scratch retained local. Real setup/validator,21bilingual+138regression tests, Ruff/mypy17 and deterministic491published+3cache rerun PASS; [evidence](#h-t07-a06). Push result/actual hash reported post-commit. **STOP AFTER T07**; T08 TODO/dependencies ready, only start on a new user request. AGENTS/P14 replace historical Hermes workflow below. No scratch deletion or skipped path-length diagnostic executed.
+
+### Lịch sử checkpoint Hermes (không còn workflow hiện hành)
+
+- **Hermes handover 2026-09-26:** Người dùng chấm dứt `USER-PAUSED AFTER T06`, phê duyệt dùng model/reasoning hiện tại của profile. Baseline `main` CLEAN, HEAD `7d40fc4affbb009dbdda51d6d659cdf2371915d6` (T06-A03 đã được Codex accept), Python 3.12.4, uv 0.11.16. Board mới `2026-09-26-0058-rag-core-corpus-drain` xác minh 0 card khi tạo; Hermes Reviewer Phase 0 PASS tại card `t_9dfeffd9`; bootstrap/review commit `7696f83fa2d718bcad3ca6d69f627ff886f2d10d`. **Current: T07-A05 BLOCKED** vì terminal vẫn từ chối đúng phép hash/mtime inspection dù user phê duyệt hẹp; cần operator giải quyết runtime gate, không retry/bypass. T07 chưa nghiệm thu/commit; T08–T36 TODO, Phase 1 review/final review chưa chạy. Pause T06 bên dưới là lịch sử.
 - **Quyền và mô hình Hermes:** Theo quyết định người dùng supersede AGENTS/P14 phần điều phối: chỉ Orchestrator ghi `docs/` và tạo completion commit sau khi kiểm handoff/diff/DoD; Worker chỉ viết source/tests/config và README/RUNBOOK ngoài `docs/`, Reviewer chỉ đọc. Artifact docs do Worker sinh staging ngoài docs; Orchestrator kiểm rồi đưa nguyên bản vào docs. Không resume Worker/Reviewer; card/session mới mỗi attempt/review, không song song. `tasks.md` giữ ID T00–T36 và TODO/IN_PROGRESS/BLOCKED/COMPLETE. Profile thực tế: orchestrator `gpt-6-sol`/openai-codex, worker `gpt-6-luna`/openai-codex, reviewer `gpt-5.6-sol`/openai-codex; user cho phép giữ nguyên model/effort. Không claim đã kiểm effort runtime khi chưa có log.
 - **Bootstrap:** Protocol gốc tại `C:/Users/Admin/Downloads/HERMES-AGENT-EXECUTION-PROTOCOL.md` được copy nguyên vào `docs/HERMES-AGENT-EXECUTION-PROTOCOL.md`; `docs/agent-state.md` và `docs/review-report.md` được khởi tạo. Không sửa prompt corpus. Chỉ các file docs quản trị Hermes là dirty lúc chuẩn bị Phase 0 review; không commit chúng như completion của T07 hoặc coi review là PASS trước handoff.
 
@@ -21,6 +27,57 @@
 - CWD `C:/Users/Admin/Documents/GitHub/rag-core`, `main` HEAD `7d40fc4affbb009dbdda51d6d659cdf2371915d6`. Exact compound command: `PYTHONDONTWRITEBYTECODE=1 .venv/Scripts/python.exe -B scripts/check_docs.py && git diff --check && git status --short && git diff --stat && git diff --name-only && git ls-files --others --exclude-standard && git var GIT_AUTHOR_IDENT >/dev/null && printf 'Git author configured\n'`; overall **exit 128** chỉ ở `git var GIT_AUTHOR_IDENT`.
 - Actual output excerpt trước lỗi: `PASS UTF-8/nonempty Markdown: 13 files`; `PASS internal links/anchors: 221`; `PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic`; `DOCUMENTATION CHECK: PASS`; `git diff --check` không có stdout; modified `docs/handoffs.md`; untracked `docs/HERMES-AGENT-EXECUTION-PROTOCOL.md`, `docs/agent-state.md`, `docs/review-report.md` tại thời điểm đó (sau đó thêm `docs/tasks.md` cho T-H1).
 - Actual Git output: `Author identity unknown` / `fatal: unable to auto-detect email address (got 'Admin@Vincent.(none)')`. Khi đó không in secret, không cấu hình danh tính giả/global/local, không stage/commit, không dispatch T07. Người dùng sau đó xác nhận đã cấu hình Git author: exact check `git var GIT_AUTHOR_IDENT >/dev/null && printf 'Git author configured\n'` exit **0**, actual output `Git author configured`; không in identity. Đồng thời `git status --short` chỉ hiển thị bootstrap docs, HEAD `7d40fc4`, `scripts/check_docs.py` exit 0 (13 Markdown/221 links/37 tasks/81 edges), board có 1 Reviewer `done`/0 active. T-H1 COMPLETE; Orchestrator stage đúng docs/ và commit bootstrap/review riêng trước T07.
+
+### Hermes T07-A01 blocker
+
+<a id="hermes-t07-a01-blocker"></a>
+
+- From: Worker profile `worker` configured `gpt-6-luna`/`openai-codex`; card `t_2a19f514`, run 2. To: Orchestrator. Phase 1 / T07-A01. Board status `blocked`, elapsed ~23m; terminal session ended, **do not resume**. Result: BLOCKED, no structured DoD handoff, no verified setup/validation/test result, no commit or task acceptance.
+- Exact rejected command reported by Worker/board: `rm -rf .t .tmp-test .verify-temp`; terminal explicitly denied it and instructed stop. Board summary: `Verification is paused because the terminal explicitly denied the cleanup command ... and instructed me to stop; generated pytest scratch artifacts remain untracked.` This is a safety-gate denial, not permission to retry with another syntax/tool or skip a required inspection silently. Worker requested a human choice to retain or authorize cleanup of precisely these three repo-local scratch directories.
+- Preexisting Orchestrator docs edits `docs/tasks.md`, `docs/agent-state.md`, `docs/handoffs.md` after clean baseline commit `7696f83`. Latest-good accepted code T06; no T07 candidate accepted. User selected: **authorize cleanup of exactly the three repo-local scratch directories after verifying path is in repo**. Orchestrator read-only check `pwd && git status --short && git rev-parse HEAD && for p in .t .tmp-test .verify-temp; do if test -e "$p"; then printf 'path=%s resolved=%s\n' "$p" "$(realpath "$p")"; stat -c 'type=%F size=%s' "$p"; else printf 'path=%s missing\n' "$p"; fi; done && git diff --name-only && git ls-files --others --exclude-standard`, exit 0, confirmed all three top-level directories resolve to `C:/Users/Admin/Documents/GitHub/rag-core/<name>` with `type=directory`; status excerpt lists modified README/RUNBOOK/corpus scripts/manifests/common tests and docs; untracked three scratch dirs + bilingual QA/prepare script/test. Output of complete untracked list was large and is not reproduced as QA data; do not accidentally stage scratch. No cleanup performed by Orchestrator. Nested reparse points still need Worker check before operation. If tool still refuses, stop; no alternate syntax/outcome bypass. New A02 fresh card/session after preserving code/diffs. T08 and Phase 1 review remain gated.
+
+### Hermes T07-A02 handoff
+
+<a id="hermes-t07-a02-handoff"></a>
+
+- From: fresh Worker `worker`, configured `gpt-6-luna`/`openai-codex` (effort not verified), card `t_b2a34702` run 3. To: Orchestrator. T07-A02 result **BLOCKED**; `main` HEAD/base `7696f83fa2d718bcad3ca6d69f627ff886f2d10d`, no stage/commit, no `docs/` edits by Worker. Full structured comment in Kanban card, no claim T07 complete.
+- Approved cleanup: Worker ran PowerShell native absolute path/reparse inspection; counted `.t` 23 files/10 dirs, `.tmp-test` 21 files/27 dirs, `.verify-temp` 1,959 files/343 dirs; no reparse points. Removed only the three approved targets with `Remove-Item -LiteralPath ... -Recurse -Force`, verified absence, exit 0. New `.tmp-t07-a02/`, `.pytmp-t07-a02/` scratch retained and **not** authorized for deletion automatically.
+- Actual DoD commands, cwd repo root, config `UV_CACHE_DIR=.uv-cache UV_PYTHON_INSTALL_DIR=.uv-python`: `uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual` exit 0 → `CORPUS SETUP: PASS - bilingual/XQuAD; documents={'en': 240, 'vi': 240} QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240`; separate `uv run python corpus-documents/scripts/validate_corpus.py --domain bilingual` exit 0 → `CORPUS VALIDATION: PASS - bilingual; paragraphs={'en': 240, 'vi': 240} QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240`. `uv run pytest tests/unit/test_corpus_bilingual.py` exit **1**, 4 passed and 1 Windows temp setup error; two repo-local temp retries exit **1**, 4 passed/1 failed `FileNotFoundError` from `tempfile.mkstemp` under deeply nested stage/documents/en path. Worker added unproven parent-mkdir patch in `prepare_bilingual.py`; repeat still failed. DoD-1 has A02 PASS commands, DoD-2 FAIL, D1–D5 incomplete, D6 not attempted. Measured source SHA receipts/rerun hash+mtime not supplied; no claim PASS.
+- Subsequent read-only diagnostic requested exact command from board log:
+
+```text
+python -c "from pathlib import Path; p=Path.cwd()/'.p'/'test_prepare_validate_and_reru0'/'.downloads'/('bilingual-stage-'+'a'*32)/'bilingual'/'documents'/'en'/('.xquad_en_'+'a'*64+'.md.'+'a'*8+'.part'); print(len(str(p))); print(p)"
+```
+
+  Terminal output: `Timeout — denying command`, elapsed 60.5s; Worker stopped immediately. Do not retry/rephrase/use another tool to obtain the same denied diagnostic. This denial is separate from the already approved cleanup. User selected: **skip only this optional diagnostic**; mandatory bilingual test and all original T07 DoD remain unchanged and must PASS via a fresh Worker. Do not use alternate syntax/tool to re-attempt the denied measurement.
+- Next: A03 fresh Worker after decision, inspect partial diff/scratch without deleting unapproved dirs; isolate Windows `FileNotFoundError` using permitted evidence and run all checks separately. T08 not dispatchable.
+
+### Hermes T07-A03 stale recovery
+
+<a id="hermes-t07-a03-stale"></a>
+
+- From: card `t_9bc95bc3` run 4 / Worker profile configured `gpt-6-luna`/`openai-codex`; no terminal handoff. To: Orchestrator. A03 was still marked `running` after 12.5h, claim expired; read-only `MSYS_NO_PATHCONV=1 tasklist.exe /FI 'PID eq 34724'`, exit 0, actual `INFO: No tasks are running which match the specified criteria.` Initial Git-bash `tasklist /FI` attempt exit 1 due MSYS path conversion; corrected with environment flag, not a denied safety gate. `hermes kanban ... runs t_9bc95bc3` showed 12.5h `running`; board diagnostics none.
+- Board-native `hermes kanban --board 2026-09-26-0058-rag-core-corpus-drain log --tail 5000 t_9bc95bc3` showed source/docs reads, two pytest attempts exit1 using repo/Windows temp arguments, third invocation preview 3.2s without displayed exit, then patch removing a previously added `output_path.parent.mkdir` line in `prepare_bilingual.py`. No structured result; cannot claim DoD, pytest or rerun PASS. Base HEAD remained `7696f83fa2d718bcad3ca6d69f627ff886f2d10d`. `git diff --check` exit0; source/test/manifests/README/RUNBOOK and orchestration docs modified, untracked bilingual QA/script/test and four scratch trees. Preserve all, do not stage scratch or delete unapproved paths.
+- Recovery exact actions: `hermes kanban --board 2026-09-26-0058-rag-core-corpus-drain reclaim t_9bc95bc3 --reason 'A03 stale: claim expired, worker PID 34724 absent, log stops after partial patch; preserve changes and require fresh T07-A04 card'` → `Reclaimed t_9bc95bc3`, exit0; then `hermes kanban --board 2026-09-26-0058-rag-core-corpus-drain block t_9bc95bc3 'A03 terminal after stale reclaim; no handoff or DoD; do not resume; T07-A04 new card must inspect partial patch and tests'` → blocked, exit0. Board now done1/blocked3/running0/ready0.
+- Result: A03 terminal/incomplete, no T07 acceptance or commit; A04 fresh card and session with exact inherited state. No repetition of optional denied diagnostic; mandatory test/DoD unchanged. After repeated attempts on related Windows test issue, escalate if A04 makes no progress or needs product decision.
+
+### Hermes T07-A04 — test fixed; rerun evidence denied
+
+<a id="hermes-t07-a04"></a>
+
+- From: fresh Worker `worker`, configured `gpt-6-luna`/`openai-codex`, effort not independently available; card `t_88f601c9` run 6, Phase 1 T07-A04 [Fix], result **BLOCKED**. To: Orchestrator. Base `main`/`7696f83fa2d718bcad3ca6d69f627ff886f2d10d`, no stage/commit, no A04 source/docs changes or cleanup. Board structured comment has full handoff and Git inventory. Baseline dirty inherited A01–A03 plus Orchestrator docs; untracked four temp trees, bilingual QA/script/test retained. No new T08 work.
+- Actual cwd for commands: `C:/Users/Admin/Documents/GitHub/rag-core`; env for corpus/test `UV_CACHE_DIR=.uv-cache UV_PYTHON_INSTALL_DIR=.uv-python`. `UV_CACHE_DIR=.uv-cache UV_PYTHON_INSTALL_DIR=.uv-python uv run pytest tests/unit/test_corpus_bilingual.py` exit1: 4 passed/1 setup error `PermissionError: [WinError 5] Access is denied` at user Temp `pytest-of-Admin`. `if test -e /c/t07-a04-btemp; then printf 'Refusing existing basetemp\n'; exit 2; fi; UV_CACHE_DIR=.uv-cache UV_PYTHON_INSTALL_DIR=.uv-python uv run pytest -p no:cacheprovider --basetemp='C:/t07-a04-btemp' tests/unit/test_corpus_bilingual.py` exit0: `5 passed in 2.33s`; fresh short Windows-native temp path, no cleanup. Đây là test PASS có cấu hình temp rõ, không claim lệnh mặc định PASS.
+- `UV_CACHE_DIR=.uv-cache UV_PYTHON_INSTALL_DIR=.uv-python uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual` exit0, output thực `CORPUS SETUP: PASS - bilingual/XQuAD; documents={'en': 240, 'vi': 240} QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240`. Lệnh riêng `UV_CACHE_DIR=.uv-cache UV_PYTHON_INSTALL_DIR=.uv-python uv run python corpus-documents/scripts/validate_corpus.py --domain bilingual` exit0, output `CORPUS VALIDATION: PASS - bilingual; paragraphs={'en': 240, 'vi': 240} QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240`.
+- Safety gate: read-only Python `python -c` snapshot toàn `corpus-documents/bilingual` để tính file tree SHA256, mtime-map SHA256, 4 QA slice SHA256 và đọc `qa/preparation.json` source hashes/counts bị terminal `Timeout — denying command` sau 60.4s, output `BLOCKED: User denied this command. The user has NOT consented to this action. Do NOT retry this command, do NOT rephrase it, and do NOT attempt the same outcome via a different command. Stop the current workflow...`; **không chạy (exit -1)**. Exact attempted command lưu trong board-native log `hermes kanban --board 2026-09-26-0058-rag-core-corpus-drain log --tail 7000 t_88f601c9`, chưa được phép retry dưới bất kỳ dạng nào. Phép đo path-length tùy chọn bị từ chối A02 không được lặp lại. Không có before/after rerun checksum/mtime hoặc source receipts independent; Worker dừng ngay.
+- DoD-1: real setup+validator separate PASS, rerun/source receipts BLOCKED; DoD-2: 5/5 unit PASS với basetemp cụ thể, hash/mtime rerun chưa đo. D1 scope final chưa đóng; D2 Ruff/mypy/regression chưa chạy; D3 incomplete; D4 README/RUNBOOK candidate A01–A03 chưa review A04, docs/ do Orchestrator; D5 diff/secrets/license/ignored data chưa final; D6 commit chưa có. Không giả T07 COMPLETE. Human Task T-H2 đã được user quyết định sau handoff: “Tôi phê duyệt riêng phép kiểm hash/mtime bị từ chối ở card t_88f601c9.” Scope chỉ đúng phép read-only inspection của A04, không cho phép bỏ DoD, blanket bypass, phép đo path-length tùy chọn hay xóa scratch. A05 mới được giao kiểm đúng scope, nhưng runtime vẫn từ chối; xem entry A05 dưới đây. A04 không resume; T08 không dispatch.
+
+### Hermes T07-A05 — runtime denied despite narrow human approval
+
+<a id="hermes-t07-a05"></a>
+
+- From: fresh Worker `worker`, configured `gpt-6-luna`/`openai-codex`, effort not independently verified; card `t_90838461`, run 7, Phase 1 T07-A05 [Fix]. Result **BLOCKED**; no code/docs/source edits, stage, commit, scratch cleanup, setup rerun, validator or test in A05. Branch `main`/base HEAD `7696f83fa2d718bcad3ca6d69f627ff886f2d10d`; inherited dirty T07 candidate + docs + four untracked scratch dirs and bilingual QA/script/test preserved. Worker read T-H2 authorization and exact original invocation in A04 board log; did not retry A02 optional diagnostic.
+- Approved operation: exactly the read-only bilingual tree hash/mtime/source-receipt snapshot denied at A04. Exact original command remains in board-native `hermes kanban --board 2026-09-26-0058-rag-core-corpus-drain log --tail 7000 t_88f601c9`; A05 attempted same, no alternate. Terminal again denied with exit **-1**, actual response: `BLOCKED: User denied this command. The user has NOT consented to this action. Do NOT retry this command, do NOT rephrase it, and do NOT attempt the same outcome via a different command. Stop the current workflow and wait for the user to respond before taking any further destructive or irreversible action.` No snapshot output; Worker stopped immediately. Chat approval had been recorded but did not change runtime terminal decision.
+- DoD-1 BLOCKED: A04 historical real setup/validator pass only, no A05 rerun/hash. DoD-2 NOT RUN in A05 (A04 historical 5/5 targeted tests with short temp), no deterministic before/after evidence. D1–D5 closure NOT RUN; D6 no commit. No T07 acceptance or T08 dispatch. Board 1 Reviewer done/5 Worker blocked/0 running at terminal state. Escalate runtime safety gate to operator for precise approval path; no auto-spawn A06, no rephrase/alternate tool/skip DoD. Full structured Worker comment on `t_90838461`.
 
 ### Historical checkpoint retained below (before Hermes handover)
 
@@ -2697,3 +2754,341 @@ documentation supplement to existing T06 implementation commit `6863abf`,
 not a second implementation. Formal T06 acceptance follows successful
 documentation commit and root review. Actual A03 hash/end/status are reported
 outside this self-referential commit; no T07 work is authorized.
+
+<a id="h-t07-a06"></a>
+## H-T07-A06 — XQuAD closure in one-task Codex session
+
+- **Authorization/runtime:** user explicitly requested finishing T07 only, committing/pushing to GitHub and stopping; confirmed agent may directly edit code/tests/docs under one-task/session workflow. Actual root runtime `gpt-6-sol`/`xhigh`; no subagents. AGENTS/P14/state updated accordingly; historical Hermes attempts retained. No T08 implementation, model/API/retrieval/Scarlet/deployment work.
+- **Baseline/recovery:** `main` / `7696f83fa2d718bcad3ca6d69f627ff886f2d10d`. Inherited modified README/RUNBOOK/corpus README, bilingual/root manifests, setup/validator, inventory, docs agent-state/handoffs/tasks, common test; untracked bilingual QA, preparation script/test and Hermes scratch `.ptmp-t07-a02/`, `.tmp-t07-a02/`. Git also reports inaccessible `.pytmp-t07-a02/` and `UsersAdminAppDataLocalTempt07a03/`. Scratch preserved/excluded from commit, no permission or deletion workaround. The previously approved read-only hash/mtime operation succeeded normally in Codex; historical Hermes terminal refusals remain in A04/A05. Optional path-length diagnostic was not repeated.
+- **Dependencies/read scope:** full T04/T06 notes and summaries, P01/P03/P11/P13/P14, original prompt §3/§§6–7, handoffs, README/RUNBOOK read. T06 closure `7d40fc4`, implementation `6863abf`; T04 `ad49ecc`. Original prompt SHA256 remains `7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46`.
+- **Implemented:** accepted and completed inherited XQuAD full-source preparation/alignment/four-slice pipeline. Strengthened source SHA pin and artifact role validation. Replaced live-data common unit test with injected failure; 21 bilingual tests cover counterpart languages/gold, regrouped paragraphs, duplicate IDs/invalid spans, corruption, unknown files/locks, rollback, synthetic CLI success/failure, deterministic rerun. Compact fixture directory names avoid Windows deep paths. Documentation traversal now excludes existing ignored `.local` runtime/test state; no meaningful docs excluded. No dependency/schema/API migration.
+- **Environment:** cwd for every command below `C:\\Users\\Admin\\Documents\\GitHub\\rag-core`; Windows, Python3.12.4, pytest9.1.1, local uv cache/install directories, fresh short basetemps. Unit tests use synthetic sources/injected transport only; real DoD uses existing official pinned XQuAD bytes (verified Git blobs + SHA256 + source semantics), not mocks. A06 setup reuses validated cache; fresh-download/clean-clone proof remains T08. No provider/model inference/service required in T07.
+- **Measured:** revision `7d30520c717524000f0d9d2f9c10a069acd9d285`; 240 aligned groups, 240 EN+240 VI documents, 1190 original parallel QA per language, 1190 rows in each of four slices (4760 slice rows, not unique QA). Manifest has 489 artifact receipts; original source/gold text and language policy retained, no translation/subsetting. XQuAD lacks unanswerable examples. CC-BY-SA4.0 attribution/change/ShareAlike notices updated; raw/documents and FinanceBench QA stay ignored.
+- **DoD-1 PASS:** separate real setup and validator below. **DoD-2 PASS:** 21 tests and actual rerun of 491 published +3 cache files preserving byte hashes, mtimes, all IDs and downloaded_at. **D1:** dependencies/scope/original-prompt review and final diff check. **D2:** Ruff PASS, strict mypy17 PASS, 138 corpus regressions PASS; unrelated broader export-script mypy failure retained below, not claimed fixed. **D3:** actual commands/output below. **D4:** README/RUNBOOK/corpus/license docs, tasks/handoffs/summary/state/workflow; final documentation check below. **D5:** explicit path review; no raw/restricted payload, credentials, scratch or caches staged. **D6:** completion subject `feat(T07): prepare XQuAD bilingual evaluation slices`; COMPLETE effective only after successful commit and inspected tree/hash; actual hash returned post-commit (resolve with `git log -1 --format=%H --grep="^feat(T07):"`). User authorized push to origin/main; verify remote hash after push, no force/merge.
+- **Attempt troubleshooting:** initial PowerShell→Python documentation edit lost UTF-8 on stdin and stopped at assertion (exit1); only two previously clean files touched by that edit were restored from HEAD, then scoped Unicode patches applied. Inherited candidate remained intact. First bilingual run:20pass/1fail because synthetic CLI fixture omitted schemas; added fixture schemas, rerun21pass. Initial docs check saw an intentionally empty synthetic Markdown under ignored .local; fixed traversal to exclude that existing runtime directory. Historical scratch permission warnings retained, no cleanup. Start date2026-09-26; exact starting wall-clock not captured; review timestamp measured `2026-09-26T17:05:20.5114250+07:00`.
+- **Next:** stop after T07. T08 dependencies T07/T05/T06 are complete once this commit is accepted; user may start T08 in a fresh session. T08 owns all-domain CLI, output-root safety, clean downloads/rerun and missing-file rejection. No full-phase/final-product acceptance claim.
+
+### Actual commands and output
+
+#### DoD-2 initial fixture failure
+
+Command (PowerShell), exit **1**; full local log `.local/t07-a06/tests1.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; $env:PYTEST_ADDOPTS = '--basetemp=.local/p7a6'; uv run pytest tests/unit/test_corpus_bilingual.py
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 21 items
+
+tests\unit\test_corpus_bilingual.py ....................F                [100%]
+
+================================== FAILURES ===================================
+____ test_domain_commands_dispatch_to_synthetic_corpus_and_report_failure _____
+
+corpus_root = WindowsPath('C:/Users/Admin/Documents/GitHub/rag-core/.local/p7a6/b11')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001D6DA90D3A0>
+capsys = <_pytest.capture.CaptureFixture object at 0x000001D6DA933470>
+
+    def test_domain_commands_dispatch_to_synthetic_corpus_and_report_failure(
+        corpus_root: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        prepare = bilingual.prepare_bilingual
+        monkeypatch.setattr(bilingual, "prepare_bilingual", lambda: prepare(corpus_root))
+        monkeypatch.setattr(validate_corpus, "CORPUS_ROOT", corpus_root)
+>       assert setup_corpus.main(["--domain", "bilingual"]) == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = <function main at 0x000001D6DA7428E0>(['--domain', 'bilingual'])
+E        +    where <function main at 0x000001D6DA7428E0> = setup_corpus.main
+
+tests\unit\test_corpus_bilingual.py:380: AssertionError
+---------------------------- Captured stderr call -----------------------------
+CORPUS SETUP: FAIL - bilingual: JSON file is missing, unreadable, or not UTF-8; no data acceptance
+=========================== short test summary info ===========================
+FAILED tests/unit/test_corpus_bilingual.py::test_domain_commands_dispatch_to_synthetic_corpus_and_report_failure
+======================== 1 failed, 20 passed in 13.11s ========================
+```
+
+#### DoD-2 final bilingual tests
+
+Command (PowerShell), exit **0**; full local log `.local/t07-a06/tests2.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; $env:PYTEST_ADDOPTS = '--basetemp=.local/p7a6b'; uv run pytest tests/unit/test_corpus_bilingual.py
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 21 items
+
+tests\unit\test_corpus_bilingual.py .....................                [100%]
+
+============================= 21 passed in 15.05s =============================
+```
+
+#### D2 corpus regression
+
+Command (PowerShell), exit **0**; full local log `.local/t07-a06/regression.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; $env:PYTEST_ADDOPTS = '--basetemp=.local/p7reg'; uv run pytest tests/unit/test_corpus_common.py tests/unit/test_corpus_default.py tests/unit/test_corpus_document.py
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 138 items
+
+tests\unit\test_corpus_common.py ....................................... [ 28%]
+...........................................                              [ 59%]
+tests\unit\test_corpus_default.py .....................................  [ 86%]
+tests\unit\test_corpus_document.py ...................                   [100%]
+
+============================ 138 passed in 46.22s =============================
+```
+
+#### D2 broad type-check diagnostic (existing unrelated missing stub)
+
+Command (PowerShell), exit **1**; full local log `.local/t07-a06/types1.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run mypy src scripts corpus-documents/scripts
+```
+
+```text
+scripts\export_openapi.py:11: error: Library stubs not installed for
+"jsonschema"  [import-untyped]
+    from jsonschema import Draft202012Validator, FormatChecker
+    ^
+scripts\export_openapi.py:11: note: Hint: "python3 -m pip install types-jsonschema"
+scripts\export_openapi.py:11: note: (or run "mypy --install-types" to install all missing stub packages)
+scripts\export_openapi.py:11: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+Found 1 error in 1 file (checked 20 source files)
+```
+
+#### D2 established source/corpus type-check
+
+Command (PowerShell), exit **0**; full local log `.local/t07-a06/types2.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run mypy src corpus-documents/scripts
+```
+
+```text
+Success: no issues found in 17 source files
+```
+
+#### D2 final Ruff
+
+Command (PowerShell), exit **0**; full local log `.local/t07-a06/quality_final.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run ruff check src tests scripts corpus-documents/scripts
+```
+
+```text
+All checks passed!
+```
+
+#### DoD-2 before snapshot
+
+Command (PowerShell), exit **0**; full local log `.local/t07-a06/before.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; $env:PYTEST_ADDOPTS = '--basetemp=.local/p7reg'; uv run python corpus-documents/.downloads/t07-a06-snapshot.py before
+```
+
+```text
+BEFORE: 491 published files; 3 cache files; slice IDs={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190}
+source_sha256={"en": "e4c57d1c9143aaa1c5d265ba5987a65f4e69528d2a98f29d6e75019b10344f29", "vi": "f619a1eb11fb42d3ab0834259e488a65f585447ef6154437bfb7199d85161a04"}
+downloaded_at=2026-09-25T18:35:30.879042+00:00
+en_en_sha256=784609bd8822fa25db35fe32723387ba96e77b64756fc30dcd1104ed11e0acbf
+vi_vi_sha256=384741e6c840fcf48c5cbc3f29ee8b4ea45d276ad95e8fb41d4f74019aab8ecc
+vi_en_sha256=859df1cb47b251d4b5432f2815a76245f4eba087516a0fbccb1ecd320c12a8ba
+en_vi_sha256=74184b2a56090fa85d677569b2e0c7c455e1521af746a9d0018a8e1d6bd40102
+```
+
+#### DoD-1 real setup / rerun
+
+Command (PowerShell), exit **0**; full local log `.local/t07-a06/live_setup.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual
+```
+
+```text
+CORPUS SETUP: PASS - bilingual/XQuAD; documents={'en': 240, 'vi': 240} QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240
+```
+
+#### DoD-1 independent real validator
+
+Command (PowerShell), exit **0**; full local log `.local/t07-a06/live_validate.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run python corpus-documents/scripts/validate_corpus.py --domain bilingual
+```
+
+```text
+CORPUS VALIDATION: PASS - bilingual; paragraphs={'en': 240, 'vi': 240} QA_slices={'en_en': 1190, 'vi_vi': 1190, 'vi_en': 1190, 'en_vi': 1190} parallel_groups=240
+```
+
+#### DoD-2 after snapshot
+
+Command (PowerShell), exit **0**; full local log `.local/t07-a06/after.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run python corpus-documents/.downloads/t07-a06-snapshot.py after
+```
+
+```text
+RERUN PASS: 491 published + 3 cache hashes/mtimes, all slice IDs and downloaded_at unchanged
+source_sha256={"en": "e4c57d1c9143aaa1c5d265ba5987a65f4e69528d2a98f29d6e75019b10344f29", "vi": "f619a1eb11fb42d3ab0834259e488a65f585447ef6154437bfb7199d85161a04"}
+downloaded_at=2026-09-25T18:35:30.879042+00:00
+en_en_sha256=784609bd8822fa25db35fe32723387ba96e77b64756fc30dcd1104ed11e0acbf
+vi_vi_sha256=384741e6c840fcf48c5cbc3f29ee8b4ea45d276ad95e8fb41d4f74019aab8ecc
+vi_en_sha256=859df1cb47b251d4b5432f2815a76245f4eba087516a0fbccb1ecd320c12a8ba
+en_vi_sha256=74184b2a56090fa85d677569b2e0c7c455e1521af746a9d0018a8e1d6bd40102
+```
+
+#### D4 initial docs failure
+
+Command (PowerShell), exit **1**; full local log `.local/t07-a06/docs_initial.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run python scripts/check_docs.py
+```
+
+```text
+DOCUMENTATION CHECK: FAIL: Empty Markdown file: C:\Users\Admin\Documents\GitHub\rag-core\.local\p7reg\test_invalid_qa_reference_or_c2\documents\doc.md
+```
+
+### Final documentation and scope checks
+
+D4 documentation, cwd repo root, exit **0**:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'; uv run python scripts/check_docs.py
+```
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 240
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+D1 whitespace/scope, cwd repo root, exit **0**:
+
+```powershell
+git diff --check
+```
+
+```text
+(no output)
+```
+
+
+
+### Staging and secret/scope review
+
+D6 explicit staging, cwd repo root, exit **0**:
+
+```powershell
+git add -- 'AGENTS.md' 'README.md' 'RUNBOOK.md' 'corpus-documents/README.md' 'corpus-documents/bilingual/manifest.json' 'corpus-documents/manifest.json' 'corpus-documents/source-license-inventory.json' 'corpus-documents/licenses/README.md' 'corpus-documents/scripts/prepare_bilingual.py' 'corpus-documents/scripts/setup_corpus.py' 'corpus-documents/scripts/validate_corpus.py' 'corpus-documents/bilingual/qa/documents_en.jsonl' 'corpus-documents/bilingual/qa/documents_vi.jsonl' 'corpus-documents/bilingual/qa/en_en.jsonl' 'corpus-documents/bilingual/qa/en_vi.jsonl' 'corpus-documents/bilingual/qa/vi_en.jsonl' 'corpus-documents/bilingual/qa/vi_vi.jsonl' 'corpus-documents/bilingual/qa/preparation.json' 'docs/agent-state.md' 'docs/handoffs.md' 'docs/plan.md' 'docs/tasks.md' 'docs/implementation-summary.md' 'docs/task-session-prompt.md' 'scripts/check_docs.py' 'tests/unit/test_corpus_common.py' 'tests/unit/test_corpus_bilingual.py'
+```
+
+```text
+(no output)
+```
+
+D5 staged review, cwd repo root, exit **0**:
+
+```powershell
+$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); @'
+import hashlib, re, subprocess
+from pathlib import Path
+expected = ["AGENTS.md","README.md","RUNBOOK.md","corpus-documents/README.md","corpus-documents/bilingual/manifest.json","corpus-documents/manifest.json","corpus-documents/source-license-inventory.json","corpus-documents/licenses/README.md","corpus-documents/scripts/prepare_bilingual.py","corpus-documents/scripts/setup_corpus.py","corpus-documents/scripts/validate_corpus.py","corpus-documents/bilingual/qa/documents_en.jsonl","corpus-documents/bilingual/qa/documents_vi.jsonl","corpus-documents/bilingual/qa/en_en.jsonl","corpus-documents/bilingual/qa/en_vi.jsonl","corpus-documents/bilingual/qa/vi_en.jsonl","corpus-documents/bilingual/qa/vi_vi.jsonl","corpus-documents/bilingual/qa/preparation.json","docs/agent-state.md","docs/handoffs.md","docs/plan.md","docs/tasks.md","docs/implementation-summary.md","docs/task-session-prompt.md","scripts/check_docs.py","tests/unit/test_corpus_common.py","tests/unit/test_corpus_bilingual.py"]
+actual = subprocess.check_output(['git','diff','--cached','--name-only'], text=True).splitlines()
+assert set(actual) == set(expected), (set(actual)-set(expected),set(expected)-set(actual))
+patterns=[rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',rb'(?<![A-Za-z0-9])(?:sk-[A-Za-z0-9_-]{32,}|gh[pousr]_[A-Za-z0-9]{30,}|AKIA[A-Z0-9]{16})(?![A-Za-z0-9])']
+for name in actual:
+    body=subprocess.check_output(['git','show',':'+name])
+    body.decode('utf-8')
+    assert not any(re.search(p,body) for p in patterns), 'Secret-like token in '+name
+    assert not any(part in {'.env','.downloads','.local','raw','documents'} for part in Path(name).parts),name
+prompt=Path('corpus-documents/Codex Prompt – Build RAG Evaluation Corpus.md')
+assert hashlib.sha256(prompt.read_bytes()).hexdigest().upper()=='7EC6E58AE4C24DB27AF4320BCB30222BBF2B67961D99C62980CEA4410AEE2C46'
+print(f'PASS staged scope: {len(actual)} exact approved files; UTF-8; no raw/restricted corpus/cache/scratch; no private-key/provider-token patterns')
+print('PASS original prompt SHA256 unchanged')
+'@ | .venv/Scripts/python.exe -
+```
+
+```text
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+PASS staged scope: 27 exact approved files; UTF-8; no raw/restricted corpus/cache/scratch; no private-key/provider-token patterns
+PASS original prompt SHA256 unchanged
+```
+
+D1/D6 staged diff check, cwd repo root, exit **0**:
+
+```powershell
+git diff --cached --check
+```
+
+```text
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+```
+
+Network preflight: sandbox `git ls-remote --heads origin` failed with GitHub443 connection denied (exit1). Approved network retry of the same read-only command exited0 with no branch refs; author already configured, no Git identity changes. Push is explicitly user-authorized. After recording this evidence, re-stage only handoffs and run `git commit -m "feat(T07): prepare XQuAD bilingual evaluation slices"`; validate actual commit tree/hash, then `git push -u origin main` and compare `git ls-remote --heads origin main`. Actual commit/push output is reported after commit, avoiding a self-referential hash or fabricated pre-commit result.
+
+### Snapshot helper provenance
+
+The exact ignored local helper used above (snapshot JSON at `corpus-documents/.downloads/t07-a06-before.json`; no clean-download claim):
+
+```python
+"""Local T07-A06 evidence helper; never a shipped corpus command."""
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[1]
+domain = root / "bilingual"
+paths = [root / "manifest.json", *sorted(p for p in domain.rglob("*") if p.is_file())]
+cache = [root / ".downloads" / name for name in ("xquad.en.json", "xquad.vi.json", "xquad-download.json")]
+def receipt(path):
+    return {"sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "mtime_ns": path.stat().st_mtime_ns}
+snapshot = {
+    "files": {str(p.relative_to(root)): receipt(p) for p in paths},
+    "cache": {p.name: receipt(p) for p in cache},
+    "ids": {name: [json.loads(line)["id"] for line in (domain / "qa" / (name + ".jsonl")).read_text(encoding="utf-8").splitlines()] for name in ("en_en", "vi_vi", "vi_en", "en_vi")},
+    "downloaded_at": json.loads((domain / "manifest.json").read_text(encoding="utf-8"))["downloaded_at"],
+}
+baseline = root / ".downloads/t07-a06-before.json"
+if sys.argv[1] == "before":
+    baseline.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"BEFORE: {len(paths)} published files; {len(cache)} cache files; slice IDs={ {name: len(ids) for name, ids in snapshot['ids'].items()} }")
+else:
+    assert snapshot == json.loads(baseline.read_text(encoding="utf-8")), "Rerun changed bytes/mtime/IDs/timestamp"
+    print(f"RERUN PASS: {len(paths)} published + {len(cache)} cache hashes/mtimes, all slice IDs and downloaded_at unchanged")
+report = json.loads((domain / "qa/preparation.json").read_text(encoding="utf-8"))
+print("source_sha256=" + json.dumps(report["source_sha256"], sort_keys=True))
+print("downloaded_at=" + snapshot["downloaded_at"])
+for name in snapshot["ids"]:
+    print(name + "_sha256=" + hashlib.sha256((domain / "qa" / (name + ".jsonl")).read_bytes()).hexdigest())
+```

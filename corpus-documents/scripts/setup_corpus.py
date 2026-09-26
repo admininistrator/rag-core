@@ -1,4 +1,4 @@
-"""Corpus setup entry point. Domain implementations are added sequentially in T05-T07."""
+"""Corpus setup entry point for supported individual domains; --all is reserved for T08."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from common import DOMAINS, CorpusError
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Reproduce official RAG evaluation corpus (default/document implemented)."
+        description="Reproduce official RAG evaluation corpus (individual domains; --all belongs to T08)."
     )
     selection = parser.add_mutually_exclusive_group(required=True)
     selection.add_argument(
@@ -18,14 +18,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     selection.add_argument("--domain", choices=DOMAINS, help="Prepare one corpus domain.")
     args = parser.parse_args(argv)
-    selected = DOMAINS if args.all else (args.domain,)
-    unavailable = [domain for domain in selected if domain == "bilingual"]
-    # Preflight every requested domain before any download or mutation. No success stubs.
-    if unavailable:
+    if args.all:
         print(
-            "CORPUS SETUP: UNAVAILABLE - domain preparation not implemented: "
-            + ", ".join(unavailable)
-            + ". Required task: T07 (bilingual); full acceptance T08.",
+            "CORPUS SETUP: UNAVAILABLE - --all setup and acceptance are reserved for T08.",
             file=sys.stderr,
         )
         return 2
@@ -39,7 +34,7 @@ def main(argv: list[str] | None = None) -> int:
                 f"QA={report['qa_count']} seed={report['seed']} "
                 f"source_sha256={report['source_sha256']}"
             )
-        else:
+        elif args.domain == "document":
             from prepare_document import prepare_document
 
             report = prepare_document()
@@ -47,6 +42,15 @@ def main(argv: list[str] | None = None) -> int:
                 f"document/FinanceBench; PDFs={report['document_count']} "
                 f"QA={report['qa_count']} evidence={report['evidence_count']} "
                 f"page_indexing={report['page_indexing']} source_sha256={report['source_sha256']}"
+            )
+        else:
+            from prepare_bilingual import prepare_bilingual
+
+            report = prepare_bilingual()
+            detail = (
+                f"bilingual/XQuAD; documents={report['paragraph_count_by_language']} "
+                f"QA_slices={report['qa_count_by_slice']} "
+                f"parallel_groups={report['parallel_group_count']}"
             )
     except (CorpusError, OSError) as exc:
         print(f"CORPUS SETUP: FAIL - {args.domain}: {exc}; no data acceptance", file=sys.stderr)

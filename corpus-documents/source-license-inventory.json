@@ -139,7 +139,7 @@
         }
       ],
       "data_commit_policy": "lightweight_metadata_and_normalized_qa_with_attribution_only",
-      "limitations": "Dataset bytes not downloaded in T04; Git blob IDs are upstream metadata, not measured local SHA256 checksums. Full EN/VI paragraph/QA alignment and four slices must be validated in T07. XQuAD has no unanswerable questions and cannot establish a complete hallucination/refusal benchmark."
+      "limitations": "T07 verified official EN/VI raw Git blob pins, source SHA256 receipts, 240 paragraph groups and 1190 aligned QA per language at revision 7d30520c717524000f0d9d2f9c10a069acd9d285. The dataset has no unanswerable questions and cannot establish complete hallucination/refusal behavior. Four full slices preserve source language-matched counterpart answers without translation; clean all-domain reproduction remains T08."
     }
   ]
 }

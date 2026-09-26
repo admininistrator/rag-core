@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: T01–T04 nền tảng, T05 HotpotQA Default và T06 FinanceBench Document đã triển khai, kiểm chứng local.** Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. T03 có contracts; T04 có tooling; T05 có 100QA/986documents từ nguồn Hugging Face được user phê duyệt; T06 có 150QA/84PDF từ FinanceBench. Business API, ingestion, retrieval, LLM, SSE runtime và UI chưa hoạt động. T07–T36 còn trong backlog; theo yêu cầu người dùng, công việc tạm dừng sau khi đóng T06.
+> **Trạng thái: T01–T04 nền tảng, T05 HotpotQA Default, T06 FinanceBench Document và T07 corpus đánh giá XQuAD song ngữ đã triển khai và kiểm chứng local.** Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. T03 có contracts; T04 có tooling; T05 có 100 QA/986 documents từ nguồn Hugging Face được user phê duyệt; T06 có 150 QA/84 PDF từ FinanceBench; T07 có 240 paragraphs đã align mỗi ngôn ngữ và bốn XQuAD slices. Business API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T08–T36 còn trong backlog.
 
 ## Phạm vi đã chốt
 
@@ -76,23 +76,24 @@ uv run python scripts/export_openapi.py --check
 
 [OpenAPI v1 thiết kế](docs/api/openapi-v1.designed.json) có 13 operations với `x-served`/`x-implementation-status`; [OpenAPI đang serve](docs/api/openapi.served.json) chỉ có 2 health routes. [37 examples](docs/api/examples-v1.json) là dữ liệu synthetic minh họa, không phải response runtime. Export kiểm OpenAPI model, JSON Schema Draft 2020-12 và examples bằng cả JSON Schema/Pydantic; không đọc secret hoặc chạy dependency/provider probes. Hợp đồng và các gate runtime còn thiếu nằm ở [RUNBOOK R05–R08](RUNBOOK.md#r05), actual evidence [H-T03-A02](docs/handoffs.md#h-t03-a02); [H-T03-A01](docs/handoffs.md#h-t03-a01) ghi recovery do runtime quota trước commit.
 
-## Corpus tooling T04, Default T05 và Document T06
+## Corpus tooling T04, Default T05, Document T06 và Bilingual T07
 
-[Corpus README](corpus-documents/README.md) và [source/license inventory](corpus-documents/source-license-inventory.json) ghi URLs/pins/license và ngoại lệ nguồn T05 được user phê duyệt tại [P11](docs/plan.md#p11). Default `ready`: 100QA, 986Markdown từ toàn context gồm distractors, supporting-only gold; 50bridge/50comparison, allhard theo nguồn thật. Document `ready` local: 150 open FinanceBench QA, 84 PDF được reference, 189 evidence giữ zero-based pages. Utilities kiểm download hỏng/ngắt, rollback publication, retry hữu hạn, idempotency và reference safety. Bilingual còn `not_downloaded`, counts/timestamps null. Commands từ root:
+T07 được đóng riêng theo yêu cầu người dùng; không tự chạy T08. Workflow hiện hành là một task/session theo [AGENTS.md](AGENTS.md). Bằng chứng T07 và các giới hạn ở [H-T07-A06](docs/handoffs.md#h-t07-a06).
+
+[Corpus README](corpus-documents/README.md) và [source/license inventory](corpus-documents/source-license-inventory.json) ghi URLs/pins/license và ngoại lệ nguồn T05 được user phê duyệt tại [P11](docs/plan.md#p11). Default `ready`: 100 QA, 986 Markdown từ toàn context gồm distractors, supporting-only gold; 50 bridge/50 comparison, all hard theo nguồn thật. Document `ready` local: 150 open FinanceBench QA, 84 PDF được reference, 189 evidence giữ zero-based pages. Bilingual `ready`: XQuAD EN/VI v1.1, 240 aligned paragraphs per language and 1190 QA rows in each of four evaluation slices. Bilingual test checks alignment, counterpart gold, answer spans, setup/validation and deterministic reruns. Commands from root:
 
 ```powershell
-uv run python corpus-documents/scripts/setup_corpus.py --help
 uv run python corpus-documents/scripts/validate_corpus.py --metadata-only
-uv run pytest tests/unit/test_corpus_common.py
 uv run python corpus-documents/scripts/setup_corpus.py --domain default
 uv run python corpus-documents/scripts/validate_corpus.py --domain default
-uv run pytest tests/unit/test_corpus_default.py
 uv run python corpus-documents/scripts/setup_corpus.py --domain document
 uv run python corpus-documents/scripts/validate_corpus.py --domain document
-uv run pytest tests/unit/test_corpus_document.py
+uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual
+uv run python corpus-documents/scripts/validate_corpus.py --domain bilingual
+uv run pytest tests/unit/test_corpus_bilingual.py
 ```
 
-`--metadata-only` không nghiệm thu data. Default và Document setup/validation PASS với real bytes; rerun giữ IDs/hashes/timestamp/mtimes và không tải lại PDF. FinanceBench pin `cc39aeb4afdf33909ee1412188bf89035950c2eb`, QA SHA256 `a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877`, metadata SHA256 `1c69127783879de8cdadb159d2181f39bc3123b8e0ebf74031c3969d69189575`; 84 PDF thực có 12,013 trang/165,527,662 bytes và mọi page gold trong range. Dev-only `pypdf[crypto]==6.19.0` chỉ dùng cho corpus. Raw/PDF/normalized FinanceBench QA local bị ignore vì redistribution applicability chưa rõ; publisher card riêng khai CC BY-NC4.0 và company PDF rights riêng. Chỉ `documents/` được ingest sau này; `qa/`/source IDs/gold không là retrieval hints. Setup `--all` và bilingual vẫn fail nonzero; T07–T08 pending. Evidence [H-T06-A02](docs/handoffs.md#h-t06-a02), [H-T05-A02](docs/handoffs.md#h-t05-a02); vận hành [RUNBOOK R11](RUNBOOK.md#r11).
+`--metadata-only` không nghiệm thu data. Setup/validation of all three domains pass with real bytes. XQuAD sources are pinned to revision `7d30520c717524000f0d9d2f9c10a069acd9d285`, source SHAs and artifact hashes are recorded in bilingual manifests; rerun preserves published file hashes, mtimes, slice IDs and original timestamp. Four slices are en-en, vi-vi, vi-en and en-vi; QA/gold is evaluator-only and must not be ingested. Bilingual `bilingual` is a corpus label only; product API domain remains `multilingual`. T08 all-domain clean reproduction remains TODO. Document limits: FinanceBench redistribution applicability unresolved; XQuAD has no unanswerable examples. Only `documents/` is eligible for future ingestion; `qa/`/source IDs/gold are not retrieval hints. See [H-T06-A02](docs/handoffs.md#h-t06-a02), [H-T05-A02](docs/handoffs.md#h-t05-a02), [Corpus README](corpus-documents/README.md) and [RUNBOOK R11](RUNBOOK.md#r11).
 
 ## Tài liệu
 
@@ -110,7 +111,7 @@ uv run pytest tests/unit/test_corpus_document.py
 
 - **T01 VERIFIED:** Python prerequisites và quality nền tảng. **T02 VERIFIED:** Docker start/stop/health, dependency probes, loopback/internal ports và restart persistence.
 - **T03 VERIFIED contracts:** schemas, designed/served OpenAPI snapshots và examples; auth/ownership/readiness/tokenizer enforcement/query/SSE runtime vẫn theo task sau.
-- **T04 VERIFIED tooling; T05 VERIFIED Default; T06 VERIFIED Document local:** real setup/validation, unchanged gold và stable reruns. **T07–T08 PLANNED:** Bilingual/all-domain clean reproduction.
+- **T04 VERIFIED tooling; T05 Default/T06 Document/T07 Bilingual VERIFIED local:** real setup/validation, unchanged gold và stable reruns. **T08 PLANNED:** all-domain clean reproduction. Mỗi session thực hiện một task theo [prompt mẫu](docs/task-session-prompt.md).
 - **T09–T12:** authentication, session và storage registration.
 - **T13–T19:** format/OCR matrix, model setup, ingestion commands.
 - **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.

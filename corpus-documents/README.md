@@ -1,10 +1,11 @@
 # RAG evaluation corpus
 
-**T04 shared tooling, T05 Default and T06 Document preparation are VERIFIED locally.**
+**T04 shared tooling, T05 Default, T06 Document and T07 Bilingual preparation are VERIFIED locally.**
 Default uses the exact Hugging Face derivative approved by the user after the
 canonical CMU endpoint timed out. Document uses the pinned official FinanceBench
-open sample and only its referenced repository PDFs. Bilingual is pending T07;
-full clean-state reproduction and acceptance belong to T08.
+open sample and only its referenced repository PDFs. Bilingual uses the official
+pinned XQuAD EN/VI 1.1 sources; full clean-state reproduction and acceptance belong
+to T08.
 The [original prompt](Codex%20Prompt%20%E2%80%93%20Build%20RAG%20Evaluation%20Corpus.md)
 remains unchanged.
 
@@ -12,12 +13,15 @@ remains unchanged.
 | --- | --- | --- | --- |
 | `default` / HotpotQA | Generic multi-hop retrieval with supporting paragraphs and distractors | `ready`; approved HF derivative | 986 / 100 |
 | `document` / FinanceBench | Long financial PDFs, numeric answers, evidence and page-aware citations | `ready` locally; redistribution applicability unresolved | 84 PDFs / 150 QA |
-| `bilingual` / XQuAD | Parallel EN/VI QA and cross-lingual retrieval | `not_downloaded` | unknown / unknown |
+| `bilingual` / XQuAD | Parallel EN/VI QA and cross-lingual retrieval | `ready`; official pinned sources | 480 language-specific documents / 4760 QA slice rows |
 
-The remaining prompt targets (approximately 240 paragraphs per language and 1190
-XQuAD QA per slice) are planned, **not measured counts**. The bilingual manifest
-stores unknown counts/download timestamp as JSON `null` with empty receipts. Inventory
-`verified_at` records when source metadata was assembled, not a dataset download.
+The bilingual corpus materializes 240 paragraphs per language (240 aligned groups)
+and 1190 QA rows in each of `en_en`, `vi_vi`, `vi_en`, `en_vi`. The 4760 rows are
+four evaluation slices over 1190 parallel QA items, not 4760 unique questions.
+The manifest records exact artifact hashes and source receipts. XQuAD version 1.1
+sources are pinned at revision `7d30520c717524000f0d9d2f9c10a069acd9d285`; measured
+raw source SHA256 values and the parallel alignment receipt are in
+`bilingual/qa/preparation.json`.
 
 ## Sources and rights
 
@@ -25,7 +29,8 @@ stores unknown counts/download timestamp as JSON `null` with empty receipts. Inv
 upstream commit dates, exact Git commit/blob IDs, attribution and limitations.
 Git blob IDs were read from the official GitHub trees; they are not local SHA256
 measurements. README statements, trees and publisher cards were checked live on
-2026-09-17; FinanceBench pins/notices were rechecked on 2026-09-19. Evidence is in
+2026-09-17; FinanceBench pins/notices were rechecked on 2026-09-19; XQuAD bytes and
+Git blob pins were verified during T07. Evidence is in
 [H-T04-A01](../docs/handoffs.md#h-t04-a01) and [H-T06-A02](../docs/handoffs.md#h-t06-a02).
 
 | Dataset | Pinned upstream | Dataset rights |
@@ -66,27 +71,29 @@ uv run python corpus-documents/scripts/validate_corpus.py --domain default
 uv run python corpus-documents/scripts/setup_corpus.py --domain document
 uv run python corpus-documents/scripts/validate_corpus.py --domain document
 uv run pytest tests/unit/test_corpus_document.py
+uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual
+uv run python corpus-documents/scripts/validate_corpus.py --domain bilingual
+uv run pytest tests/unit/test_corpus_bilingual.py
 ```
 
 `--metadata-only` validates inventory/schema/provenance and aggregate consistency.
 Its success message explicitly states that corpus data was **not validated**.
-Default and Document setup/validation PASS with real downloaded bytes. The following
-setup/full-validation selections currently fail nonzero with a
-clear unavailable/not-downloaded message and preserve files:
+Default, Document, and Bilingual setup/validation PASS with real downloaded bytes.
+The following all-domain selections remain reserved for T08 and fail nonzero without
+claiming all-domain acceptance:
 
 ```powershell
 uv run python corpus-documents/scripts/setup_corpus.py --all
-uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual
 uv run python corpus-documents/scripts/validate_corpus.py --all
 ```
 
-The bilingual domain becomes a working preparation/validation command in T07;
-the one-command, all-domain setup is accepted in T08. There are no hidden manual
+The bilingual domain setup and validation are implemented; the one-command,
+all-domain setup is accepted in T08. There are no hidden manual
 downloads, success stubs or legacy training/model setup calls in T04.
 
 ```text
 corpus-documents/
-  scripts/{common,prepare_default,prepare_document,setup_corpus,validate_corpus}.py
+  scripts/{common,prepare_default,prepare_document,prepare_bilingual,setup_corpus,validate_corpus}.py
   schemas/{domain-manifest,root-manifest,source-inventory}.schema.json
   source-license-inventory.json
   manifest.json
@@ -94,8 +101,9 @@ corpus-documents/
   licenses/README.md
 ```
 
-Default and Document have separate `raw/`, `documents/` and `qa/` directories;
-Bilingual follows in T07.
+Each domain has separate `raw/`, `documents/` and `qa/` directories. Bilingual
+publishes language-specific `documents/en/` and `documents/vi/`; QA indexes and
+all four evaluator slices live under `bilingual/qa/`.
 All download/normalization scripts and corpus outputs stay below this directory.
 `documents/` alone contains ingestable content. `qa/`, answers, justification,
 supporting flags and raw source QA are evaluator inputs and must never be ingested
@@ -152,7 +160,9 @@ Default validation compares every generated QA/document/report to the pinned sou
 checks original answers/type/level/supporting mapping, all receipts and exact file sets,
 and reruns the seed42 sampling. Document validation recomputes every normalized
 FinanceBench field, opens every real PDF, checks every zero-based evidence page against
-its page count and verifies the exact file/receipt set. Parallel alignment follows T07.
+its page count and verifies the exact file/receipt set. Parallel alignment uses article titles and exact counterpart QA-ID sets rather than
+array positions. Every parallel group has one EN and one VI paragraph document;
+source question/answer text remains evaluator-only, never retrieval document text.
 
 ## Default measured data and evaluation contract
 
@@ -236,8 +246,9 @@ PDF citations belongs to the evaluation adapter, not source rewriting.
 | `vi_en` | VI | EN | EN counterpart |
 | `en_vi` | EN | VI | VI counterpart |
 
-XQuAD alignment must be validated before assigning deterministic parallel group
-IDs. `bilingual` is the corpus label; product API domain remains `multilingual`.
+XQuAD receipts validate exact pinned source revision, Git blob/SHA256, title/QA-ID
+alignment, 240 paragraph groups, and 1190 rows in each slice. `bilingual` is the
+corpus label; product API domain remains `multilingual`.
 XQuAD has no unanswerable questions, so its results cannot establish complete
 hallucination/refusal behavior. No retrieval/generation benchmark has run. All
 eventual RAG queries still require uploads/registration in the current app/user

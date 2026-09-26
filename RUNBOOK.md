@@ -348,7 +348,7 @@ Không xem raw chunks/answers/prompts của user, không xem secrets hoặc xóa
 <a id="r11"></a>
 ## R11. Corpus và quality evaluation
 
-**T04 tooling/T05 Default/T06 Document setup + data VERIFIED local; Bilingual/full reproduction PLANNED — T07–T08; evaluation DESIGNED — T30–T31.**
+**T04 tooling/T05 Default/T06 Document/T07 Bilingual setup + data VERIFIED locally; all-domain clean reproduction PLANNED — T08; evaluation DESIGNED — T30–T31.**
 
 Prompt gốc: [Build RAG Evaluation Corpus](corpus-documents/Codex%20Prompt%20%E2%80%93%20Build%20RAG%20Evaluation%20Corpus.md).
 
@@ -371,17 +371,37 @@ uv run pytest tests/unit/test_corpus_default.py
 uv run python corpus-documents/scripts/setup_corpus.py --domain document
 uv run python corpus-documents/scripts/validate_corpus.py --domain document
 uv run pytest tests/unit/test_corpus_document.py
+uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual
+uv run python corpus-documents/scripts/validate_corpus.py --domain bilingual
+uv run pytest tests/unit/test_corpus_bilingual.py
 ```
 
-`--metadata-only` chỉ kiểm inventory/schema/provenance/aggregate; không nghiệm thu data. [Corpus README](corpus-documents/README.md), [inventory](corpus-documents/source-license-inventory.json), [manifest](corpus-documents/manifest.json) ghi Default ready100QA/986documents, Document ready150QA/84PDF và Bilingual not_downloaded/null counts/timestamp. Default source có measured7405rows/27,452,575B; JSON conversion hash và distributions/report tại `default/qa/preparation.json`, document ID/path/hash/source-question map tại `default/qa/documents.json` (evaluator only). Markdown chỉ title/dataset/document ID/original paragraph, toàn distractors được materialize. 996instances dedup còn986; identity dùng title+exact concatenated sentences. Sample seed42 cân bằng available type/level:50bridge/50comparison/allhard; upstream không cómedium. Default validator recompute source conversion, sampledIDs, gold/type/level/supporting-only mapping, everydocument/receipt/count và exact file set.
+`--metadata-only` chỉ kiểm inventory/schema/provenance/aggregate; không nghiệm thu data. [Corpus README](corpus-documents/README.md), [inventory](corpus-documents/source-license-inventory.json), [manifest](corpus-documents/manifest.json) ghi Default ready 100 QA/986 documents, Document ready 150 QA/84 PDF và Bilingual ready 480 language-specific documents/4760 QA slice rows. Default source có measured 7405 rows/27,452,575 B; JSON conversion hash và distributions/report tại `default/qa/preparation.json`, document ID/path/hash/source-question map tại `default/qa/documents.json` (evaluator only). Markdown chỉ title/dataset/document ID/original paragraph, toàn distractors được materialize. 996 instances dedup còn 986; identity dùng title+exact concatenated sentences. Sample seed42 cân bằng available type/level: 50 bridge/50 comparison/all hard; upstream không có medium. Default validator recompute source conversion, sampled IDs, gold/type/level/supporting-only mapping, every document/receipt/count và exact file set. Bilingual pinned XQuAD EN/VI version 1.1 at `7d30520c717524000f0d9d2f9c10a069acd9d285`: 240 aligned paragraph groups, 240 EN and 240 VI retrieval documents, and 1190 rows in each `en_en`, `vi_vi`, `vi_en`, `en_vi` QA slice. Alignment keys are article title + exact counterpart QA-ID sets (not positional order); source questions/answers do not enter retrieval document text. Measured raw SHA256, source receipts, and output checksums are in `bilingual/qa/preparation.json` and the bilingual manifest. Validation rechecks source hashes/pins, structure/alignment, evaluator gold-answer spans, and exact artifact sets. XQuAD is CC-BY-SA-4.0 and has no unanswerable examples.
 
 Utilities bounded retries/timeout/size, exact pins/content/length trước atomic replace; references reject traversal/Windows streams/links/junctions. Default setup lock `.downloads/default-setup.lock` ngăn concurrent writers; stage nguyên domain, validate rồi swap + aggregate publication; ordinary failure/interruption rollback giữ last good. Readers/eval phải chờ setup kết thúc (directory rename không là concurrent reader transaction). Equal trees không publish lại, giữ timestamp/mtimes. Source download receipt giữ original downloaded_at khi cache reuse; failed stages/rollback backups nằm ignored `.downloads/default-stage-*`, không tự xóa. Unknown files trong default bị refuse, không overwrite user files. Nếu lock còn sau process crash: kiểm process và stage/backup trước khi operator gỡ lock; không tự bypass lock hoặc xóa dữ liệu.
 
-Các selections còn **fail nonzero** trước download/mutation vì Bilingual chưa implement/ready:
+T07-A06: [evidence](docs/handoffs.md#h-t07-a06) records separate real setup/validation,
+491 published files plus 3 cache receipts/files unchanged on rerun (hashes, mtimes,
+slice IDs and downloaded_at), and isolated synthetic unit tests. This verifies the
+existing local corpus; it does not establish fresh-clone downloads, reserved for T08.
+
+Windows tests can use a fresh short ignored basetemp to avoid inherited TEMP ACLs:
+set `$env:PYTEST_ADDOPTS='--basetemp=.local/<fresh-run-name>'` before pytest. Use a
+new name each run; pytest may remove an existing basetemp. Bilingual fixtures use
+compact directory names while keeping full SHA256 document IDs. `.local` is local
+test/runtime state, excluded from documentation traversal. Legacy Hermes scratch
+is preserved and must not be committed or deleted as part of task completion.
+
+Bilingual publication uses `.downloads/bilingual-setup.lock`, complete staging under
+`.downloads/bilingual-stage-*`, validation before swap and aggregate rollback on
+failure. Corrupt published data, unknown files or an existing lock cause refusal;
+inspect the relevant process and retained stage before operator recovery. No
+automatic lock bypass, source deletion or concurrent-reader transaction is provided.
+
+The all-domain selections remain **fail nonzero** until T08 implements and accepts complete clean-state setup/validation:
 
 ```powershell
 uv run python corpus-documents/scripts/setup_corpus.py --all
-uv run python corpus-documents/scripts/setup_corpus.py --domain bilingual
 uv run python corpus-documents/scripts/validate_corpus.py --all
 ```
 
@@ -391,7 +411,7 @@ Document T06 dùng FinanceBench pin `cc39aeb4afdf33909ee1412188bf89035950c2eb`: 
 
 Document writer dùng `.downloads/document-setup.lock`, resumable verified PDF cache, complete-domain stage và rollback domain+aggregate. Rerun giữ91 published hashes/mtimes/150IDs/downloaded_at và84 PDF cache hashes/mtimes, không network download lại. Failed stage giữ ở `.downloads/document-stage-*`; reader/eval chờ setup xong. Existing user plan authorizes local evaluation download nhưng không phải upstream redistribution/commercial grant. GitHub tree/README không có explicit dataset/PDF grant; publisher card `e04404e3a97f69f79c14d42f24981a1c9c3bcd18` riêng khai CC-BY-NC4.0; company PDF rights riêng. Vì vậy raw/PDF/normalized FinanceBench QA đều local ignored, chỉ manifest hashes/counts/attribution track. Bilingual T07/XQuAD pin `7d30520c717524000f0d9d2f9c10a069acd9d285`, datasetCC-BY-SA4.0; all-domain clean reproduction T08. Không arbitrary source override hoặc mirror khác.
 
-Troubleshooting: unavailable bilingual/all setup đúng pending tasks. Default/Document network failure giữ prior corpus và forensic stage; cache-only rerun không thay thế first live download proof. Corrupt/truncated/PDF parse/page-range failure fail trước publication; T06 transfer2attempts, metadata30s/4MiB, PDF60s/32MiB. `pypdf` AES `DependencyError` cần locked crypto extra, không bỏ page gate. Source checksum/gold/evidence/file drift fail nonzero, không sửa/drop/resample source. Actual T06 live setup/validator/rerun và synthetic document tests tại [H-T06-A02](docs/handoffs.md#h-t06-a02); Default tại [H-T05-A02](docs/handoffs.md#h-t05-a02); historical tooling [H-T04-A01](docs/handoffs.md#h-t04-a01). Không DB/index/API migration/production ingestion. Full clean reproduction T08; evaluation reports/metrics/provider costs T30–T31, chưa benchmark score.
+Troubleshooting: chỉ all-domain setup/validation còn unavailable theo T08; bilingual đã hoạt động. Default/Document network failure giữ prior corpus và forensic stage; cache-only rerun không thay thế first live download proof. Corrupt/truncated/PDF parse/page-range failure fail trước publication; T06 transfer2attempts, metadata30s/4MiB, PDF60s/32MiB. `pypdf` AES `DependencyError` cần locked crypto extra, không bỏ page gate. Source checksum/gold/evidence/file drift fail nonzero, không sửa/drop/resample source. Actual T06 live setup/validator/rerun và synthetic document tests tại [H-T06-A02](docs/handoffs.md#h-t06-a02); Default tại [H-T05-A02](docs/handoffs.md#h-t05-a02); historical tooling [H-T04-A01](docs/handoffs.md#h-t04-a01). Không DB/index/API migration/production ingestion. Full clean reproduction T08; evaluation reports/metrics/provider costs T30–T31, chưa benchmark score.
 
 <a id="r12"></a>
 ## R12. Hiệu năng và observability

@@ -89,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Check schemas/pins/manifest consistency; no corpus acceptance.",
     )
     selection.add_argument(
-        "--all", action="store_true", help="Validate all prepared domains (pending T05-T08)."
+        "--all", action="store_true", help="Validate all domains (all-domain acceptance is in T08)."
     )
     selection.add_argument("--domain", choices=DOMAINS, help="Validate a prepared domain.")
     args = parser.parse_args(argv)
@@ -100,16 +100,15 @@ def main(argv: list[str] | None = None) -> int:
                 "CORPUS METADATA: PASS - 3 domain manifests + inventory; corpus data NOT validated."
             )
             return 0
-        selected = DOMAINS if args.all else (args.domain,)
+        if args.all:
+            raise CorpusError("All-domain data validation and acceptance are reserved for T08")
+        selected = (args.domain,)
         for domain in selected:
             manifest = read_json(CORPUS_ROOT / domain / "manifest.json")
             if manifest["status"] != "ready":
                 raise CorpusError(
                     f"{domain}: corpus is {manifest['status']}; run domain setup after its implementation"
                 )
-            if domain == "bilingual":
-                raise CorpusError(f"{domain}: domain validation pending its implementation")
-        for domain in selected:
             if domain == "default":
                 from prepare_default import validate_default
 
@@ -118,7 +117,7 @@ def main(argv: list[str] | None = None) -> int:
                     f"documents={report['document_count']} QA={report['qa_count']} "
                     f"seed={report['seed']} source_sha256={report['source_sha256']}"
                 )
-            else:
+            elif domain == "document":
                 from prepare_document import validate_document
 
                 report = validate_document(CORPUS_ROOT / domain)
@@ -127,6 +126,15 @@ def main(argv: list[str] | None = None) -> int:
                     f"evidence={report['evidence_count']} "
                     f"page_indexing={report['page_indexing']} "
                     f"source_sha256={report['source_sha256']}"
+                )
+            else:
+                from prepare_bilingual import validate_bilingual
+
+                report = validate_bilingual(CORPUS_ROOT / domain)
+                detail = (
+                    f"paragraphs={report['paragraph_count_by_language']} "
+                    f"QA_slices={report['qa_count_by_slice']} "
+                    f"parallel_groups={report['parallel_group_count']}"
                 )
             print(f"CORPUS VALIDATION: PASS - {domain}; {detail}")
         return 0

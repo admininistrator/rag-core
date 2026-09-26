@@ -377,6 +377,8 @@ Local acceptance cuối: pipeline thật với storage/Qdrant/OCR/models, provid
 <a id="p14"></a>
 ## P14. Orchestrator và task workflow
 
+**Workflow hiện hành — user xác nhận 2026-09-26:** mỗi session thực hiện đúng một task được chỉ định rồi dừng. Agent hiện tại trực tiếp triển khai code/tests/docs, chạy từng DoD và D1–D6, review và commit; push chỉ khi được yêu cầu. Không tự spawn agent hoặc drain. Các ràng buộc vai trò/model/effort/Kanban/worker mới bên dưới là lịch sử và được thay bởi quyết định này cùng phần đầu [AGENTS.md](../AGENTS.md). Scope sản phẩm, dependencies, tiêu chuẩn nghiệm thu, giới hạn retry và Git/secrets giữ nguyên. Báo readiness của task kế tiếp, không khởi động nó. Failed attempt phải lưu reproduction/checkpoint; thiếu quyền/credential/quyết định sản phẩm thì hỏi ngay. COMPLETE chỉ hợp lệ sau đủ DoD, docs và commit đã kiểm.
+
 ### Vai trò
 
 - Orchestrator chạy **GPT-6-Astra**: chỉ đọc, lập kế hoạch, chọn task, spawn/wait/review. Không viết code, script, test, config hoặc sửa file bằng shell. Việc ghi kế hoạch/nhật ký vào repo cũng giao worker để giữ một người ghi.

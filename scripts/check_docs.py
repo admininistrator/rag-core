@@ -21,7 +21,8 @@ IGNORED_DIRECTORY_NAMES = {
     ".venv",
     "__pycache__",
 }
-IGNORED_ROOT_DIRECTORIES = {"backups", "logs", "model-cache", "models", "runtime", "var"}
+# .local is ignored runtime/test state; fixture Markdown is not repository documentation.
+IGNORED_ROOT_DIRECTORIES = {".local", "backups", "logs", "model-cache", "models", "runtime", "var"}
 TASK_FIELDS = (
     "Trạng thái",
     "Phụ thuộc",
