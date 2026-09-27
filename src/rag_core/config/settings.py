@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     database_password_file: Path | None = Field(default=None, repr=False)
     redis_url: RedisDsn = Field(repr=False)
     qdrant_url: AnyHttpUrl = Field(repr=False)
+    auth_config_file: Path | None = Field(default=None, repr=False)
 
 
 def _safe_validation_message(exc: ValidationError) -> str:

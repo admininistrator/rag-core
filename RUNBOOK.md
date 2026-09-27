@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T08 nền tảng và corpus IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. API hiện chỉ serve health; business/auth/query/SSE runtime vẫn DESIGNED. Dừng sau T08 theo workflow một task/session; T09–T36 chưa bắt đầu.
+> **T01–T09 nền tảng, corpus và authentication IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 service identity/JWT/JWKS/local issuer đã kiểm qua HTTP thật. API chỉ mount health; business/query/SSE runtime vẫn DESIGNED. Dừng sau T09; T10–T36 chưa bắt đầu.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -19,7 +19,8 @@
 | Compose/services + health skeleton | VERIFIED local | T02 |
 | API v1 schemas/design snapshots/examples | VERIFIED structural contracts; business routes chưa mount | T03 |
 | Corpus | Ba domain và all-domain clean reproduction VERIFIED local | T04–T08 |
-| Auth/session/storage | DESIGNED | T09–T12 |
+| Service identity/JWT/JWKS/local issuer | VERIFIED local HTTP; protected endpoint chỉ trong tests | T09 |
+| Session/storage | DESIGNED | T10–T12 |
 | Parsing/OCR/index | DESIGNED | T13–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
 | Admin UI | DESIGNED | T27–T29 |
@@ -97,6 +98,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | `DATABASE_PASSWORD_FILE` | path; `None` | Không | Docker secret tách khỏi DSN; chuỗi rỗng được bỏ qua |
 | `REDIS_URL` | Redis DSN | Có | Có thể chứa credential; bị loại khỏi repr/error chuẩn hóa |
 | `QDRANT_URL` | HTTP(S) URL | Có | Endpoint vector nội bộ; bị loại khỏi repr |
+| `AUTH_CONFIG_FILE` | path; `None` | Cho `/v1` | T09 JSON app registry; absent = 503, invalid/unreadable = startup failure; không chứa private signing key |
 
 `rag_core.config.load_settings()` đọc environment rồi `.env`, bỏ qua giá trị rỗng. Thiếu config trả `SettingsError` dạng `Missing required RAG Core configuration: DATABASE_URL, QDRANT_URL, REDIS_URL`; giá trị malformed không được echo qua error/traceback. T02 readiness dùng PostgreSQL `SELECT 1`, Redis `PING` và Qdrant `/readyz`, mỗi probe có deadline.
 
@@ -146,21 +148,110 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps
 
 Không dùng `docker compose down -v` trong flow mặc định. Không commit `.local/`, `.env`, key hoặc database files. MinIO/MC dùng release community lịch sử đã pin từ official Quay cho local simulation; server/cloud deployment ngoài scope.
 
-Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` rồi `docker compose logs --no-color <service>`; không render `docker compose config` đầy đủ vào ticket vì có thể lộ config khi operator tự thêm biến. Business quickstart (migration, ingest/query, model, auth/admin) vẫn DESIGNED cho các task sau.
+Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` rồi `docker compose logs --no-color <service>`; không render `docker compose config` đầy đủ vào ticket vì có thể lộ config khi operator tự thêm biến. Business quickstart (migration, ingest/query, model, admin) vẫn DESIGNED cho các task sau. Host auth/local issuer đã VERIFIED ở R03; Compose mặc định chưa mount app registry hay issuer.
 
 <a id="r03"></a>
 ## R03. Auth, app registration và trust boundary
 
-**DESIGNED — T09/T11/T27.**
+**T09 IMPLEMENTED/VERIFIED local; storage trust T11 và admin T27 vẫn DESIGNED.**
 
 - Core operator đăng ký app bằng cấu hình tin cậy: app ID, service credential, JWT issuer/audience/JWKS và storage alias/prefix.
 - Mỗi API nghiệp vụ gửi `Authorization: Bearer <user-JWT>` và `X-RAG-Service-Key: <app-service-key>`.
 - Core lấy subject từ JWT đã verify; app ID từ service identity đã verify; không cho request body ghi đè identity.
 - Backend app phải xác minh người dùng được phép dùng object trước đăng ký. Core không có quyền tự đọc DB quyền của Scarlet; chữ ký/trust contract này là trách nhiệm tích hợp.
-- Key rotation, JWKS cache TTL, revoked key behavior và local token generation command: điền sau T09 với evidence.
+- `Principal(app_id, user_id)` là immutable domain type; API middleware xác thực toàn `/v1` trước body/handler, `require_principal` inject cho handlers. Không dùng body/query/history làm identity. Principal chưa thay thế session/document scope resolver T10.
 - Không đưa token/service key vào query string, metrics label, logs hoặc browser JS. Không dùng chung admin credential với API app.
 
-401: credentials invalid/missing. 403: role không đủ. 404: resource không thuộc principal/scope. Không tắt auth để tránh lỗi tích hợp.
+401 `invalid_credentials`: credentials invalid/missing/duplicate hoặc unknown signing kid; có `WWW-Authenticate: Bearer`. 503 `dependency_unavailable`: chưa cấu hình registry hoặc JWKS không dùng được khi cần refresh. Error theo T03 envelope, request UUID mới, không chứa token/key/URL/exception, `Cache-Control: no-store`. 403 role và 404 resource ngoài scope là contract cho task sau. Route chưa mount chỉ trả framework 404 sau auth thành công; trước đó guard có thể trả 401/503. Không tắt auth để tránh lỗi tích hợp.
+
+### App registry và JWT contract
+
+Đặt `AUTH_CONFIG_FILE` vào environment hoặc `.env`, trỏ tới JSON operator-owned,
+giới hạn 256 KiB/100 apps; giữ file ngoài Git, chỉ account chạy core được sửa.
+`apps` phải nonempty; `app_id` và `service_key_sha256` phải unique. Mỗi app có
+`app_id`, SHA256 hex của service key random 32 bytes trở lên, exact `issuer`,
+`audience`, `jwks_url`. CLI dưới đây tạo registry đúng schema. Không dùng password
+ngắn làm service key; core chỉ giữ SHA256 và so sánh bằng constant-time digest check.
+
+JWT có `sub` nonempty <=256 ký tự, signed `app_id` khớp service app (kể cả hai app
+dùng chung issuer/audience/JWKS), exact issuer và expected audience, integer NumericDate
+`iat`/`nbf`/`exp`; `exp` phải sau `iat` và `nbf`. Cả bảy claims bắt buộc; zero clock
+leeway, kiểm cả future `iat`. Header phải `alg=RS256`, `kid` nonempty <=128; JWT <=16KiB.
+Không nhận `none`/HS algorithms hoặc token headers `jku`, `jwk`, `x5u`, `x5c`, `crit`.
+JWT payload `user_id`/`jwks_url` không cấp quyền và không chọn URL. Backend tích hợp
+sau này phải phát đúng claims; đây là contract T09 mới, chưa có client business cũ cần migrate.
+
+JWKS URL chỉ từ config: HTTPS mặc định, không userinfo/query/fragment, không redirect
+hoặc environment proxy. `allow_loopback_http=true` chỉ mở HTTP literal `127.0.0.1`
+hoặc `::1`; bị cấm khi `APP_ENV=production`. Local CLI chỉ bind IPv4 loopback.
+Không fetch URL do token/body cung cấp. RSA public keys 2048–8192 bits, <=32 keys,
+JWKS <=128KiB; private RSA material/duplicate kid bị từ chối. Other algorithms/use
+không được chọn. Auth dùng PyJWT 2.15.0 crypto trong group `api`; fixed algorithm
+allowlist và required claims theo [PyJWT API](https://pyjwt.readthedocs.io/en/stable/api.html).
+
+### Cache, rotation và thu hồi
+
+Registry được load một lần lúc tạo app. Sửa app/service-key/issuer policy cần restart
+mọi API process. Xóa app/hash cũ và restart để revoke service key ngay; không có
+per-token logout/revocation list ở T09. JWT còn hiệu lực tới exp hoặc signing-key removal
+được nhìn thấy qua refresh, tùy điều kiện nào đến trước.
+
+Cache JWKS tách theo app/process, TTL mặc định300s (1–3600),
+`refresh_interval_seconds=5` (1–60, <=TTL), `jwks_timeout_seconds=3` (>0–10).
+Known kid dùng cache tới TTL; unknown kid có thể refresh sớm, tối đa một lần mỗi
+refresh interval. Lock coalesce concurrent fetch và không tạo negative cache theo
+attacker kid. New kid trong cooldown trả401; publisher nên prepublish khóa mới trước
+khi phát token, giữ khóa cũ đến hết token lifetime + TTL. Refresh thay toàn bộ key set,
+không merge giữ khóa đã xóa. Không có cache vô hạn theo từng signing key.
+
+Revoke signing key: bỏ nó khỏi trusted JWKS; existing cached key có thể còn dùng tối
+đa TTL (mặc định300s). Restart mọi verifier để xóa cache sớm, đồng thời ngừng phát token
+bằng key đó. Refresh lỗi không kéo dài expiry; known cached key còn hạn vẫn dùng được,
+expired/unknown key cần refresh mà JWKS lỗi thì503, không stale fallback. Empty JWKS
+trả503 khi refresh; valid nonempty set không chứa kid đã revoke trả401. Timeout là
+deadline cả fetch, bounded body; cancellation truyền ra ngoài. Response/cache metadata
+của upstream không thay TTL operator. HTTP tests kiểm removal bằng elapsed TTL thật;
+security suite kiểm rotation/grace/refresh flood/recovery với controlled cache clock.
+
+### Local issuer và HTTP acceptance đã chạy
+
+Từ root repository, sync dev+api. Dùng thư mục mới dưới `.local/` đã ignore; bảo vệ ACL
+parent trên Windows vì mode0600 không thay Windows ACL. Không chia sẻ/copy private.pem,
+service-key hoặc JWT vào Git/log/browser. CLI từ chối directory/output đã tồn tại.
+
+```powershell
+uv run python -m rag_core.auth.local_issuer init --directory .local/auth
+uv run python -m rag_core.auth.local_issuer token --directory .local/auth --subject local-user --output .local/auth/user.jwt --ttl 300
+uv run python -m rag_core.auth.local_issuer serve --directory .local/auth
+```
+
+Init tạo RSA2048 private PEM, public `jwks.json`, random `service-key`, `apps.json`.
+Issuer `http://127.0.0.1:8765`, audience `rag-core:local-dev`, app `local-dev`;
+TTL token1–3600s. Serve chỉ trả `/.well-known/jwks.json`, không serve directory/private
+files, và đọc lại public file khi rotation. Không có HTTP endpoint mint token.
+`serve` là foreground process; dừng bằng Ctrl+C. Với API host, đặt
+`$env:AUTH_CONFIG_FILE='.local/auth/apps.json'` và giữ DSN/Redis/Qdrant theo R02.
+Compose hiện không mount registry; loopback trong container không trỏ về host issuer.
+Docker issuer wiring/server deployment chưa được claim VERIFIED ở T09.
+
+Acceptance tự tạo credentials trong pytest temp đã ignore, khởi động CLI JWKS process
+và Uvicorn protected test app trên ephemeral loopback ports, rồi tự dừng đúng process:
+
+```powershell
+$env:PYTEST_ADDOPTS='--basetemp=.local/9s-new'
+uv run pytest tests/security/test_auth.py
+$env:PYTEST_ADDOPTS='--basetemp=.local/9h-new'
+uv run pytest tests/security/test_local_auth_http.py -s
+```
+
+Dùng tên basetemp mới mỗi lần. `/v1/auth-test` chỉ tồn tại trong test app, nhận
+`{"external_session_id":"http-test-session"}` và headers redacted
+`Authorization: Bearer [REDACTED]`, `X-RAG-Service-Key: [REDACTED]`.
+Real HTTP trả200 principal `local-dev/http-user`, missing auth401, forged body422,
+unmounted route404 sau auth, empty JWKS sau TTL503, private file404. Không mock JWT,
+crypto/JWKS/HTTP; không gọi DB/LLM và không claim session authorization. Evidence
+[H-T09-A01](docs/handoffs.md#h-t09-a01). Business API vẫn chưa mount; T10 chỉ bắt đầu
+khi người dùng giao task mới.
 
 <a id="r04"></a>
 ## R04. Session mapping và upload registration

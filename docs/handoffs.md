@@ -6,7 +6,10 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
-- **Current 2026-09-26 / T08-A01 COMPLETE after inspected completion commit:** `test(T08): verify complete corpus reproduction`; actual hash returned post-commit, resolve with `git log -1 --format=%H --grep="^test(T08):"`. Canonical all-domain setup/validator, final cold a2 setup/validator,1574published/92cache equality/stable rerun and missing-file exit1 all PASS.268full unit+contract then21focused tests, Ruff/mypy19/docs PASS. Direct agent, model/effort not exposed, no subagents; inherited T07 scratch preserved. User authorized origin/main push; actual remote equality reported post-push. [T08 evidence](#h-t08-a01). T09 dependencies T08/T03 ready after completion; **STOP AFTER T08**, no T09 implementation.
+
+- **Current 2026-09-27 / T09-A01 COMPLETE after inspected completion commit:** direct agent, exact model/effort unavailable, no subagents. Service identity/RS256/JWKS/local issuer implemented;51security +1real HTTP +269unit/contract PASS, Ruff/mypy16/locked83/50/OpenAPI PASS. Scoped19files; inherited T07 scratch retained. [T09 evidence](#h-t09-a01). Completion subject `feat(T09): implement authenticated application principals`; COMPLETE requires successful inspected commit; authorized push and remote hash equality reported post-execution. T10/T02 dependencies ready after T09 commit; **STOP AFTER T09**, do not implement T10.
+
+- **Previous 2026-09-26 / T08-A01 COMPLETE after inspected completion commit:** `test(T08): verify complete corpus reproduction`; actual hash returned post-commit, resolve with `git log -1 --format=%H --grep="^test(T08):"`. Canonical all-domain setup/validator, final cold a2 setup/validator,1574published/92cache equality/stable rerun and missing-file exit1 all PASS.268full unit+contract then21focused tests, Ruff/mypy19/docs PASS. Direct agent, model/effort not exposed, no subagents; inherited T07 scratch preserved. User authorized origin/main push; actual remote equality reported post-push. [T08 evidence](#h-t08-a01). T09 dependencies T08/T03 ready after completion; **STOP AFTER T08**, no T09 implementation.
 
 
 - **Previous checkpoint 2026-09-26 / T07-A06 COMPLETE after inspected completion commit:** `feat(T07): prepare XQuAD bilingual evaluation slices`, resolve actual hash with `git log -1 --format=%H --grep="^feat(T07):"`. User authorized commit/push GitHub and stop; confirmed direct one-task/session workflow. Runtime `gpt-6-sol`/`xhigh`; no subagents. Base `main`/`7696f83`; inherited candidate completed, old scratch retained local. Real setup/validator,21bilingual+138regression tests, Ruff/mypy17 and deterministic491published+3cache rerun PASS; [evidence](#h-t07-a06). Push result/actual hash reported post-commit. **STOP AFTER T07**; T08 TODO/dependencies ready, only start on a new user request. AGENTS/P14 replace historical Hermes workflow below. No scratch deletion or skipped path-length diagnostic executed.
@@ -3672,3 +3675,272 @@ Actual commit output/hash and authorized `git push origin main` result are retur
 user after commit, together with `git ls-remote origin refs/heads/main` equality. No self hash
 or claimed push success is embedded before execution. Completion status is valid only after
 the successful inspected commit; failure would require a new checkpoint, not COMPLETE.
+
+
+<a id="h-t09-a01"></a>
+## H-T09-A01 — Phase 2 / JWT, service identity and local issuer
+
+Direct Codex agent, exact model/effort not exposed; no subagents. Started/ended2026-09-27.
+CWD for all commands: `C:\Users\Admin\Documents\GitHub\rag-core`.
+Scope:19 files listed in final review below, no corpus/prompt/Scarlet/T10 changes.
+Baseline main/HEAD `5f851c38ede7430a2dd41f32beed2108ad7d3e64` (T08 COMPLETE);
+T03 COMPLETE notes/summary, T08 notes/summary, AGENTS/task-session prompt,
+P01/P05/P06/P13, README/RUNBOOK/current checkpoint read before implementation.
+Baseline dirty: untracked `.ptmp-t07-a02/`, `.tmp-t07-a02/`; preserved.
+Git reported legacy ACL warnings for `.pytmp-t07-a02/`,
+`.tmp-t07-a02/pytest-tmp/`, `UsersAdminAppDataLocalTempt07a03/`
+and user global ignore file. No cleanup or optional historical denied diagnostic.
+
+### Environment and dependency preparation
+
+PowerShell environment used for uv commands:
+
+```powershell
+$env:UV_CACHE_DIR='.uv-cache'
+$env:UV_PYTHON_INSTALL_DIR='.uv-python'
+```
+
+`uv add --group api 'pyjwt[crypto]==2.15.0'` initially exit1: sandbox network
+`Failed to fetch: https://pypi.org/simple/httpx/` / `os error 10013`.
+Same scoped dependency operation retried with approved network escalation, then
+`uv sync --locked --group dev --group api`: exit0, actual excerpt:
+
+```text
+Resolved 83 packages in 1.26s
+Prepared 2 packages in 1.62s
+ + pyjwt==2.15.0
+Resolved 83 packages in 1ms
+Checked 50 packages in 2ms
+```
+
+No automatic approval rejection. PyPI official artifacts only, exact PyJWT2.15.0
+pin+wheel/sdist hashes in uv.lock; no unrelated dependency upgrade. Official
+[PyJWT API reference](https://pyjwt.readthedocs.io/en/stable/api.html) and
+[usage](https://pyjwt.readthedocs.io/en/stable/usage.html) inspected for fixed
+algorithm allowlist/required claims/signature validation, not token-selected algorithms.
+
+Commands `uv --version` and the following version check exit0:
+
+```powershell
+uv run python -c "import sys, jwt, cryptography, httpx, uvicorn; print('Python', sys.version.split()[0], 'PyJWT', jwt.__version__, 'cryptography', cryptography.__version__, 'HTTPX', httpx.__version__, 'Uvicorn', uvicorn.__version__)"
+```
+
+```text
+Python 3.12.4 PyJWT 2.15.0 cryptography 50.0.1 HTTPX 0.28.1 Uvicorn 0.53.0
+uv 0.11.16 (135a36367 2026-05-21 x86_64-pc-windows-msvc)
+```
+
+Services: generated ephemeral local RSA2048/public JWKS over real loopback HTTP;
+DoD-2 uses CLI JWKS process + Uvicorn test API. No DB/Redis/Qdrant/MinIO/model/provider
+used or claimed live; HealthChecks injection in test only avoids unrelated health probes,
+not auth/crypto/network. API app itself retains real health adapter defaults.
+
+<a id="h-t09-a01-dod1"></a>
+### DoD-1 — Security and fail-closed identity
+
+Initial `uv run pytest tests/security/test_auth.py -q` with
+`PYTEST_ADDOPTS=--basetemp=.local/t09-security-01`: exit0, `49 passed in 32.06s`.
+Added meaningful deadline/cancellation/startup-failure coverage, then final exact command:
+
+```powershell
+$env:PYTEST_ADDOPTS='--basetemp=.local/9s'
+uv run pytest tests/security/test_auth.py *> .local/t09-a01/security.log
+```
+
+Exit **0**, expected rejection/identity/rotation/config gates all pass. Actual excerpt
+from ignored local log `.local/t09-a01/security.log`:
+
+```text
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0
+collected 51 items
+tests\security\test_auth.py ............................................ [ 86%]
+.......                                                                  [100%]
+============================= 51 passed in 32.20s =============================
+```
+
+- Wrong signature, none/HS alg, issuer/audience/exp/nbf/future iat, missing claims,
+  app mismatch including shared trust tuple, invalid/empty subject/NumericDates -> rejected.
+- Token `jku/jwk/x5u/x5c/crit` rejected before fetch; signed user_id/JWKS URL cannot
+  override subject/config; forged body user_id/app_id/jwks_url422; duplicate headers401.
+- Real JWKS endpoint, per-app cache isolation, old+new key rotation, removed key401,
+  TTL, unknown-kid flood/coalescing, expired-cache outage503/recovery; no stale extension.
+  Clock is controlled for cache boundaries only; RSA signatures/HTTP JWKS are real.
+- Untrusted transport/URL, duplicate app/key mapping, private/ambiguous/oversized/malformed
+  JWKS/weak key/redirect, deadline/cancellation checked; no auth config503 and explicit
+  bad config startup failure. T03 ErrorEnvelope validates401/503 without secrets.
+
+<a id="h-t09-a01-dod2"></a>
+### DoD-2 — CLI JWT consumed over real HTTP
+
+Initial `uv run pytest tests/security/test_local_auth_http.py -q -s`,
+`PYTEST_ADDOPTS=--basetemp=.local/t09-http-01`: exit0, `1 passed in 4.61s`.
+Final after formatting, separate invocation:
+
+```powershell
+$env:PYTEST_ADDOPTS='--basetemp=.local/9h'
+uv run pytest tests/security/test_local_auth_http.py -s *> .local/t09-a01/http.log
+```
+
+Exit **0**, log `.local/t09-a01/http.log`; actual output:
+
+```text
+collected 1 item
+tests\security\test_local_auth_http.py REAL HTTP AUTH: PASS; CLI RS256 -> public JWKS -> protected API 200; missing credentials 401; forged identity 422; unmounted route 404; empty JWKS after TTL 503; private files 404; no credentials displayed
+.
+============================== 1 passed in 4.07s ==============================
+```
+
+Test launches actual CLI `init --directory <fresh-temp>/auth --port <ephemeral>`,
+`token --directory ... --subject http-user --output .../user.jwt`, and
+`serve --directory ... --port ...` subprocess; generates256bit-service-key/RSA2048 fixture
+at runtime. File credentials never printed; exclusive directory/token overwrite refusal
+verified. Uvicorn serves a test-only `/v1/auth-test` handler using production auth middleware
+and `require_principal`, strict SessionCreateRequest. HTTPX uses real TCP/trust_env=False.
+JWT is resolved against live JWKS, gives `local-dev/http-user`; old cache expires after
+real1.1s elapsed against configTTL1s, empty JWKS503. No mocked provider/ASGI-only success
+substitutes this DoD. Both servers stopped in finally; test endpoint not mounted in app.
+README/RUNBOOK document generated secrets, redacted headers, cache/revocation and limits.
+
+### D2 regression, failures retained and resolution
+
+Initial command (before adapting T03 assertion):
+
+```powershell
+$env:PYTEST_ADDOPTS='--basetemp=.local/t09-regression-01'
+uv run pytest tests/unit tests/contract -q
+```
+
+Exit **1**, actual output excerpts (initial full output was in terminal, not saved to disk):
+
+```text
+FAILED tests/unit/test_corpus_default.py::test_prepare_and_rerun_preserve_ids_content_timestamp_and_mtimes
+E                   assert 503 == 404
+FAILED tests/contract/test_api_schema.py::test_designed_business_endpoints_are_unmounted_and_never_stub_success
+11 failed, 258 passed in 47.51s
+```
+
+Ten Default corpus tests failed while creating deep atomic `.part` paths under the long
+Windows basetemp. No corpus code/data/gold change: use short fresh ignored basetemp as
+existing RUNBOOK advises. Remaining failure is the intended T09 behavior change: `/v1`
+now fails closed before routing. Contract regression now asserts no business route mounted
+plus503 dependency_unavailable without registry, not a stub success; real authenticated
+unmounted404 verified in DoD-2. Final exact command:
+
+```powershell
+$env:PYTEST_ADDOPTS='--basetemp=.local/9r'
+uv run pytest tests/unit tests/contract -q *> .local/t09-a01/regression.log
+```
+
+Exit **0**, output `.local/t09-a01/regression.log`:
+
+```text
+........................................................................ [ 26%]
+........................................................................ [ 53%]
+........................................................................ [ 80%]
+.....................................................                    [100%]
+269 passed in 65.47s (0:01:05)
+```
+
+Earlier Ruff found SIM105 in new deadline fixture; replaced try/except/pass with
+contextlib.suppress, no behavior/test weakening. Source/new-test formatting only.
+
+### Quality, docs and final review
+
+Commands executed separately, all exit0:
+
+```powershell
+uv run ruff check .
+uv run mypy src
+uv sync --locked --group dev --group api
+uv run python scripts/export_openapi.py --check
+git diff --check
+```
+
+Actual output excerpts:
+
+```text
+All checks passed!
+Success: no issues found in 16 source files
+Resolved 83 packages in 0.98ms
+Checked 50 packages in 1ms
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+Ruff additionally reported three inherited `Access is denied (os error5)` traversal
+warnings; final explicit changed-source checks also run to avoid relying on inaccessible
+scratch scanning. `git diff --check` had no whitespace errors; initial tasks CRLF advisory
+fixed by final UTF-8/LF write. No runtime schema snapshot/DB/index migration.
+
+`git remote get-url origin`, branch/log/author check: exit0,
+`https://github.com/admininistrator/rag-core.git`, `main`, `Git author configured`.
+`git ls-remote origin refs/heads/main` initially exit1 sandbox connection blocked;
+approved read-only network escalation exit0:
+
+```text
+5f851c38ede7430a2dd41f32beed2108ad7d3e64 refs/heads/main
+```
+
+Full completion scope (19 files): `.env.example`, README.md, RUNBOOK.md,
+`docs/{tasks,handoffs,implementation-summary}.md`, pyproject.toml, uv.lock,
+`src/rag_core/api/{app,auth}.py`, `src/rag_core/auth/{__init__,config,verifier,local_issuer}.py`,
+`src/rag_core/config/settings.py`, `tests/contract/test_api_schema.py`,
+`tests/security/{conftest,test_auth,test_local_auth_http}.py`.
+D1 scope/dependency/P01 review; D2 checks above; D3 each DoD separately;
+D4 README/RUNBOOK/task/summary/evidence; D5 fixed algorithm/no token URLs/no raw corpus,
+keys/cache/scratch/secrets in explicit stage. D6 subject
+`feat(T09): implement authenticated application principals`, actual commit/hash and
+remote equality reported after execution; no self-reference hash or preclaimed push.
+
+Known limits: no Docker image/issuer wiring rerun, production JWKS/LLM/services/session
+scope/query/admin verification. HTTP fixture alone grants no data access. T10 dependencies
+T09/T02 ready only after successful closure. **Stop after T09**, no next task implementation.
+
+
+### D4/D5/D6 final closure evidence
+
+`uv run python scripts/check_docs.py *> .local/t09-a01/docs-final.log` exit0:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 258
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+`uv run ruff check src/rag_core tests/security tests/contract/test_api_schema.py`
+exit0 `All checks passed!`; `uv run mypy src` exit0
+`Success: no issues found in 16 source files`. `git diff --check` and
+`git diff --exit-code -- corpus-documents AGENTS.md docs/plan.md` exit0/no output.
+`git check-ignore .local/9h .local/9s .local/t09-a01` exit0, all three paths ignored.
+Explicit file-set/UTF-8/size/credential-pattern inspection exit0:
+
+```text
+D1/D5 review: PASS; 19 explicit UTF-8 task files; no unexpected tracked/src/test/doc files; no private-key material or JWT literals.
+Runtime credentials/logs remain ignored; original corpus/prompt/AGENTS/plan unchanged. No DB/index/schema migration.
+```
+
+Actual stage command, exit0 (approved Git-index write escalation):
+
+```powershell
+git add -- .env.example README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md pyproject.toml uv.lock src/rag_core/api/app.py src/rag_core/api/auth.py src/rag_core/auth/__init__.py src/rag_core/auth/config.py src/rag_core/auth/verifier.py src/rag_core/auth/local_issuer.py src/rag_core/config/settings.py tests/contract/test_api_schema.py tests/security/conftest.py tests/security/test_auth.py tests/security/test_local_auth_http.py
+```
+
+`git diff --cached --check` exit0/no output. Cached stat before this evidence append:
+`19 files changed, 1460 insertions(+), 23 deletions(-)`.
+Staged-vs-reviewed exact-file/content/secret check exit0:
+
+```text
+D6 staged review: PASS; exact 19 files; staged content matches reviewed worktree; no credential material detected.
+```
+
+After this append, restage only handoffs and rerun docs/cached checks.
+Completion command `git commit -m "feat(T09): implement authenticated application principals"`;
+then inspect actual commit19file inventory/whitespace, execute authorized
+`git push origin main`, and compare `git rev-parse HEAD` with
+`git ls-remote origin refs/heads/main`. Post-execution results are reported to the user,
+not embedded as fabricated pre-commit success. If commit fails, T09 is not COMPLETE.

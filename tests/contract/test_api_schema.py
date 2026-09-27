@@ -465,5 +465,7 @@ async def test_designed_business_endpoints_are_unmounted_and_never_stub_success(
                 )
                 path = path.replace("{job_id}", DOCUMENT).replace("{chunk_id}", "synthetic-chunk-1")
                 result = await client.request(endpoint.method, path)
-                assert result.status_code == 404
-                assert result.json() == {"detail": "Not Found"}
+                # T09 guards the v1 namespace even before business routes exist.
+                assert path not in app.openapi()["paths"]
+                assert result.status_code == 503
+                assert result.json()["error"]["code"] == "dependency_unavailable"

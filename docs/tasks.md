@@ -177,7 +177,7 @@
 <a id="t09"></a>
 ### T09 — JWT, service identity và local issuer
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T08, T03.
 - **Tham chiếu kế hoạch:** [P01](plan.md#p01), [P05](plan.md#p05), [P06](plan.md#p06).
 - **Công việc:** Principal injection, app config/service-key mapping, JWT verify/JWKS rotation/cache, dev key/token CLI; không tích hợp Scarlet. Document auth flow/secret generation trong RUNBOOK.
@@ -185,7 +185,9 @@
   1. `uv run pytest tests/security/test_auth.py` PASS cho sai chữ ký/alg/iss/aud/exp/nbf, key rotation, app mismatch, forged user_id/JWKS URL; missing config fail closed.
   2. Local issuer tạo JWT dùng thực qua HTTP protected test endpoint; không default bypass hoặc commit key; README/RUNBOOK có ví dụ redacted, key revocation/cache semantics.
 - **Cạm bẫy:** JWT decode không là validation; không tin subject từ body; service key không gửi browser; không lộ token trong handoff.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `feat(T09): implement authenticated application principals`.
+- **Ghi chú thực thi:** T09-A01 | Direct Codex agent; model/effort not exposed, no subagents | Started 2026-09-27. Baseline main/5f851c38ede7430a2dd41f32beed2108ad7d3e64; inherited T07 scratch retained, no T09 partial code. T08/T03 COMPLETE; dependency notes/P01/P05/P06/P13/handoffs/summary/README/RUNBOOK read. Allowed: auth/principal/config/API guard, local issuer CLI, security/HTTP tests, dependency lock/env and README/RUNBOOK/tasks/handoffs/summary. Plan: fail-closed service identity + RS256 validation, bounded JWKS rotation/cache, generated local credentials and real loopback HTTP acceptance; individual DoD + D1–D6, scoped commit/push then stop. Commit dự kiến `feat(T09): implement authenticated application principals`.
+
+- **T09-A01 results (completion effective only after successful inspected commit):** DoD-1 **PASS**,51security tests with real RSA/JWKS; [H-T09-A01 DoD-1](handoffs.md#h-t09-a01-dod1). DoD-2 **PASS**, CLI-generated JWT through real loopback JWKS/Uvicorn HTTP, safe failure/revocation/private-file/exclusive-output checks; [H-T09-A01 DoD-2](handoffs.md#h-t09-a01-dod2). D1 scope/dependencies/diff PASS; D2 Ruff/mypy16/locked83packages50installed,269unit+contract PASS; D3 separate actual evidence PASS; D4 README/RUNBOOK/env/task/handoffs/summary/docs links PASS; D5 explicit19files/secret+scope review PASS; D6 scoped completion subject `feat(T09): implement authenticated application principals`, actual hash/commit inspection and authorized origin/main push equality returned post-execution, no self-reference hash. README/RUNBOOK now cover AUTH_CONFIG_FILE, required JWT claims, app binding, fail-closed errors, TTL/rotation/revocation/restart and local CLI/HTTP commands. Interfaces/files/limits [S-T09-A01](implementation-summary.md#s-t09-a01). Initial regression failures (10long Windows temp paths +1old pre-auth404 assertion) resolved with short fresh basetemp and contract assertion matching new guard; no corpus/gold changes. No blocker remains; Docker issuer wiring/production JWKS/session authorization/business API/provider/Scarlet not claimed. Ended2026-09-27; T10 dependencies T09/T02 ready after completion; **STOP AFTER T09**.
 
 <a id="t10"></a>
 ### T10 — Schema metadata và session scope resolver
