@@ -192,7 +192,7 @@
 <a id="t10"></a>
 ### T10 — Schema metadata và session scope resolver
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T09, T02.
 - **Tham chiếu kế hoạch:** [P01](plan.md#p01), [P04](plan.md#p04), [P06](plan.md#p06).
 - **Công việc:** Alembic migrations/core repositories; sessions, document versions, links, jobs/outbox types; create/get/delete session và scoped link resolver, tombstone/revision. Không public route liệt kê kho ngoài session.
@@ -200,7 +200,9 @@
   1. `uv run alembic upgrade head` trên DB trống; `uv run pytest tests/integration/test_session_scope.py` chạy PG thật, kiểm app/user/session isolation, same-owner different sessions, uniqueness, empty/deleted scope.
   2. Session delete lặp lại đúng semantics, không đụng source/index; concurrent detach/query snapshot có revision; migrations tái tạo trên DB riêng. RUNBOOK có schema ownership và session mapping.
 - **Cạm bẫy:** Foreign keys thiếu owner checks; external_session_id không unique toàn hệ thống; không tự inherit user documents vào session mới.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `feat(T10): add session-scoped metadata persistence`.
+- **Ghi chú thực thi:** T10-A01 | Direct Codex agent; exact model/effort unavailable, no subagents | Started 2026-09-27. Baseline main/9e67d5d513c751930e4548ae9c292501444963a4 equals origin/main; inherited T07 scratch preserved. T09/T02 COMPLETE notes, P01/P04/P06/P13, handoffs/summary/README/RUNBOOK read. Allowed: metadata domain/port/SQLAlchemy adapter, Alembic migrations, real PG integration tests/test service, dependency groups/lock and task docs. Plan: owner-enforced schema, transactional tombstone/detach/revision and exact-pair resolver; two isolated PG databases for migration/reproduction and concurrent lifecycle evidence. Business HTTP mounting remains T26 per R05; no T11/T12 registration/storage implementation. Commit dự kiến `feat(T10): add session-scoped metadata persistence`.
+
+- **T10-A01 results (COMPLETE effective only after successful inspected commit):** DoD-1 **PASS**: empty PG17.11 `alembic upgrade head/current`,18real scope tests for app/user/same-owner-session isolation, concurrent uniqueness, empty/deleted/subset/readiness and owner constraints. DoD-2 **PASS**: real lock/connection detach-query race, idempotent/concurrent delete, retained metadata unchanged, no worker/replay resurrection; separate empty DB migration repeat/downgrade/re-upgrade with identical columns/defaults/constraints/indexes. Evidence [H-T10-A01](handoffs.md#h-t10-a01). D1 scope/dependency/diff PASS; D2 Ruff/mypy24/locked83resolved55installed/325regression PASS; D3 individual real gates PASS; D4 README/RUNBOOK/schema mapping/migration/transaction/snapshot/test instructions and notes/summary/evidence PASS; D5 scoped review/no secrets in Git/first-schema recovery PASS; D6 completion subject `feat(T10): add session-scoped metadata persistence`, actual commit/push/remote equality returned post-execution. Interfaces/files/limits [S-T10-A01](implementation-summary.md#s-t10-a01). Initial Windows Proactor failure fixed with SelectorEventLoop; traceback exposed old local PG credential, redacted from evidence and switched to own ignored T10 test credential; original credential needs operator rotation (not changed silently). HTTP business routes remain unmounted per T26; no storage/vector/provider/worker verification claimed. Ended2026-09-27; T11 dependencies T10/T02 ready after closure; **STOP AFTER T10**.
 
 <a id="t11"></a>
 ### T11 — S3/MinIO read adapter và nguồn bất biến

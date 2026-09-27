@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T09 nền tảng, corpus và authentication IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 service identity/JWT/JWKS/local issuer đã kiểm qua HTTP thật. API chỉ mount health; business/query/SSE runtime vẫn DESIGNED. Dừng sau T09; T10–T36 chưa bắt đầu.
+> **T01–T10 nền tảng, corpus, authentication và metadata IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 auth đã kiểm qua HTTP thật; T10 session repository/scope/migrations đã kiểm trên PG17.11 thật. API chỉ mount health; business HTTP/query/SSE runtime vẫn DESIGNED. Dừng sau T10; T11–T36 chưa bắt đầu.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -20,7 +20,8 @@
 | API v1 schemas/design snapshots/examples | VERIFIED structural contracts; business routes chưa mount | T03 |
 | Corpus | Ba domain và all-domain clean reproduction VERIFIED local | T04–T08 |
 | Service identity/JWT/JWKS/local issuer | VERIFIED local HTTP; protected endpoint chỉ trong tests | T09 |
-| Session/storage | DESIGNED | T10–T12 |
+| Session/schema/scope repository | VERIFIED real PostgreSQL; HTTP routes chưa mount | T10 |
+| Storage/upload registration | DESIGNED | T11–T12 |
 | Parsing/OCR/index | DESIGNED | T13–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
 | Admin UI | DESIGNED | T27–T29 |
@@ -82,6 +83,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | dev | IMPLEMENTED/VERIFIED | Ruff, mypy, pytest, pytest-asyncio; jsonschema 4.26.0 từ T03 để validate exported schemas/examples, không vào API image |
 | api | IMPLEMENTED/VERIFIED T02 | FastAPI, HTTPX, Uvicorn, psycopg, Redis client; health-only API process, không có business routes |
 | ingestion | LOCKED/DESIGNED | Alembic, boto3, Celery, Qdrant client, Redis, SQLAlchemy; chưa có worker |
+| metadata | IMPLEMENTED/VERIFIED T10 | SQLAlchemy2.0.53 async + greenlet3.5.6, Psycopg, Alembic1.20.0; được include bởi api/ingestion |
 | inference | RESERVED/DESIGNED | Rỗng có chủ đích; T17 pin model runtime/revisions sau capability checks |
 
 ### Typed settings đã triển khai
@@ -250,13 +252,121 @@ Dùng tên basetemp mới mỗi lần. `/v1/auth-test` chỉ tồn tại trong t
 Real HTTP trả200 principal `local-dev/http-user`, missing auth401, forged body422,
 unmounted route404 sau auth, empty JWKS sau TTL503, private file404. Không mock JWT,
 crypto/JWKS/HTTP; không gọi DB/LLM và không claim session authorization. Evidence
-[H-T09-A01](docs/handoffs.md#h-t09-a01). Business API vẫn chưa mount; T10 chỉ bắt đầu
-khi người dùng giao task mới.
+[H-T09-A01](docs/handoffs.md#h-t09-a01). Business API vẫn chưa mount; T10 thêm
+repository/scope gate bên dưới, không thay auth hoặc mount query/registration.
 
 <a id="r04"></a>
 ## R04. Session mapping và upload registration
 
-**DESIGNED — T10–T12/T19.**
+**T10 schema/session repository/scope VERIFIED trên PG thật; HTTP/storage/registration/worker vẫn DESIGNED — T11–T12/T19/T26.**
+
+### Schema ownership và migration T10
+
+Core sở hữu PostgreSQL metadata riêng. App không ghi trực tiếp DB; app identity nằm
+trong registry T09, owner là JWT subject, không tạo user-account database. Revision
+`0001_session_metadata` tạo `sessions`, `documents`, `document_versions`,
+`index_generations`, `session_documents`, `ingestion_jobs`, `outbox_events`.
+Composite foreign keys mang app+owner xuyên session/link/document/version/generation/
+job/outbox. FK không cascade delete; lifecycle chỉ UPDATE session/link. Source references
+và retained generation/job/outbox rows được giữ. Binary nguồn, transcript và chunks
+chưa có trong schema này; chunks/ingestion theo task sau.
+
+Từ checkout root, sync dev+api (hoặc nhóm metadata cho migration-only). Alembic đọc
+**process environment**, không tự load `.env`, không cần Redis/Qdrant/auth config:
+
+```powershell
+uv sync --locked --group dev --group api
+# Set DATABASE_URL to the operator-verified target; never paste its password into logs.
+uv run alembic upgrade head
+uv run alembic current
+```
+
+`DATABASE_URL` chấp nhận `postgresql://` hoặc `postgresql+psycopg://`, driver luôn Psycopg3.
+Optional `DATABASE_PASSWORD_FILE` đọc UTF-8 secret riêng, override password của DSN.
+Migration có transactional DDL và advisory transaction lock, không chạy ngầm khi boot.
+Đây là schema đầu tiên, không chuyển dữ liệu của app hay sửa T02 fixture table. Backup
+DB trước migration trên môi trường có dữ liệu. `downgrade base` **xóa bảng metadata**;
+chỉ test replay trên DB do fixture tạo, không dùng làm undo session delete hoặc thao tác
+vận hành thông thường. Recovery production/backup rehearsal vẫn T34.
+Migration files cần checkout; API image hiện chưa đóng gói migration CLI assets và
+không claim Docker image rebuild/production migration ở T10.
+
+### Session mapping và transaction contract
+
+`PostgresSessionRepository(engine)` implements framework-free `SessionRepository`.
+App phải giữ mapping `(app_id, JWT subject, external_session_id) -> core UUID`.
+`create_session` concurrent/idempotent theo đúng tuple; external ID có thể trùng giữa
+app/users. Deleted mapping giữ tombstone: create/get/query lại trả `session_deleted`
+(410) cho owner, resource ngoài owner hoặc không tồn tại trả404. Repeated delete của
+owner trả cùng deleted record/revision; session mới cần external ID mới và không có links.
+
+`attach_version(conn, principal, session_id, version_id, upload_registration_id)` là
+primitive **internal trusted registration**, không là public attach-by-UUID. T12 phải
+verify nguồn/upload, ghi registration + job + outbox trong cùng caller transaction.
+Primitive kiểm owner/session, max50 active documents, version-specific link, unique
+registration trong session và một attached version/document. Existing registration
+khác version trả409; replay registration đã detach giữ detached; chỉ registration mới
+mới cấp link mới. Không âm thầm chuyển version cũ sang version mới. Attach/detach/delete
+khóa row session và bump revision trong cùng transaction; rollback không để link/revision lẻ.
+
+`resolve_scope` nhận principal đã authenticate, session UUID và optional nonempty unique
+tuple document UUIDs (tối đa50). Nó dùng một SELECT/READ COMMITTED snapshot cho revision,
+active links, versions và published generations. Empty session ->409 `no_session_documents`;
+subset ngoài session ->404; bất kỳ selected version/generation chưa ready ->409
+`documents_not_ready`, không trả partial selection. Resolver không xử lý domain/language
+(T20) và không xem history là quyền. Version/gen giữ **cặp**, không hai independent lists.
+
+Immutable `ScopeSnapshot` chứa principal, session, revision, requested subset và tuple
+`VersionGeneration(document_id, version_id, generation_id)`. Cache/retrieval consumers
+phải mang đủ các trường này; `validate_snapshot` đọc snapshot mới và so cả revision/pairs.
+Detach/delete hoặc publish generation mới làm snapshot cũ trả409 `session_scope_changed`,
+kể cả reindex không đổi revision. Staging generation không thay active ready generation.
+Consumer T18/T24/T25 phải kiểm lại trước evidence/answer/delta/done; snapshot không giữ
+DB lock suốt LLM call và không tự thu hồi bytes đã gửi. Job completion không hồi sinh links.
+
+Async engine bounded5 connections/max_overflow0, pool wait5s, connect5s, statement10s,
+lock5s. Không dùng blocking DB I/O trong async repository. Host Windows cần
+`asyncio.SelectorEventLoop` cho Psycopg; integration suite tự chọn bằng pytest-asyncio
+loop factory. Future host entrypoint phải chọn loop tương thích; Linux Docker không
+có Proactor limitation. Xem [Psycopg async documentation](https://www.psycopg.org/psycopg3/docs/advanced/async.html).
+
+### Kiểm chứng PostgreSQL tách biệt
+
+`compose.metadata-test.yaml` là project riêng `rag-core-metadata-test`, pinnedPG17.11,
+loopback55432 và **tmpfs disposable**, không volume hoặc network chung với stack app.
+Stop/recreate mất dữ liệu test; không dùng service này để giữ dữ liệu thật. Main Compose
+PG/Qdrant/Redis vẫn không publish host. Cần port55432 trống, secret mới đã ignore:
+
+```powershell
+uv run python -c "from pathlib import Path; import secrets; p=Path('.local/secrets'); p.mkdir(parents=True, exist_ok=True); f=(p/'t10_postgres_password').open('x', encoding='utf-8'); f.write(secrets.token_hex(32)); f.close()"
+docker compose -f compose.metadata-test.yaml up -d --wait
+$env:DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+$env:RAG_TEST_DATABASE_URL=$env:DATABASE_URL
+$env:PYTEST_ADDOPTS='--basetemp=.local/10-new --tb=short -o cache_dir=.local/10-test-cache'
+uv run alembic upgrade head
+uv run alembic current
+uv run pytest tests/integration/test_session_scope.py -v -s
+uv run pytest tests/integration/test_metadata_migrations.py -v -s
+docker compose -f compose.metadata-test.yaml stop
+```
+
+Secret creation exclusive: nếu đã có file, giữ file hiện có và bỏ dòng tạo; không
+overwrite credential. Dùng basetemp mới cho lần test sau; bảo vệ ACL của `.local`.
+Tests cần role CREATEDB trong test service, tạo `t10_test_<random UUID>` riêng từng
+module, kiểm DB trống trước migration và chỉ drop DB chính fixture vừa tạo. Thiếu URL,
+DB sai tên hoặc không kết nối được thì FAIL, không skip/mock/SQLite. Gate migration
+kiểm columns/defaults/constraints/indexes sau upgrade/idempotent head/downgrade/re-upgrade.
+Gate lifecycle kiểm real locks, owner FKs, readiness/subsets, rollback/max50, concurrent
+create/delete, retained source/version/generation/job/outbox metadata không đổi.
+
+Test chỉ gọi PostgreSQL; adapter không có storage/vector client hay DELETE binary/chunks/
+vectors. T10 không claim live MinIO/Qdrant retention/query, HTTP session routes, provider,
+retrieval hoặc index publication worker. Evidence [H-T10-A01](docs/handoffs.md#h-t10-a01).
+Giữ traceback ngắn/redacted: exception thư viện có thể in connection kwargs/credential
+khi pytest dựng long traceback. Không chép raw traceback vào Git/handoff.
+
+### Upload registration mục tiêu T12
 
 Luồng app bắt buộc:
 
@@ -297,8 +407,8 @@ Idempotency-Key scope app+owner+session+request hash; cùng key/body trả cùng
 
 | Method / route | Contract request → response | Trạng thái runtime / owner |
 | --- | --- | --- |
-| POST `/v1/sessions` | SessionCreateRequest → SessionResponse | DESIGNED, chưa mount / T10 |
-| GET/DELETE `/v1/sessions/{session_id}` | path UUID → SessionResponse | DESIGNED, chưa mount / T10 |
+| POST `/v1/sessions` | SessionCreateRequest → SessionResponse | T10 repository VERIFIED; HTTP chưa mount / T26 |
+| GET/DELETE `/v1/sessions/{session_id}` | path UUID → SessionResponse | T10 repository VERIFIED; HTTP chưa mount / T26 |
 | POST `/v1/sessions/{session_id}/documents` | DocumentRegisterRequest → 202 DocumentRegisterResponse | DESIGNED, chưa mount / T12 |
 | GET `/v1/sessions/{session_id}/documents` | cursor, limit 1–50 → DocumentListResponse | DESIGNED, chưa mount / T12 |
 | DELETE `/v1/sessions/{session_id}/documents/{document_id}` | path UUIDs → DetachResponse | DESIGNED, chưa mount / T12 |
@@ -387,7 +497,7 @@ T35 sẽ thêm client FastAPI/HTTPX độc lập chạy thật, xử lý chunk b
 <a id="r08"></a>
 ## R08. Citations, xóa chat và retained index
 
-**T03 locator structural schemas VERIFIED; parsing/resolver/scope/lifecycle runtime DESIGNED — T10/T16/T24/T25.**
+**T03 locator structural schemas và T10 PG session scope/lifecycle VERIFIED; parsing/citation resolver/stream revalidation DESIGNED — T16/T24/T25.**
 
 | Format | Vị trí nguồn |
 | --- | --- |

@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: T01–T09 nền tảng, corpus và authentication đã triển khai, kiểm chứng local.** T09 xác thực service identity + JWT RS256, bounded JWKS cache/rotation và local issuer qua HTTP thật. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T10–T36 còn trong backlog.
+> **Trạng thái: T01–T10 nền tảng, corpus, authentication và metadata đã triển khai, kiểm chứng local.** T10 có Alembic schema, session repository và scope resolver trên PostgreSQL thật; T09 xác thực service identity/JWT/JWKS qua HTTP thật. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T11–T36 còn trong backlog.
 
 ## Phạm vi đã chốt
 
@@ -36,7 +36,7 @@ uv run python scripts/export_openapi.py --check
 uv run python scripts/check_docs.py
 ```
 
-Trong sandbox hoặc máy không ghi được cache uv của user, đặt `UV_CACHE_DIR` và `UV_PYTHON_INSTALL_DIR` vào `.uv-cache`/`.uv-python` trong repository trước khi chạy; hai thư mục đã được ignore. `uv sync` tạo `.venv` từ lock. Nhóm `api` đã IMPLEMENTED cho health skeleton; nhóm `ingestion` mới LOCKED/DESIGNED và nhóm `inference` để trống đến T17 để không kéo model runtime nặng vào API.
+Trong sandbox hoặc máy không ghi được cache uv của user, đặt `UV_CACHE_DIR` và `UV_PYTHON_INSTALL_DIR` vào `.uv-cache`/`.uv-python` trong repository trước khi chạy; hai thư mục đã được ignore. `uv sync` tạo `.venv` từ lock. Nhóm `api` đã IMPLEMENTED cho health skeleton và bao gồm nhóm `metadata` từ T10 (SQLAlchemy async, Psycopg, Alembic); nhóm `ingestion` bao gồm metadata nhưng worker vẫn DESIGNED. Nhóm `inference` để trống đến T17.
 
 Typed settings đọc environment hoặc `.env`: `DATABASE_URL`, `REDIS_URL` và `QDRANT_URL` là bắt buộc; `DATABASE_PASSWORD_FILE` cho phép API đọc Docker secret tách khỏi DSN. Biến rỗng trong example được bỏ qua, DSN/credential không xuất hiện trong repr hoặc traceback chuẩn hóa. Bảng đầy đủ nằm ở [RUNBOOK R02](RUNBOOK.md#r02).
 
@@ -82,7 +82,7 @@ uv run python scripts/export_openapi.py --check
 `Authorization: Bearer <JWT>` và `X-RAG-Service-Key`; app lấy từ service identity,
 user lấy từ `sub` đã verify. JWT phải có signed `app_id` khớp app, `iss`, `aud`,
 `exp`, `nbf`, `iat`; chỉ RS256. Chưa cấu hình auth thì `/v1` trả 503, không bypass.
-Health routes vẫn public. Principal chưa cấp quyền session/document (T10 trở đi).
+Health routes vẫn public. T10 repository kiểm thêm owner/session/link/version/generation; principal tự nó không cấp quyền tài liệu.
 
 ```powershell
 uv run python -m rag_core.auth.local_issuer init --directory .local/auth
@@ -104,6 +104,35 @@ Endpoint `/v1/auth-test` chỉ được mount trong test. Application hiện v�
 hai health routes; request đã authenticate tới business route chưa implement trả
 404. T09 chưa dựng issuer trong Compose hay tích hợp Scarlet. Evidence:
 [H-T09-A01](docs/handoffs.md#h-t09-a01).
+
+## Metadata và session scope T10
+
+`PostgresSessionRepository` triển khai create/get/delete session, detach và snapshot
+scope từ một SQL statement. External session ID chỉ unique trong app + user; session
+mới rỗng. Tombstone không hồi sinh, delete/detach lặp lại giữ revision, link mới cần
+registration mới. Scope chỉ chứa các cặp version/generation đã ready trong session;
+subset ngoài quyền trả404, rỗng409, deleted410, selected chưa ready409.
+
+Migration `0001_session_metadata` chạy bằng lệnh operator, không tự chạy khi API boot.
+Với `DATABASE_URL` và optional `DATABASE_PASSWORD_FILE` trỏ tới DB đích đã kiểm:
+
+```powershell
+uv run alembic upgrade head
+uv run alembic current
+```
+
+[RUNBOOK R04](RUNBOOK.md#r04) có schema ownership, mapping, transaction/revision contract,
+credential riêng và commands cho PostgreSQL kiểm thử tách biệt. Acceptance đã chạy:
+
+```powershell
+uv run pytest tests/integration/test_session_scope.py -v -s --tb=short
+uv run pytest tests/integration/test_metadata_migrations.py -v -s --tb=short
+```
+
+Tests cần `RAG_TEST_DATABASE_URL` tới service riêng, không tự thay PG bằng mock.
+Evidence: [H-T10-A01](docs/handoffs.md#h-t10-a01). Business routes vẫn chưa mount theo
+R05/T26; storage reader T11, registration/outbox dispatch T12 và worker/chunks/vector
+T19 chưa triển khai. Snapshot phải được consumer revalidate trước khi phát evidence/answer.
 
 ## Corpus T04–T08: setup và tái tạo
 
@@ -157,8 +186,9 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T01 VERIFIED:** Python prerequisites và quality nền tảng. **T02 VERIFIED:** Docker start/stop/health, dependency probes, loopback/internal ports và restart persistence.
 - **T03 VERIFIED contracts:** schemas, designed/served OpenAPI snapshots và examples; ownership/readiness/tokenizer enforcement/query/SSE runtime vẫn theo task sau.
 - **T04–T08 VERIFIED corpus:** từng domain và all-domain setup/validation, tải mới vào root độc lập, unchanged gold, stable reruns và missing-file rejection. Mỗi session thực hiện một task theo [prompt mẫu](docs/task-session-prompt.md).
-- **T09 VERIFIED authentication:** service identity + RS256 JWT, local issuer, bounded JWKS rotation/cache và HTTP acceptance. Dừng sau T09; T10 dependencies đã sẵn sàng sau completion commit.
-- **T10–T12:** session và storage registration.
+- **T09 VERIFIED authentication:** service identity + RS256 JWT, local issuer, bounded JWKS rotation/cache và HTTP acceptance.
+- **T10 VERIFIED metadata:** PG migrations, owner-bound session/link repository, revision và exact version/generation snapshots. T11 đủ dependencies sau completion commit; dừng sau T10.
+- **T11–T12:** storage reader và upload registration.
 - **T13–T19:** format/OCR matrix, model setup, ingestion commands.
 - **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.
 - **T27–T29:** admin URL/login, UI workflows.

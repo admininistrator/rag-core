@@ -1,0 +1,20 @@
+# Isolated, opt-in PG acceptance service. Does not alter the application stack.
+name: rag-core-metadata-test
+services:
+  postgres:
+    image: postgres:17.11-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0
+    environment:
+      POSTGRES_DB: t10_acceptance
+      POSTGRES_USER: rag_core_test
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    ports: ["127.0.0.1:55432:5432"]
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag_core_test -d t10_acceptance"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+secrets:
+  postgres_password:
+    file: ./.local/secrets/t10_postgres_password

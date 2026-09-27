@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-09-27 / T10-A01 COMPLETE after inspected completion commit:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T09 `9e67d5d513c751930e4548ae9c292501444963a4` matched origin/main. Metadata schema/repository/scope implemented; real PG18scope +1migration and325unit/contract/security PASS. [T10 evidence](#h-t10-a01). Completion subject `feat(T10): add session-scoped metadata persistence`; COMPLETE effective only after successful inspected commit. Authorized origin/main push/hash equality reported post-execution. T11 dependencies T10/T02 ready after closure; **STOP AFTER T10**. Inherited T07 scratch retained. Initial pytest long traceback exposed existing local PG credential; value excluded from this handoff/Git, T10 now uses separate ignored credential, original credential not rotated (outside scoped change; operator follow-up).
+
 
 - **Current 2026-09-27 / T09-A01 COMPLETE after inspected completion commit:** direct agent, exact model/effort unavailable, no subagents. Service identity/RS256/JWKS/local issuer implemented;51security +1real HTTP +269unit/contract PASS, Ruff/mypy16/locked83/50/OpenAPI PASS. Scoped19files; inherited T07 scratch retained. [T09 evidence](#h-t09-a01). Completion subject `feat(T09): implement authenticated application principals`; COMPLETE requires successful inspected commit; authorized push and remote hash equality reported post-execution. T10/T02 dependencies ready after T09 commit; **STOP AFTER T09**, do not implement T10.
 
@@ -3944,3 +3946,341 @@ then inspect actual commit19file inventory/whitespace, execute authorized
 `git push origin main`, and compare `git rev-parse HEAD` with
 `git ls-remote origin refs/heads/main`. Post-execution results are reported to the user,
 not embedded as fabricated pre-commit success. If commit fails, T09 is not COMPLETE.
+
+<a id="h-t10-a01"></a>
+## H-T10-A01 — Phase 2 / Metadata schema and session scope
+
+Direct Codex agent; exact model/effort unavailable, no subagents. Started/ended2026-09-27.
+CWD for every command below: `C:\Users\Admin\Documents\GitHub\rag-core`.
+Baseline main/HEAD `9e67d5d513c751930e4548ae9c292501444963a4`, T09 COMPLETE;
+`git ls-remote origin refs/heads/main` returned the same hash. T02/T09 execution notes,
+summaries, current handoff, AGENTS/task-session prompt, P01/P04/P06/P13, README/RUNBOOK
+read before code. Inherited untracked `.ptmp-t07-a02/`, `.tmp-t07-a02/` and ACL warnings
+for legacy `.pytmp-t07-a02/`, nested pytest temp, `UsersAdminAppDataLocalTempt07a03/`
+and global Git ignore retained; no cleanup. No existing T10 candidate.
+
+Allowed: core domain/port + PG adapter, frozen Alembic revision/environment, isolated
+test Compose, integration/config tests, dependency groups/lock, five living docs.
+User authorizes scoped commit and origin/current-branch push; no force/merge/deploy.
+R05 explicitly leaves business HTTP mounting to T26; T10 implements repository methods,
+not placeholder HTTP success or T12 registration/worker.
+
+### Environment and failures retained
+
+PowerShell uv environment for commands below:
+
+```powershell
+$env:UV_CACHE_DIR='.uv-cache'
+$env:UV_PYTHON_INSTALL_DIR='.uv-python'
+```
+
+Initial sandbox `docker compose ps` could not read user Docker config and daemon pipe;
+escalated `docker context show; docker compose ps` reported `desktop-linux` and missing
+`dockerDesktopLinuxEngine` pipe. Started installed Docker Desktop hidden:
+
+```powershell
+Start-Process -FilePath 'C:\Program Files\Docker\Docker\Docker Desktop.exe' -WindowStyle Hidden
+docker info --format '{{.ServerVersion}}'
+docker compose ps
+```
+
+Exit0; actual server `29.5.2`, existing application project had no running containers.
+No automatic approval rejection. Escalated calls permit Docker/network/loopback tests.
+Application volumes and sources were not reset or migrated.
+
+After adding shared metadata group to api/ingestion, `uv lock` then
+`uv sync --locked --group dev --group api`: exit0, actual excerpt:
+
+```text
+Resolved 83 packages in 807ms
+Installed 6 packages in 141ms
+ + alembic==1.20.0
+ + greenlet==3.5.6
+ + mako==1.4.1
+ + markupsafe==3.0.3
+ ~ rag-core==0.1.0 (from file:///C:/Users/Admin/Documents/GitHub/rag-core)
+ + sqlalchemy==2.0.53
+```
+
+No package version upgrades; existing locked packages enter installed graph. Lock adds
+asyncio extra and official same-version greenlet platform wheels, no heavyweight model
+dependency. Official [SQLAlchemy Psycopg dialect](https://docs.sqlalchemy.org/en/20/dialects/postgresql.html),
+[Alembic tutorial](https://alembic.sqlalchemy.org/en/latest/tutorial.html),
+[Psycopg async](https://www.psycopg.org/psycopg3/docs/advanced/async.html) and
+[pytest-asyncio loop factory](https://pytest-asyncio.readthedocs.io/en/stable/reference/hooks.html)
+informed driver/migration/Windows configuration.
+
+First `uv run pytest tests/integration/test_session_scope.py -v -s` (basetemp `.local/10a`)
+exit1,16setup errors; migration had already succeeded. Exact redacted diagnostic:
+
+```text
+0001_session_metadata (head)
+Psycopg cannot use the 'ProactorEventLoop' to run in async mode. Please use a compatible event loop
+======================= 2 warnings, 16 errors in 5.51s ========================
+```
+
+Long pytest traceback printed driver connection kwargs including an existing local
+PostgreSQL password `[REDACTED]`. It is not copied into this file or any tracked artifact.
+This was an actual diagnostic disclosure, not a hypothetical warning. T10 test service
+was changed to an independently generated ignored `t10_postgres_password`, recreated
+with disposable tmpfs, and subsequent runs use `--tb=short` and fresh local cache.
+Original T02 credential/file/database was not changed; operator should rotate the
+exposed original local credential separately. New test credential is not a rotation
+of the original. No claim that previous tool transcript can be erased.
+
+Fix: integration-only pytest-asyncio SelectorEventLoop factory, as required by Psycopg
+on Windows. Initial Ruff SIM117 and six mypy RowMapping-vs-Mapping diagnostics fixed
+using combined transaction context and SQLAlchemy RowMapping types; no test skip or
+semantics change. Initial docs check failed missing `h-t10-a01` before this evidence
+was appended; final documentation check below supersedes it.
+
+`uv run python -c "import sys, sqlalchemy, alembic, psycopg; print('Python',sys.version.split()[0], 'SQLAlchemy',sqlalchemy.__version__, 'Alembic',alembic.__version__, 'Psycopg',psycopg.__version__)"`
+exit0:
+
+```text
+Python 3.12.4 SQLAlchemy 2.0.53 Alembic 1.20.0 Psycopg 3.3.5
+```
+
+### DoD-1 — Empty DB migration and real PG scope
+
+Separate secret creation (exit0, no credential output):
+
+```powershell
+uv run python -c "from pathlib import Path; import secrets; p=Path('.local/secrets/t10_postgres_password'); p.touch(exist_ok=False); p.write_text(secrets.token_hex(32),encoding='utf-8'); print('Created separate ignored T10 PostgreSQL secret')"
+docker compose -f compose.metadata-test.yaml up -d --force-recreate --wait
+$env:DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+$env:RAG_TEST_DATABASE_URL=$env:DATABASE_URL
+$env:PYTEST_ADDOPTS='--basetemp=.local/10b --tb=short -o cache_dir=.local/10cache'
+uv run alembic upgrade head
+uv run alembic current
+uv run pytest tests/integration/test_session_scope.py -v -s
+```
+
+Each command exit0. Recreate is only the disposable T10 project, never application
+Compose. Expected: new empty PG database, revision head, owner/session isolation.
+Actual excerpt:
+
+```text
+Created separate ignored T10 PostgreSQL secret
+ Container rag-core-metadata-test-postgres-1 Recreated
+ Container rag-core-metadata-test-postgres-1 Healthy
+0001_session_metadata (head)
+============================= 16 passed in 3.04s ==============================
+```
+
+After adding source/generation/job/outbox constraint coverage and explicit assertion
+that newly created DBs have zero public tables, final DoD-1 command (exit0):
+
+```powershell
+$env:PYTEST_ADDOPTS='--basetemp=.local/10d --tb=short -o cache_dir=.local/10cache'
+uv run pytest tests/integration/test_session_scope.py -v -s
+```
+
+Actual output excerpt, all18tests executed with PG and no mocks:
+
+```text
+collecting ... collected 18 items
+Real PostgreSQL: separate database t10_test_d59c32c0009943d0a70a2f66ea63f3ce, public tables before migration=0
+Real PostgreSQL: migrated separate database t10_test_d59c32c0009943d0a70a2f66ea63f3ce
+PASS isolation: app/user/current-session, explicit new registration, independent detach
+PASS repeated/concurrent delete: one revision, retained rows byte-equivalent, no resurrection
+PASS real lock race: old coherent snapshot then revision invalidation; replay stays detached
+============================= 18 passed in 2.47s ==============================
+```
+
+Coverage: app/user/same-owner-other-session; concurrent create unique mapping; same
+external ID legal under other principals; empty/deleted/unknown/duplicate/oversized
+subset; mixed ready + every8nonready states fail without partial scope; foreign subset
+404; explicit ready subset; exact version/generation pairs and owner FKs; unpublished
+generation refusal; source fingerprint required; max50active; transactional rollback.
+No broad library listing or global fallback exists.
+
+### DoD-2 — Idempotent delete, concurrent snapshot and separate DB reproduction
+
+Lifecycle tests above execute real concurrent connections: five concurrent deletes
+produce one tombstone/revision bump; all source/document/version/generation/job/outbox
+rows compare equal before/after. Pending worker publication does not recreate links;
+detached registration replay stays detached, new registration can attach explicitly.
+A held row lock plus observed `pg_stat_activity.wait_event_type='Lock'` proves detach
+was blocked while old consistent snapshot was read; after commit revision invalidates
+that snapshot. Reindex publication invalidates by pair equality even without revision
+change; staging generation leaves old active scope unchanged. No mock clock/DB/lock.
+
+Separate command, same safe environment, exit0:
+
+```powershell
+uv run pytest tests/integration/test_metadata_migrations.py -v -s
+```
+
+Actual output:
+
+```text
+collecting ... collected 1 item
+Real PostgreSQL: separate database t10_test_362ebdcee89f489f9e3cd9a9e93ddd8c, public tables before migration=0
+Real PostgreSQL: migrated separate database t10_test_362ebdcee89f489f9e3cd9a9e93ddd8c
+PASS separate empty PG migration -> repeat head -> downgrade base -> upgrade head: identical schema
+============================== 1 passed in 2.99s ==============================
+```
+
+Compares columns/types/defaults/nullability plus every constraint/index. Tests drop only
+their own random `t10_test_<uuid>` databases. Migration admin URL is restricted to
+loopback `t10_acceptance`; fail missing config/service, never skip/SQLite substitution.
+`downgrade base` is destructive only inside this throwaway test DB. Main app data untouched.
+
+Service/version inspection, both exit0:
+
+```powershell
+docker compose -f compose.metadata-test.yaml ps
+docker compose -f compose.metadata-test.yaml exec -T postgres psql -U rag_core_test -d t10_acceptance -c 'SELECT version(); SELECT version_num FROM alembic_version;'
+```
+
+Actual excerpt:
+
+```text
+rag-core-metadata-test-postgres-1 ... Up 43 seconds (healthy) 127.0.0.1:55432->5432/tcp
+PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+0001_session_metadata
+```
+
+Pinned image digest `sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0`;
+separate project/tmpfs, no application volume/host-port changes. Real services used:
+PostgreSQL17.11 for T10; loopback JWKS/Uvicorn for inherited T09 regression only.
+No provider/model/LLM/Qdrant/MinIO inference/retention call was claimed live. T10 adapter
+has no storage/vector clients or derivative deletion methods; retained metadata rows
+are verified, actual pipeline/chunks/vector integration remains T19/T32.
+
+### D2 — Regression, types, lint and locked environment
+
+Separate regression shell (no DB environment required), exit0:
+
+```powershell
+$env:PYTEST_ADDOPTS='--basetemp=.local/ar --tb=short -o cache_dir=.local/10regcache'
+uv run pytest tests/unit tests/contract tests/security
+uv run python scripts/export_openapi.py --check
+```
+
+Actual output excerpt:
+
+```text
+collected 325 items
+tests\unit\test_metadata_config.py ....                                  [ 57%]
+tests\security\test_local_auth_http.py .                                 [100%]
+======================= 325 passed in 108.13s (0:01:48) =======================
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+`uv run ruff check .`, `uv run mypy src`,
+`uv sync --locked --group dev --group api` each exit0:
+
+```text
+warning: Encountered error: Access is denied. (os error 5)
+warning: Encountered error: Access is denied. (os error 5)
+warning: Encountered error: Access is denied. (os error 5)
+All checks passed!
+Success: no issues found in 24 source files
+Resolved 83 packages in 2ms
+Checked 55 packages in 4ms
+```
+
+Root Ruff warnings are inherited inaccessible scratch; explicit
+`uv run ruff check src tests/integration tests/unit/test_metadata_config.py migrations`
+exit0 `All checks passed!`. Config tests check malformed/missing DSN and password file
+errors without echoing input; no tests written for prose-only changes.
+
+### D1/D3/D4/D5/D6 — Review and completion boundary
+
+- D1: task/dependency scope reviewed, `git diff --check` exit0/no output; no AGENTS/plan,
+  corpus/prompt, auth/runtime API, application Compose, source data or Scarlet edits.
+- D3: both DoD rows above run individually on real PG; no credential/provider gate
+  substituted. Current final acceptance19integration +325regression tests.
+- D4: README/RUNBOOK describe schema ownership, mapping, CLI env, migrations/recovery,
+  internal registration transaction, revision/pair revalidation, test setup, Windows
+  loop and HTTP/storage/worker limitations; tasks/summary/evidence updated together.
+- D5: schema is first revision, frozen DDL/transaction advisory lock, no startup migration,
+  no destructive lifecycle cascade. Forward upgrade/no app client change; downgrade
+  documented destructive and tested only in own DB. Lock official sources/no upgrades.
+  Credential diagnostic incident above is retained/redacted; no secret value in Git.
+- D6: stage exact task files; completion subject
+  `feat(T10): add session-scoped metadata persistence`. COMPLETE only valid after
+  successful inspected commit. Actual hash/push/remote equality returned post-execution,
+  not fabricated inside its own commit. T11 dependencies T10/T02 ready then; stop.
+
+Final review command outputs are appended below after documentation closure.
+
+### Final D4/D5/D6 evidence
+
+Final migration helper is injected as a fixture rather than importing `conftest`
+directly, avoiding cross-suite module name collisions. Checked alongside auth tests
+(same PG environment; basetemp `.local/10e`), exit0:
+
+```powershell
+uv run pytest tests/integration/test_metadata_migrations.py tests/security/test_auth.py -q -s
+```
+
+```text
+Real PostgreSQL: separate database t10_test_d6fcc54bf30f42c49c55d58dd1334585, public tables before migration=0
+Real PostgreSQL: migrated separate database t10_test_d6fcc54bf30f42c49c55d58dd1334585
+PASS separate empty PG migration -> repeat head -> downgrade base -> upgrade head: identical schema
+52 passed in 35.47s
+```
+
+`uv run ruff check src tests/integration tests/unit/test_metadata_config.py migrations`,
+`uv run mypy src`, `uv run python scripts/check_docs.py`, `git diff --check` each exit0:
+
+```text
+All checks passed!
+Success: no issues found in 24 source files
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 265
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+`git check-ignore .local/secrets/t10_postgres_password .local/secrets/postgres_password`
+exit0, both paths ignored. Git author was already configured; not changed. Read/reviewed
+actual adapter/domain/port/migration/test code and README/RUNBOOK/dependency diff. No
+unrelated dependency upgrade, source/prompt edit, URL service credential or fake identity.
+
+Completion contains exactly24task files; task COMPLETE label is contingent on the
+successful commit below. Expected inherited scratch remains untracked after commit.
+
+Actual explicit staging command (exit0), no `git add .`:
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md pyproject.toml uv.lock alembic.ini compose.metadata-test.yaml migrations/env.py migrations/script.py.mako migrations/versions/0001_session_metadata.py src/rag_core/adapters/__init__.py src/rag_core/adapters/persistence/__init__.py src/rag_core/adapters/persistence/database.py src/rag_core/adapters/persistence/sessions.py src/rag_core/domain/__init__.py src/rag_core/domain/metadata.py src/rag_core/ports/__init__.py src/rag_core/ports/metadata.py tests/integration/conftest.py tests/integration/test_session_scope.py tests/integration/test_metadata_migrations.py tests/unit/test_metadata_config.py
+git diff --cached --check
+git diff --cached --stat
+git diff --name-only
+```
+
+Cached check and unstaged diff empty; stage24files, code/tests/migration/config/docs
+only. Before this final evidence append, stat reported1887insertions/19deletions.
+Actual secret/artifact check below exit0; it prints only the verdict, never secret values:
+
+```powershell
+uv run python -c "from pathlib import Path; import subprocess; names=subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines(); secrets=[Path('.local/secrets/postgres_password').read_bytes().strip(),Path('.local/secrets/t10_postgres_password').read_bytes().strip()]; blobs=[subprocess.check_output(['git','show',':'+name]) for name in names]; assert len(names)==24; assert all(not name.startswith(('.local/','corpus-documents/','.env','.ptmp','.tmp')) for name in names); assert not any(secret and secret in blob for secret in secrets for blob in blobs), 'staged credential detected'; assert not any(b'-----BEGIN PRIVATE KEY-----' in blob for blob in blobs); print('PASS exact 24-file stage; no local credentials/private keys or excluded artifacts')"
+```
+
+```text
+PASS exact 24-file stage; no local credentials/private keys or excluded artifacts
+```
+
+Stopped only test PostgreSQL after verification; `docker compose -f compose.metadata-test.yaml stop`
+and `docker compose -f compose.metadata-test.yaml ps --all` exit0:
+
+```text
+ Container rag-core-metadata-test-postgres-1 Stopped
+rag-core-metadata-test-postgres-1 ... Exited (0) Less than a second ago
+```
+
+After this append, restage only handoffs, rerun docs/cached review, then execute
+`git commit -m "feat(T10): add session-scoped metadata persistence"`. Inspect commit24files
+and `git show --check`; authorized `git push origin main`, then compare
+`git rev-parse HEAD` against `git ls-remote origin refs/heads/main`. Actual post-execution
+hash/status belongs in user report; no self-reference hash or fabricated future success.
