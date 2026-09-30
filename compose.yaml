@@ -33,6 +33,25 @@ services:
     restart: unless-stopped
     networks: [backend]
 
+  dispatcher:
+    profiles: [registration]
+    image: rag-core-dispatcher:t12
+    build:
+      context: .
+      dockerfile: docker/dispatcher.Dockerfile
+    environment:
+      DATABASE_URL: postgresql://rag_core@postgres:5432/rag_core
+      DATABASE_PASSWORD_FILE: /run/secrets/postgres_password
+      REDIS_URL: redis://redis:6379/0
+    secrets: [postgres_password]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [backend]
+
   qdrant:
     image: qdrant/qdrant:v1.19.1-unprivileged@sha256:801777072776dc81b2a9dd2007b2ed487571f21ecd30efffd15ddb1671f2193d
     volumes:

@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: T01–T11 nền tảng, corpus, authentication, metadata và storage reader đã triển khai, kiểm chứng local.** T11 S3 reader và IAM chỉ đọc đã kiểm trên MinIO thật; T10 có Alembic schema, session repository và scope resolver trên PostgreSQL thật; T09 xác thực service identity/JWT/JWKS qua HTTP thật. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T12–T36 còn trong backlog.
+> **Trạng thái: T01–T12 nền tảng, corpus, authentication, metadata, storage reader và registration/outbox đã triển khai, kiểm chứng local.** T12 xác minh nguồn trên MinIO, ghi idempotency/link/job/outbox trong PostgreSQL và phát job qua Redis/Celery; ingestion worker T19 chưa có nên tài liệu vẫn queued. T11 S3 reader/IAM chỉ đọc đã kiểm trên MinIO thật; T10 schema/scope trên PostgreSQL thật; T09 xác thực qua HTTP thật. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO, `registration` thêm dispatcher. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T13–T36 còn trong backlog.
 
 ## Phạm vi đã chốt
 
@@ -18,7 +18,7 @@ RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp tr
 
 ## Kiến trúc hiện tại và dự kiến
 
-T02 đã có Python 3.12/FastAPI health skeleton, PostgreSQL 17, Qdrant, Redis và MinIO tùy chọn trong Docker Compose trên Windows. Celery/outbox, Docling/Tesseract OCR, BGE-M3 + multilingual reranker, DeepSeek/Anthropic adapters và Admin UI Jinja2/CSS/JavaScript vẫn là thiết kế cho task sau. Compose không khai báo worker/dispatcher/inference khi các process đó chưa được triển khai.
+T02 đã có Python 3.12/FastAPI health skeleton, PostgreSQL 17, Qdrant, Redis và MinIO tùy chọn trong Docker Compose trên Windows. T12 thêm outbox dispatcher qua Celery/Redis trong profile `registration`; worker nhận và xử lý task, Docling/Tesseract OCR, BGE-M3 + multilingual reranker, DeepSeek/Anthropic adapters và Admin UI Jinja2/CSS/JavaScript vẫn là thiết kế cho task sau. Compose chưa khai báo worker/inference.
 
 Máy mục tiêu: RAM 16 GB, RTX 4060 Laptop 8 GB VRAM; tài liệu nguồn khoảng <=1 GB; kiểm thử 15–20 người dùng đồng thời. Chưa có số đo RAM/VRAM/độ trễ hoặc benchmark chất lượng.
 
@@ -131,8 +131,33 @@ uv run pytest tests/integration/test_metadata_migrations.py -v -s --tb=short
 
 Tests cần `RAG_TEST_DATABASE_URL` tới service riêng, không tự thay PG bằng mock.
 Evidence: [H-T10-A01](docs/handoffs.md#h-t10-a01). Business routes vẫn chưa mount theo
-R05/T26; storage reader đã VERIFIED ở T11, registration/outbox dispatch T12 và worker/chunks/vector
-T19 chưa triển khai. Snapshot phải được consumer revalidate trước khi phát evidence/answer.
+R05/T26; storage reader đã VERIFIED ở T11, registration/outbox dispatch đã VERIFIED ở T12;
+worker/chunks/vector T19 chưa triển khai. Snapshot phải được consumer revalidate trước khi phát evidence/answer.
+
+## Upload registration và outbox T12
+
+`PostgresRegistrationRepository` nhận principal đã xác thực, core session UUID,
+`Idempotency-Key` và `DocumentRegisterRequest`. App backend phải xác minh upload thuộc
+user/session trước khi gọi; core đọc đúng app storage alias/prefix và kiểm bytes thực,
+version/SHA-256. Cùng key/body trong app+owner+session trả cùng job; khác body hoặc
+external upload ID dùng lại với key khác trả409. Link/job/outbox ghi trong một PG
+transaction; Redis mất kết nối giữ event chờ. Dispatcher phát Celery task
+`rag_core.ingest`, consumer T19 sẽ dùng `claim_job` để chống xử lý lặp.
+
+Migration `0002_upload_registrations` chạy bằng `uv run alembic upgrade head` trên DB
+đã kiểm. Dispatcher có CLI `uv run python -m rag_core.adapters.broker.dispatcher`
+với `DATABASE_URL`, optional `DATABASE_PASSWORD_FILE` và `REDIS_URL`; Compose profile
+`registration` có image riêng, không tự mount HTTP routes. Test tích hợp thật:
+
+```powershell
+uv sync --locked --group dev --group api --group ingestion
+uv run pytest tests/integration/test_registration_jobs.py -v -s
+```
+
+Test cần isolated PostgreSQL `RAG_TEST_DATABASE_URL`, MinIO test IAM và Redis test
+theo [RUNBOOK R04](RUNBOOK.md#r04). Khi T19 chưa triển khai, dispatcher chỉ đưa
+message vào broker, job không thể đạt `ready`; không dùng message Redis làm trạng
+thái nguồn. [H-T12-A01](docs/handoffs.md#h-t12-a01) ghi bằng chứng và giới hạn.
 
 ## Corpus T04–T08: setup và tái tạo
 
@@ -188,7 +213,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T04–T08 VERIFIED corpus:** từng domain và all-domain setup/validation, tải mới vào root độc lập, unchanged gold, stable reruns và missing-file rejection. Mỗi session thực hiện một task theo [prompt mẫu](docs/task-session-prompt.md).
 - **T09 VERIFIED authentication:** service identity + RS256 JWT, local issuer, bounded JWKS rotation/cache và HTTP acceptance.
 - **T10 VERIFIED metadata:** PG migrations, owner-bound session/link repository, revision và exact version/generation snapshots.
-- **T11 VERIFIED storage reader:** HEAD/GET theo app/alias/bucket/prefix cấu hình; checksum hoặc version ID, giới hạn stream/temp, MinIO IAM reader chỉ đọc kiểm chứng thật. [RUNBOOK R04](RUNBOOK.md#r04) có cấu hình/test/trust contract. Reader chưa nối HTTP/job; T12 đăng ký upload còn DESIGNED.
+- **T11 VERIFIED storage reader:** HEAD/GET theo app/alias/bucket/prefix cấu hình; checksum hoặc version ID, giới hạn stream/temp, MinIO IAM reader chỉ đọc kiểm chứng thật. [RUNBOOK R04](RUNBOOK.md#r04) có cấu hình/test/trust contract.
+- **T12 VERIFIED registration/outbox:** real MinIO/PG/Redis integration, owner/session idempotency, detach, retry, crash redelivery và dispatcher image/CLI. Business HTTP mount và ingestion worker vẫn DESIGNED ở T26/T19.
 - **T13–T19:** format/OCR matrix, model setup, ingestion commands.
 - **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.
 - **T27–T29:** admin URL/login, UI workflows.

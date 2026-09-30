@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T11 nền tảng, corpus, authentication, metadata và storage reader IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 auth qua HTTP thật; T10 session repository/scope/migrations trên PG17.11 thật; T11 read-only S3 adapter trên MinIO thật. API chỉ mount health; business HTTP/query/SSE runtime vẫn DESIGNED. T12–T36 chưa bắt đầu.
+> **T01–T12 nền tảng, corpus, authentication, metadata, storage reader và registration/outbox IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 auth qua HTTP thật; T10 session repository/scope/migrations trên PG17.11 thật; T11 read-only S3 adapter trên MinIO thật; T12 register và outbox trên PG/Redis/MinIO thật. API chỉ mount health; business HTTP/query/SSE runtime vẫn DESIGNED. T13–T36 chưa bắt đầu.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -22,7 +22,7 @@
 | Service identity/JWT/JWKS/local issuer | VERIFIED local HTTP; protected endpoint chỉ trong tests | T09 |
 | Session/schema/scope repository | VERIFIED real PostgreSQL; HTTP routes chưa mount | T10 |
 | S3/MinIO read adapter | VERIFIED real local MinIO; chưa nối HTTP/job | T11 |
-| Upload registration | DESIGNED | T12 |
+| Upload registration, job repository/outbox | VERIFIED real PG/MinIO/Redis; HTTP chưa mount, worker chưa có | T12 |
 | Parsing/OCR/index | DESIGNED | T13–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
 | Admin UI | DESIGNED | T27–T29 |
@@ -156,7 +156,7 @@ Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` r
 <a id="r03"></a>
 ## R03. Auth, app registration và trust boundary
 
-**T09 authentication VERIFIED local; T11 storage reader VERIFIED local; app upload ownership/registration T12 và admin T27 vẫn DESIGNED.**
+**T09 authentication VERIFIED local; T11 storage reader VERIFIED local; T12 registration/outbox VERIFIED local. App vẫn chịu trách nhiệm xác nhận user/session upload ownership; admin T27 vẫn DESIGNED.**
 
 - Core operator đăng ký app bằng cấu hình tin cậy: app ID, service credential, JWT issuer/audience/JWKS và storage alias/prefix.
 - Mỗi API nghiệp vụ gửi `Authorization: Bearer <user-JWT>` và `X-RAG-Service-Key: <app-service-key>`.
@@ -259,14 +259,16 @@ repository/scope gate bên dưới, không thay auth hoặc mount query/registra
 <a id="r04"></a>
 ## R04. Session mapping và upload registration
 
-**T10 schema/session repository/scope VERIFIED trên PG thật; T11 storage reader VERIFIED trên MinIO thật; HTTP/registration/worker vẫn DESIGNED — T12/T19/T26.**
+**T10 schema/session repository/scope VERIFIED trên PG thật; T11 storage reader VERIFIED trên MinIO thật; T12 registration/outbox VERIFIED trên PG/MinIO/Redis thật; business HTTP/worker vẫn DESIGNED — T26/T19.**
 
 ### Schema ownership và migration T10
 
 Core sở hữu PostgreSQL metadata riêng. App không ghi trực tiếp DB; app identity nằm
 trong registry T09, owner là JWT subject, không tạo user-account database. Revision
 `0001_session_metadata` tạo `sessions`, `documents`, `document_versions`,
-`index_generations`, `session_documents`, `ingestion_jobs`, `outbox_events`.
+`index_generations`, `session_documents`, `ingestion_jobs`, `outbox_events`; revision
+`0002_upload_registrations` thêm idempotency records với unique app+owner+session+key
+và app+owner+session+external upload ID.
 Composite foreign keys mang app+owner xuyên session/link/document/version/generation/
 job/outbox. FK không cascade delete; lifecycle chỉ UPDATE session/link. Source references
 và retained generation/job/outbox rows được giữ. Binary nguồn, transcript và chunks
@@ -401,17 +403,17 @@ uv sync --locked --group dev --group api --group ingestion
 uv run --no-sync pytest -q tests/integration/test_storage_reader.py --basetemp .local/t11-pytest
 ```
 
-Fixture script enables versioning only on `rag-core-storage-test`, creates separate reader/uploader IAM users and policies. Test uses unique object key, deletes only its own fixture via uploader, and checks real GET, denied prefix, old version, source change, oversized body, interrupted stream/temp cleanup, denied PUT/DELETE, redirect target not reached and source hash unchanged. [H-T11-A01](docs/handoffs.md#h-t11-a01) contains actual outputs. Business registration/worker wiring remains T12/T19; API readiness still checks only PG/Redis/Qdrant.
+Fixture script enables versioning only on `rag-core-storage-test`, creates separate reader/uploader IAM users and policies. Test uses unique object key, deletes only its own fixture via uploader, and checks real GET, denied prefix, old version, source change, oversized body, interrupted stream/temp cleanup, denied PUT/DELETE, redirect target not reached and source hash unchanged. [H-T11-A01](docs/handoffs.md#h-t11-a01) contains actual outputs. T12 nối reader vào registration; worker T19 chưa có; API readiness vẫn chỉ kiểm PG/Redis/Qdrant.
 
-### Upload registration mục tiêu T12
+### Upload registration T12 — service/dispatcher VERIFIED, HTTP contract DESIGNED
 
 Luồng app bắt buộc:
 
 1. User chọn/upload tài liệu trong một phiên chat của app.
 2. App upload vào S3/MinIO của app; xác minh quyền object thuộc user và upload của session đó.
 3. App tạo/resolve core session bằng external_session_id; lưu core session UUID trong metadata app.
-4. App backend register upload cho core session với Idempotency-Key; không dùng UUID browser gửi mà bỏ ownership checks.
-5. Nhận HTTP 202 với document/job IDs; poll job đến ready hoặc lỗi có cấu trúc.
+4. App backend register upload cho core session với Idempotency-Key; không dùng UUID browser gửi mà bỏ ownership checks. T12 service nội bộ hoạt động, HTTP route sẽ mount ở T26.
+5. Khi HTTP route được mount, nhận 202 với document/job IDs và poll job đến ready hoặc lỗi có cấu trúc. Trước T19, job chỉ có thể `queued` hoặc bị huỷ/thất bại qua fixture; chưa có worker tạo `ready`.
 6. Chỉ query tập tài liệu ready, đúng core session; document subset ngoài session bị từ chối.
 
 Payload mục tiêu cho `POST /v1/sessions/{session_id}/documents`:
@@ -435,7 +437,22 @@ Các chuỗi trên là placeholders, không là dữ liệu đã verify. Schema 
 
 Session mới không tự dùng index cũ. Upload registration mới của cùng file có thể reuse computation cùng owner/fingerprint, nhưng phải tạo link mới hợp lệ. Link ràng buộc version cụ thể, không tự đổi nguồn của citations cũ.
 
-Idempotency-Key scope app+owner+session+request hash; cùng key/body trả cùng job, khác body 409. App retry lỗi transport bằng cùng key; không tạo upload mới chỉ vì HTTP response bị mất.
+Idempotency-Key scope app+owner+session+request hash; cùng key/body trả cùng job, khác body 409. External upload ID dùng lại với key khác cũng trả409; một registration đã detach replay vẫn detached. App retry lỗi transport bằng cùng key; không tạo upload mới chỉ vì HTTP response bị mất. Đọc nguồn được thực hiện qua thread trước PG transaction; app xác nhận user/session ownership bằng identity đã xác thực, còn core đối chiếu storage config và bytes/version/hash thật. Core không thể suy ownership từ S3 key hay ACL.
+
+T12 ghi document/version/job/registration/link/outbox trong một transaction. Outbox dispatcher phát Celery task `rag_core.ingest` vào queue `rag_core_ingestion` trên Redis rồi đánh dấu dispatched trong PG. Crash sau publish trước PG commit có thể tạo hai message cùng event ID; `claim_job` chỉ chuyển `queued -> fetching` một lần, tăng attempts/lease một lần. Dispatcher và consumer kiểm session/link hiện hành, nên deleted/detached session không được hồi sinh. Khi broker lỗi, transaction rollback giữ event pending; rerun phát lại. T19 sẽ triển khai worker parser và lease recovery; chưa gọi `ready` hoặc claim live ingestion.
+
+Chạy trên host từ root với env `DATABASE_URL`, optional `DATABASE_PASSWORD_FILE`, `REDIS_URL` trỏ các service đã kiểm; migration thực hiện riêng trước dispatcher:
+
+```powershell
+uv sync --locked --group dev --group api --group ingestion
+uv run alembic upgrade head
+uv run python -m rag_core.adapters.broker.dispatcher --once
+uv run python -m rag_core.adapters.broker.dispatcher
+```
+
+`--once` phát tối đa một event và exit0 khi không có event; lỗi broker/PG exit1, event vẫn chờ. `--interval` 0.1–60 giây, mặc định1. Compose image riêng `rag-core-dispatcher:t12` ở profile `registration`; chỉ bật sau migration và khi muốn publish vào Redis. Chưa có worker nhận queue trước T19. Stop/start giữ PG/Redis volumes; không dùng down-v. Isolated acceptance: `docker compose -f compose.metadata-test.yaml -f compose.registration-test.yaml up -d --wait postgres redis`, MinIO T11 test fixture theo R04, đặt `RAG_TEST_DATABASE_URL`/`DATABASE_PASSWORD_FILE` như T10 và chạy `uv run pytest tests/integration/test_registration_jobs.py -v -s`; Redis test ở loopback16379/DB15 và đo queue delta, không flush dữ liệu. [H-T12-A01](docs/handoffs.md#h-t12-a01) ghi output thực.
+
+**Ví dụ HTTP mục tiêu, chưa serve trước T26:** `POST /v1/sessions/{session_id}/documents` với `Idempotency-Key: <opaque-key>` và payload trên → `202` cùng `session_id`, `scope_revision`, `document` và `job` (`state: queued`, `retryable: false`). `GET /v1/jobs/{job_id}` poll trạng thái; `POST /v1/jobs/{job_id}/retry` chỉ khi `failed` và `attempts < max_attempts`, chuyển lại `queued`, thêm outbox event; retry cùng lúc khi đã `queued` trả cùng job. Cùng key khác body → `409 idempotency_conflict`; ngoài owner → `404 not_found`; session deleted → `410 session_deleted`; source đổi → `409 source_changed`; broker lỗi không làm register thất bại, job vẫn `queued`. Đừng coi ví dụ là response runtime HTTP đã verify.
 
 <a id="r05"></a>
 ## R05. Endpoint inventory và lỗi

@@ -222,7 +222,7 @@
 <a id="t12"></a>
 ### T12 — Upload registration, idempotency và outbox
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T11, T10.
 - **Tham chiếu kế hoạch:** [P04](plan.md#p04), [P06](plan.md#p06), [P12](plan.md#p12).
 - **Công việc:** Register upload, list/detach session documents, SessionDocument, job status/retry API, transactional outbox dispatcher, lifecycle transitions, dedup phạm vi owner; worker parsing sẽ nối ở T19.
@@ -230,7 +230,9 @@
   1. `uv run pytest tests/integration/test_registration_jobs.py` với PG/Redis/MinIO: same-key same-body, same-key different-body 409, concurrent duplicate, broker unavailable/recovered, owner checks đều PASS.
   2. Outbox event không mất khi crash giữa DB commit và publish; consumer redelivery không nhân link/job; session deleted trước publish không được hồi sinh. RUNBOOK ghi 202/polling/retry/error examples.
 - **Cạm bẫy:** DB commit rồi publish không transaction gây mất job; worker retry không được gắn lại tài liệu; chưa ingestion thì không báo document ready.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `feat(T12): register uploads with durable ingestion jobs`.
+- **Ghi chú thực thi:** T12-A01 | direct Codex agent, model/effort không được runtime công bố; bắt đầu 2026-09-30. Baseline `main`/T11 `06185be330c090d59a5924e449f2502f7b3dc4cb`; hai thư mục scratch T07 untracked giữ nguyên. T11/T10 COMPLETE; đã đọc AGENTS, task-session-prompt, dependency notes, P01/P04/P06/P12/P13, handoffs/summary/README/RUNBOOK. Phạm vi: registration/job/outbox repository, migration, storage validation, broker dispatch, integration tests và tài liệu liên quan. Kế hoạch: giữ idempotency và link/job/outbox trong một PG transaction, dispatcher có thể phát lại an toàn, owner/session checks và MinIO/Redis/PG real tests; chạy từng DoD cùng D1–D6, review, scoped commit/push rồi dừng. Commit dự kiến `feat(T12): register uploads with durable ingestion jobs`. Đang làm rõ ranh giới mount HTTP T12/T26 theo R05.
+
+- **T12-A01 results (COMPLETE effective only after successful inspected commit):** Implemented additive `0002_upload_registrations`, owner/session idempotency and source validation, atomic document/version/link/job/outbox, list/detach/get/retry, Celery/Redis dispatcher, CLI/Compose image and consumer claim gate. [S-T12-A01](implementation-summary.md#s-t12-a01). DoD-1 **PASS** real PG/Redis/MinIO 2 tests: same key/body, changed body409, concurrent duplicate, broker down/recovery, wrong app/user404, invalid prefix rollback and new session binding. DoD-2 **PASS** separate real PG/Redis crash-after-publish/replay, claim once, retry and delete-before-publish no resurrection; RUNBOOK has target 202/poll/retry/error examples clearly unmounted until T26. [H-T12-A01](handoffs.md#h-t12-a01). D1 scoped diff/dependencies PASS; D2 Ruff/mypy32, T10 regression19, unit/contract/security325, Docker image build PASS; D3 individual DoD real tests PASS; D4 README/RUNBOOK/task/handoff/summary/contract/docs checks; D5 additive schema/contract/secret/scope review; D6 scoped completion commit subject `feat(T12): register uploads with durable ingestion jobs`, actual hash and origin/main equality reported post-execution. Limits: no HTTP business routes per R05/T26, no T19 worker/ready or content-pipeline dedup, only local PG/Redis/MinIO. Initial Windows long pytest basetemp fixed by shorter local temp; no corpus changes. T13 dependencies T12/T03 ready only after closure; **STOP AFTER T12**.
 
 ## Phase 3 — Ingestion và index
 
