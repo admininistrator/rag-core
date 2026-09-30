@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T10 nền tảng, corpus, authentication và metadata IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 auth đã kiểm qua HTTP thật; T10 session repository/scope/migrations đã kiểm trên PG17.11 thật. API chỉ mount health; business HTTP/query/SSE runtime vẫn DESIGNED. Dừng sau T10; T11–T36 chưa bắt đầu.
+> **T01–T11 nền tảng, corpus, authentication, metadata và storage reader IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 auth qua HTTP thật; T10 session repository/scope/migrations trên PG17.11 thật; T11 read-only S3 adapter trên MinIO thật. API chỉ mount health; business HTTP/query/SSE runtime vẫn DESIGNED. T12–T36 chưa bắt đầu.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -21,7 +21,8 @@
 | Corpus | Ba domain và all-domain clean reproduction VERIFIED local | T04–T08 |
 | Service identity/JWT/JWKS/local issuer | VERIFIED local HTTP; protected endpoint chỉ trong tests | T09 |
 | Session/schema/scope repository | VERIFIED real PostgreSQL; HTTP routes chưa mount | T10 |
-| Storage/upload registration | DESIGNED | T11–T12 |
+| S3/MinIO read adapter | VERIFIED real local MinIO; chưa nối HTTP/job | T11 |
+| Upload registration | DESIGNED | T12 |
 | Parsing/OCR/index | DESIGNED | T13–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
 | Admin UI | DESIGNED | T27–T29 |
@@ -110,7 +111,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | Metadata/broker | DATABASE_URL, REDIS_URL | T02/T10/T12 |
 | Vector/model | QDRANT_URL đã typed T02; API key, INFERENCE_URL, model IDs/revisions/device/batches còn DESIGNED | T02/T17–T18 |
 | App identity | cấu hình app_id, service-key hash/reference, JWT issuer/audience/JWKS, algorithms | T09 |
-| Source storage | storage alias, endpoint, region, bucket/prefix allowlist, read-only credential reference | T11 |
+| Source storage | `STORAGE_CONFIG_FILE` trỏ JSON app/alias/endpoint/region/bucket/prefix và credential file read-only | T11 |
 | Providers | DEEPSEEK_API_KEY/MODEL, ANTHROPIC_API_KEY/MODEL; base URLs phía server | T23 |
 | Admin | password hash/secret, cookie config, expiration/CSRF | T27 |
 
@@ -155,7 +156,7 @@ Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` r
 <a id="r03"></a>
 ## R03. Auth, app registration và trust boundary
 
-**T09 IMPLEMENTED/VERIFIED local; storage trust T11 và admin T27 vẫn DESIGNED.**
+**T09 authentication VERIFIED local; T11 storage reader VERIFIED local; app upload ownership/registration T12 và admin T27 vẫn DESIGNED.**
 
 - Core operator đăng ký app bằng cấu hình tin cậy: app ID, service credential, JWT issuer/audience/JWKS và storage alias/prefix.
 - Mỗi API nghiệp vụ gửi `Authorization: Bearer <user-JWT>` và `X-RAG-Service-Key: <app-service-key>`.
@@ -258,7 +259,7 @@ repository/scope gate bên dưới, không thay auth hoặc mount query/registra
 <a id="r04"></a>
 ## R04. Session mapping và upload registration
 
-**T10 schema/session repository/scope VERIFIED trên PG thật; HTTP/storage/registration/worker vẫn DESIGNED — T11–T12/T19/T26.**
+**T10 schema/session repository/scope VERIFIED trên PG thật; T11 storage reader VERIFIED trên MinIO thật; HTTP/registration/worker vẫn DESIGNED — T12/T19/T26.**
 
 ### Schema ownership và migration T10
 
@@ -365,6 +366,42 @@ vectors. T10 không claim live MinIO/Qdrant retention/query, HTTP session routes
 retrieval hoặc index publication worker. Evidence [H-T10-A01](docs/handoffs.md#h-t10-a01).
 Giữ traceback ngắn/redacted: exception thư viện có thể in connection kwargs/credential
 khi pytest dựng long traceback. Không chép raw traceback vào Git/handoff.
+
+### T11 storage reader VERIFIED trên MinIO local
+
+`rag_core.ports.storage.StorageReader` chỉ có `read(app_id, SourceObject)` trả context manager chứa file tạm, byte count, SHA-256 và version ID. Caller phải đọc trong `with`; đóng context xóa file cả khi exception. Adapter `S3StorageReader` chỉ gọi HEAD/GET. Đây là boto3 đồng bộ, nên worker tương lai dùng worker thread/process; không gọi trực tiếp trên async API loop. T12 xác thực principal/session/upload và nối adapter vào registration; T11 không cấp quyền cho object chỉ vì key tồn tại.
+
+`STORAGE_CONFIG_FILE` là JSON operator-owned ngoài Git, tối đa 256 KiB/100 vị trí; một `(app_id, alias)` duy nhất. Ví dụ cấu trúc local (tên file chứa credential, không chứa giá trị):
+
+```json
+{
+  "locations": [{
+    "app_id": "test-app", "alias": "test-store",
+    "endpoint": "http://127.0.0.1:9000", "region": "us-east-1",
+    "bucket": "rag-core-storage-test", "prefix": "allowed/",
+    "access_key_file": ".local/secrets/minio_reader_user",
+    "secret_key_file": ".local/secrets/minio_reader_password",
+    "allow_loopback_http": true, "max_bytes": 104857600, "timeout_seconds": 10
+  }]
+}
+```
+
+Production yêu cầu HTTPS, không cho loopback HTTP; URL không được có userinfo/path/query/fragment. App ID và alias lấy từ identity/config đã xác thực, không từ URL request. Bucket/prefix exact allowlist; key loại absolute/traversal/encoded percent/control; không dùng ETag như SHA-256. Nguồn cần `version_id` hoặc `sha256`: versioned HEAD/GET + If-Match cho bản cụ thể, hoặc HEAD/GET If-Match + tính SHA-256 từ stream + HEAD sau tải để phát hiện đổi nguồn. Size kiểm trước và trong stream, timeout hữu hạn, temp cleanup. `source_changed`, `source_too_large`, `storage_forbidden`, `storage_unavailable` là lỗi an toàn, không in credential/provider URL. Không truyền redirect sang host khác. Reader credential chỉ có `GetObject/GetObjectVersion` trong prefix; app uploader dùng principal riêng. App backup và sở hữu nguồn; core không PUT/DELETE.
+
+Reproduce live T11 từ root trên Docker Desktop (test bucket và users riêng, secrets ignored; không xóa MinIO volume):
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap_local.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap_storage_test.ps1
+docker compose -f compose.yaml -f compose.storage-test.yaml --profile local-storage --profile storage-test up -d --wait minio
+docker compose -f compose.yaml -f compose.storage-test.yaml --profile local-storage --profile storage-test run --rm storage-fixture
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'
+$env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'
+uv sync --locked --group dev --group api --group ingestion
+uv run --no-sync pytest -q tests/integration/test_storage_reader.py --basetemp .local/t11-pytest
+```
+
+Fixture script enables versioning only on `rag-core-storage-test`, creates separate reader/uploader IAM users and policies. Test uses unique object key, deletes only its own fixture via uploader, and checks real GET, denied prefix, old version, source change, oversized body, interrupted stream/temp cleanup, denied PUT/DELETE, redirect target not reached and source hash unchanged. [H-T11-A01](docs/handoffs.md#h-t11-a01) contains actual outputs. Business registration/worker wiring remains T12/T19; API readiness still checks only PG/Redis/Qdrant.
 
 ### Upload registration mục tiêu T12
 

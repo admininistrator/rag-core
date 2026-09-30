@@ -207,7 +207,7 @@
 <a id="t11"></a>
 ### T11 — S3/MinIO read adapter và nguồn bất biến
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T10, T02.
 - **Tham chiếu kế hoạch:** [P04](plan.md#p04), [P05](plan.md#p05), [P07](plan.md#p07).
 - **Công việc:** StorageReader HEAD/GET, app-config endpoint/bucket/prefix, bounded streaming/temp cleanup, source version/checksum, MinIO dev read-only policy. Fixture uploader riêng mô phỏng app dùng credential riêng.
@@ -215,7 +215,9 @@
   1. `uv run pytest tests/integration/test_storage_reader.py` PASS trên MinIO thật: đọc đúng file, denied prefix, source change, oversized body và interrupted download.
   2. Credential core không PUT/DELETE được; endpoint tùy ý/path traversal/URL redirects bị chặn; source hash trước/sau còn nguyên. README/RUNBOOK có storage trust contract.
 - **Cạm bẫy:** S3 key không là chứng minh ownership; ETag không luôn là content SHA-256; không dùng cùng admin credential cho app uploader và reader.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `feat(T11): add read-only application storage adapter`.
+- **Ghi chú thực thi:** T11-A01 | direct Codex agent, exact model/effort unavailable; started 2026-09-30. Baseline `main`/`2a67f8b53b65371a71ca72719cd6d0cd5025b899`, T10/T02 COMPLETE; inherited `.ptmp-t07-a02/` and `.tmp-t07-a02/` scratch retained untouched. Read AGENTS, task session prompt, dependency notes, P01/P04/P05/P07/P13, handoffs/summary/README/RUNBOOK. Allowed: storage port/domain/config/adapter, local MinIO read-only fixture policy/setup, integration/security tests, relevant dependency/env and README/RUNBOOK/task/handoff/summary. Plan: bound configured alias/prefix, immutable HEAD/GET with bounded temp cleanup; test against real isolated MinIO with separate uploader and reader principals, each DoD and D1–D6; scoped commit/push then stop. Commit subject `feat(T11): add read-only application storage adapter`.
+
+- **T11-A01 results (COMPLETE effective only after successful inspected commit):** Implemented storage protocol, operator registry and read-only boto3 adapter, dedicated versioned MinIO test bucket with separate IAM reader/uploader and live security tests; files [S-T11-A01](implementation-summary.md#s-t11-a01). DoD-1 **PASS**: real MinIO `test_storage_reader.py` 5 passed; separate 3-test read/version/change/size/interruption run [H-T11-A01](handoffs.md#h-t11-a01). DoD-2 **PASS**: actual reader PUT/DELETE and outside-prefix GET denied, source bytes hash unchanged; separate 2-test unsafe endpoint/path and live redirect check pass. D1 scope/dependencies/diff PASS; D2 Ruff/mypy27/325 regression PASS; D3 individual real gates PASS; D4 README/RUNBOOK/env/tasks/handoffs/summary/docs check PASS; D5 reviewed scoped code/policies/no secrets/raw data/schema/API change; D6 explicit stage and subject `feat(T11): add read-only application storage adapter`, actual hash/remote equality reported after commit/push. README/RUNBOOK record working reader/config/test command and designed registration boundary. Limits: local MinIO only, synchronous boto3 adapter not yet called by API/worker, no S3 ACL ownership inference, no registration/ingestion/provider. Initial redirect recursion fixed without relaxing gate. T12 dependencies T11/T10 ready only after commit; **STOP AFTER T11**.
 
 <a id="t12"></a>
 ### T12 — Upload registration, idempotency và outbox

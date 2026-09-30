@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-09-30 / T11-A01 completion candidate:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline `main`/T10 `2a67f8b53b65371a71ca72719cd6d0cd5025b899`. Real MinIO versioned fixture: 5 storage integration tests, separate DoD runs 3+2, 325 unit/contract/security PASS; Ruff/mypy27/OpenAPI PASS. [T11 evidence](#h-t11-a01). Completion only after docs/scope review and inspected `feat(T11): add read-only application storage adapter` commit/push. T07 inaccessible scratch untouched. T12 ready after closure; **STOP AFTER T11**.
+
 - **Current 2026-09-27 / T10-A01 COMPLETE after inspected completion commit:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T09 `9e67d5d513c751930e4548ae9c292501444963a4` matched origin/main. Metadata schema/repository/scope implemented; real PG18scope +1migration and325unit/contract/security PASS. [T10 evidence](#h-t10-a01). Completion subject `feat(T10): add session-scoped metadata persistence`; COMPLETE effective only after successful inspected commit. Authorized origin/main push/hash equality reported post-execution. T11 dependencies T10/T02 ready after closure; **STOP AFTER T10**. Inherited T07 scratch retained. Initial pytest long traceback exposed existing local PG credential; value excluded from this handoff/Git, T10 now uses separate ignored credential, original credential not rotated (outside scoped change; operator follow-up).
 
 
@@ -4284,3 +4286,39 @@ After this append, restage only handoffs, rerun docs/cached review, then execute
 and `git show --check`; authorized `git push origin main`, then compare
 `git rev-parse HEAD` against `git ls-remote origin refs/heads/main`. Actual post-execution
 hash/status belongs in user report; no self-reference hash or fabricated future success.
+
+<a id="h-t11-a01"></a>
+## H-T11-A01 — T11 read-only S3/MinIO adapter, 2026-09-30
+
+All commands below ran in `C:\Users\Admin\Documents\GitHub\rag-core` (PowerShell, Windows). Baseline `main`/`2a67f8b53b65371a71ca72719cd6d0cd5025b899`; `origin` is `https://github.com/admininistrator/rag-core.git`. Initial `git status --short` exit 0: only inherited `?? .ptmp-t07-a02/`, `?? .tmp-t07-a02/`; access warnings on old T07 scratch and user Git ignore. Those directories and old app sources untouched. Runtime model/effort not exposed. Config: Docker 29.5.2, pinned local MinIO `RELEASE.2025-07-23T15-54-02Z`, MC `RELEASE.2025-07-21T05-28-08Z`, boto3 1.43.94, botocore 1.43.94; no provider/model. Secrets read from ignored `.local/secrets`; no values logged.
+
+**Setup / real service:** `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap_local.ps1` exit 0 (`Kept existing ignored local secret file` x3); `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap_storage_test.ps1` exit 0 (`T11 ignored reader/uploader secret files ready; values not printed.`). `docker compose -f compose.yaml -f compose.storage-test.yaml --profile local-storage --profile storage-test config --quiet` exit 0/no output. `docker compose -f compose.yaml -f compose.storage-test.yaml --profile local-storage --profile storage-test up -d --wait minio` exit 0: `Container rag-core-minio-1 Healthy`. `docker compose -f compose.yaml -f compose.storage-test.yaml --profile local-storage --profile storage-test run --rm storage-fixture` exit 0: `T11 isolated bucket and separate reader/uploader principals are ready.` Isolated bucket versioning enabled; separate reader and uploader IAM policies, root used solely for provisioner. `docker compose -f compose.yaml -f compose.storage-test.yaml --profile local-storage --profile storage-test ps --all` exit 0: MinIO `Up 12 minutes (healthy)`, `127.0.0.1:9000-9001->9000-9001/tcp`; other T02 services stopped as at baseline.
+
+**DoD-1 expected:** actual MinIO GET correct bytes, denied prefix, old pinned version, changed source, size cap, interrupted download and temp cleanup. Command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest -q tests/integration/test_storage_reader.py --basetemp .local/t11-pytest` exit **0**:
+
+```text
+.....                                                                    [100%]
+5 passed in 1.79s
+```
+
+Separate DoD-1 line command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest -q tests/integration/test_storage_reader.py::test_real_read_and_reader_iam tests/integration/test_storage_reader.py::test_real_version_id_pins_old_bytes tests/integration/test_storage_reader.py::test_scope_change_size_and_interrupted_stream --basetemp .local/t11-dod1` exit **0**:
+
+```text
+...                                                                      [100%]
+3 passed in 0.58s
+```
+
+**DoD-2 expected/actual:** test `test_real_read_and_reader_iam` observes actual MinIO `AccessDenied` for core reader PUT/DELETE/outside-prefix GET and confirms SHA-256 of uploader GET before/after identical; `test_operator_endpoint_and_redirect_guard` rejects arbitrary HTTP endpoint/userinfo/path/query plus redirect event; local HTTP 307 redirect test confirms source endpoint received request and target received zero. No fake IAM success. Separate command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest -q tests/integration/test_storage_reader.py::test_operator_endpoint_and_redirect_guard tests/integration/test_storage_reader.py::test_live_http_redirect_never_reaches_target --basetemp .local/t11-dod2` exit **0**:
+
+```text
+..                                                                       [100%]
+2 passed in 1.36s
+```
+
+**D1/D2/D3:** `git diff --check` exit 0/no output; T11-only files reviewed against T10/T02 notes/P01/P04/P05/P07/P13. `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync ruff check .` exit 0, `All checks passed!` (three inherited inaccessible scratch warnings). `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync mypy src` exit 0, `Success: no issues found in 27 source files`. `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest -q tests/unit tests/contract tests/security --basetemp .local/t11-suite` exit **0**, `325 passed in 107.31s (0:01:47)`. `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python scripts/export_openapi.py --check` exit 0: designed/served/examples PASS, `designed_operations=13 served_health_routes=2 synthetic_examples=37`; business endpoints unmounted. DoD lines run separately above; no external AWS/provider verification claimed.
+
+**Diagnostic preserved:** first bootstrap storage script exit1 under Windows PowerShell 5 because `RandomNumberGenerator.Fill` then `Convert.ToHexString` unavailable; fixed with `Create().GetBytes()` and byte hex formatting, rerun exit0. Initial `uv run --group dev --group ingestion ...` without sandbox escalation failed to fetch locked `vine`/`h2` (`os error 10013`); approved `uv sync --locked --group dev --group api --group ingestion` with local `.uv-cache` exit0, `Resolved 83 packages`, then checks used `--no-sync`. Docker API also required approved daemon access; `docker version --format '{{.Server.Version}}'` exit0 `29.5.2`. Initial live redirect test exit1 `RecursionError: maximum recursion depth exceeded` in botocore's region redirect handler; fixed by rejecting HTTP 3xx at `needs-retry.s3` before botocore redirect logic. Final 5 tests and separate DoD runs exit0. No secret from local files included here.
+
+**D4:** README/RUNBOOK/.env.example and task/summary updated with trust boundary, config, exact live commands and limits. `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python scripts/check_docs.py` exit **0**: `PASS UTF-8/nonempty Markdown: 14 files`, `PASS internal links/anchors: 271`, `PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic`, `DOCUMENTATION CHECK: PASS`.
+
+**D5/D6 review:** `git check-ignore .local/secrets/minio_reader_password .local/secrets/minio_uploader_password .local/t11-pytest` exit0, all three paths ignored. `git diff --cached --name-only` exit0 lists exactly 16 T11 files (adapter/port/config, integration tests, isolated Compose/policies/bootstrap, README/RUNBOOK/.env and three task docs); inherited T07 scratch absent. PowerShell in-memory comparison of four ignored local password values with staged diff exit0: `PASS staged diff contains no local secret values`; no values printed. First `git diff --cached --check` exit1 found one new blank line at EOF in storage package `__init__.py`; corrected and restaged before final check. No schema/API migration, provider/model change, raw corpus or log. `docker compose -f compose.yaml -f compose.storage-test.yaml --profile local-storage --profile storage-test stop minio` exit0, `Container rag-core-minio-1 Stopped`, volume preserved. Completion subject `feat(T11): add read-only application storage adapter`; actual commit/hash/remote equality reported post-execution, not self-referenced here.

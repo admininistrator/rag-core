@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: T01–T10 nền tảng, corpus, authentication và metadata đã triển khai, kiểm chứng local.** T10 có Alembic schema, session repository và scope resolver trên PostgreSQL thật; T09 xác thực service identity/JWT/JWKS qua HTTP thật. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T11–T36 còn trong backlog.
+> **Trạng thái: T01–T11 nền tảng, corpus, authentication, metadata và storage reader đã triển khai, kiểm chứng local.** T11 S3 reader và IAM chỉ đọc đã kiểm trên MinIO thật; T10 có Alembic schema, session repository và scope resolver trên PostgreSQL thật; T09 xác thực service identity/JWT/JWKS qua HTTP thật. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T12–T36 còn trong backlog.
 
 ## Phạm vi đã chốt
 
@@ -131,7 +131,7 @@ uv run pytest tests/integration/test_metadata_migrations.py -v -s --tb=short
 
 Tests cần `RAG_TEST_DATABASE_URL` tới service riêng, không tự thay PG bằng mock.
 Evidence: [H-T10-A01](docs/handoffs.md#h-t10-a01). Business routes vẫn chưa mount theo
-R05/T26; storage reader T11, registration/outbox dispatch T12 và worker/chunks/vector
+R05/T26; storage reader đã VERIFIED ở T11, registration/outbox dispatch T12 và worker/chunks/vector
 T19 chưa triển khai. Snapshot phải được consumer revalidate trước khi phát evidence/answer.
 
 ## Corpus T04–T08: setup và tái tạo
@@ -187,8 +187,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T03 VERIFIED contracts:** schemas, designed/served OpenAPI snapshots và examples; ownership/readiness/tokenizer enforcement/query/SSE runtime vẫn theo task sau.
 - **T04–T08 VERIFIED corpus:** từng domain và all-domain setup/validation, tải mới vào root độc lập, unchanged gold, stable reruns và missing-file rejection. Mỗi session thực hiện một task theo [prompt mẫu](docs/task-session-prompt.md).
 - **T09 VERIFIED authentication:** service identity + RS256 JWT, local issuer, bounded JWKS rotation/cache và HTTP acceptance.
-- **T10 VERIFIED metadata:** PG migrations, owner-bound session/link repository, revision và exact version/generation snapshots. T11 đủ dependencies sau completion commit; dừng sau T10.
-- **T11–T12:** storage reader và upload registration.
+- **T10 VERIFIED metadata:** PG migrations, owner-bound session/link repository, revision và exact version/generation snapshots.
+- **T11 VERIFIED storage reader:** HEAD/GET theo app/alias/bucket/prefix cấu hình; checksum hoặc version ID, giới hạn stream/temp, MinIO IAM reader chỉ đọc kiểm chứng thật. [RUNBOOK R04](RUNBOOK.md#r04) có cấu hình/test/trust contract. Reader chưa nối HTTP/job; T12 đăng ký upload còn DESIGNED.
 - **T13–T19:** format/OCR matrix, model setup, ingestion commands.
 - **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.
 - **T27–T29:** admin URL/login, UI workflows.
