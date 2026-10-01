@@ -10,6 +10,7 @@ from rag_core.contracts.v1 import DocxLocator, OffsetRange, PdfLocator
 from rag_core.domain.documents import (
     Block,
     DocumentFormat,
+    OcrConfig,
     ParsedDocument,
     ParseError,
     ParserLimits,
@@ -197,18 +198,63 @@ def enforce(blocks: list[Block], limits: ParserLimits) -> None:
 
 
 def parse_local(
-    path: Path, format_: DocumentFormat, source: SourceIdentity, limits: ParserLimits
+    path: Path,
+    format_: DocumentFormat,
+    source: SourceIdentity,
+    limits: ParserLimits,
+    ocr: OcrConfig | None = None,
 ) -> ParsedDocument:
     with path.open("rb") as stream:
         signature = stream.read(8)
     page_count = None
     missing: tuple[int, ...] = ()
     warnings: tuple[str, ...] = ()
+    report = None
+    ocr = ocr or OcrConfig()
     if format_ == "pdf":
         if not signature.startswith(b"%PDF-"):
             raise ParseError("mime_mismatch")
         blocks, page_count, missing = pdf_blocks(path, limits)
         revision = "docling-parse-7.22.1/text-v1"
+        if missing and ocr.enabled:
+            from pypdf import PdfReader
+
+            from .ocr import ocr_blocks
+
+            extracted, missing, report = ocr_blocks(
+                path,
+                missing,
+                limits,
+                ocr,
+                labels=PdfReader(path).page_labels,
+            )
+            blocks.extend(extracted)
+            blocks.sort(
+                key=lambda block: (
+                    cast(PdfLocator, block.locator).page,
+                    cast(PdfLocator, block.locator).block or 0,
+                )
+            )
+            revision += "/docling-2.132.0/tesseract-vie-eng-v1"
+            if missing:
+                warnings = ("ocr_unreadable_pages",)
+    elif format_ == "image":
+        from .ocr import ocr_blocks, prepare_image
+
+        normalized = prepare_image(path, limits)
+        if not ocr.enabled:
+            raise ParseError("ocr_required")
+        blocks, failed, report = ocr_blocks(
+            normalized,
+            (1,),
+            limits,
+            ocr,
+            image=True,
+            image_id=source.sha256,
+        )
+        revision = "docling-2.132.0/tesseract-vie-eng-v1"
+        if failed:
+            raise ParseError("ocr_empty")
     elif format_ in {"docx", "xlsx", "pptx"}:
         if signature == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1":
             raise ParseError("encrypted_document")
@@ -256,6 +302,8 @@ def parse_local(
             revision = "utf8-lines/table-v2" if format_ == "md" else "utf8-lines/text-v1"
     enforce(blocks, limits)
     if not blocks:
+        if report is not None:
+            raise ParseError("ocr_empty")
         raise ParseError("ocr_required" if format_ == "pdf" else "empty_extraction")
     return ParsedDocument(
         source=source,
@@ -264,8 +312,9 @@ def parse_local(
         blocks=tuple(blocks),
         page_count=page_count,
         needs_ocr_pages=missing,
-        quality="partial" if missing else "text",
+        quality="partial" if missing else "ocr" if report else "text",
         warnings=warnings,
+        ocr=report,
     )
 
 
@@ -281,6 +330,7 @@ def main() -> int:
             cast(DocumentFormat, data["format"]),
             SourceIdentity.model_validate(data["source"]),
             limits,
+            OcrConfig.model_validate(data.get("ocr", {})),
         )
         payload = result.model_dump_json()
         if len(payload.encode("utf-8")) > limits.max_result_bytes:

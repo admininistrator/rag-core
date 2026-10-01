@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T14 nền tảng, corpus, authentication, metadata, storage reader, registration/outbox và parsers IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 auth qua HTTP thật; T10 session repository/scope/migrations trên PG17.11 thật; T11 read-only S3 adapter trên MinIO thật; T12 register và outbox trên PG/Redis/MinIO thật; T13 parse PDF text/DOCX/TXT/MD/HTML EN/VI thật; T14 XLSX/CSV/PPTX tables thật. API chỉ mount health; business HTTP/query/SSE runtime vẫn DESIGNED. T15–T36 chưa bắt đầu; scan/OCR chưa verified.
+> **T01–T15 IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup/tải mới/rerun đã kiểm. Auth, metadata, read-only storage, registration/outbox và native text/Office tables đã kiểm thật. T15 thêm CPU Tesseract vie/eng qua Docling stage trong worker image, source locators/quality/cancel. API chỉ mount health; business HTTP/query/SSE và Celery ingestion orchestration vẫn DESIGNED. T16–T36 chưa bắt đầu.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -25,7 +25,8 @@
 | Upload registration, job repository/outbox | VERIFIED real PG/MinIO/Redis; HTTP chưa mount, worker chưa có | T12 |
 | PDF text/DOCX/TXT/MD/HTML parsers | VERIFIED real native parsers trên fixtures EN/VI; chưa nối worker | T13 |
 | XLSX/CSV/PPTX tables | VERIFIED real parsers, locators/header/unit/formula cache và archive safety; chưa nối worker | T14 |
-| Office tables/OCR/chunking/index | DESIGNED | T14–T19 |
+| OCR scan/mixed PDF, PNG/JPEG | VERIFIED worker image, engine thật EN/VI + locator/status/limits/cancel | T15 |
+| Chunking/index ingestion orchestration | DESIGNED | T16–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
@@ -85,7 +86,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | base | IMPLEMENTED/VERIFIED | Pydantic v2 + pydantic-settings cho typed config |
 | dev | IMPLEMENTED/VERIFIED | Ruff, mypy, pytest, pytest-asyncio; jsonschema 4.26.0 từ T03 để validate exported schemas/examples, không vào API image |
 | api | IMPLEMENTED/VERIFIED T02 | FastAPI, HTTPX, Uvicorn, psycopg, Redis client; health-only API process, không có business routes |
-| ingestion | IMPLEMENTED/VERIFIED adapters T11–T14; worker DESIGNED | Metadata, boto3, Celery, Qdrant/Redis; Docling Parse7.22.1, python-docx1.2.0, openpyxl3.1.5, python-pptx1.0.2, pypdf6.19.0 crypto, defusedxml0.7.1; chưa có worker/model/OCR |
+| ingestion | T11–T15 VERIFIED adapters/OCR worker runtime; orchestration T19 DESIGNED | Metadata, boto3, Celery, Qdrant/Redis; Docling Parse7.22.1/slim2.132.0 convert-core, pandas3.0.6, PDFium5.13.0, Office/native parsers; CPU OCR image có Tesseract5.3.0 + eng/vie/osd, không Torch/layout/VLM weights |
 | metadata | IMPLEMENTED/VERIFIED T10 | SQLAlchemy2.0.53 async + greenlet3.5.6, Psycopg, Alembic1.20.0; được include bởi api/ingestion |
 | inference | RESERVED/DESIGNED | Rỗng có chủ đích; T17 pin model runtime/revisions sau capability checks |
 
@@ -553,7 +554,7 @@ T35 sẽ thêm client FastAPI/HTTPX độc lập chạy thật, xử lý chunk b
 <a id="r08"></a>
 ## R08. Citations, xóa chat và retained index
 
-**T03 locator structural schemas, T10 PG session scope/lifecycle và T13–T14 text/table provenance VERIFIED; chunk mapping/citation resolver/stream revalidation DESIGNED — T16/T24/T25.**
+**T03 locator structural schemas, T10 PG session scope/lifecycle và T13–T15 text/table/OCR provenance VERIFIED; chunk mapping/citation resolver/stream revalidation DESIGNED — T16/T24/T25.**
 
 | Format | Vị trí nguồn |
 | --- | --- |
@@ -579,7 +580,7 @@ Không có auto-delete derivative khi session hết link ở bản đầu. Admin
 <a id="r09"></a>
 ## R09. Ingestion, formats và xử lý lỗi
 
-**T13–T14 text/table extraction VERIFIED trên Windows/Python3.12.4; OCR/chunking/index worker DESIGNED — T15–T19.**
+**T13–T14 VERIFIED trên Windows/Python3.12.4; T15 OCR VERIFIED trong Linux worker/Python3.12.13; chunking/index orchestration DESIGNED — T16–T19.**
 
 | Format / MIME (extension allowlist) | Extraction và locator đã kiểm | Trạng thái / giới hạn |
 | --- | --- | --- |
@@ -588,7 +589,7 @@ Không có auto-delete derivative khi session hết link ở bản đầu. Admin
 | TXT / `text/plain` (`.txt`) | UTF-8, BOM/CRLF giữ vị trí, line/paragraph/offset | VERIFIED EN/VI; encoding khác báo `invalid_encoding` |
 | Markdown / `text/markdown` (`.md`) | UTF-8 source blocks; ATX/Setext headings, fenced code và bảng pipe cơ bản | VERIFIED EN/VI/source offsets; raw syntax giữ nguyên, không render/execute |
 | HTML / `text/html` (`.html`, `.htm`) | stdlib HTMLParser; heading/block/raw source span, entity text, table rows | VERIFIED; script/style/template/iframe/object không là text evidence; 0 HTTP canary requests |
-| PDF scan/mixed, PNG/JPEG | Tesseract eng/vie qua Docling, per-page fallback | DESIGNED T15; T13 chỉ phát hiện page thiếu native text, không OCR |
+| PDF scan/mixed, PNG/JPEG | Tesseract vie/eng qua Docling OCR stage, per-page fallback, PDF physical page và image raw pixel bbox | VERIFIED T15; bật OCR operator-side; giới hạn OCR region ở dưới |
 | XLSX/CSV/PPTX | openpyxl sheet/cell/formula cache, stdlib CSV records/header, python-pptx slide/shape/XML | VERIFIED T14 text/tables, no chart/image reasoning |
 | `.doc/.xls/.ppt`, audio/video | Không hỗ trợ | Không có parser; không cam kết hiểu charts/images |
 
@@ -648,7 +649,8 @@ Error public chỉ code: `unsupported_format`, `mime_mismatch`, `invalid_encodin
 `extraction_limit`, `encrypted_document`, `corrupt_document`, `parser_timeout`,
 `parser_busy`, `parser_failed`, `empty_extraction`, `ocr_required`. Không thử password,
 không coi empty thành success. PDF có trang thiếu text trả `quality=partial` + physical
-`needs_ocr_pages`; worker T15/T19 phải xử lý trước ready, không bỏ trang âm thầm.
+`needs_ocr_pages`; T15 OCR có thể xử lý khi bật, T19 phải từ chối ready nếu còn partial,
+không bỏ trang âm thầm.
 
 Limits/compatibility: schema trung gian mới, không DB/index/API migration; T03 locators
 và OpenAPI giữ nguyên. New pins chỉ ingestion group, không vào API/inference/weights.
@@ -728,6 +730,92 @@ output/deadline T13 vẫn áp dụng; không benchmark RAM hoặc worker image t
 Intermediate schema1 thêm fields có default; API T03/PG/index không đổi. Revisions
 `openpyxl-3.1.5/table-v1`, `python-pptx-1.0.2/table-v1`, `stdlib-csv/table-v1` và DOCX/
 MD/HTML `table-v2` phải vào pipeline fingerprints T16/T19 khi tái sử dụng kết quả.
+
+### OCR worker CPU T15
+
+**VERIFIED: full20tests và separate13status checks trong worker image.** Build/test commands trong
+[README OCR](README.md#ocr-envi-t15). `worker` target là non-root10001 parser runtime;
+`ocr-test` kế thừa runtime này và thêm pytest/DejaVu font cho synthetic fixtures.
+T19 mới nối Celery/job/ready/index. Không chạy service ingestion giả trong Compose.
+
+```python
+from rag_core.adapters.parsers import ParserRegistry
+from rag_core.domain.documents import OcrConfig, ParserLimits
+
+parser = ParserRegistry(temp_root, ParserLimits(), ocr=OcrConfig(enabled=True))
+# parser.parse(verified_path, filename=..., content_type=..., source=..., cancel=event)
+```
+
+`OcrConfig` chỉ từ operator/DI, không từ upload body/document text. Default disabled;
+optional `tessdata_path` là local trusted directory, truyền `TESSDATA_PREFIX` cho child.
+Ngôn ngữ cố định `vie+eng`, PSM3, `OcrMode.FULL_PAGE` **chỉ trên selected pages**,
+PDF216dpi, ảnh native resolution. Tesseract order ảnh hưởng kết quả; T15 đo cùng PNG
+và thấy eng+vie mất dấu “đạt”, vie+eng giữ đúng. Không spell-correct theo gold.
+[Docling OCR options](https://docling-project.github.io/docling/reference/pipeline_options/)
+và [Tesseract CLI](https://tesseract-ocr.github.io/tessdoc/Command-Line-Usage.html) là
+nguồn API; code thực được kiểm trên slim2.132.0 đã pin trong lock.
+
+Native Docling Parse pass giữ nguyên textline/offset/bbox. Trang không có text mới
+vào Docling `TesseractOcrCliModel`, PDFium chỉ render selected pages; không OCR mọi
+trang hoặc ghép OCR vào text layer có sẵn. Mixed PDF là mixed **pages**; trang có
+native text nhưng còn bitmap text riêng chưa được OCR region detection. Đây là
+giới hạn rõ, không claim đã hiểu tất cả nội dung ảnh trong trang có native text.
+OCR stage độc lập layout pipeline, không download model/network, không remote OCR.
+
+`Block.extraction_method=native|ocr`; OCR blocks là word cells theo Docling/Tesseract
+order. PDF physical page one-based + printed label riêng; OCR block indices zero-based,
+offsets vào canonical OCR page text = words joined LF, half-open Unicode chars.
+OCR PDF bbox là page points, **top-left**; native PDF bbox vẫn native coordinate system.
+Ảnh giữ `format=image`, image ID=source SHA256, `ocr_block` và T03 bbox trong raw
+source pixels/top-left. EXIF orientation/DPI được strip trên bản copy để bbox trỏ
+raw pixels gốc; không hứa camera EXIF auto-rotation. PNG/JPEG single frame, MIME
+và suffix phải khớp decoder. T16 cần regroup words nhưng giữ source locators.
+
+`quality=text` khi native-only, `ocr` khi OCR thành công (kể cả mixed), `partial`
+khi còn failed PDF pages. `ocr` là extraction method, không calibrated accuracy.
+Partial có `needs_ocr_pages` và `ocr_unreadable_pages`; worker T19 phải xử lý/fail
+trước publication, không coi partial ready. `OcrReport` ghi engine/version/languages,
+attempted/completed physical pages (ảnh logical1), OCR-stage elapsed (không gồm copy,
+native pass và import), parser/child Linux peak RSS. RSS child high-water có thể
+bao gồm inherited fork memory, không cộng hai số như total RAM. Tests in cgroup2
+báo whole-container peak và acceptance wall; không là benchmark full corpus/10GiB gate.
+
+T13 byte/page/archive/text/result/deadline limits giữ nguyên; thêm max25million
+pixels trước image decode và trước PDF render (tính cả PDFium1.5x intermediate).
+One registry/one process, không queue; OMP thread limit1. Optional
+`cancel=threading.Event()` kiểm mỗi50ms/copy, deadline60s default <=300s cho toàn parse.
+Linux child là new session/process group, timeout/cancel kill group rồi reap parser
+trước temp cleanup. `docker run --init` giúp reap orphan CLI; cancellation tests
+quan sát PID Tesseract thật. Windows tree cleanup dùng taskkill, native parser
+regression kiểm host; OCR acceptance chuẩn là Linux Docker.
+
+| Code / state | Ý nghĩa / xử lý |
+| --- | --- |
+| `ocr_required` | OCR disabled; bật cấu hình tại worker có engine/data, không ready scan |
+| `ocr_engine_missing` | Không tìm thấy CLI; kiểm worker image/PATH |
+| `ocr_tessdata_missing` | Thiếu eng/vie hoặc không load directory; kiểm data/env |
+| `ocr_failed` | Engine CLI lỗi kỹ thuật, gồm data corrupt; không đổi thành empty success |
+| `ocr_empty` | Toàn file OCR không có readable text, gồm white image; extraction failed |
+| `partial` + `needs_ocr_pages` | Có text nhưng còn PDF pages không đọc được; không ready |
+| `image_limit` | Pixel/render/multiframe vượt limit; không tăng limit theo request |
+| `parser_timeout` / `parser_cancelled` | Deadline/caller cancel; process tree stopped + cleanup |
+| `corrupt_document` / `mime_mismatch` | Image/PDF hỏng hoặc không khớp format; nguồn giữ nguyên |
+
+Diagnostics đã chạy trên worker/test image (không cần API/PG/LLM key):
+
+```powershell
+docker run --rm --network none --entrypoint tesseract rag-core-worker:t15 --version
+docker run --rm --network none --entrypoint tesseract rag-core-worker:t15 --list-langs
+docker run --rm --network none --entrypoint python rag-core-worker:t15 -c "import os; from importlib.metadata import version; print('uid', os.getuid(), 'docling-slim', version('docling-slim')); print('tessdata', os.environ.get('TESSDATA_PREFIX', 'system default'))"
+```
+
+Expected Tesseract5.3.0, eng/vie/osd and uid10001/Docling slim2.132.0. Custom data
+directory needs both actual traineddata files; no network download at runtime.
+Full DoD output/status/elapsed/RAM and failures retained at [H-T15-A01](docs/handoffs.md#h-t15-a01).
+Additive intermediate fields, existing T03 locator/API unchanged; no PG/index migration.
+OCR config/order/DPI/Docling+engine+traineddata revisions must enter T16/T19 pipeline
+fingerprints before reuse. Engine/data package versions pinned; transitive OS packages
+use Debian repositories at build time, no claim of byte-identical future apt rebuilds.
 
 <a id="r10"></a>
 ## R10. UI quản trị

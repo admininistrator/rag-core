@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-01 / T15-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, no subagents; baseline main/`cc6345dfb4b957a8f57d0ff6b3e9d31a016e606c` equals origin/main, inherited T07 scratch retained. CPU Docling/Tesseract vie+eng OCR/image runtime, provenance/quality/process bounds implemented; final DoD-1 actual20PASS and separate DoD-2 status13PASS in non-root Linux worker image, source SHA42/testSHA2 equal. Native42/regression325/Ruff/mypy42/locked112/OpenAPI/docs/scope/secrets pass. Full acceptance peak810.703MiB, status peak867.703MiB including21.6MP stress below25MP cap; fixture measurements, not full-stack budget. [T15 evidence](#h-t15-a01). Completion subject `feat(T15): support Vietnamese and English OCR`; actual hash/remote equality returned post-commit/push, resolve by subject. No T15 blocker; T16 dependencies ready after closure. **STOP AFTER T15**.
+
 - **Current 2026-10-01 / T14-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort not exposed, no subagents. Baseline `main`/T13 `d3e57b29de892ff360e2e255e9d1680bf179faaf` equals origin/main. XLSX/CSV/PPTX tables, formula/cache/source context and common bounded OOXML preflight implemented; final DoD-1 23PASS, separate DoD-2 9PASS, regression344PASS, Ruff/mypy41/locked105/OpenAPI/docs/scope/secrets review PASS. [T14 evidence](#h-t14-a01). Completion subject `feat(T14): preserve spreadsheet and table evidence`; actual hash/remote equality reported post-commit/push (resolve by subject). Inherited T07 scratch untouched. No T14 blocker; T15 dependencies ready after closure. **STOP AFTER T14**.
 
 - **Current 2026-10-01 / T13-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, no subagents; baseline main/T12 `094f74452307a8645eeb1d00a0a0af738b4403e9` equals origin/main. Native PDF/DOCX/TXT/MD/HTML EN/VI provenance and bounded registry implemented. Final DoD1 19 PASS, separate DoD2 8 PASS, regression325 PASS, Ruff/mypy38/locked101/OpenAPI/docs/scope/secrets review PASS. [T13 evidence](#h-t13-a01). Completion subject `feat(T13): parse text documents with source provenance`; actual hash/remote equality reported post-commit/push (resolve by subject). T14 ready after closure; no T13 blocker. Inherited T07 scratch preserved; **STOP AFTER T13**.
@@ -5252,3 +5254,378 @@ commit/history and records its actual closure evidence here. No source/tests/DoD
 only docs validator/diff checks apply to this correction. Corrective commit subject
 `docs(T14): repair handoff heading encoding`; actual hash/remote equality reported
 after that commit/push, not self-referenced. T15 ready; stop after T14.
+
+<a id="h-t15-a01"></a>
+## H-T15-A01 — Phase 3 / OCR EN/VI, 2026-10-01
+
+Direct Codex agent (GPT-6 family; exact model/effort not exposed), no subagents.
+All host commands cwd `C:\Users\Admin\Documents\GitHub\rag-core`, Windows PowerShell.
+Baseline `main`/`cc6345dfb4b957a8f57d0ff6b3e9d31a016e606c`; read AGENTS/session
+prompt/T13+T14 notes/evidence/summary, P01/P02/P07/P13 and living docs before code.
+`git status --short` exit0 listed only inherited `?? .ptmp-t07-a02/` and
+`?? .tmp-t07-a02/`; access warnings for historical T07 scratch/user Git ignore.
+Initial combined rg enumeration exit1 from inherited inaccessible directory, targeted
+reads succeeded. No T15 unfinished source/checkpoint; baseline scratch untouched.
+`git branch --show-current`, `git rev-parse HEAD`, `git remote -v` exit0:
+
+```text
+main
+cc6345dfb4b957a8f57d0ff6b3e9d31a016e606c
+origin https://github.com/admininistrator/rag-core.git (fetch)
+origin https://github.com/admininistrator/rag-core.git (push)
+```
+
+Initial sandbox `docker version --format '{{.Client.Version}} {{.Server.Version}}'`
+exit1: config/npipe permission denied. Approved read check exit0 `29.5.2 29.5.2`;
+approved `git ls-remote origin refs/heads/main` exit0:
+`cc6345dfb4b957a8f57d0ff6b3e9d31a016e606c refs/heads/main` (matches baseline).
+No credential/provider requirement, no external document upload or deployment.
+Docker tests CPU2/memory2GiB/network none/init, uid10001, Python3.12.13;
+Tesseract5.3.0/Leptonica1.82.0, eng/vie/osd Debian1:4.1.0-2, Docling slim2.132.0
+OCR-only stage, Docling Parse7.22.1, PDFium5.13.0, pandas3.0.6; no Torch/weights.
+Only original synthetic raster/PDF fixtures, never corpus QA or user documents.
+
+### Preparation and retained failures
+
+`$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv lock; uv sync --locked
+--group dev --group api --group ingestion` (each command run, exit0): final lock112
+packages; added slim/filetype/langcodes/PDFium/rtree/scipy/tqdm. An initial pandas
+pin3.0.3 caused a downgrade; corrected to existing3.0.6 before implementation gates,
+final existing package versions unchanged. Actual import command
+`uv run --no-sync python -c "from docling.models.stages.ocr.tesseract_ocr_cli_model import TesseractOcrCliModel; print('OCR stage import OK')"`
+exit0 `OCR stage import OK`; no models required.
+
+Initial source Ruff/mypy exit1 found import/style, Windows POSIX typing, external
+pandas stubs and union/backend annotations; fixed without global relaxations.
+Exact external pandas import/untyped upstream unload and POSIX-only killpg annotations
+are local and documented; final strict check42 source files passes below.
+
+Build command (each exit0):
+`docker build --progress=plain --target ocr-test -f docker/worker.Dockerfile -t rag-core-ocr-test:t15 .`;
+logs `.local/t15-build.log`, `t15-build2.log` through `t15-build5.log`, no secrets.
+Initial default `docker run --rm --init --network none --memory=2g --cpus=2 rag-core-ocr-test:t15`
+exit2 `.local/t15-ocr-initial.log`: `Failed to initialize cache at /home/ragcore/.cache/uv`.
+Set runtime UV_CACHE_DIR=/tmp/uv-cache; initial2 run with
+`-e UV_CACHE_DIR=/tmp/uv-cache` exit1, `.local/t15-ocr-initial2.log`:
+
+```text
+AssertionError: assert 'Doanh thu quý một đạt 120 triệu đồng.' in 'Doanh thu quý một dat 120 triệu đồng.'
+AssertionError: Real Tesseract child must start before interruption
+3 failed, 16 passed in 80.84s (0:01:20)
+```
+
+PNG lost dấu with eng+vie, searchable scan inherited that actual upstream text.
+Cancellation observer initially selected TSV only, missing live Tesseract OSD phase.
+Kept source phrase/gold/fixtures unchanged; observed actual recognition (`stdout`,
+OSD or TSV), not startup list-langs. Actual isolated CPU/network-none probe on same
+PNG, `tesseract <fixture> stdout -l <order> --psm <mode>`, exit0:
+
+```text
+eng+vie 3 'Doanh thu quý một dat 120 triệu đồng.'
+eng+vie 6 'Doanh thu quý một dat 120 triệu đồng.'
+vie+eng 3 'Doanh thu quý một đạt 120 triệu đồng.'
+vie+eng 6 'Doanh thu quý một đạt 120 triệu đồng.'
+```
+
+Production OCR/config and searchable fixture CLI now vie+eng/PSM3; no spelling
+repair or expected phrase reduction. A later default run `.local/t15-dod1.log`
+exit2 found root-owned `/tmp/uv-cache/sdists-v9/.git` baked by build-time sync.
+Build cache explicitly `/root/.cache/uv` mounted in both RUNs; runtime `/tmp/uv-cache`
+created by non-root. Final build5 exit0; default runner now works without extra env.
+
+### DoD-1 — Actual worker OCR, source phrase and locator
+
+Expected: real scan EN/VI có dấu, PNG/JPG/JPEG, mixed PDF, searchable scan native
+layer once; original page/image locators/offset/bboxes; no skipped test or mock.
+Command (approved Docker access), host cwd above; container cwd `/app`:
+
+```powershell
+docker run --rm --init --network none --memory=2g --cpus=2 rag-core-ocr-test:t15
+```
+
+Exit **0**, full real output `.local/t15-dod1-final.log`. Image CMD executes
+`uv run --no-sync pytest tests/integration/test_ocr.py -v -s --tb=short --basetemp=/tmp/ocr-tests -o cache_dir=/tmp/pytest-cache`.
+Actual excerpts (not inferred/rounded outputs):
+
+```text
+platform linux -- Python 3.12.13, pytest-9.1.1, pluggy-1.6.0 -- /app/.venv/bin/python3
+collected 19 items
+{"page_count": null, "quality": "ocr", "ocr": {"engine": "tesseract", "engine_version": "5.3.0", "languages": ["vie", "eng"], "attempted_pages": [1], "completed_pages": [1], "elapsed_seconds": 0.47932633999880636, "parser_peak_rss_mib": 147.421875, "child_peak_rss_mib": 146.921875}, "excerpt": "Doanh thu quý một đạt 120 triệu đồng."}
+{"page_count": 2, "quality": "ocr", "ocr": {"engine": "tesseract", "engine_version": "5.3.0", "languages": ["vie", "eng"], "attempted_pages": [1, 2], "completed_pages": [1, 2], "elapsed_seconds": 2.5078987150009198, "parser_peak_rss_mib": 182.28125, "child_peak_rss_mib": 182.28125}, "excerpt": "First quarter revenue was 120 million VND. Doanh thu quý một đạt 120 triệu đồng."}
+{"page_count": 3, "quality": "ocr", "ocr": {"engine": "tesseract", "engine_version": "5.3.0", "languages": ["vie", "eng"], "attempted_pages": [2], "completed_pages": [2], "elapsed_seconds": 1.2101823769990006, "parser_peak_rss_mib": 181.73828125, "child_peak_rss_mib": 181.73828125}, "excerpt": "First quarter revenue was 120 million VND. Doanh thu quý một đạt 120 triệu đồng. First quarter revenue was 120 million VND."}
+PASS actual searchable scan image + Tesseract text layer: no OCR retry, phrase once
+PASS cancel: observed actual Tesseract children=1, killed process group; cleanup; elapsed=3.625s
+PASS timeout: observed actual Tesseract children=1, killed process group; cleanup; elapsed=8.015s
+ACTUAL worker acceptance wall=74.189s container_memory_peak_mib=536.254
+19 passed in 74.83s (0:01:14)
+```
+
+DoD-1 **PASS**. PDF physical2pages with distinct EN/VI source phrases, printed i/ii,
+canonical OCR offsets/page bbox; images SHA256 ID/zero-based word bbox validated by
+cropping original source pixels. Mixed3pages OCR only2; actual searchable OCR text
+layer native-only/no duplicate. Source bytes and temp-empty asserted on every parse.
+Stage elapsed excludes import/copy/native pass; RSS high-water/inherited fork memory
+not sum or whole-machine budget. cgroup peak is whole test-container measurement,
+not full corpus/other containers/Windows or promised production throughput.
+
+### DoD-2 — Separate status/error/resource gate
+
+Initial separate command below exit1, full `.local/t15-dod2.log`:
+
+```powershell
+docker run --rm --init --network none --memory=2g --cpus=2 rag-core-ocr-test:t15 uv run --no-sync pytest tests/integration/test_ocr.py -k status -v -s --tb=short --basetemp=/tmp/ocr-status -o cache_dir=/tmp/pytest-cache
+```
+
+```text
+collected 19 items / 6 deselected / 13 selected
+PASS cancel: observed actual Tesseract children=1, killed process group; cleanup; elapsed=3.340s
+Failed: DID NOT RAISE ParseError
+ACTUAL worker acceptance wall=42.961s container_memory_peak_mib=508.035
+1 failed, 12 passed, 6 deselected in 43.66s
+```
+
+Real9.6MP stress fixture sometimes completed before8s deadline. Increased only
+stress canvas/line count to21.6MP (<25MP cap), kept actual engine/recognition observer,
+deadline/assertions/phrases unchanged. No sleeps/stubs in OCR, no gate reduction.
+Final test image rebuilt via same build command, log `.local/t15-build6.log`.
+Append final two DoD reruns below before completion.
+
+Final review found Pillow conversion can carry EXIF metadata through PNG saving;
+explicitly cleared copied image metadata before saving. Added independent original
+JPEG EXIF orientation6/DPI600 phrase/source-pixel crop check (20 full OCR tests now).
+No change to source input/expected EN/VI phrases. Rebuilt `.local/t15-build7.log`;
+both final DoD runs must cover this current source/test revision.
+
+### D2 — Host native/regression/locked quality and unchanged contracts
+
+Host cwd above, `$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'`.
+Actual commands and outputs:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_text_parsers.py tests/integration/test_office_tables.py -q --tb=short --basetemp=.local/t15-native -o cache_dir=.local/t15-native-cache
+```
+
+Exit0, `.local/t15-native.log`: `42 passed in 36.41s`. Tests actual native parsers;
+OCR disabled T13/14 paths unchanged by later OCR-only order/metadata fixes.
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.t15a -o cache_dir=.local/t15-regression-cache
+```
+
+Exit0, `.local/t15-regression.log`:
+
+```text
+........................................................................ [ 22%]
+........................................................................ [ 44%]
+........................................................................ [ 66%]
+........................................................................ [ 88%]
+.....................................                                    [100%]
+325 passed in 125.03s (0:02:05)
+```
+
+Removed only own `.t15a` after verifying resolved absolute path equals workspace
+direct child and stays inside root; native `.local` artifacts retained; historical
+T07 scratch untouched. Output `PASS removed only self-created T15 regression basetemp inside workspace`.
+Source paths exercised above unaffected by later OCR-only fixes; actual final OCR
+gates exercise changed OCR branches separately. No service/provider mocks as OCR proof.
+
+```powershell
+uv sync --locked --offline --group dev --group api --group ingestion
+uv run --no-sync python scripts/export_openapi.py --check
+uv run --no-sync ruff check .
+uv run --no-sync mypy src
+git diff --check
+```
+
+Each exit0, actual output (locked112, existing package revisions unchanged):
+
+```text
+Resolved 112 packages in 56ms
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+All checks passed!
+Success: no issues found in 42 source files
+```
+
+Ruff inherited three inaccessible scratch warnings; no lint errors. Final OCR metadata
+review check `uv run --no-sync ruff check src tests/integration/test_ocr.py` and
+`uv run --no-sync mypy src` repeated exit0, same success outputs.
+`uv run --no-sync python scripts/check_docs.py` at interim docs exit0:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 298
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Final docs validation will be repeated after final gate results/status.
+
+### Final DoD-2 rerun — current source/test image
+
+Same separate `docker run ... uv run --no-sync pytest ... -k status ...` command
+above, host cwd unchanged/container `/app`, CPU2/RAM2GiB/init/network none.
+Exit **0**, full `.local/t15-dod2-final.log`; expected explicit non-success errors,
+partial page detection, real engine cancellation and measurements, actual:
+
+```text
+collected 20 items / 7 deselected / 13 selected
+PASS .png blank/unreadable -> ocr_empty; source unchanged; sandbox empty
+PASS .pdf blank/unreadable -> ocr_empty; source unchanged; sandbox empty
+{"page_count": 2, "quality": "partial", "ocr": {"engine": "tesseract", "engine_version": "5.3.0", "languages": ["vie", "eng"], "attempted_pages": [1, 2], "completed_pages": [1], "elapsed_seconds": 0.6312517539990949, "parser_peak_rss_mib": 182.4296875, "child_peak_rss_mib": 182.4296875}, "excerpt": "Doanh thu quý một đạt 120 triệu đồng."}
+PASS real Tesseract with empty tessdata -> ocr_tessdata_missing; cleanup
+PASS missing vie -> ocr_tessdata_missing; corrupt eng/vie -> technical ocr_failed
+PASS actual unavailable CLI -> ocr_engine_missing
+PASS corrupt/image signature mismatch explicit errors; cleanup
+PASS .png pixel allocation bounded before render/decode
+PASS .pdf pixel allocation bounded before render/decode
+PASS cancel: observed actual Tesseract children=1, killed process group; cleanup; elapsed=4.999s
+PASS timeout: observed actual Tesseract children=1, killed process group; cleanup; elapsed=8.024s
+ACTUAL worker acceptance wall=49.403s container_memory_peak_mib=867.703
+13 passed, 7 deselected in 50.62s
+```
+
+DoD-2 **PASS**, not skip: deselected7 are phrase/provenance checks in separate full
+DoD-1. Actual source unchanged + temp cleanup assert on every case. RUNBOOK
+diagnostic/error/quality policy documented. Current 21.6MP stress measured peak above;
+not full-stack budget or model inference benchmark.
+
+### Final DoD-1 rerun — final OCR code and all20 tests
+
+Same default `docker run --rm --init --network none --memory=2g --cpus=2 rag-core-ocr-test:t15`
+command above, exit **0**, `.local/t15-dod1-final2.log`; engine/config/cwd unchanged.
+Includes EXIF/DPI fix and larger actual stress input. Actual excerpts:
+
+```text
+collected 20 items
+{"page_count": null, "quality": "ocr", "ocr": {"engine": "tesseract", "engine_version": "5.3.0", "languages": ["vie", "eng"], "attempted_pages": [1], "completed_pages": [1], "elapsed_seconds": 0.34707980299936025, "parser_peak_rss_mib": 147.25, "child_peak_rss_mib": 146.875}, "excerpt": "Doanh thu quý một đạt 120 triệu đồng."}
+{"page_count": 2, "quality": "ocr", "ocr": {"engine": "tesseract", "engine_version": "5.3.0", "languages": ["vie", "eng"], "attempted_pages": [1, 2], "completed_pages": [1, 2], "elapsed_seconds": 0.7161576729995431, "parser_peak_rss_mib": 182.390625, "child_peak_rss_mib": 182.390625}, "excerpt": "First quarter revenue was 120 million VND. Doanh thu quý một đạt 120 triệu đồng."}
+PASS EXIF orientation6/DPI600: phrase + bboxes retain original raw source pixels
+{"page_count": 3, "quality": "ocr", "ocr": {"engine": "tesseract", "engine_version": "5.3.0", "languages": ["vie", "eng"], "attempted_pages": [2], "completed_pages": [2], "elapsed_seconds": 0.3648834400009946, "parser_peak_rss_mib": 181.8671875, "child_peak_rss_mib": 181.8671875}, "excerpt": "First quarter revenue was 120 million VND. Doanh thu quý một đạt 120 triệu đồng. First quarter revenue was 120 million VND."}
+PASS actual searchable scan image + Tesseract text layer: no OCR retry, phrase once
+PASS cancel: observed actual Tesseract children=1, killed process group; cleanup; elapsed=4.012s
+PASS timeout: observed actual Tesseract children=1, killed process group; cleanup; elapsed=8.024s
+ACTUAL worker acceptance wall=68.447s container_memory_peak_mib=810.703
+20 passed in 69.10s (0:01:09)
+```
+
+Final DoD-1 **PASS**, DoD-2 **PASS** separately above; no pending OCR acceptance.
+
+### D1/D4/D5 review and closure preparation
+
+Final source reviewed for per-page selection/no native text duplication, raw image
+EXIF/DPI provenance, cumulative pixel/text/process bounds, safe error/quality and
+no source mutation/auth/storage scope changes. T03 API/PG/index schemas unchanged;
+intermediate schema1 additive fields/config/revisions need T16/T19 fingerprints.
+No prompt corpus/gold edits, provider/model/Scarlet/deploy/merge/force push.
+README/RUNBOOK working build/test/diagnostic commands and unsupported cases updated,
+task notes/summary/evidence cover separate gates, limits and readiness. No N/A.
+
+An initial ad-hoc scope helper's Python command exit1 (combined shell continued)
+matched a literal private-key marker in historical T10 review code at handoffs line4277,
+not a real credential. Corrected to compare task added diff and actual local secret
+values in memory; historical evidence kept unchanged. Reproduction helper retained
+at ignored `.local/t15_review.py`; actual command/cwd as above:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+uv run --no-sync python .local/t15_review.py
+```
+
+Exit0:
+
+```text
+PASS existing lock package versions unchanged; added=docling-slim,filetype,langcodes,pypdfium2,rtree,scipy,tqdm; total=112
+PASS API/metadata/inference/dev dependency groups unchanged
+PASS exact15 task paths UTF-8/scope; original prompt/corpus/plan/API/Compose unchanged
+PASS added diff credential markers/local secret comparisons; no values printed
+```
+
+`git var GIT_AUTHOR_IDENT > $null` exit0, `PASS Git author identity already configured; no identity change`.
+Final worker target build `docker build --progress=plain --target worker -f docker/worker.Dockerfile -t rag-core-worker:t15 .`
+log `.local/t15-worker-build-final.log`; final image/source/diagnostic check follows.
+
+Final production target build exit0; diagnostics/image SHA command:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .local/t15_images.ps1
+```
+
+Exit0, full `.local/t15-images-final.log`, actual excerpt (helper contains exact
+Docker commands; compares installed source42 + copied test2 to worktree SHA256,
+queries UID/packages/no Torch, CLI version/list-langs/config/data SHA):
+
+```text
+PASS rag-core-worker:t15: uid=10001 source_sha256_equal=42 test_sha256_equal=0 docling-slim=2.132.0 docling-parse=7.22.1 pdfium=5.13.0 torch_installed=False
+sha256:54294ef6d35ae5c76a5967b224ca8de12b2a0bc7cc5ecb1bc313f7d26158f9c4 10001:10001
+PASS rag-core-ocr-test:t15: uid=10001 source_sha256_equal=42 test_sha256_equal=2 docling-slim=2.132.0 docling-parse=7.22.1 pdfium=5.13.0 torch_installed=False
+sha256:593c7d5abe847efd733d64b1bbe58e8531eb6839df1a76bfbf093fae84f9c455 10001:10001
+tesseract 5.3.0
+ leptonica-1.82.0
+List of available languages in "/usr/share/tesseract-ocr/5/tessdata/" (3):
+eng
+osd
+vie
+uid 10001 docling-slim 2.132.0
+tessdata system default
+{"eng.traineddata": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2", "osd.traineddata": "9cf5d576fcc47564f11265841e5ca839001e7e6f38ff7f7aacf46d15a96b00ff", "vie.traineddata": "79df64caf7bcfb2a27df5042ecb6121e196eada34da774956995747636d5bfa1"}
+```
+
+D1 scope/dependency/diff PASS, D2 quality/native/regression/lock PASS, D3 each real
+DoD PASS, D4 living docs/notes/summary/evidence updated, D5 source/contract/pins/secrets
+review PASS. D6 subject `feat(T15): support Vietnamese and English OCR`; explicit15file
+stage/inspection and commit follow. COMPLETE candidate fields only effective with
+successful inspected completion commit; actual hash/remote equality returned after
+push, no self-referenced hash/amend. If commit/push fails, report actual checkpoint.
+T16 deps T15/T13/T14 ready after closure; no next-task implementation started.
+
+### Final D4/D5/D6 — Explicit staged completion candidate
+
+`uv run --no-sync python scripts/check_docs.py` exit0 on final living docs:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 301
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+`git diff --check` exit0/no output. Approved Git staging, host cwd above:
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md pyproject.toml uv.lock docker/worker.Dockerfile docker/worker.Dockerfile.dockerignore src/rag_core/domain/documents.py src/rag_core/ports/parsers.py src/rag_core/adapters/parsers/registry.py src/rag_core/adapters/parsers/worker.py src/rag_core/adapters/parsers/ocr.py tests/integration/test_ocr.py
+git diff --cached --check
+uv run --no-sync python .local/t15_review.py --staged
+git diff --cached --stat
+git status --short
+```
+
+Each exit0; cached whitespace clean, exact15 paths above, actual review output:
+
+```text
+PASS existing lock package versions unchanged; added=docling-slim,filetype,langcodes,pypdfium2,rtree,scipy,tqdm; total=112
+PASS API/metadata/inference/dev dependency groups unchanged
+PASS exact15 task paths UTF-8/scope; original prompt/corpus/plan/API/Compose unchanged
+PASS exact15 staged paths; staged content equals reviewed worktree
+PASS added diff credential markers/local secret comparisons; no values printed
+15 files changed, 1372 insertions(+), 33 deletions(-)
+```
+
+Final docs-only evidence append changes that insertion count; restage handoffs and
+repeat cached/docs review before commit. Escalated Git status can enumerate two
+extra historical directories previously only present as Access-denied warnings:
+`.pytmp-t07-a02/` and `UsersAdminAppDataLocalTempt07a03/`. Together with baseline
+`.ptmp-t07-a02/`/`.tmp-t07-a02/`, all four remain untracked, untouched and unstaged.
+Ignored `.local` logs/helpers/temp stay outside commit. No secret/model/cache/raw
+source/pdf/dataset, or unexpected source/test/contract path in stage.
+
+D1–D5 **PASS**. D6 candidate exact scoped15-file commit reviewed; command
+`git commit -m "feat(T15): support Vietnamese and English OCR"` followed by
+`git show --stat --oneline HEAD`, `git rev-parse HEAD`, authorized normal
+`git push origin main` and remote hash equality. Actual post-commit/remote output
+reported to user; not written into this same commit, no amend/rewrite. T15 COMPLETE
+only with successful inspected completion commit; T16 then ready, **STOP AFTER T15**.

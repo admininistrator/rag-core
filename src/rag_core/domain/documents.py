@@ -1,5 +1,6 @@
 """Parser output is source data, never authorization or executable instructions."""
 
+from pathlib import Path
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
@@ -7,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from rag_core.contracts.v1 import SourceLocator
 
-DocumentFormat = Literal["pdf", "docx", "txt", "md", "html", "xlsx", "csv", "pptx"]
+DocumentFormat = Literal["pdf", "docx", "txt", "md", "html", "xlsx", "csv", "pptx", "image"]
 
 
 class ParseError(Exception):
@@ -32,6 +33,28 @@ class ParserLimits(BaseModel):
     max_table_cells: int = Field(default=250_000, gt=0)
     max_sheets: int = Field(default=128, gt=0)
     max_slides: int = Field(default=1000, gt=0, le=1000)
+    max_image_pixels: int = Field(default=25_000_000, gt=0, le=25_000_000)
+
+
+class OcrConfig(BaseModel):
+    """Operator-only CPU configuration; never populated from source/request text."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    enabled: bool = False
+    tessdata_path: Path | None = None
+
+
+class OcrReport(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    engine: Literal["tesseract"] = "tesseract"
+    engine_version: str
+    languages: tuple[Literal["eng", "vie"], ...] = ("vie", "eng")
+    attempted_pages: tuple[int, ...]
+    completed_pages: tuple[int, ...]
+    elapsed_seconds: float = Field(ge=0)
+    # Linux process high-water marks, not total Docker/Windows memory.
+    parser_peak_rss_mib: float | None = None
+    child_peak_rss_mib: float | None = None
 
 
 class SourceIdentity(BaseModel):
@@ -66,6 +89,7 @@ class Block(BaseModel):
     rows: tuple[tuple[str, ...], ...] = ()
     table_headers: tuple[tuple[str, ...], ...] = ()
     cells: tuple[TableCell, ...] = ()
+    extraction_method: Literal["native", "ocr"] = "native"
 
 
 class ParsedDocument(BaseModel):
@@ -77,8 +101,9 @@ class ParsedDocument(BaseModel):
     blocks: Annotated[tuple[Block, ...], Field(min_length=1)]
     page_count: int | None = Field(default=None, gt=0)
     needs_ocr_pages: tuple[int, ...] = ()
-    quality: Literal["text", "partial"] = "text"
+    quality: Literal["text", "ocr", "partial"] = "text"
     warnings: tuple[str, ...] = ()
+    ocr: OcrReport | None = None
 
     @model_validator(mode="after")
     def provenance(self) -> Self:

@@ -29,6 +29,9 @@ ingestion = [
   "celery>=5.5,<6",
   "defusedxml==0.7.1",
   "docling-parse==7.22.1",
+  "docling-slim[convert-core]==2.132.0",
+  "pandas==3.0.6",
+  "pypdfium2==5.13.0",
   "openpyxl==3.1.5",
   "pypdf[crypto]==6.19.0",
   "python-docx==1.2.0",
@@ -43,6 +46,7 @@ metadata = [
 ]
 # T17 will add and pin heavyweight model runtimes only after CPU/GPU validation.
 inference = []
+ocr-test = ["pytest>=8.4,<10"]
 dev = [
   "jsonschema>=4.25,<5",
   "mypy>=1.17,<2",

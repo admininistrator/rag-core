@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: T01–T14 nền tảng, corpus, authentication, metadata, storage reader, registration/outbox và parsers đã triển khai, kiểm chứng local.** T14 thêm XLSX/CSV/PPTX và table context; T13 parse PDF text/DOCX/TXT/MD/HTML với provenance EN/VI, giới hạn và cleanup; OCR/scan chưa verified. T12 xác minh nguồn trên MinIO, ghi idempotency/link/job/outbox trong PostgreSQL và phát job qua Redis/Celery; ingestion worker T19 chưa có nên tài liệu vẫn queued. T11 S3 reader/IAM chỉ đọc đã kiểm trên MinIO thật; T10 schema/scope trên PostgreSQL thật; T09 xác thực qua HTTP thật. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO, `registration` thêm dispatcher. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T15–T36 còn trong backlog.
+> **Trạng thái: T01–T15 IMPLEMENTED/VERIFIED local.** T15 thêm CPU Tesseract EN/VI qua Docling trong worker image, scan/mixed PDF và PNG/JPEG, locators/quality/cancellation. T14 thêm XLSX/CSV/PPTX và table context; T13 native text/provenance EN/VI. T12 registration/outbox đã kiểm trên PostgreSQL/Redis/MinIO; ingestion jobs vẫn queued đến T19. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO, `registration` thêm dispatcher. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion orchestration, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T16–T36 còn trong backlog.
 
 ## Phạm vi đã chốt
 
@@ -177,7 +177,7 @@ DOCX page break/bảng/header/footer và TXT/MD/HTML EN/VI, chạy parser thật
 physical page one-based + native textline/bbox; DOCX paragraph/table + XML part/path,
 không có page giả. HTML không render/fetch/execute. File rỗng/hỏng/mã hóa có safe
 error; PDF có trang thiếu text trả `partial`/`needs_ocr_pages`, toàn bộ thiếu text
-trả `ocr_required`. Scan/OCR và chunking/index vẫn chưa verified; Office tables T14 ở dưới.
+trả `ocr_required` khi OCR chưa bật. T15 thêm OCR bên dưới; chunking/index vẫn DESIGNED.
 MIME/limits/offset conventions/format matrix: [RUNBOOK R09](RUNBOOK.md#r09).
 Evidence: [H-T13-A01](docs/handoffs.md#h-t13-a01).
 
@@ -203,6 +203,29 @@ PPTX lấy text/bảng, kể cả group shapes. Không hỗ trợ `.doc/.xls/.pp
 suy luận charts/images. ZIP/macro/XML/external-link safety và giới hạn cụ thể ở
 [RUNBOOK R09](RUNBOOK.md#r09); [H-T14-A01](docs/handoffs.md#h-t14-a01) ghi evidence.
 Chưa nối parser vào ingestion worker/index; parser không cấp quyền truy xuất session.
+
+## OCR EN/VI T15
+
+**VERIFIED trong worker image:** worker Docker có Tesseract5.3.0, tessdata
+vie/eng/osd và Docling slim2.132.0 OCR stage. CPU, không tải layout/VLM/Torch weights.
+Synthetic scan PDF EN/VI, PNG/JPEG, mixed PDF và searchable scan kiểm engine thật.
+
+```powershell
+docker build --target worker -f docker/worker.Dockerfile -t rag-core-worker:t15 .
+docker build --target ocr-test -f docker/worker.Dockerfile -t rag-core-ocr-test:t15 .
+docker run --rm --init --network none --memory=2g --cpus=2 rag-core-ocr-test:t15
+docker run --rm --init --network none --memory=2g --cpus=2 rag-core-ocr-test:t15 uv run --no-sync pytest tests/integration/test_ocr.py -k status -v -s --tb=short --basetemp=/tmp/ocr-status -o cache_dir=/tmp/pytest-cache
+```
+
+Operator bật bằng `ParserRegistry(temp_root, limits, ocr=OcrConfig(enabled=True))`.
+Mặc định tắt để native-only callers giữ hợp đồng T13. Native text layer được giữ,
+chỉ OCR trang PDF không có native text; ảnh luôn cần OCR. `quality=text|ocr|partial`,
+`needs_ocr_pages` và `OcrReport` giúp T19 từ chối publication còn thiếu trang.
+PDF physical pages/printed labels riêng; ảnh dùng SHA256 image ID + raw pixel bbox.
+`cancel=threading.Event()` hoặc deadline dừng cả process group và cleanup.
+[RUNBOOK R09](RUNBOOK.md#r09) có lỗi/diagnostics/offsets/giới hạn;
+[evidence T15](docs/handoffs.md#h-t15-a01) có output/elapsed/RAM thật.
+Image này cung cấp parser runtime; Celery ingestion orchestration và ready/index là T19.
 
 ## Corpus T04–T08: setup và tái tạo
 
@@ -260,9 +283,10 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T10 VERIFIED metadata:** PG migrations, owner-bound session/link repository, revision và exact version/generation snapshots.
 - **T11 VERIFIED storage reader:** HEAD/GET theo app/alias/bucket/prefix cấu hình; checksum hoặc version ID, giới hạn stream/temp, MinIO IAM reader chỉ đọc kiểm chứng thật. [RUNBOOK R04](RUNBOOK.md#r04) có cấu hình/test/trust contract.
 - **T12 VERIFIED registration/outbox:** real MinIO/PG/Redis integration, owner/session idempotency, detach, retry, crash redelivery và dispatcher image/CLI. Business HTTP mount và ingestion worker vẫn DESIGNED ở T26/T19.
-- **T13 VERIFIED text parsers:** PDF native text, DOCX, TXT/MD/HTML EN/VI; provenance và process/MIME/size/archive/time/cleanup gates. OCR/scan chưa verified.
+- **T13 VERIFIED text parsers:** PDF native text, DOCX, TXT/MD/HTML EN/VI; provenance và process/MIME/size/archive/time/cleanup gates.
 - **T14 VERIFIED Office tables:** XLSX sheet/cells/formula cache, CSV records và PPTX slide/shape; common headers/units và archive bounds.
-- **T15–T19:** OCR, model setup, chunking và ingestion commands.
+- **T15 VERIFIED OCR:** Docker CPU Tesseract vie/eng + Docling stage, page/image provenance, quality/error/cancel/process bounds; 20 full + 13 separate status checks thật.
+- **T16–T19:** model setup, chunking và ingestion commands.
 - **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.
 - **T27–T29:** admin URL/login, UI workflows.
 - **T30–T34:** benchmark reports, performance, reliability, backup/restore.
