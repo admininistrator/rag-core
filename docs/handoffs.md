@@ -4730,7 +4730,7 @@ D1–D5 PASS. D6 scope/cached review PASS; final docs restage, cached/docs valid
 
 
 <a id="h-t14-a01"></a>
-## H-T14-A01 ? Phase 3 / XLSX, CSV, PPTX v? b?ng, 2026-10-01
+## H-T14-A01 — Phase 3 / XLSX, CSV, PPTX và bảng, 2026-10-01
 
 **Runtime/baseline/scope:** direct Codex agent, exact model/effort not exposed, no subagents.
 Cwd for all commands below `C:\Users\Admin\Documents\GitHub\rag-core`, PowerShell,
@@ -4814,7 +4814,7 @@ writes exact intended LF bytes. CSV field-size error maps to extraction_limit; f
 single-column/empty/budget test1PASS. Context-mismatched apply_patch calls made no
 changes and were corrected after reading actual formatted lines. Final full gates below.
 
-### DoD-1 ? Actual Office/CSV parsing and source round-trip
+### DoD-1 — Actual Office/CSV parsing and source round-trip
 
 Expected multi-sheet/merged/numeric headers/units/formula-cache distinction, PPTX slides,
 CSV quoting/delimiters/Unicode, source cell/slide/logical record round-trip; actual22PASS,
@@ -4876,7 +4876,7 @@ tests/integration/test_office_tables.py::test_safety_office_mime_package_corrupt
 ============================= 22 passed in 15.43s =============================
 ```
 
-### DoD-2 ? Archives/macros/links inert, legacy/chart limits documented
+### DoD-2 — Archives/macros/links inert, legacy/chart limits documented
 
 Expected unsafe Office packages refused, no external/formula/macro execution and honest
 format limits in README/RUNBOOK. Actual9PASS in separate safety run,0loopback requests
@@ -4916,7 +4916,7 @@ tests/integration/test_office_tables.py::test_safety_office_mime_package_corrupt
 ====================== 9 passed, 13 deselected in 10.42s ======================
 ```
 
-### D2 ? Quality, regression, reproducible dependencies and contracts
+### D2 — Quality, regression, reproducible dependencies and contracts
 
 Regression on current T14 source, expected T13 native text/parser safety and full
 unit/contract/security remain correct. Actual344PASS (325 prior suite+19T13), no skips,
@@ -4973,7 +4973,7 @@ CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream ver
 Git author configured
 ```
 
-### D1/D5 ? Scope, source and dependency review
+### D1/D5 — Scope, source and dependency review
 
 Read/reviewed all new/modified source/tests/lock/docs. Read-only inline Python review
 (`$reviewScript | .venv/Scripts/python.exe -`, script shown below) exit0, expected no
@@ -5011,7 +5011,7 @@ README/RUNBOOK both explain working commands, source context convention, missing
 formula cache, numeric formats, UTF-8/CSV record semantics, PPTX groups and bounds;
 no worker/index/OCR/chart/legacy support claimed.
 
-### D4/D6 ? Closure boundary
+### D4/D6 — Closure boundary
 
 README/RUNBOOK + tasks/handoffs/summary updated; final docs check, exact scope/secrets
 scan/stage evidence appended below. Completion subject/Task-ID
@@ -5207,3 +5207,48 @@ then `git commit -m "feat(T14): preserve spreadsheet and table evidence"` and in
 actual commit before authorized `git push origin main`. Actual commit/output/remote
 hash equality returned directly post-execution, not inserted into its own commit.
 If commit/push fails, report actual failure/checkpoint instead of claiming closure.
+
+### Post-completion inspection and heading encoding correction
+
+Source completion command `git commit -m "feat(T14): preserve spreadsheet and table evidence"`
+exit0, actual:
+
+```text
+[main f7c8acd] feat(T14): preserve spreadsheet and table evidence
+15 files changed, 1680 insertions(+), 75 deletions(-)
+```
+
+`git show --check --oneline HEAD; git rev-parse HEAD; git rev-parse HEAD^;
+git branch --show-current; git remote get-url origin; git show --format= --name-only HEAD;
+git status --short` exit0: commit whitespace clean, exact15files, parentT13 unchanged,
+only two inherited scratch directories untracked. Actual identities:
+
+```text
+f7c8acd04eb8282d520ad68f2ba572e16be77bdb
+d3e57b29de892ff360e2e255e9d1680bf179faaf
+main
+https://github.com/admininistrator/rag-core.git
+```
+
+Authorized `git push origin main` exit0:
+
+```text
+To https://github.com/admininistrator/rag-core.git
+   d3e57b2..f7c8acd  main -> main
+```
+
+Remote comparison `git rev-parse HEAD` + `git ls-remote origin refs/heads/main`,
+with unequal-hash guard, exit0:
+
+```text
+PASS HEAD equals origin/main: f7c8acd04eb8282d520ad68f2ba572e16be77bdb
+```
+
+Final read inspection found six handoff headings had Unicode replaced by `?` in the
+PowerShell-to-Python stdin write; `$OutputEncoding.WebName` returned `us-ascii`.
+Raw log decoding and source/tests were unaffected. Headings repaired using UTF-8
+apply_patch; separate docs-only corrective commit preserves the successful completion
+commit/history and records its actual closure evidence here. No source/tests/DoD change;
+only docs validator/diff checks apply to this correction. Corrective commit subject
+`docs(T14): repair handoff heading encoding`; actual hash/remote equality reported
+after that commit/push, not self-referenced. T15 ready; stop after T14.
