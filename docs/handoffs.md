@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-01 / T14-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort not exposed, no subagents. Baseline `main`/T13 `d3e57b29de892ff360e2e255e9d1680bf179faaf` equals origin/main. XLSX/CSV/PPTX tables, formula/cache/source context and common bounded OOXML preflight implemented; final DoD-1 23PASS, separate DoD-2 9PASS, regression344PASS, Ruff/mypy41/locked105/OpenAPI/docs/scope/secrets review PASS. [T14 evidence](#h-t14-a01). Completion subject `feat(T14): preserve spreadsheet and table evidence`; actual hash/remote equality reported post-commit/push (resolve by subject). Inherited T07 scratch untouched. No T14 blocker; T15 dependencies ready after closure. **STOP AFTER T14**.
+
 - **Current 2026-10-01 / T13-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, no subagents; baseline main/T12 `094f74452307a8645eeb1d00a0a0af738b4403e9` equals origin/main. Native PDF/DOCX/TXT/MD/HTML EN/VI provenance and bounded registry implemented. Final DoD1 19 PASS, separate DoD2 8 PASS, regression325 PASS, Ruff/mypy38/locked101/OpenAPI/docs/scope/secrets review PASS. [T13 evidence](#h-t13-a01). Completion subject `feat(T13): parse text documents with source provenance`; actual hash/remote equality reported post-commit/push (resolve by subject). T14 ready after closure; no T13 blocker. Inherited T07 scratch preserved; **STOP AFTER T13**.
 
 - **Current 2026-09-30 / T12-A01 completion candidate:** direct Codex agent, model/effort unavailable, no subagents. Baseline `main`/T11 `06185be330c090d59a5924e449f2502f7b3dc4cb`; two inherited T07 scratch directories unchanged. Registration, migration, job polling/retry, outbox dispatcher/CLI and Compose profile implemented. Separate DoD real PG/Redis/MinIO tests 2+1 PASS, T10 regression19 PASS, unit/contract/security325 PASS with short Windows basetemp; dispatcher image built and CLI checked. [T12 evidence](#h-t12-a01). Final docs/scope/commit/push review pending; T13 readiness only after closure. **STOP AFTER T12**.
@@ -4725,3 +4727,483 @@ PASS staged exact task files; compared local secret values absent; no private ke
 ```
 
 D1–D5 PASS. D6 scope/cached review PASS; final docs restage, cached/docs validation and commit are last atomic completion steps. COMPLETE field is effective only with successful inspected completion commit; resolve actual hash via `git log -1 --format=%H --grep="^feat(T13):"`. Actual commit and remote equality reported post-push. No unresolved T13 blocker; T14 ready after closure; stop here.
+
+
+<a id="h-t14-a01"></a>
+## H-T14-A01 ? Phase 3 / XLSX, CSV, PPTX v? b?ng, 2026-10-01
+
+**Runtime/baseline/scope:** direct Codex agent, exact model/effort not exposed, no subagents.
+Cwd for all commands below `C:\Users\Admin\Documents\GitHub\rag-core`, PowerShell,
+Windows/Python3.12.4/pytest9.1.1/uv0.11.16; `UV_CACHE_DIR=<repo>\.uv-cache`.
+No services/provider/model/OCR/weights required, only synthetic Office/CSV fixtures.
+T13 COMPLETE and its notes/evidence/summary, AGENTS/task-session-prompt, P01/P02/P06/P07/P13,
+living docs/current checkpoint read before code. No unfinished T14 work existed.
+User explicitly authorizes scoped commit/push origin/current branch, no force/merge/deploy.
+
+Baseline command `git status --short; git branch --show-current; git rev-parse HEAD;
+git remote -v; rg --files -g AGENTS.md -g task-session-prompt.md -g tasks.md -g plan.md
+-g handoffs.md -g implementation-summary.md -g README.md -g RUNBOOK.md` overall exit1
+because rg hit inherited inaccessible scratch. Git baseline output:
+
+```text
+?? .ptmp-t07-a02/
+?? .tmp-t07-a02/
+main
+d3e57b29de892ff360e2e255e9d1680bf179faaf
+origin https://github.com/admininistrator/rag-core.git (fetch)
+origin https://github.com/admininistrator/rag-core.git (push)
+```
+
+Inherited scratch/global Git-ignore ACL warnings unchanged, no files touched there.
+`git log -1 --format='%H%n%s'` exit0: same hash / `feat(T13): parse text documents with source provenance`.
+`git ls-remote origin refs/heads/main` sandbox exit128:
+`fatal: unable to access 'https://github.com/admininistrator/rag-core.git/': Failed to connect to github.com port 443 after 22 ms: Could not connect to server`.
+Authorized network escalation of same command exit0:
+
+```text
+d3e57b29de892ff360e2e255e9d1680bf179faaf refs/heads/main
+```
+
+`git var GIT_AUTHOR_IDENT | Out-Null; if ($LASTEXITCODE -eq 0) { Write-Output 'Git author configured' }`
+exit0, actual `Git author configured`; identity neither printed nor changed.
+
+**Implementation/official APIs:** [openpyxl load_workbook](https://openpyxl.readthedocs.io/en/stable/api/openpyxl.reader.excel.html)
+data_only controls formula vs stored cache; keep_vba/keep_links disabled, no recalculation.
+[python-pptx shapes](https://python-pptx.readthedocs.io/en/latest/api/shapes.html) supplies text,
+tables/groups/z-order, never Office execution. Release artifacts verified on official PyPI
+[openpyxl3.1.5](https://pypi.org/project/openpyxl/3.1.5/) / [python-pptx1.0.2](https://pypi.org/project/python-pptx/1.0.2/).
+Interfaces/policies/files/revisions in [S-T14-A01](implementation-summary.md#s-t14-a01).
+Allowed exact15 files: README/RUNBOOK, tasks/handoffs/implementation-summary,
+pyproject/uv.lock, domain/documents, parser registry/worker/text/archive/office/tables,
+real integration test_office_tables. No API/DB/index/corpus/session semantics change.
+
+Dependency command, authorized network escalation, exit0:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv add --group ingestion 'openpyxl==3.1.5' 'python-pptx==1.0.2' --no-sync; if ($LASTEXITCODE -eq 0) { uv sync --locked --group dev --group api --group ingestion }
+```
+
+Actual excerpt (upstream invalid version normalization WARNs retained in tool output):
+
+```text
+Resolved 105 packages in 1.28s
+Resolved 105 packages in 1ms
+Prepared 5 packages in 1.75s
+Uninstalled 1 package in 7ms
+Installed 5 packages in 145ms
++ et-xmlfile==2.0.0
++ openpyxl==3.1.5
++ python-pptx==1.0.2
+~ rag-core==0.1.0 (from file:///C:/Users/Admin/Documents/GitHub/rag-core)
++ xlsxwriter==3.2.9
+```
+
+**Diagnostics/fixes retained, no lowered gate:** initial integration collection exit1
+`ModuleNotFoundError: No module named 'tests'` from cross-test helper import; replaced
+with local real registry/source-hash/cleanup helper. Initial Ruff RUF001 dash/import
+and later UP012 encode argument fixed. Second run exit1 `1 failed, 18 passed in14.69s`:
+XPath lacked namespace mapping; namespace provided. Third combined run exit1
+`1 failed, 37 passed in32.64s`: python-pptx custom XML text properties repeated itertext;
+independent XML-from-original-package resolver used instead; exact source text assert
+unchanged, focused real PPTX run1PASS. Review made group blocks unique, retained
+numeric year headers/full merged bounds/blank regions, pre-load combined area limits,
+and actual hyperlink/WEBSERVICE execution canaries. Three focused review tests PASS.
+First DoD invocation in `.local/t14-dod1.log` exit1 `1 failed, 21 passed in15.67s`:
+Windows fixture write_text inserted CRLF, parser correctly preserved it; fixture now
+writes exact intended LF bytes. CSV field-size error maps to extraction_limit; focused
+single-column/empty/budget test1PASS. Context-mismatched apply_patch calls made no
+changes and were corrected after reading actual formatted lines. Final full gates below.
+
+### DoD-1 ? Actual Office/CSV parsing and source round-trip
+
+Expected multi-sheet/merged/numeric headers/units/formula-cache distinction, PPTX slides,
+CSV quoting/delimiters/Unicode, source cell/slide/logical record round-trip; actual22PASS,
+no skips. Original source bytes unchanged and private parser sandbox empty asserted on
+every parse, including errors. Full synthetic-only log `.local/t14-dod1-final.log`.
+Exit **0**, exact command:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/integration/test_office_tables.py -v -s --tb=short --basetemp=.local/t14-accept-dod1 -o cache_dir=.local/t14-cache-accept-dod1 2>&1 | Tee-Object -FilePath .local/t14-dod1-final.log; exit $LASTEXITCODE
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Admin\Documents\GitHub\rag-core\.venv\Scripts\python.exe
+cachedir: .local\t14-cache-accept-dod1
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 22 items
+
+tests/integration/test_office_tables.py::test_xlsx_multisheet_merged_headers_units_and_cell_round_trip PASS actual XLSX: 2 sheets, merged A1:C1, headers/units/percent format, every cell/range round-trip; no PDF page
+PASSED
+tests/integration/test_office_tables.py::test_xlsx_formula_cache_policy_never_recalculates PASS formula policy: stored cache240 retained, missing cache not inferred as0.5; formulas separate and inert
+PASSED
+tests/integration/test_office_tables.py::test_xlsx_numeric_headers_merged_extent_blank_regions_and_false_dimension PASS numeric year headers/units, full merged extent, blank-region reset; forged dimension ignored
+PASSED
+tests/integration/test_office_tables.py::test_common_table_normalization_preserves_empty_cells_multiline_headers_units PASS shared DOCX/HTML/MD table rows/header/units/empty cells; CSV HTML/formula-looking fields remain inert data
+PASSED
+tests/integration/test_office_tables.py::test_csv_unicode_quoting_multiline_delimiters_record_round_trip[,] PASS actual CSV delimiter',': Unicode/BOM/CRLF/escaped quotes/multiline; logical records1-3, formula text unchanged
+PASSED
+tests/integration/test_office_tables.py::test_csv_unicode_quoting_multiline_delimiters_record_round_trip[;] PASS actual CSV delimiter';': Unicode/BOM/CRLF/escaped quotes/multiline; logical records1-3, formula text unchanged
+PASSED
+tests/integration/test_office_tables.py::test_csv_unicode_quoting_multiline_delimiters_record_round_trip[\t] PASS actual CSV delimiter'\t': Unicode/BOM/CRLF/escaped quotes/multiline; logical records1-3, formula text unchanged
+PASSED
+tests/integration/test_office_tables.py::test_csv_unicode_quoting_multiline_delimiters_record_round_trip[|] PASS actual CSV delimiter'|': Unicode/BOM/CRLF/escaped quotes/multiline; logical records1-3, formula text unchanged
+PASSED
+tests/integration/test_office_tables.py::test_pptx_multislide_table_group_xml_locator_round_trip PASS actual PPTX: slides1/2, blank paragraph indices, tables/units, group paths and original XML round-trip
+PASSED
+tests/integration/test_office_tables.py::test_csv_invalid_encoding_shape_or_quotes_are_explicit_errors[a,b\n1,2,3\n] PASSED
+tests/integration/test_office_tables.py::test_csv_invalid_encoding_shape_or_quotes_are_explicit_errors[a,b\n1,"unterminated] PASSED
+tests/integration/test_office_tables.py::test_csv_invalid_encoding_shape_or_quotes_are_explicit_errors[\xff\xfe\x00] PASSED
+tests/integration/test_office_tables.py::test_csv_invalid_encoding_shape_or_quotes_are_explicit_errors[a,b\n\n] PASSED
+tests/integration/test_office_tables.py::test_safety_office_archive_bombs_macros_traversal_entities[xlsx] PASS xlsx actual ZIP entry/expanded/ratio bombs, traversal, VBA and XML entities refused; no extraction, source preserved
+PASSED
+tests/integration/test_office_tables.py::test_safety_office_archive_bombs_macros_traversal_entities[pptx] PASS pptx actual ZIP entry/expanded/ratio bombs, traversal, VBA and XML entities refused; no extraction, source preserved
+PASSED
+tests/integration/test_office_tables.py::test_safety_external_relationships_never_fetch_or_execute[xlsx] PASS xlsx actual loopback HTTP execution canary:0 requests; external relations inert
+PASSED
+tests/integration/test_office_tables.py::test_safety_external_relationships_never_fetch_or_execute[pptx] PASS pptx actual loopback HTTP execution canary:0 requests; external relations inert
+PASSED
+tests/integration/test_office_tables.py::test_safety_csv_single_column_empty_and_cell_text_limits PASSED
+tests/integration/test_office_tables.py::test_safety_xlsx_sparse_dimension_merged_and_cell_sheet_budgets PASS XLSX pre-load sparse/merge area and sheet/cell budgets; huge merge never materialized
+PASSED
+tests/integration/test_office_tables.py::test_safety_pptx_slide_table_and_result_budgets PASSED
+tests/integration/test_office_tables.py::test_safety_office_mime_package_corrupt_encrypted_and_legacy[xlsx] PASSED
+tests/integration/test_office_tables.py::test_safety_office_mime_package_corrupt_encrypted_and_legacy[pptx] PASSED
+
+============================= 22 passed in 15.43s =============================
+```
+
+### DoD-2 ? Archives/macros/links inert, legacy/chart limits documented
+
+Expected unsafe Office packages refused, no external/formula/macro execution and honest
+format limits in README/RUNBOOK. Actual9PASS in separate safety run,0loopback requests
+from real hyperlink refs/WEBSERVICE formula; VBA/entity/bomb rejected before backend,
+no package extraction. `.doc/.xls/.ppt` unsupported, charts/images not promised; format
+matrix/policy checked in both docs. Full log `.local/t14-dod2-final.log`, exit **0**:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/integration/test_office_tables.py -k safety -v -s --tb=short --basetemp=.local/t14-accept-dod2 -o cache_dir=.local/t14-cache-accept-dod2 2>&1 | Tee-Object -FilePath .local/t14-dod2-final.log; exit $LASTEXITCODE
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Admin\Documents\GitHub\rag-core\.venv\Scripts\python.exe
+cachedir: .local\t14-cache-accept-dod2
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 22 items / 13 deselected / 9 selected
+
+tests/integration/test_office_tables.py::test_safety_office_archive_bombs_macros_traversal_entities[xlsx] PASS xlsx actual ZIP entry/expanded/ratio bombs, traversal, VBA and XML entities refused; no extraction, source preserved
+PASSED
+tests/integration/test_office_tables.py::test_safety_office_archive_bombs_macros_traversal_entities[pptx] PASS pptx actual ZIP entry/expanded/ratio bombs, traversal, VBA and XML entities refused; no extraction, source preserved
+PASSED
+tests/integration/test_office_tables.py::test_safety_external_relationships_never_fetch_or_execute[xlsx] PASS xlsx actual loopback HTTP execution canary:0 requests; external relations inert
+PASSED
+tests/integration/test_office_tables.py::test_safety_external_relationships_never_fetch_or_execute[pptx] PASS pptx actual loopback HTTP execution canary:0 requests; external relations inert
+PASSED
+tests/integration/test_office_tables.py::test_safety_csv_single_column_empty_and_cell_text_limits PASSED
+tests/integration/test_office_tables.py::test_safety_xlsx_sparse_dimension_merged_and_cell_sheet_budgets PASS XLSX pre-load sparse/merge area and sheet/cell budgets; huge merge never materialized
+PASSED
+tests/integration/test_office_tables.py::test_safety_pptx_slide_table_and_result_budgets PASSED
+tests/integration/test_office_tables.py::test_safety_office_mime_package_corrupt_encrypted_and_legacy[xlsx] PASSED
+tests/integration/test_office_tables.py::test_safety_office_mime_package_corrupt_encrypted_and_legacy[pptx] PASSED
+
+====================== 9 passed, 13 deselected in 10.42s ======================
+```
+
+### D2 ? Quality, regression, reproducible dependencies and contracts
+
+Regression on current T14 source, expected T13 native text/parser safety and full
+unit/contract/security remain correct. Actual344PASS (325 prior suite+19T13), no skips,
+exit **0**, `.local/t14-regression.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/unit tests/contract tests/security tests/integration/test_text_parsers.py -q --tb=short --basetemp=.local/t14-reg -o cache_dir=.local/t14-cache-reg 2>&1 | Tee-Object -FilePath .local/t14-regression.log; exit $LASTEXITCODE
+```
+
+```text
+........................................................................ [ 20%]
+........................................................................ [ 41%]
+........................................................................ [ 62%]
+........................................................................ [ 83%]
+........................................................                 [100%]
+344 passed in 118.27s (0:01:58)
+```
+
+Final quality command, exit0:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync ruff check .; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; uv run --no-sync mypy src; git diff --check; git diff --exit-code -- corpus-documents docs/api; git status --short
+```
+
+Actual quality excerpt:
+
+```text
+warning: Encountered error: Access is denied. (os error 5)
+warning: Encountered error: Access is denied. (os error 5)
+warning: Encountered error: Access is denied. (os error 5)
+All checks passed!
+Success: no issues found in 41 source files
+```
+
+Three warnings refer to inherited scratch; all changed files checked. Git diff checks
+no stdout, no corpus/prompt/API snapshot edits; status only allowed candidate + two
+baseline T07 scratch directories. No scope loosening or storage operations introduced.
+
+Locked offline sync/OpenAPI check command, exit0:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv sync --offline --locked --group dev --group api --group ingestion; uv run --no-sync python scripts/export_openapi.py --check; git var GIT_AUTHOR_IDENT | Out-Null; if ($LASTEXITCODE -eq 0) { Write-Output 'Git author configured' }
+```
+
+```text
+Resolved 105 packages in 34ms
+Checked 104 packages in 14ms
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+Git author configured
+```
+
+### D1/D5 ? Scope, source and dependency review
+
+Read/reviewed all new/modified source/tests/lock/docs. Read-only inline Python review
+(`$reviewScript | .venv/Scripts/python.exe -`, script shown below) exit0, expected no
+old lock upgrades or dependency spill, actual:
+
+```text
+PASS existing lock versions unchanged; 4 Office packages added; other dependency groups unchanged
+PASS corpus/prompt and API snapshots unchanged; no schema/DB/index migration
+```
+
+```python
+import subprocess,tomllib
+from pathlib import Path
+old=tomllib.loads(subprocess.check_output(['git','show','HEAD:uv.lock'],text=True,encoding='utf-8'))
+new=tomllib.loads(Path('uv.lock').read_text(encoding='utf-8'))
+before={p['name']:p['version'] for p in old['package']}
+after={p['name']:p['version'] for p in new['package']}
+assert all(after[k]==v for k,v in before.items())
+assert set(after)-set(before)=={'openpyxl','python-pptx','et-xmlfile','xlsxwriter'}
+assert subprocess.run(['git','diff','--exit-code','--','corpus-documents','docs/api']).returncode==0
+cfg=tomllib.loads(Path('pyproject.toml').read_text(encoding='utf-8'))
+prior=tomllib.loads(subprocess.check_output(['git','show','HEAD:pyproject.toml'],text=True,encoding='utf-8'))
+for name in cfg['dependency-groups']:
+ if name!='ingestion': assert cfg['dependency-groups'][name]==prior['dependency-groups'][name]
+print('PASS existing lock versions unchanged; 4 Office packages added; other dependency groups unchanged')
+print('PASS corpus/prompt and API snapshots unchanged; no schema/DB/index migration')
+```
+
+Source schema1 fields additive with defaults, parser revisions updated where table
+metadata changed; future T16/T19 fingerprint obligation documented, no migration needed
+before those tasks exist. Existing T03 locators and page policy reused, session/auth/
+retention/storage contracts untouched. Only generated synthetic fixtures in ignored
+`.local`, no raw corpus/weights/.env/cache/logs/source binaries included in completion.
+README/RUNBOOK both explain working commands, source context convention, missing/stale
+formula cache, numeric formats, UTF-8/CSV record semantics, PPTX groups and bounds;
+no worker/index/OCR/chart/legacy support claimed.
+
+### D4/D6 ? Closure boundary
+
+README/RUNBOOK + tasks/handoffs/summary updated; final docs check, exact scope/secrets
+scan/stage evidence appended below. Completion subject/Task-ID
+`feat(T14): preserve spreadsheet and table evidence`; actual hash, inspected commit
+and origin/main equality returned after execution, never self-reference/amend.
+COMPLETE only after all gates and successful inspected commit; failed commit/push must
+report actual error/checkpoint. T15 depends on T14/T13, ready after successful closure;
+stop T14, no T15 code/worker/OCR/deployment/Scarlet changes.
+
+
+### Final review correction and separate DoD reruns
+
+Final source review found two T14-only edge cases: all-empty single-column CSV header
+was valid context followed by actual data but Pydantic rejected its empty text;
+merged formula header must reuse normalized cache/missing value, not expression text.
+Preserved raw rows/formula metadata, explicit empty-field marker and all-empty-file
+`empty_extraction`; normalized anchor value now supplies merged context. Added one
+real regression test (23total). Shared T13 parser/worker/domain/contract regression
+paths unchanged by this Office-only fix, so344PASS evidence above still applies;
+final T14 DoD reruns and Ruff/mypy below cover final changed paths. No tests/gold/gates
+removed. Focused `-k empty_csv_header` exit0 `1 passed, 22 deselected in1.78s`.
+
+Final DoD-1, exit0, `.local/t14-dod1-close.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/integration/test_office_tables.py -v -s --tb=short --basetemp=.local/t14-close-dod1 -o cache_dir=.local/t14-cache-close-dod1 2>&1 | Tee-Object -FilePath .local/t14-dod1-close.log; exit $LASTEXITCODE
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Admin\Documents\GitHub\rag-core\.venv\Scripts\python.exe
+cachedir: .local\t14-cache-close-dod1
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 23 items
+
+tests/integration/test_office_tables.py::test_xlsx_multisheet_merged_headers_units_and_cell_round_trip PASS actual XLSX: 2 sheets, merged A1:C1, headers/units/percent format, every cell/range round-trip; no PDF page
+PASSED
+tests/integration/test_office_tables.py::test_xlsx_formula_cache_policy_never_recalculates PASS formula policy: stored cache240 retained, missing cache not inferred as0.5; formulas separate and inert
+PASSED
+tests/integration/test_office_tables.py::test_xlsx_numeric_headers_merged_extent_blank_regions_and_false_dimension PASS numeric year headers/units, full merged extent, blank-region reset; forged dimension ignored
+PASSED
+tests/integration/test_office_tables.py::test_common_table_normalization_preserves_empty_cells_multiline_headers_units PASS shared DOCX/HTML/MD table rows/header/units/empty cells; CSV HTML/formula-looking fields remain inert data
+PASSED
+tests/integration/test_office_tables.py::test_csv_unicode_quoting_multiline_delimiters_record_round_trip[,] PASS actual CSV delimiter',': Unicode/BOM/CRLF/escaped quotes/multiline; logical records1-3, formula text unchanged
+PASSED
+tests/integration/test_office_tables.py::test_csv_unicode_quoting_multiline_delimiters_record_round_trip[;] PASS actual CSV delimiter';': Unicode/BOM/CRLF/escaped quotes/multiline; logical records1-3, formula text unchanged
+PASSED
+tests/integration/test_office_tables.py::test_csv_unicode_quoting_multiline_delimiters_record_round_trip[\t] PASS actual CSV delimiter'\t': Unicode/BOM/CRLF/escaped quotes/multiline; logical records1-3, formula text unchanged
+PASSED
+tests/integration/test_office_tables.py::test_csv_unicode_quoting_multiline_delimiters_record_round_trip[|] PASS actual CSV delimiter'|': Unicode/BOM/CRLF/escaped quotes/multiline; logical records1-3, formula text unchanged
+PASSED
+tests/integration/test_office_tables.py::test_pptx_multislide_table_group_xml_locator_round_trip PASS actual PPTX: slides1/2, blank paragraph indices, tables/units, group paths and original XML round-trip
+PASSED
+tests/integration/test_office_tables.py::test_csv_invalid_encoding_shape_or_quotes_are_explicit_errors[a,b\n1,2,3\n] PASSED
+tests/integration/test_office_tables.py::test_csv_invalid_encoding_shape_or_quotes_are_explicit_errors[a,b\n1,"unterminated] PASSED
+tests/integration/test_office_tables.py::test_csv_invalid_encoding_shape_or_quotes_are_explicit_errors[\xff\xfe\x00] PASSED
+tests/integration/test_office_tables.py::test_csv_invalid_encoding_shape_or_quotes_are_explicit_errors[a,b\n\n] PASSED
+tests/integration/test_office_tables.py::test_safety_office_archive_bombs_macros_traversal_entities[xlsx] PASS xlsx actual ZIP entry/expanded/ratio bombs, traversal, VBA and XML entities refused; no extraction, source preserved
+PASSED
+tests/integration/test_office_tables.py::test_safety_office_archive_bombs_macros_traversal_entities[pptx] PASS pptx actual ZIP entry/expanded/ratio bombs, traversal, VBA and XML entities refused; no extraction, source preserved
+PASSED
+tests/integration/test_office_tables.py::test_safety_external_relationships_never_fetch_or_execute[xlsx] PASS xlsx actual loopback HTTP execution canary:0 requests; external relations inert
+PASSED
+tests/integration/test_office_tables.py::test_safety_external_relationships_never_fetch_or_execute[pptx] PASS pptx actual loopback HTTP execution canary:0 requests; external relations inert
+PASSED
+tests/integration/test_office_tables.py::test_safety_csv_single_column_empty_and_cell_text_limits PASSED
+tests/integration/test_office_tables.py::test_empty_csv_header_and_merged_formula_header_keep_source_data_distinct PASSED
+tests/integration/test_office_tables.py::test_safety_xlsx_sparse_dimension_merged_and_cell_sheet_budgets PASS XLSX pre-load sparse/merge area and sheet/cell budgets; huge merge never materialized
+PASSED
+tests/integration/test_office_tables.py::test_safety_pptx_slide_table_and_result_budgets PASSED
+tests/integration/test_office_tables.py::test_safety_office_mime_package_corrupt_encrypted_and_legacy[xlsx] PASSED
+tests/integration/test_office_tables.py::test_safety_office_mime_package_corrupt_encrypted_and_legacy[pptx] PASSED
+
+============================= 23 passed in 16.60s =============================
+```
+
+Final separate DoD-2, exit0, `.local/t14-dod2-close.log`:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/integration/test_office_tables.py -k safety -v -s --tb=short --basetemp=.local/t14-close-dod2 -o cache_dir=.local/t14-cache-close-dod2 2>&1 | Tee-Object -FilePath .local/t14-dod2-close.log; exit $LASTEXITCODE
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Admin\Documents\GitHub\rag-core\.venv\Scripts\python.exe
+cachedir: .local\t14-cache-close-dod2
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 23 items / 14 deselected / 9 selected
+
+tests/integration/test_office_tables.py::test_safety_office_archive_bombs_macros_traversal_entities[xlsx] PASS xlsx actual ZIP entry/expanded/ratio bombs, traversal, VBA and XML entities refused; no extraction, source preserved
+PASSED
+tests/integration/test_office_tables.py::test_safety_office_archive_bombs_macros_traversal_entities[pptx] PASS pptx actual ZIP entry/expanded/ratio bombs, traversal, VBA and XML entities refused; no extraction, source preserved
+PASSED
+tests/integration/test_office_tables.py::test_safety_external_relationships_never_fetch_or_execute[xlsx] PASS xlsx actual loopback HTTP execution canary:0 requests; external relations inert
+PASSED
+tests/integration/test_office_tables.py::test_safety_external_relationships_never_fetch_or_execute[pptx] PASS pptx actual loopback HTTP execution canary:0 requests; external relations inert
+PASSED
+tests/integration/test_office_tables.py::test_safety_csv_single_column_empty_and_cell_text_limits PASSED
+tests/integration/test_office_tables.py::test_safety_xlsx_sparse_dimension_merged_and_cell_sheet_budgets PASS XLSX pre-load sparse/merge area and sheet/cell budgets; huge merge never materialized
+PASSED
+tests/integration/test_office_tables.py::test_safety_pptx_slide_table_and_result_budgets PASSED
+tests/integration/test_office_tables.py::test_safety_office_mime_package_corrupt_encrypted_and_legacy[xlsx] PASSED
+tests/integration/test_office_tables.py::test_safety_office_mime_package_corrupt_encrypted_and_legacy[pptx] PASSED
+
+====================== 9 passed, 14 deselected in 10.43s ======================
+```
+
+Final `uv run --no-sync ruff check .; uv run --no-sync mypy src; git diff --check`,
+same UV_CACHE_DIR/cwd, exit0 (after Office edge fix):
+
+```text
+warning: Encountered error: Access is denied. (os error 5)
+warning: Encountered error: Access is denied. (os error 5)
+warning: Encountered error: Access is denied. (os error 5)
+All checks passed!
+Success: no issues found in 41 source files
+```
+
+D4 docs check command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python scripts/check_docs.py; git diff --check`, exit0:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 291
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Read-only scope/secret review `$scopeScript | .venv/Scripts/python.exe -`, exit0,
+script enforces exact15 candidate allowlist, unchanged-source/new files within list,
+all text/no NUL/<1MiB, high-confidence AWS/Anthropic/GitHub/private-key marker absence
+in added diff/new sources (never prints matched values), manual legacy/chart docs
+and artifact-ignore assertions. Actual output:
+
+```text
+.local/t14-dod1-close.log
+.local/t14-dod2-close.log
+.local/t14-regression.log
+PASS exact15 allowed files; source/new-file scope; text/size and added credential-marker scan
+PASS README/RUNBOOK legacy/chart limits; generated fixtures and evidence logs ignored
+PASS D5 manual review: no secrets/raw corpus/binaries/weights; API/DB/index unchanged; retained session policy
+```
+
+D1 PASS dependencies/allowed scope/diff, D2 PASS quality/regression/lock, D3 PASS
+individual actual DoD1/2, D4 PASS docs/evidence/summary, D5 PASS code/contract/secrets/
+source review. D6 completion candidate staged exactly15 paths and inspected below;
+status COMPLETE is effective only when actual completion commit succeeds and is
+inspected. Authorized remote push/hash equality reported post-execution; no self-hash
+inside completion commit, no amend/rewrite/force push. T15 TODO and technically ready
+once T14 closes; no next-task work or server deployment performed.
+
+### D6 — Explicit staging and inspected completion candidate
+
+Authorized Git mutation, exact command, exit0/no stdout:
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md pyproject.toml uv.lock src/rag_core/domain/documents.py src/rag_core/adapters/parsers/registry.py src/rag_core/adapters/parsers/worker.py src/rag_core/adapters/parsers/text.py src/rag_core/adapters/parsers/archive.py src/rag_core/adapters/parsers/office.py src/rag_core/adapters/parsers/tables.py tests/integration/test_office_tables.py
+```
+
+`git diff --cached --check; git diff --cached --stat; git diff --cached --name-only;
+git diff --cached -- src/rag_core/adapters/parsers/archive.py src/rag_core/adapters/parsers/office.py src/rag_core/adapters/parsers/tables.py`
+exit0, full source diff inspected. Actual stat at that boundary:
+
+```text
+15 files changed, 1640 insertions(+), 75 deletions(-)
+```
+
+Read-only `$stagedScript | .venv/Scripts/python.exe -` compares exact15-path stage
+against allowed list, requires no unstaged paths, cached whitespace/added credential
+markers clean and baseline main/T13 HEAD unchanged. Exit0, actual:
+
+```text
+PASS staged exact15 T14 code/tests/docs; no unstaged changes; whitespace/credential-marker checks
+PASS branch main and baseline T13 HEAD unchanged; baseline T07 scratch excluded
+```
+
+Latest docs check after final task notes, same command/cwd/config, exit0:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 293
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Only this evidence append is restaged; repeat cached scope/whitespace/docs checks,
+then `git commit -m "feat(T14): preserve spreadsheet and table evidence"` and inspect
+actual commit before authorized `git push origin main`. Actual commit/output/remote
+hash equality returned directly post-execution, not inserted into its own commit.
+If commit/push fails, report actual failure/checkpoint instead of claiming closure.

@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from rag_core.contracts.v1 import SourceLocator
 
-DocumentFormat = Literal["pdf", "docx", "txt", "md", "html"]
+DocumentFormat = Literal["pdf", "docx", "txt", "md", "html", "xlsx", "csv", "pptx"]
 
 
 class ParseError(Exception):
@@ -29,6 +29,9 @@ class ParserLimits(BaseModel):
     max_blocks: int = Field(default=100_000, gt=0)
     max_text_chars: int = Field(default=8 * 1024 * 1024, gt=0)
     max_result_bytes: int = Field(default=32 * 1024 * 1024, gt=0)
+    max_table_cells: int = Field(default=250_000, gt=0)
+    max_sheets: int = Field(default=128, gt=0)
+    max_slides: int = Field(default=1000, gt=0, le=1000)
 
 
 class SourceIdentity(BaseModel):
@@ -36,6 +39,18 @@ class SourceIdentity(BaseModel):
     document_id: UUID
     version_id: UUID
     sha256: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+
+class TableCell(BaseModel):
+    """Stored values and formulas remain distinct; no recalculation or display inference."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    reference: str
+    value: str
+    formula: str | None = None
+    value_origin: Literal["stored", "formula_cache", "missing_formula_cache"] = "stored"
+    number_format: str | None = None
+    merged_origin: str | None = None
 
 
 class Block(BaseModel):
@@ -49,6 +64,8 @@ class Block(BaseModel):
     source_path: str | None = None
     bbox: tuple[float, float, float, float] | None = None
     rows: tuple[tuple[str, ...], ...] = ()
+    table_headers: tuple[tuple[str, ...], ...] = ()
+    cells: tuple[TableCell, ...] = ()
 
 
 class ParsedDocument(BaseModel):

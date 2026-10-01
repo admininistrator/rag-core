@@ -254,7 +254,7 @@
 <a id="t14"></a>
 ### T14 — XLSX, CSV, PPTX và bảng
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T13.
 - **Tham chiếu kế hoạch:** [P07](plan.md#p07), [P06](plan.md#p06).
 - **Công việc:** XLSX sheet/cell locators, CSV rows/header, PPTX slide/block, table normalization chung; formula/cached value policy, archive limits.
@@ -262,7 +262,9 @@
   1. `uv run pytest tests/integration/test_office_tables.py` PASS trên multi-sheet, merged header, units, missing cached formula, multi-slide, CSV quoting/delimiter/Unicode; locator round-trip đúng ô/slide/row.
   2. Archive bomb/external links/macros không được thực thi; README/RUNBOOK nêu `.doc/.xls/.ppt` chưa hỗ trợ và không cam kết suy luận biểu đồ.
 - **Cạm bẫy:** Sheet không là trang PDF; không tính lại công thức; không bỏ đơn vị/tiêu đề cột rồi khiến số liệu sai.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `feat(T14): preserve spreadsheet and table evidence`.
+- **Ghi chú thực thi:** T14-A01 | direct Codex agent, exact model/effort không được runtime công bố, không subagent; started 2026-10-01. Baseline `main`/T13 `d3e57b29de892ff360e2e255e9d1680bf179faaf` bằng origin/main; hai scratch T07 untracked giữ nguyên, không có T14 dở. Đã đọc AGENTS/session prompt, T13 notes/evidence/summary, P01/P02/P06/P07/P13, handoffs, README/RUNBOOK. Allowed: intermediate model, parser adapters/registry/worker, real synthetic Office/CSV integration fixtures, dependency/lock và README/RUNBOOK/tasks/handoffs/summary. Plan: openpyxl giữ sheet/cells và formula/cache riêng, PPTX text/table slide/shape/XML, UTF-8 CSV strict delimiter/records, common lossless table normalization và bounded archive preflight; chạy riêng từng DoD, D1–D6, scoped commit/push/hash verification, stop T14. Commit dự kiến `feat(T14): preserve spreadsheet and table evidence`.
+
+- **T14-A01 results (COMPLETE effective only after successful inspected completion commit):** Implemented XLSX multi-sheet row/cell/XML locators, merged/header/unit/number-format context, separate formula/cache origins, strict UTF-8 CSV logical records, PPTX slide/shape/group/table/XML blocks và common table normalization; generalized bounded OOXML preflight. Files/interfaces/revisions [S-T14-A01](implementation-summary.md#s-t14-a01), exact15files. DoD-1 **PASS** final23actual parser tests: multi-sheet/merged/numeric headers/units/missing and present caches, multi-slide/group tables, quoting4delimiters/Unicode/multiline/source round-trip; empty header/merged formula edge retained source distinction. DoD-2 **PASS** separate9safety tests: ZIP bombs/VBA/XML entities/traversal/MIME/encryption/cell-sheet-slide-output limits/cleanup, actual hyperlink+WEBSERVICE loopback0requests; README/RUNBOOK unsupported legacy/no chart promise. [H-T14-A01](handoffs.md#h-t14-a01). D1 scope/deps/diff PASS; D2 Ruff/mypy41/locked105/OpenAPI/344regression PASS; D3 individual real gates PASS; D4 README/RUNBOOK/task/handoff/summary + docscheck PASS; D5 scoped text/secret/lock/API/corpus review PASS; D6 explicit15file stage/inspection + completion subject `feat(T14): preserve spreadsheet and table evidence`, actual hash and origin/main equality reported post-commit/push. Runtime model/effort unavailable, no subagents; ended after inspected completion commit. Limits: host Windows/Python3.12.4 only, no worker Docker/OCR/index/RAM benchmark; header convention not general semantic table detection, formula caches can be stale; `.doc/.xls/.ppt` unsupported/no chart reasoning. No blockers requiring input. T15 dependencies T14/T13 ready after closure; **STOP AFTER T14**.
 
 <a id="t15"></a>
 ### T15 — OCR EN/VI có kiểm chứng

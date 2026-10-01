@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T13 nền tảng, corpus, authentication, metadata, storage reader, registration/outbox và text parsers IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 auth qua HTTP thật; T10 session repository/scope/migrations trên PG17.11 thật; T11 read-only S3 adapter trên MinIO thật; T12 register và outbox trên PG/Redis/MinIO thật; T13 parse PDF text/DOCX/TXT/MD/HTML EN/VI thật. API chỉ mount health; business HTTP/query/SSE runtime vẫn DESIGNED. T14–T36 chưa bắt đầu; scan/OCR chưa verified.
+> **T01–T14 nền tảng, corpus, authentication, metadata, storage reader, registration/outbox và parsers IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 auth qua HTTP thật; T10 session repository/scope/migrations trên PG17.11 thật; T11 read-only S3 adapter trên MinIO thật; T12 register và outbox trên PG/Redis/MinIO thật; T13 parse PDF text/DOCX/TXT/MD/HTML EN/VI thật; T14 XLSX/CSV/PPTX tables thật. API chỉ mount health; business HTTP/query/SSE runtime vẫn DESIGNED. T15–T36 chưa bắt đầu; scan/OCR chưa verified.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -24,6 +24,7 @@
 | S3/MinIO read adapter | VERIFIED real local MinIO; chưa nối HTTP/job | T11 |
 | Upload registration, job repository/outbox | VERIFIED real PG/MinIO/Redis; HTTP chưa mount, worker chưa có | T12 |
 | PDF text/DOCX/TXT/MD/HTML parsers | VERIFIED real native parsers trên fixtures EN/VI; chưa nối worker | T13 |
+| XLSX/CSV/PPTX tables | VERIFIED real parsers, locators/header/unit/formula cache và archive safety; chưa nối worker | T14 |
 | Office tables/OCR/chunking/index | DESIGNED | T14–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
 | Admin UI | DESIGNED | T27–T29 |
@@ -84,7 +85,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | base | IMPLEMENTED/VERIFIED | Pydantic v2 + pydantic-settings cho typed config |
 | dev | IMPLEMENTED/VERIFIED | Ruff, mypy, pytest, pytest-asyncio; jsonschema 4.26.0 từ T03 để validate exported schemas/examples, không vào API image |
 | api | IMPLEMENTED/VERIFIED T02 | FastAPI, HTTPX, Uvicorn, psycopg, Redis client; health-only API process, không có business routes |
-| ingestion | IMPLEMENTED/VERIFIED adapters T11–T13; worker DESIGNED | Metadata, boto3, Celery, Qdrant/Redis; Docling Parse7.22.1, python-docx1.2.0, pypdf6.19.0 crypto, defusedxml0.7.1; chưa có worker/model/OCR |
+| ingestion | IMPLEMENTED/VERIFIED adapters T11–T14; worker DESIGNED | Metadata, boto3, Celery, Qdrant/Redis; Docling Parse7.22.1, python-docx1.2.0, openpyxl3.1.5, python-pptx1.0.2, pypdf6.19.0 crypto, defusedxml0.7.1; chưa có worker/model/OCR |
 | metadata | IMPLEMENTED/VERIFIED T10 | SQLAlchemy2.0.53 async + greenlet3.5.6, Psycopg, Alembic1.20.0; được include bởi api/ingestion |
 | inference | RESERVED/DESIGNED | Rỗng có chủ đích; T17 pin model runtime/revisions sau capability checks |
 
@@ -552,7 +553,7 @@ T35 sẽ thêm client FastAPI/HTTPX độc lập chạy thật, xử lý chunk b
 <a id="r08"></a>
 ## R08. Citations, xóa chat và retained index
 
-**T03 locator structural schemas, T10 PG session scope/lifecycle và T13 text provenance VERIFIED; chunk mapping/citation resolver/stream revalidation DESIGNED — T16/T24/T25.**
+**T03 locator structural schemas, T10 PG session scope/lifecycle và T13–T14 text/table provenance VERIFIED; chunk mapping/citation resolver/stream revalidation DESIGNED — T16/T24/T25.**
 
 | Format | Vị trí nguồn |
 | --- | --- |
@@ -578,7 +579,7 @@ Không có auto-delete derivative khi session hết link ở bản đầu. Admin
 <a id="r09"></a>
 ## R09. Ingestion, formats và xử lý lỗi
 
-**T13 text extraction VERIFIED trên Windows/Python3.12.4; OCR/chunking/index worker DESIGNED — T14–T19.**
+**T13–T14 text/table extraction VERIFIED trên Windows/Python3.12.4; OCR/chunking/index worker DESIGNED — T15–T19.**
 
 | Format / MIME (extension allowlist) | Extraction và locator đã kiểm | Trạng thái / giới hạn |
 | --- | --- | --- |
@@ -588,7 +589,7 @@ Không có auto-delete derivative khi session hết link ở bản đầu. Admin
 | Markdown / `text/markdown` (`.md`) | UTF-8 source blocks; ATX/Setext headings, fenced code và bảng pipe cơ bản | VERIFIED EN/VI/source offsets; raw syntax giữ nguyên, không render/execute |
 | HTML / `text/html` (`.html`, `.htm`) | stdlib HTMLParser; heading/block/raw source span, entity text, table rows | VERIFIED; script/style/template/iframe/object không là text evidence; 0 HTTP canary requests |
 | PDF scan/mixed, PNG/JPEG | Tesseract eng/vie qua Docling, per-page fallback | DESIGNED T15; T13 chỉ phát hiện page thiếu native text, không OCR |
-| XLSX/CSV/PPTX | sheet/cell, row/header, slide/shape | DESIGNED T14 |
+| XLSX/CSV/PPTX | openpyxl sheet/cell/formula cache, stdlib CSV records/header, python-pptx slide/shape/XML | VERIFIED T14 text/tables, no chart/image reasoning |
 | `.doc/.xls/.ppt`, audio/video | Không hỗ trợ | Không có parser; không cam kết hiểu charts/images |
 
 Reproduce từ root (chọn basetemp mới mỗi lần để pytest không xóa artifact cũ):
@@ -616,7 +617,7 @@ trong worker, một slot không queue (`parser_busy`). T19 chưa nối parser v�
 `ParsedDocument` schema1 có source, format, parser_revision, blocks, page_count,
 quality, needs_ocr_pages và warnings; `Block` giữ text/kind/T03 SourceLocator,
 heading_path, rows, XML source_part/source_path hoặc native PDF bbox. Bảng DOCX/HTML
-giữ hàng/cột cùng header/units, không tách ô khi extraction; T14/T16 mới normalization/chunking.
+giữ hàng/cột cùng header/units, không tách ô khi extraction; T14 thêm common normalization/context, T16 mới token chunking.
 Mọi offsets là half-open **Unicode character**, không byte: TXT/MD vào original decoded
 source (kể cả BOM/CRLF); HTML span vào original HTML gồm tags/entities, decoded text
 không nhất thiết bằng raw substring. PDF vào canonical page text = native textline
@@ -655,6 +656,78 @@ Docling native backend theo P02 ([upstream API](https://github.com/docling-proje
 không tải Docling layout/OCR models trong T13. Windows host verified; worker image,
 OCR quality, general PDF semantic table/layout accuracy và RAM/latency corpus chưa đo.
 Job state PG/outbox giữ T12 semantics; publication/retry/lease/reindex ở T19.
+
+### Office/CSV policy và source mapping T14
+
+Commands ở root repo, với ingestion group ở trên; dùng basetemp mới:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_office_tables.py -v -s --tb=short --basetemp=.local/t14-check
+uv run --no-sync pytest tests/integration/test_office_tables.py -k safety -v -s --tb=short --basetemp=.local/t14-safety
+```
+
+**VERIFIED native parsers**, không mock/LLM/services/weights, fixtures synthetic EN/VI.
+Evidence từng DoD: [H-T14-A01](docs/handoffs.md#h-t14-a01). Registry signature/source
+identity/time/temp contract giữ nguyên. Thêm MIME chính xác:
+`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, `text/csv`,
+`application/vnd.openxmlformats-officedocument.presentationml.presentation`.
+Không nhận `.xlsm/.pptm/.doc/.xls/.ppt`; macro-enabled main content hoặc VBA member
+đổi suffix thành `.xlsx/.pptx` vẫn bị từ chối. Không có Office automation/calculation.
+ZIP preflight chung DOCX/XLSX/PPTX kiểm CRC, main part/type, XML DTD/entities,
+duplicate/traversal/encryption/bomb trước backend; không extract members. External
+relationships là inert metadata và warning `external_relationships_ignored`; không
+fetch/update linked workbooks. Embedded objects/media không mở hoặc thực thi.
+
+`Block.rows` giữ source cell strings, empty cells và embedded newlines; common
+TAB/LF text normalization cho DOCX/HTML/XLSX/CSV/PPTX, MD giữ nguyên source text/offset.
+`table_headers` lưu context rows tách khỏi rows. XLSX có thêm `cells` với reference,
+value, formula, value_origin, number_format, merged_origin. Context convention là
+first nonempty row và các text-only leading rows trước data numeric/formula, reset
+sau blank row; numeric year headers được giữ. Đây là source context convention,
+không cam kết tự nhận diện mọi bảng phức tạp. Merged header context lặp anchor text
+trong các cột liên quan; raw rows không fill giá trị giả, cells giữ anchor mapping.
+Mỗi XLSX block là một source row/range + context; T16 phải giữ context khi chia chunks.
+Source part lấy từ workbook relationships; XPath dùng prefix `s` với namespace
+`http://schemas.openxmlformats.org/spreadsheetml/2006/main`. Locators không có page.
+
+Formula text giữ trong metadata riêng, không đưa expression vào text numeric evidence.
+`value_origin=stored|formula_cache|missing_formula_cache`; missing cache có text
+`[formula cache unavailable]` + `formula_cache_missing`, không là0 hoặc computed value.
+Cache có sẵn giữ nguyên và cảnh báo `formula_cached_values_unverified`; không bảo
+đảm cache mới. Unsupported formula representation trả `unsupported_formula`.
+Stored number/date/bool giữ canonical backend value (ISO date/time, TRUE/FALSE),
+Excel number_format riêng và trong evidence text khi khác General: ví dụ raw0.25
+với0% không bị trình bày như25 đã render. Header units giữ nguyên, không đoán unit.
+Theo [openpyxl API](https://openpyxl.readthedocs.io/en/stable/api/openpyxl.reader.excel.html),
+hai lần load `data_only=False/True`, đều `keep_vba=False/keep_links=False`, không save.
+
+CSV chỉ UTF-8, optional BOM; sniff64Ki chars cho comma/semicolon/TAB/pipe và strict
+parse toàn file. Không tự đoán legacy encoding; malformed quotes, unequal widths,
+blank record hoặc delimiter không xác định trả `invalid_csv`/`invalid_encoding`.
+Single-column không delimiter được nhận. First logical record là header/context,
+nhưng vẫn có source block; không drop first-row values. Empty header nhận label
+`Column N` theo vị trí, raw context giữ nguyên. `row_start/end` là **logical record**
+one-based, không phải physical line khi quoted field chứa newline. Record có empty
+fields vẫn giữ raw rows, text marker `[empty CSV fields]` nếu cần; file chỉ có empty
+fields trả `empty_extraction`. Formula/HTML-looking fields là text data.
+Không export CSV sang Office hoặc chạy formula.
+
+PPTX slide order là presentation order one-based; shape là top-level z-order index
+zero-based; block là paragraph index (blank counted) hoặc table slot. Group shapes
+dùng depth-first flattened blocks trong top-level group, mỗi table tính một slot,
+paragraph blank vẫn tăng index; source_part/XPath chỉ đúng child XML. Text/bảng lấy
+bằng [python-pptx shapes API](https://python-pptx.readthedocs.io/en/latest/api/shapes.html).
+Không extract notes/master/chart/image/media; warning `non_text_shapes_not_extracted`
+hoặc `chartsheets_not_extracted` khi gặp. Không cam kết suy luận biểu đồ/hình.
+
+Thêm operator limits:250000 actual table cells/cumulative merge expansion, max128
+sheets/max1000slides, `table_limit`/`sheet_limit`/`slide_limit`. XLSX còn giới hạn
+combined bounding rectangles <=250000cells trước load để không densify sparse/huge
+merged ranges; forged dimension không dùng làm loop bounds. Các limits input/archive/
+output/deadline T13 vẫn áp dụng; không benchmark RAM hoặc worker image trong T14.
+Intermediate schema1 thêm fields có default; API T03/PG/index không đổi. Revisions
+`openpyxl-3.1.5/table-v1`, `python-pptx-1.0.2/table-v1`, `stdlib-csv/table-v1` và DOCX/
+MD/HTML `table-v2` phải vào pipeline fingerprints T16/T19 khi tái sử dụng kết quả.
 
 <a id="r10"></a>
 ## R10. UI quản trị

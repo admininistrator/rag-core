@@ -6,6 +6,8 @@ from html.parser import HTMLParser
 from rag_core.contracts.v1 import HtmlLocator, OffsetRange, TextLocator
 from rag_core.domain.documents import Block, ParseError
 
+from .tables import table_rows, table_text
+
 
 def decode(data: bytes) -> str:
     try:
@@ -95,6 +97,7 @@ def text_blocks(text: str, markdown: bool) -> list[Block]:
                     offsets=OffsetRange(start=start, end=end),
                 ),
                 rows=rows,
+                table_headers=rows[:1],
             )
         )
     return blocks
@@ -209,15 +212,16 @@ class SafeHTML(HTMLParser):
                 self.table_rows[-1].append("".join(self.cell).strip())
                 self.cell = None
             elif tag == "table":
-                rows = tuple(tuple(row) for row in self.table_rows)
+                rows = table_rows(self.table_rows)
                 self.table_rows = None
-                value = "\n".join("\t".join(row) for row in rows)
+                value = table_text(rows)
                 if value.strip():
                     self.blocks.append(
                         Block(
                             kind="table",
                             text=value,
                             rows=rows,
+                            table_headers=rows[:1],
                             heading_path=tuple(title for _, title in self.headings),
                             locator=HtmlLocator(
                                 kind="html",

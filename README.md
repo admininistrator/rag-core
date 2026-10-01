@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: T01–T13 nền tảng, corpus, authentication, metadata, storage reader, registration/outbox và text parsers đã triển khai, kiểm chứng local.** T13 parse PDF text/DOCX/TXT/MD/HTML với provenance EN/VI, giới hạn và cleanup; OCR/scan chưa verified. T12 xác minh nguồn trên MinIO, ghi idempotency/link/job/outbox trong PostgreSQL và phát job qua Redis/Celery; ingestion worker T19 chưa có nên tài liệu vẫn queued. T11 S3 reader/IAM chỉ đọc đã kiểm trên MinIO thật; T10 schema/scope trên PostgreSQL thật; T09 xác thực qua HTTP thật. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO, `registration` thêm dispatcher. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T14–T36 còn trong backlog.
+> **Trạng thái: T01–T14 nền tảng, corpus, authentication, metadata, storage reader, registration/outbox và parsers đã triển khai, kiểm chứng local.** T14 thêm XLSX/CSV/PPTX và table context; T13 parse PDF text/DOCX/TXT/MD/HTML với provenance EN/VI, giới hạn và cleanup; OCR/scan chưa verified. T12 xác minh nguồn trên MinIO, ghi idempotency/link/job/outbox trong PostgreSQL và phát job qua Redis/Celery; ingestion worker T19 chưa có nên tài liệu vẫn queued. T11 S3 reader/IAM chỉ đọc đã kiểm trên MinIO thật; T10 schema/scope trên PostgreSQL thật; T09 xác thực qua HTTP thật. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO, `registration` thêm dispatcher. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T15–T36 còn trong backlog.
 
 ## Phạm vi đã chốt
 
@@ -177,9 +177,32 @@ DOCX page break/bảng/header/footer và TXT/MD/HTML EN/VI, chạy parser thật
 physical page one-based + native textline/bbox; DOCX paragraph/table + XML part/path,
 không có page giả. HTML không render/fetch/execute. File rỗng/hỏng/mã hóa có safe
 error; PDF có trang thiếu text trả `partial`/`needs_ocr_pages`, toàn bộ thiếu text
-trả `ocr_required`. Scan/OCR, Office tables T14, chunking/index vẫn chưa verified.
+trả `ocr_required`. Scan/OCR và chunking/index vẫn chưa verified; Office tables T14 ở dưới.
 MIME/limits/offset conventions/format matrix: [RUNBOOK R09](RUNBOOK.md#r09).
 Evidence: [H-T13-A01](docs/handoffs.md#h-t13-a01).
+
+## Office tables T14
+
+**VERIFIED trên Windows/Python3.12:** cùng `ParserRegistry` nhận XLSX/CSV/PPTX,
+giữ sheet/cell ranges, logical CSV records và slide/shape/block/XML nguồn.
+XLSX dùng `openpyxl==3.1.5`, PPTX dùng `python-pptx==1.0.2`, chỉ trong ingestion group.
+
+```powershell
+uv sync --locked --group dev --group api --group ingestion
+uv run --no-sync pytest tests/integration/test_office_tables.py -v -s --tb=short --basetemp=.local/t14-check
+uv run --no-sync pytest tests/integration/test_office_tables.py -k safety -v -s --tb=short --basetemp=.local/t14-safety
+```
+
+Dùng basetemp mới mỗi lần chạy. Fixtures synthetic, parser thật, không services/provider/model.
+Bảng giữ empty cells, header/unit context; merged XLSX có anchor mapping. Formula và
+cached value là hai fields riêng: không tính lại, cache thiếu ghi rõ, cache hiện có
+được cảnh báo chưa xác minh độ mới. Stored numbers giữ Excel format như `0%`; không
+âm thầm đổi `0.25` thành giá trị đã render. CSV UTF-8/BOM hỗ trợ comma/semicolon/TAB/pipe,
+quoted multiline và logical row one-based; first record là context/header convention.
+PPTX lấy text/bảng, kể cả group shapes. Không hỗ trợ `.doc/.xls/.ppt`, không cam kết
+suy luận charts/images. ZIP/macro/XML/external-link safety và giới hạn cụ thể ở
+[RUNBOOK R09](RUNBOOK.md#r09); [H-T14-A01](docs/handoffs.md#h-t14-a01) ghi evidence.
+Chưa nối parser vào ingestion worker/index; parser không cấp quyền truy xuất session.
 
 ## Corpus T04–T08: setup và tái tạo
 
@@ -238,7 +261,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T11 VERIFIED storage reader:** HEAD/GET theo app/alias/bucket/prefix cấu hình; checksum hoặc version ID, giới hạn stream/temp, MinIO IAM reader chỉ đọc kiểm chứng thật. [RUNBOOK R04](RUNBOOK.md#r04) có cấu hình/test/trust contract.
 - **T12 VERIFIED registration/outbox:** real MinIO/PG/Redis integration, owner/session idempotency, detach, retry, crash redelivery và dispatcher image/CLI. Business HTTP mount và ingestion worker vẫn DESIGNED ở T26/T19.
 - **T13 VERIFIED text parsers:** PDF native text, DOCX, TXT/MD/HTML EN/VI; provenance và process/MIME/size/archive/time/cleanup gates. OCR/scan chưa verified.
-- **T14–T19:** Office tables/OCR, model setup, chunking và ingestion commands.
+- **T14 VERIFIED Office tables:** XLSX sheet/cells/formula cache, CSV records và PPTX slide/shape; common headers/units và archive bounds.
+- **T15–T19:** OCR, model setup, chunking và ingestion commands.
 - **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.
 - **T27–T29:** admin URL/login, UI workflows.
 - **T30–T34:** benchmark reports, performance, reliability, backup/restore.

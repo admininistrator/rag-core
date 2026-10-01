@@ -19,6 +19,9 @@ FORMATS = {
     ".md": ("md", "text/markdown"),
     ".html": ("html", "text/html"),
     ".htm": ("html", "text/html"),
+    ".xlsx": ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+    ".csv": ("csv", "text/csv"),
+    ".pptx": ("pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
 }
 
 

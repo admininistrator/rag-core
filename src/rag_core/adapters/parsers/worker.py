@@ -3,8 +3,7 @@
 import json
 import re
 import sys
-import zipfile
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import cast
 
 from rag_core.contracts.v1 import DocxLocator, OffsetRange, PdfLocator
@@ -17,57 +16,10 @@ from rag_core.domain.documents import (
     SourceIdentity,
 )
 
+from .archive import archive_preflight
+from .office import csv_blocks, pptx_blocks, xlsx_blocks
+from .tables import table_rows, table_text
 from .text import SafeHTML, decode, text_blocks
-
-
-def archive_preflight(path: Path, limits: ParserLimits) -> bool:
-    from defusedxml.ElementTree import fromstring  # type: ignore[import-untyped]
-
-    external = False
-    with zipfile.ZipFile(path) as archive:
-        entries = archive.infolist()
-        if len(entries) > limits.max_archive_entries:
-            raise ParseError("archive_limit")
-        if len({entry.filename for entry in entries}) != len(entries):
-            raise ParseError("corrupt_document")
-        total = 0
-        for entry in entries:
-            name = entry.filename
-            if (
-                PurePosixPath(name).is_absolute()
-                or ".." in PurePosixPath(name).parts
-                or "\\" in name
-                or ":" in name
-            ):
-                raise ParseError("unsafe_archive")
-            if entry.flag_bits & 1:
-                raise ParseError("encrypted_document")
-            total += entry.file_size
-            if (
-                total > limits.max_expanded_bytes
-                or entry.file_size > max(entry.compress_size, 1) * limits.max_compression_ratio
-            ):
-                raise ParseError("archive_limit")
-            if "vbaproject" in name.lower():
-                raise ParseError("unsafe_archive")
-        if (
-            "[Content_Types].xml" not in archive.namelist()
-            or "word/document.xml" not in archive.namelist()
-        ):
-            raise ParseError("mime_mismatch")
-        for entry in entries:
-            data = archive.read(entry)  # validate CRC; never extract package members
-            if entry.filename.endswith((".xml", ".rels")):
-                root = fromstring(data, forbid_dtd=True, forbid_entities=True, forbid_external=True)
-                if entry.filename == "[Content_Types].xml" and not any(
-                    item.attrib.get("ContentType")
-                    == "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
-                    for item in root
-                ):
-                    raise ParseError("mime_mismatch")
-                if entry.filename.endswith(".rels"):
-                    external |= any(item.attrib.get("TargetMode") == "External" for item in root)
-    return external
 
 
 def docx_blocks(path: Path) -> list[Block]:
@@ -116,14 +68,15 @@ def docx_blocks(path: Path) -> list[Block]:
         nonlocal table_index
         index = table_index
         table_index += 1
-        rows = tuple(tuple(cell.text for cell in row.cells) for row in item.rows)
-        value = "\n".join("\t".join(row) for row in rows)
+        rows = table_rows(tuple(cell.text for cell in row.cells) for row in item.rows)
+        value = table_text(rows)
         if value.strip():
             blocks.append(
                 Block(
                     kind="table",
                     text=value,
                     rows=rows,
+                    table_headers=rows[:1],
                     heading_path=tuple(title for _, title in headings),
                     locator=DocxLocator(
                         kind="docx",
@@ -256,15 +209,24 @@ def parse_local(
             raise ParseError("mime_mismatch")
         blocks, page_count, missing = pdf_blocks(path, limits)
         revision = "docling-parse-7.22.1/text-v1"
-    elif format_ == "docx":
+    elif format_ in {"docx", "xlsx", "pptx"}:
         if signature == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1":
             raise ParseError("encrypted_document")
         if not signature.startswith(b"PK"):
             raise ParseError("mime_mismatch")
-        if archive_preflight(path, limits):
+        if archive_preflight(path, limits, format_):
             warnings = ("external_relationships_ignored",)
-        blocks = docx_blocks(path)
-        revision = "python-docx-1.2.0/text-v1"
+        if format_ == "docx":
+            blocks = docx_blocks(path)
+            revision = "python-docx-1.2.0/table-v2"
+        elif format_ == "xlsx":
+            blocks, office_warnings = xlsx_blocks(path, limits)
+            warnings += office_warnings
+            revision = "openpyxl-3.1.5/table-v1"
+        else:
+            blocks, office_warnings = pptx_blocks(path, limits)
+            warnings += office_warnings
+            revision = "python-pptx-1.0.2/table-v1"
     else:
         if signature.startswith((b"%PDF-", b"PK\x03\x04", b"\xd0\xcf\x11\xe0")):
             raise ParseError("mime_mismatch")
@@ -276,18 +238,22 @@ def parse_local(
                 re.I,
             )
         )
-        if format_ == "html":
+        if format_ == "csv":
+            # HTML/formula-looking field contents are inert CSV source data.
+            blocks = csv_blocks(text, limits)
+            revision = "stdlib-csv/table-v1"
+        elif format_ == "html":
             if not html:
                 raise ParseError("mime_mismatch")
             blocks = SafeHTML(text).finish()
-            revision = "stdlib-html/text-v1"
+            revision = "stdlib-html/table-v2"
         else:
             # Markdown may contain raw HTML or HTML examples in fenced code.
             # Plain text/Markdown have no distinct magic: preserve such text as data.
             if format_ == "txt" and re.search(r"<(?:!doctype\s+html|html)(?:\s|>)", text, re.I):
                 raise ParseError("mime_mismatch")
             blocks = text_blocks(text, format_ == "md")
-            revision = "utf8-lines/text-v1"
+            revision = "utf8-lines/table-v2" if format_ == "md" else "utf8-lines/text-v1"
     enforce(blocks, limits)
     if not blocks:
         raise ParseError("ocr_required" if format_ == "pdf" else "empty_extraction")
