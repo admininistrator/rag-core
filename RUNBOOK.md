@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T12 nền tảng, corpus, authentication, metadata, storage reader và registration/outbox IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 auth qua HTTP thật; T10 session repository/scope/migrations trên PG17.11 thật; T11 read-only S3 adapter trên MinIO thật; T12 register và outbox trên PG/Redis/MinIO thật. API chỉ mount health; business HTTP/query/SSE runtime vẫn DESIGNED. T13–T36 chưa bắt đầu.
+> **T01–T13 nền tảng, corpus, authentication, metadata, storage reader, registration/outbox và text parsers IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup, tải mới độc lập và rerun đã kiểm. T09 auth qua HTTP thật; T10 session repository/scope/migrations trên PG17.11 thật; T11 read-only S3 adapter trên MinIO thật; T12 register và outbox trên PG/Redis/MinIO thật; T13 parse PDF text/DOCX/TXT/MD/HTML EN/VI thật. API chỉ mount health; business HTTP/query/SSE runtime vẫn DESIGNED. T14–T36 chưa bắt đầu; scan/OCR chưa verified.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -23,7 +23,8 @@
 | Session/schema/scope repository | VERIFIED real PostgreSQL; HTTP routes chưa mount | T10 |
 | S3/MinIO read adapter | VERIFIED real local MinIO; chưa nối HTTP/job | T11 |
 | Upload registration, job repository/outbox | VERIFIED real PG/MinIO/Redis; HTTP chưa mount, worker chưa có | T12 |
-| Parsing/OCR/index | DESIGNED | T13–T19 |
+| PDF text/DOCX/TXT/MD/HTML parsers | VERIFIED real native parsers trên fixtures EN/VI; chưa nối worker | T13 |
+| Office tables/OCR/chunking/index | DESIGNED | T14–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
@@ -65,7 +66,7 @@ Chạy từ root repository. Trong môi trường bị giới hạn quyền ghi 
 ```powershell
 $env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'
 $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'
-uv sync --locked --group dev --group api
+uv sync --locked --group dev --group api --group ingestion
 uv run ruff check .
 uv run mypy src
 uv run pytest tests/unit
@@ -83,7 +84,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | base | IMPLEMENTED/VERIFIED | Pydantic v2 + pydantic-settings cho typed config |
 | dev | IMPLEMENTED/VERIFIED | Ruff, mypy, pytest, pytest-asyncio; jsonschema 4.26.0 từ T03 để validate exported schemas/examples, không vào API image |
 | api | IMPLEMENTED/VERIFIED T02 | FastAPI, HTTPX, Uvicorn, psycopg, Redis client; health-only API process, không có business routes |
-| ingestion | LOCKED/DESIGNED | Alembic, boto3, Celery, Qdrant client, Redis, SQLAlchemy; chưa có worker |
+| ingestion | IMPLEMENTED/VERIFIED adapters T11–T13; worker DESIGNED | Metadata, boto3, Celery, Qdrant/Redis; Docling Parse7.22.1, python-docx1.2.0, pypdf6.19.0 crypto, defusedxml0.7.1; chưa có worker/model/OCR |
 | metadata | IMPLEMENTED/VERIFIED T10 | SQLAlchemy2.0.53 async + greenlet3.5.6, Psycopg, Alembic1.20.0; được include bởi api/ingestion |
 | inference | RESERVED/DESIGNED | Rỗng có chủ đích; T17 pin model runtime/revisions sau capability checks |
 
@@ -551,7 +552,7 @@ T35 sẽ thêm client FastAPI/HTTPX độc lập chạy thật, xử lý chunk b
 <a id="r08"></a>
 ## R08. Citations, xóa chat và retained index
 
-**T03 locator structural schemas và T10 PG session scope/lifecycle VERIFIED; parsing/citation resolver/stream revalidation DESIGNED — T16/T24/T25.**
+**T03 locator structural schemas, T10 PG session scope/lifecycle và T13 text provenance VERIFIED; chunk mapping/citation resolver/stream revalidation DESIGNED — T16/T24/T25.**
 
 | Format | Vị trí nguồn |
 | --- | --- |
@@ -577,15 +578,83 @@ Không có auto-delete derivative khi session hết link ở bản đầu. Admin
 <a id="r09"></a>
 ## R09. Ingestion, formats và xử lý lỗi
 
-**DESIGNED — T13–T19.**
+**T13 text extraction VERIFIED trên Windows/Python3.12.4; OCR/chunking/index worker DESIGNED — T14–T19.**
 
-Format nghiệm thu mục tiêu: PDF text/scan/mixed, DOCX, XLSX, PPTX, TXT, MD, CSV, HTML, PNG/JPEG; OCR eng/vie. Không hỗ trợ Office legacy/audio/video trong bản đầu.
+| Format / MIME (extension allowlist) | Extraction và locator đã kiểm | Trạng thái / giới hạn |
+| --- | --- | --- |
+| PDF / `application/pdf` (`.pdf`) | Docling Parse7.22.1 native Unicode textline; physical page one-based, native block/bbox, printed label riêng | VERIFIED EN/VI hai trang và text bảng/header/unit; không suy ra cấu trúc ô từ layout PDF |
+| DOCX / `application/vnd.openxmlformats-officedocument.wordprocessingml.document` (`.docx`) | python-docx1.2.0; headings, paragraphs, bảng/nested tables, headers/footers; XML part/path | VERIFIED EN/VI page-break/table fixture; không bịa pages |
+| TXT / `text/plain` (`.txt`) | UTF-8, BOM/CRLF giữ vị trí, line/paragraph/offset | VERIFIED EN/VI; encoding khác báo `invalid_encoding` |
+| Markdown / `text/markdown` (`.md`) | UTF-8 source blocks; ATX/Setext headings, fenced code và bảng pipe cơ bản | VERIFIED EN/VI/source offsets; raw syntax giữ nguyên, không render/execute |
+| HTML / `text/html` (`.html`, `.htm`) | stdlib HTMLParser; heading/block/raw source span, entity text, table rows | VERIFIED; script/style/template/iframe/object không là text evidence; 0 HTTP canary requests |
+| PDF scan/mixed, PNG/JPEG | Tesseract eng/vie qua Docling, per-page fallback | DESIGNED T15; T13 chỉ phát hiện page thiếu native text, không OCR |
+| XLSX/CSV/PPTX | sheet/cell, row/header, slide/shape | DESIGNED T14 |
+| `.doc/.xls/.ppt`, audio/video | Không hỗ trợ | Không có parser; không cam kết hiểu charts/images |
 
-Job: queued/fetching/parsing/chunking/embedding/indexing/ready hoặc failed/cancelled. Trạng thái PG là nguồn bền; Redis chỉ broker. Index generation chỉ visible sau publication thành công.
+Reproduce từ root (chọn basetemp mới mỗi lần để pytest không xóa artifact cũ):
 
-Limits mục tiêu: 100 MiB/file, 1.000 trang, 50 docs/session; sẽ đồng bộ config và boundary tests. XLSX formula không được execute; cached value thiếu phải thông báo. Mixed PDF tránh OCR trùng text layer. Source changed giữa download báo lỗi, không index bản trộn.
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'
+uv sync --locked --group dev --group api --group ingestion
+uv run --no-sync pytest tests/integration/test_text_parsers.py -v -s --tb=short --basetemp=.local/t13-check
+uv run --no-sync pytest tests/integration/test_text_parsers.py -k safety -v -s --tb=short --basetemp=.local/t13-safety
+```
 
-Điền sau implementation: register/poll/retry examples, progress fields, supported-format matrix với fixture/evidence, concurrency/batch controls, source_changed/extraction_failed/error codes, reindex/cancel behavior và orphan cleanup scoped.
+19 tests chạy parser thật, 8 safety tests chạy riêng; không services/provider/model,
+không đọc corpus `qa/`. Fixtures tạo local trong ignored test temp; before/after
+source bytes và parser sandbox-empty được assert cả lỗi. [H-T13-A01](docs/handoffs.md#h-t13-a01)
+ghi command/config/output; completion subject `feat(T13): parse text documents with source provenance`.
+
+Interface: `rag_core.ports.parsers.DocumentParser.parse(path, filename=..., content_type=...,
+source=SourceIdentity(...))`; implementation `ParserRegistry(temp_root, ParserLimits())`.
+SHA-256 phải bằng bytes được copy, source document/version UUIDs là metadata đã xác minh,
+không chứng minh quyền truy xuất. Chỉ gọi với T11 `DownloadedSource` của registration
+đã được T12/worker authorize; parser không tìm bucket, không auto-attach/reuse index.
+Đây là synchronous CPU boundary: future async callers phải offload; share một registry
+trong worker, một slot không queue (`parser_busy`). T19 chưa nối parser vào job/ready.
+
+`ParsedDocument` schema1 có source, format, parser_revision, blocks, page_count,
+quality, needs_ocr_pages và warnings; `Block` giữ text/kind/T03 SourceLocator,
+heading_path, rows, XML source_part/source_path hoặc native PDF bbox. Bảng DOCX/HTML
+giữ hàng/cột cùng header/units, không tách ô khi extraction; T14/T16 mới normalization/chunking.
+Mọi offsets là half-open **Unicode character**, không byte: TXT/MD vào original decoded
+source (kể cả BOM/CRLF); HTML span vào original HTML gồm tags/entities, decoded text
+không nhất thiết bằng raw substring. PDF vào canonical page text = native textline
+cells theo backend order joined by LF; native block index tính cả empty cells. DOCX
+offset vào exact paragraph.text hoặc canonical table rows joined bằng TAB/LF.
+DOCX paragraph indices tính body top-level paragraphs kể cả blank rồi các header/footer
+parts unique; table indices depth-first qua body/nested/header/footer. XML member+XPath
+giữ định vị gốc cho nested tables/header/footer. Các indices zero-based; không có page
+DOCX. PDF native bbox theo coordinate system của backend, không giả image pixel bbox.
+
+`ParserLimits` là operator config, không request override: max100MiB input, max1000
+PDF pages, deadline60s (copy+subprocess+result; <=300s), max4096 ZIP members, 256MiB
+expanded ZIP, per-entry compression ratio200, max100000 blocks/8Mi Unicode chars/32MiB
+serialized result. Có thể giảm để chạy boundary tests. Registry đối chiếu extension,
+normalized declared MIME, PDF/ZIP signature và OOXML main content type; TXT/MD không
+có magic riêng nên yêu cầu UTF-8/nonbinary và suffix/MIME phù hợp. DOCX archive đọc
+CRC/XML trong process, không extract members ra disk; traversal/duplicate member/VBA,
+encrypted ZIP, DTD/entities và archive bombs bị từ chối. External relationships được
+ghi warning `external_relationships_ignored`, không fetch. HTML không browser/render,
+không chạy JS/event attributes hay tải CSS/link/image/frame.
+
+Input copy, request/result và worker TMP/TEMP/TMPDIR nằm trong unique parser directory
+dưới temp_root operator-owned. Timeout hoặc caller exception kill/reap process trước
+cleanup; backend stdout/stderr discarded để không lộ source/private paths. Không
+đưa registry vào thư mục nguồn; T11 temp vẫn thuộc lifecycle của storage reader.
+Error public chỉ code: `unsupported_format`, `mime_mismatch`, `invalid_encoding`,
+`source_too_large`, `source_changed`, `archive_limit`, `unsafe_archive`, `page_limit`,
+`extraction_limit`, `encrypted_document`, `corrupt_document`, `parser_timeout`,
+`parser_busy`, `parser_failed`, `empty_extraction`, `ocr_required`. Không thử password,
+không coi empty thành success. PDF có trang thiếu text trả `quality=partial` + physical
+`needs_ocr_pages`; worker T15/T19 phải xử lý trước ready, không bỏ trang âm thầm.
+
+Limits/compatibility: schema trung gian mới, không DB/index/API migration; T03 locators
+và OpenAPI giữ nguyên. New pins chỉ ingestion group, không vào API/inference/weights.
+Docling native backend theo P02 ([upstream API](https://github.com/docling-project/docling-parse#sequential-parsing));
+không tải Docling layout/OCR models trong T13. Windows host verified; worker image,
+OCR quality, general PDF semantic table/layout accuracy và RAM/latency corpus chưa đo.
+Job state PG/outbox giữ T12 semantics; publication/retry/lease/reindex ở T19.
 
 <a id="r10"></a>
 ## R10. UI quản trị

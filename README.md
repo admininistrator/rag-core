@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: T01–T12 nền tảng, corpus, authentication, metadata, storage reader và registration/outbox đã triển khai, kiểm chứng local.** T12 xác minh nguồn trên MinIO, ghi idempotency/link/job/outbox trong PostgreSQL và phát job qua Redis/Celery; ingestion worker T19 chưa có nên tài liệu vẫn queued. T11 S3 reader/IAM chỉ đọc đã kiểm trên MinIO thật; T10 schema/scope trên PostgreSQL thật; T09 xác thực qua HTTP thật. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO, `registration` thêm dispatcher. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T13–T36 còn trong backlog.
+> **Trạng thái: T01–T13 nền tảng, corpus, authentication, metadata, storage reader, registration/outbox và text parsers đã triển khai, kiểm chứng local.** T13 parse PDF text/DOCX/TXT/MD/HTML với provenance EN/VI, giới hạn và cleanup; OCR/scan chưa verified. T12 xác minh nguồn trên MinIO, ghi idempotency/link/job/outbox trong PostgreSQL và phát job qua Redis/Celery; ingestion worker T19 chưa có nên tài liệu vẫn queued. T11 S3 reader/IAM chỉ đọc đã kiểm trên MinIO thật; T10 schema/scope trên PostgreSQL thật; T09 xác thực qua HTTP thật. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO, `registration` thêm dispatcher. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T14–T36 còn trong backlog.
 
 ## Phạm vi đã chốt
 
@@ -18,7 +18,7 @@ RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp tr
 
 ## Kiến trúc hiện tại và dự kiến
 
-T02 đã có Python 3.12/FastAPI health skeleton, PostgreSQL 17, Qdrant, Redis và MinIO tùy chọn trong Docker Compose trên Windows. T12 thêm outbox dispatcher qua Celery/Redis trong profile `registration`; worker nhận và xử lý task, Docling/Tesseract OCR, BGE-M3 + multilingual reranker, DeepSeek/Anthropic adapters và Admin UI Jinja2/CSS/JavaScript vẫn là thiết kế cho task sau. Compose chưa khai báo worker/inference.
+T02 đã có Python 3.12/FastAPI health skeleton, PostgreSQL 17, Qdrant, Redis và MinIO tùy chọn trong Docker Compose trên Windows. T12 thêm outbox dispatcher qua Celery/Redis trong profile `registration`; T13 thêm registry với Docling native PDF và các text adapters. Worker nhận và xử lý task, Tesseract OCR, BGE-M3 + multilingual reranker, DeepSeek/Anthropic adapters và Admin UI Jinja2/CSS/JavaScript vẫn là thiết kế cho task sau. Compose chưa khai báo worker/inference.
 
 Máy mục tiêu: RAM 16 GB, RTX 4060 Laptop 8 GB VRAM; tài liệu nguồn khoảng <=1 GB; kiểm thử 15–20 người dùng đồng thời. Chưa có số đo RAM/VRAM/độ trễ hoặc benchmark chất lượng.
 
@@ -27,7 +27,7 @@ Máy mục tiêu: RAM 16 GB, RTX 4060 Laptop 8 GB VRAM; tài liệu nguồn kho�
 T01/T02 đã kiểm chứng trên Windows/PowerShell với uv 0.11.16, CPython 3.12.4 cho host checks, Docker Desktop Linux containers và Docker server 29.5.2. Project chấp nhận Python `3.12.*`; API image dùng Python 3.12.13 đã pin digest. Cài [uv](https://docs.astral.sh/uv/) và Docker Desktop, rồi từ root repository chạy quality:
 
 ```powershell
-uv sync --locked --group dev --group api
+uv sync --locked --group dev --group api --group ingestion
 uv run ruff check .
 uv run mypy src
 uv run pytest tests/unit
@@ -159,6 +159,28 @@ theo [RUNBOOK R04](RUNBOOK.md#r04). Khi T19 chưa triển khai, dispatcher chỉ
 message vào broker, job không thể đạt `ready`; không dùng message Redis làm trạng
 thái nguồn. [H-T12-A01](docs/handoffs.md#h-t12-a01) ghi bằng chứng và giới hạn.
 
+## Text parsers T13
+
+`ParserRegistry(temp_root, ParserLimits())` nhận local path đã tải bằng storage reader,
+filename, MIME và `SourceIdentity(document_id, version_id, sha256)`. Kết quả
+`ParsedDocument/Block` giữ T03 locators, heading/table context và hash nguồn; parser
+không cấp quyền session. T19 phải nối worker và T10 scope checks trước publication.
+Một registry chạy tối đa một process, timeout mặc định60s và cleanup cả khi lỗi.
+
+```powershell
+uv sync --locked --group dev --group api --group ingestion
+uv run --no-sync pytest tests/integration/test_text_parsers.py -v -s --tb=short --basetemp=.local/t13-check
+```
+
+Không cần services/provider/weights; fixtures synthetic tạo PDF Unicode hai trang,
+DOCX page break/bảng/header/footer và TXT/MD/HTML EN/VI, chạy parser thật. PDF giữ
+physical page one-based + native textline/bbox; DOCX paragraph/table + XML part/path,
+không có page giả. HTML không render/fetch/execute. File rỗng/hỏng/mã hóa có safe
+error; PDF có trang thiếu text trả `partial`/`needs_ocr_pages`, toàn bộ thiếu text
+trả `ocr_required`. Scan/OCR, Office tables T14, chunking/index vẫn chưa verified.
+MIME/limits/offset conventions/format matrix: [RUNBOOK R09](RUNBOOK.md#r09).
+Evidence: [H-T13-A01](docs/handoffs.md#h-t13-a01).
+
 ## Corpus T04–T08: setup và tái tạo
 
 T08 nghiệm thu tải mới vào output root/cache độc lập, all-domain validation và rerun. Workflow hiện hành là một task/session theo [AGENTS.md](AGENTS.md). Bằng chứng corpus và giới hạn tại [H-T08-A01](docs/handoffs.md#h-t08-a01).
@@ -215,7 +237,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T10 VERIFIED metadata:** PG migrations, owner-bound session/link repository, revision và exact version/generation snapshots.
 - **T11 VERIFIED storage reader:** HEAD/GET theo app/alias/bucket/prefix cấu hình; checksum hoặc version ID, giới hạn stream/temp, MinIO IAM reader chỉ đọc kiểm chứng thật. [RUNBOOK R04](RUNBOOK.md#r04) có cấu hình/test/trust contract.
 - **T12 VERIFIED registration/outbox:** real MinIO/PG/Redis integration, owner/session idempotency, detach, retry, crash redelivery và dispatcher image/CLI. Business HTTP mount và ingestion worker vẫn DESIGNED ở T26/T19.
-- **T13–T19:** format/OCR matrix, model setup, ingestion commands.
+- **T13 VERIFIED text parsers:** PDF native text, DOCX, TXT/MD/HTML EN/VI; provenance và process/MIME/size/archive/time/cleanup gates. OCR/scan chưa verified.
+- **T14–T19:** Office tables/OCR, model setup, chunking và ingestion commands.
 - **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.
 - **T27–T29:** admin URL/login, UI workflows.
 - **T30–T34:** benchmark reports, performance, reliability, backup/restore.

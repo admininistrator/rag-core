@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-01 / T13-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, no subagents; baseline main/T12 `094f74452307a8645eeb1d00a0a0af738b4403e9` equals origin/main. Native PDF/DOCX/TXT/MD/HTML EN/VI provenance and bounded registry implemented. Final DoD1 19 PASS, separate DoD2 8 PASS, regression325 PASS, Ruff/mypy38/locked101/OpenAPI/docs/scope/secrets review PASS. [T13 evidence](#h-t13-a01). Completion subject `feat(T13): parse text documents with source provenance`; actual hash/remote equality reported post-commit/push (resolve by subject). T14 ready after closure; no T13 blocker. Inherited T07 scratch preserved; **STOP AFTER T13**.
+
 - **Current 2026-09-30 / T12-A01 completion candidate:** direct Codex agent, model/effort unavailable, no subagents. Baseline `main`/T11 `06185be330c090d59a5924e449f2502f7b3dc4cb`; two inherited T07 scratch directories unchanged. Registration, migration, job polling/retry, outbox dispatcher/CLI and Compose profile implemented. Separate DoD real PG/Redis/MinIO tests 2+1 PASS, T10 regression19 PASS, unit/contract/security325 PASS with short Windows basetemp; dispatcher image built and CLI checked. [T12 evidence](#h-t12-a01). Final docs/scope/commit/push review pending; T13 readiness only after closure. **STOP AFTER T12**.
 
 - **Current 2026-09-30 / T11-A01 completion candidate:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline `main`/T10 `2a67f8b53b65371a71ca72719cd6d0cd5025b899`. Real MinIO versioned fixture: 5 storage integration tests, separate DoD runs 3+2, 325 unit/contract/security PASS; Ruff/mypy27/OpenAPI PASS. [T11 evidence](#h-t11-a01). Completion only after docs/scope review and inspected `feat(T11): add read-only application storage adapter` commit/push. T07 inaccessible scratch untouched. T12 ready after closure; **STOP AFTER T11**.
@@ -4374,3 +4376,352 @@ Consumer gate is `claim_job`, not a T19 parser/LLM worker. Session deletion is t
 **D5/D6 final review:** `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync ruff check .; uv run --no-sync mypy src` both exit0: `All checks passed!` (three inherited inaccessible scratch warnings), `Success: no issues found in 32 source files`. `git diff --check` exit0/no output. `git ls-remote origin refs/heads/main` with approved network access exit0 `06185be330c090d59a5924e449f2502f7b3dc4cb refs/heads/main`, equal baseline. Full task test command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; $env:DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'; $env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'; $env:RAG_TEST_DATABASE_URL=$env:DATABASE_URL; uv run --no-sync pytest tests/integration/test_registration_jobs.py -v -s --tb=short --basetemp=.local/t12-final-all -o cache_dir=.local/t12-final-call` exit0 `3 passed in 9.37s`. Initial unprivileged `git add -- ...` exit128 `Unable to create .git/index.lock: Permission denied`; approved staging of explicit 16 T12 files exit0. `git diff --cached --check` exit0, file list exactly README/RUNBOOK, 2 Compose, dispatcher Dockerfile, 3 task docs, migration, broker package/adapter/CLI, registration repository/domain, 2 integration test files. Two inherited T07 scratch directories remain untracked and unstaged. PowerShell compared ignored local PostgreSQL/MinIO password values in memory against staged diff, exit0 `PASS staged diff contains no compared local secret values`; no values printed. Additive schema, owner checks, worker/HTTP limits, no raw corpus/model/secret or provider changes reviewed. Completion subject `feat(T12): register uploads with durable ingestion jobs`; actual commit/hash/remote equality returned post-execution, not self-referenced.
 
 **Service teardown:** `docker compose -f compose.metadata-test.yaml -f compose.registration-test.yaml stop postgres redis` exit0, both test containers `Stopped`; `docker compose --profile local-storage stop minio` exit0, `rag-core-minio-1 Stopped`. No `down -v`, volume deletion or source object deletion outside unique test keys.
+
+<a id="h-t13-a01"></a>
+## H-T13-A01 — Phase 3 / Intermediate model and text parsers, 2026-10-01
+
+**Baseline/runtime/scope:** cwd `C:\Users\Admin\Documents\GitHub\rag-core`, `main`, HEAD/T12 `094f74452307a8645eeb1d00a0a0af738b4403e9`. Direct Codex agent (GPT-6 family; exact model/effort not exposed), no subagents. T12/T03 COMPLETE; task/dependency notes, P01/P02/P07/P13, AGENTS/task-session-prompt and living docs/checkpoint/summary read before code. `git status --short` returned only `?? .ptmp-t07-a02/`, `?? .tmp-t07-a02/`, with inherited inaccessible scratch/global-ignore warnings; untouched. No unfinished T13 files. `git log -3 --format='%h %s'` exit0:
+
+```text
+094f744 feat(T12): register uploads with durable ingestion jobs
+06185be feat(T11): add read-only application storage adapter
+2a67f8b feat(T10): add session-scoped metadata persistence
+```
+
+`git ls-remote origin refs/heads/main` first exit128 (`Failed to connect to github.com port 443` in sandbox); authorized network escalation exit0:
+
+```text
+094f74452307a8645eeb1d00a0a0af738b4403e9	refs/heads/main
+```
+
+`git var GIT_AUTHOR_IDENT | Out-Null; if ($LASTEXITCODE -eq 0) { Write-Output 'Git author configured' }` exit0, `Git author configured`; no identity change. User explicitly permits scoped commit/push origin/current branch; no force/merge/deploy.
+
+**Environment/dependencies:** host Python3.12.4/uv0.11.16, pytest9.1.1. No service/provider/model/weights/OCR involved. Native Docling Parse7.22.1 API verified against [official README](https://github.com/docling-project/docling-parse#sequential-parsing) and installed package; DOCX python-docx1.2.0, pypdf6.19.0 crypto, defusedxml0.7.1. Pins only ingestion; inference remains empty. `UV_CACHE_DIR=.uv-cache`; unique parser sandbox below test temp; fixtures synthetic, not corpus QA/raw licensed PDFs.
+
+Setup commands (cwd above), each exit0; network add/sync used authorized escalation:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv add --group ingestion 'docling-parse==7.22.1' 'python-docx==1.2.0' 'pypdf[crypto]==6.19.0' --no-sync
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv sync --locked --group dev --group api --group ingestion
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv add --offline --group ingestion 'defusedxml==0.7.1' --no-sync
+```
+
+Actual setup excerpts:
+
+```text
+Resolved 101 packages in 2.22s
+Resolved 101 packages in 1ms
+Prepared 19 packages in 3.12s
+Installed 19 packages in 578ms
++ docling-core==2.99.0
++ docling-parse==7.22.1
++ python-docx==1.2.0
++ defusedxml==0.7.1
+Resolved 101 packages in 62ms
+```
+
+Two upstream invalid-version-specifier normalization warnings did not fail resolution. Official wheel URLs/hashes locked; later locked offline sync below.
+
+**Diagnostics retained:** initial read probes used nonexistent `domain/locators.py`/`api/schemas.py`; actual T03 models are `contracts/v1.py`. Installed API probe `DoclingPdfParser.unload` raised `AttributeError`; corrected to returned `PdfDocument.unload()`. Initial Ruff exit1 for imports/class mutable defaults, mypy exit1 for python-docx Path argument; fixed imports/frozensets/str(path). First fixture-run command had Ruff exit1 for12 nonraw pytest regex literals (PowerShell continued to pytest); fixed literals, no initial lint PASS claim. Actual first tests: `15 passed in 12.27s`; expanded `19 passed in 14.18s`. Apply-patch context mismatches made no changes, corrected after reading formatted lines. Review added worker temp environment/caller-exception kill/cleanup, Setext/fence handling and HTML-as-data in Markdown code; final tests below.
+
+**DoD mapping:** DoD-1 expected real EN/VI format fixtures, multi-page PDF/DOCX page break/tables, source locator round-trip, corrupt/AES encrypted errors; actual19PASS/no skips below. PDF physical1/2 and printed i/ii separate, native offsets/bbox and table/header/unit text; DOCX heading/paragraph/table/XPath/nested/header/footer/no page; TXT/MD BOM/CRLF/Unicode positions; HTML entities/headings/table/raw span. DoD-2 expected MIME/size/deadline/temp gates, inert script/external refs; actual8PASS/no skips below: loopback canary0requests, real ZIP bombs/traversal/VBA/entities refused without extraction, process killed/reaped, original source unchanged and sandbox empty on every parse, concurrent real execution bounded. PDF missing-text detection is OCR-required/partial, not scan/OCR verification.
+
+### DoD-1 — Real parsers and source provenance
+
+Cwd repository root; host/config below; exit **0**.
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/integration/test_text_parsers.py -v -s --tb=short --basetemp=.local/t13-final-dod1 -o cache_dir=.local/t13-cache-final-dod1
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Admin\Documents\GitHub\rag-core\.venv\Scripts\python.exe
+cachedir: .local\t13-cache-final-dod1
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 19 items
+
+tests/integration/test_text_parsers.py::test_pdf_physical_pages_unicode_and_table_source PASS real Docling PDF: 2 physical pages, EN/VI, table headers/units, native offsets/bbox, printed i/ii
+PASSED
+tests/integration/test_text_parsers.py::test_docx_paragraph_table_heading_headers_and_no_fake_pages PASS real python-docx: page break, EN/VI paragraphs, table/unit, heading path, header/footer XML round-trip; no page
+PASSED
+tests/integration/test_text_parsers.py::test_unicode_text_line_and_source_offset_round_trip[txt] PASS real txt: exact UTF-8/BOM/CRLF Unicode offsets and one-based lines, EN/VI
+PASSED
+tests/integration/test_text_parsers.py::test_unicode_text_line_and_source_offset_round_trip[md] PASS real md: exact UTF-8/BOM/CRLF Unicode offsets and one-based lines, EN/VI
+PASSED
+tests/integration/test_text_parsers.py::test_html_heading_table_entities_and_raw_source_spans PASS real HTML parser: EN/VI, entities, headings, table/unit and original HTML spans
+PASSED
+tests/integration/test_text_parsers.py::test_corrupt_files_are_errors[pdf] PASSED
+tests/integration/test_text_parsers.py::test_corrupt_files_are_errors[docx] PASSED
+tests/integration/test_text_parsers.py::test_real_encrypted_pdf_is_error PASS real corrupt PDF/DOCX and AES-256 encrypted PDF: safe explicit errors; sources unchanged, temp empty
+PASSED
+tests/integration/test_text_parsers.py::test_safety_mime_size_hash_output_and_page_limits PASS MIME signature/type/extension, byte/page/block/text/result limits, SHA mismatch, cleanup
+PASSED
+tests/integration/test_text_parsers.py::test_safety_timeout_kills_real_parser_and_cleans_temp PASS real subprocess deadline: killed/reaped, sandbox removed, subsequent real parse succeeds
+PASSED
+tests/integration/test_text_parsers.py::test_safety_html_never_executes_or_fetches_external_refs PASS actual HTTP canary: zero requests from script/style/image/iframe/link/event refs; hidden text excluded
+PASSED
+tests/integration/test_text_parsers.py::test_safety_docx_archive_limits_traversal_macros_entities PASS real ZIP preflight: entry/expanded/ratio limits, traversal, VBA, XML entity rejected without extraction
+PASSED
+tests/integration/test_text_parsers.py::test_safety_empty_and_mixed_pdf_require_explicit_ocr PASS empty extraction errors; native PDF missing text -> OCR required/partial page 2, no scan verification claimed
+PASSED
+tests/integration/test_text_parsers.py::test_safety_docx_external_relationships_are_data_only PASSED
+tests/integration/test_text_parsers.py::test_markdown_code_and_table_are_preserved_as_source_data PASSED
+tests/integration/test_text_parsers.py::test_markdown_setext_and_fenced_delimiters_keep_heading_context PASSED
+tests/integration/test_text_parsers.py::test_safety_actual_format_encoding_and_docx_package_validation PASSED
+tests/integration/test_text_parsers.py::test_docx_nested_table_and_blank_paragraph_source_paths PASSED
+tests/integration/test_text_parsers.py::test_safety_registry_bounds_concurrent_real_execution PASSED
+
+============================= 19 passed in 14.52s =============================
+```
+
+### DoD-2 — Bounds, cleanup and inert external content
+
+Cwd repository root; host/config below; exit **0**.
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/integration/test_text_parsers.py -k safety -v -s --tb=short --basetemp=.local/t13-final-dod2 -o cache_dir=.local/t13-cache-final-dod2
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Admin\Documents\GitHub\rag-core\.venv\Scripts\python.exe
+cachedir: .local\t13-cache-final-dod2
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 19 items / 11 deselected / 8 selected
+
+tests/integration/test_text_parsers.py::test_safety_mime_size_hash_output_and_page_limits PASS MIME signature/type/extension, byte/page/block/text/result limits, SHA mismatch, cleanup
+PASSED
+tests/integration/test_text_parsers.py::test_safety_timeout_kills_real_parser_and_cleans_temp PASS real subprocess deadline: killed/reaped, sandbox removed, subsequent real parse succeeds
+PASSED
+tests/integration/test_text_parsers.py::test_safety_html_never_executes_or_fetches_external_refs PASS actual HTTP canary: zero requests from script/style/image/iframe/link/event refs; hidden text excluded
+PASSED
+tests/integration/test_text_parsers.py::test_safety_docx_archive_limits_traversal_macros_entities PASS real ZIP preflight: entry/expanded/ratio limits, traversal, VBA, XML entity rejected without extraction
+PASSED
+tests/integration/test_text_parsers.py::test_safety_empty_and_mixed_pdf_require_explicit_ocr PASS empty extraction errors; native PDF missing text -> OCR required/partial page 2, no scan verification claimed
+PASSED
+tests/integration/test_text_parsers.py::test_safety_docx_external_relationships_are_data_only PASSED
+tests/integration/test_text_parsers.py::test_safety_actual_format_encoding_and_docx_package_validation PASSED
+tests/integration/test_text_parsers.py::test_safety_registry_bounds_concurrent_real_execution PASSED
+
+====================== 8 passed, 11 deselected in 9.00s =======================
+```
+
+### D2 — Locked offline environment
+
+Cwd repository root; host/config below; exit **0**.
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv sync --locked --offline --group dev --group api --group ingestion; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; uv lock --check --offline
+```
+
+```text
+Resolved 101 packages in 1ms
+   Building rag-core @ file:///C:/Users/Admin/Documents/GitHub/rag-core
+      Built rag-core @ file:///C:/Users/Admin/Documents/GitHub/rag-core
+Prepared 1 package in 629ms
+Uninstalled 1 package in 1ms
+Installed 1 package in 8ms
+ ~ rag-core==0.1.0 (from file:///C:/Users/Admin/Documents/GitHub/rag-core)
+Resolved 101 packages in 1ms
+```
+
+### D2 — Ruff and strict mypy
+
+Cwd repository root; host/config below; exit **0**.
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync ruff check .; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; uv run --no-sync mypy src
+```
+
+```text
+warning: Encountered error: Access is denied. (os error 5)
+warning: Encountered error: Access is denied. (os error 5)
+warning: Encountered error: Access is denied. (os error 5)
+All checks passed!
+Success: no issues found in 38 source files
+```
+
+### D2 — Unit/contract/security regression
+
+Cwd repository root; host/config below; exit **0**.
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest -q tests/unit tests/contract tests/security --tb=short --basetemp=.t13r -o cache_dir=.local/t13-cache-regression
+```
+
+```text
+........................................................................ [ 22%]
+........................................................................ [ 44%]
+........................................................................ [ 66%]
+........................................................................ [ 88%]
+.....................................                                    [100%]
+325 passed in 100.64s (0:01:40)
+```
+
+### D4 — Unchanged API export
+
+Cwd repository root; host/config below; exit **0**.
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python scripts/export_openapi.py --check
+```
+
+```text
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+### D1–D6 completion review
+
+- **D1:** dependencies/P01/baseline/task scope reviewed; `git diff --check` exit0/no output. T13-only code/tests/dependency/docs; original prompt/corpus/auth/session/storage/job/retrieval semantics unchanged. Historical scratch retained.
+- **D2:** checks above plus final Ruff/mypy after review fix below. Regression325 includes T09 real loopback security/HTTP; no PG/MinIO/Redis rerun claimed because adapters unchanged.
+- **D3:** each DoD separately executed above on actual parsers, no mock substitute; T13 has no external-provider/service credential gate.
+- **D4:** README/RUNBOOK status/format matrix/operator limits/errors/offset contract/install/tests/unverified OCR/worker boundaries, task notes/handoff/phase summary updated; final docs check follows.
+- **D5:** intermediate schema1 is new, no DB/index/API migration; T03 locators/OpenAPI unchanged. No source execution/network, credentials/corpus/weights/cache/scratch staged. Native PDF retains table textline/header/unit/geometry, does not infer semantic cell structure. No general layout/corpus RAM/latency/Docker worker/OCR claim.
+- **D6:** completion subject `feat(T13): parse text documents with source provenance`; COMPLETE effective only after successful inspected scoped14-file commit. User authorizes origin/main push; actual hash/remote equality returned post-commit, never embedded into its own commit. T14 depends only on T13 and ready after closure; **STOP AFTER T13**.
+
+Final lint/type verification after Markdown review (cwd above):
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync ruff format src/rag_core/adapters/parsers/worker.py tests/integration/test_text_parsers.py; uv run --no-sync ruff check .; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; uv run --no-sync mypy src
+```
+
+Exit0, actual `1 file reformatted, 1 file left unchanged`, inherited three Access-denied scratch warnings, `All checks passed!`, `Success: no issues found in 38 source files`. Final DoD1/2 commands above were repeated after that source change.
+
+Regression used short `.t13r` to avoid known Windows corpus path limit; not ignored. After PASS only this self-created directory was removed with checked absolute target:
+
+```powershell
+$taskWorkspace = [IO.Path]::GetFullPath((Get-Location).Path); $taskScratch = [IO.Path]::GetFullPath((Join-Path $taskWorkspace '.t13r')); if ($taskScratch -ne (Join-Path $taskWorkspace '.t13r') -or -not $taskScratch.StartsWith($taskWorkspace + '\')) { throw 'Scratch outside workspace' }; Remove-Item -LiteralPath $taskScratch -Recurse -Force; Write-Output 'Removed only own verified .t13r test temp'; git diff --check
+```
+
+Exit0, `Removed only own verified .t13r test temp`; whitespace output empty. Historical T07 scratch untouched.
+
+### Final D1/D4/D5/D6 closure
+
+Review found that defusedxml's default allows entity-free DTDs; set explicit forbid_dtd/forbid_entities/forbid_external and added a standalone external-DTD fixture to existing ZIP safety test. No source/QA/gate altered. Final code after this fix:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync ruff format src/rag_core/adapters/parsers/worker.py tests/integration/test_text_parsers.py; uv run --no-sync ruff check .; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; uv run --no-sync mypy src
+```
+
+Exit0; actual `1 file reformatted, 1 file left unchanged`, three inherited scratch Access-denied warnings, `All checks passed!`, `Success: no issues found in 38 source files`.
+
+Separate final DoD-1/2 invocations on that reviewed code, cwd/config as above, both exit0:
+
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/integration/test_text_parsers.py -v -s --tb=short --basetemp=.local/t13-reviewed-dod1 -o cache_dir=.local/t13-cache-reviewed-dod1
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/integration/test_text_parsers.py -k safety -v -s --tb=short --basetemp=.local/t13-reviewed-dod2 -o cache_dir=.local/t13-cache-reviewed-dod2
+```
+
+Actual excerpts (full successful test diagnostics equal preceding runs):
+
+```text
+============================= 19 passed in 14.31s =============================
+collecting ... collected 19 items / 11 deselected / 8 selected
+PASS real ZIP preflight: entry/expanded/ratio limits, traversal, VBA, XML entity rejected without extraction
+PASS actual HTTP canary: zero requests from script/style/image/iframe/link/event refs; hidden text excluded
+====================== 8 passed, 11 deselected in 9.11s =======================
+```
+
+**D1/D5 dependency/scope review** command, exit0:
+
+```powershell
+$taskReview = @'
+import pathlib, subprocess, tomllib
+prior = tomllib.loads(subprocess.check_output(['git', 'show', 'HEAD:uv.lock'], text=True, encoding='utf-8'))
+current = tomllib.loads(pathlib.Path('uv.lock').read_text(encoding='utf-8'))
+old = {p['name']: p for p in prior['package']}
+new = {p['name']: p for p in current['package']}
+assert all(new[name]['version'] == item['version'] for name, item in old.items())
+assert old['rag-core']['dev-dependencies']['api'] == new['rag-core']['dev-dependencies']['api']
+assert not {'torch', 'transformers', 'docling-ibm-models'} & new.keys()
+print(f'PASS prior {len(old)} package pins unchanged; {len(new)-len(old)} added parser dependencies; API group unchanged; no model runtime')
+paths = ['README.md', 'RUNBOOK.md', 'docs/tasks.md', 'docs/handoffs.md', 'docs/implementation-summary.md', 'pyproject.toml', 'uv.lock', 'src/rag_core/domain/documents.py', 'src/rag_core/ports/parsers.py', 'src/rag_core/adapters/parsers/__init__.py', 'src/rag_core/adapters/parsers/registry.py', 'src/rag_core/adapters/parsers/text.py', 'src/rag_core/adapters/parsers/worker.py', 'tests/integration/test_text_parsers.py']
+for name in paths:
+    raw = pathlib.Path(name).read_bytes()
+    raw.decode('utf-8')
+    assert len(raw) < 1024*1024, name
+tracked = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+assert set(tracked) <= set(paths), tracked
+assert not subprocess.check_output(['git', 'diff', '--', 'corpus-documents'], text=True)
+print('PASS exact14 candidate UTF-8/size/scope; prompt/corpus untouched; no raw binaries/credentials/cache/weights in candidate paths')
+'@
+$taskReview | .venv/Scripts/python.exe -
+git diff --check
+```
+
+```text
+PASS prior 83 package pins unchanged; 18 added parser dependencies; API group unchanged; no model runtime
+PASS exact14 candidate UTF-8/size/scope; prompt/corpus untouched; no raw binaries/credentials/cache/weights in candidate paths
+```
+
+**D4 actual documentation check:** command `$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python scripts/check_docs.py; git diff --check`, cwd above, exit0:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 285
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+**D6 explicit stage**, approved Git write, cwd above, exit0/no stdout:
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md pyproject.toml uv.lock src/rag_core/domain/documents.py src/rag_core/ports/parsers.py src/rag_core/adapters/parsers/__init__.py src/rag_core/adapters/parsers/registry.py src/rag_core/adapters/parsers/text.py src/rag_core/adapters/parsers/worker.py tests/integration/test_text_parsers.py
+```
+
+**D5/D6 cached review and secrets check**, exit0 (actual local values compared in memory only):
+
+```powershell
+git diff --cached --check; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; git diff --cached --name-only; git diff --cached --stat; $taskStagedPatch = git diff --cached; foreach ($taskSecretName in @('postgres_password','minio_root_password','t10_postgres_password','minio_reader_password','minio_uploader_password')) { $taskSecretPath = Join-Path '.local/secrets' $taskSecretName; if (Test-Path -LiteralPath $taskSecretPath) { $taskSecretValue = [IO.File]::ReadAllText((Join-Path (Get-Location) $taskSecretPath)).Trim(); if ($taskSecretValue.Length -gt 0 -and ($taskStagedPatch -join "`n").Contains($taskSecretValue)) { throw 'Local secret matched staged diff' } } }; $taskAddedLines = ($taskStagedPatch | Where-Object { $_.StartsWith('+') -and -not $_.StartsWith('+++') }) -join "`n"; if ($taskAddedLines -match '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.') { throw 'Credential material matched new staged lines' }; Write-Output 'PASS staged exact task files; compared local secret values absent; no private keys/JWT literals in new lines'
+```
+
+```text
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+README.md
+RUNBOOK.md
+docs/handoffs.md
+docs/implementation-summary.md
+docs/tasks.md
+pyproject.toml
+src/rag_core/adapters/parsers/__init__.py
+src/rag_core/adapters/parsers/registry.py
+src/rag_core/adapters/parsers/text.py
+src/rag_core/adapters/parsers/worker.py
+src/rag_core/domain/documents.py
+src/rag_core/ports/parsers.py
+tests/integration/test_text_parsers.py
+uv.lock
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+ README.md                                 |  31 +-
+ RUNBOOK.md                                |  89 +++++-
+ docs/handoffs.md                          | 232 ++++++++++++++
+ docs/implementation-summary.md            |  12 +
+ docs/tasks.md                             |   6 +-
+ pyproject.toml                            |   4 +
+ src/rag_core/adapters/parsers/__init__.py |   5 +
+ src/rag_core/adapters/parsers/registry.py | 124 ++++++++
+ src/rag_core/adapters/parsers/text.py     | 253 +++++++++++++++
+ src/rag_core/adapters/parsers/worker.py   | 331 +++++++++++++++++++
+ src/rag_core/domain/documents.py          |  82 +++++
+ src/rag_core/ports/parsers.py             |  12 +
+ tests/integration/test_text_parsers.py    | 508 ++++++++++++++++++++++++++++++
+ uv.lock                                   | 298 ++++++++++++++++++
+ 14 files changed, 1971 insertions(+), 16 deletions(-)
+warning: unable to access 'C:\Users\Admin/.config/git/ignore': Permission denied
+PASS staged exact task files; compared local secret values absent; no private keys/JWT literals in new lines
+```
+
+D1–D5 PASS. D6 scope/cached review PASS; final docs restage, cached/docs validation and commit are last atomic completion steps. COMPLETE field is effective only with successful inspected completion commit; resolve actual hash via `git log -1 --format=%H --grep="^feat(T13):"`. Actual commit and remote equality reported post-push. No unresolved T13 blocker; T14 ready after closure; stop here.

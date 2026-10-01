@@ -239,7 +239,7 @@
 <a id="t13"></a>
 ### T13 — Intermediate document model và text parsers
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T12, T03.
 - **Tham chiếu kế hoạch:** [P07](plan.md#p07), [P02](plan.md#p02).
 - **Công việc:** ParsedDocument/Block/Locator, registry, PDF text/DOCX/TXT/MD/HTML parsers; giữ page/paragraph/table/source offsets; HTML không fetch network. OCR dành T15.
@@ -247,7 +247,9 @@
   1. `uv run pytest tests/integration/test_text_parsers.py` dùng parser thật trên fixtures EN/VI và PDF/DOCX nhiều trang/bảng, locator trỏ đúng nguồn, corrupt/encrypted file trả lỗi rõ.
   2. Giới hạn MIME/size/timeouts và safe temp cleanup hoạt động; HTML script/external refs không chạy. README/RUNBOOK format matrix đánh dấu đúng phần text, scan chưa verified.
 - **Cạm bẫy:** Không bịa page DOCX; không coi empty extraction là thành công; không làm mất dấu hoặc headers; không dùng QA file làm nguồn parse.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `feat(T13): parse text documents with source provenance`.
+- **Ghi chú thực thi:** T13-A01 | direct Codex agent (GPT-6 family; exact model/effort không được runtime công bố), không subagent; started 2026-10-01. Baseline `main`/T12 `094f74452307a8645eeb1d00a0a0af738b4403e9` bằng origin/main; chỉ `.ptmp-t07-a02/`, `.tmp-t07-a02/` untracked lịch sử, giữ nguyên. T12/T03 COMPLETE; đã đọc AGENTS/task-session-prompt, dependency notes/summary/evidence, P01/P02/P07/P13, README/RUNBOOK và checkpoint. Allowed: intermediate domain/port, parser registry/adapters, real synthetic EN/VI fixture tests, dependency/lock cần thiết và README/RUNBOOK/tasks/handoffs/summary. Plan: source provenance theo T03, Docling native PDF + format adapters không model/OCR, MIME/size/archive/page/output/time bounds và process/temp cleanup; chạy riêng mỗi DoD và D1–D6, scoped commit/push, stop T13. Commit dự kiến `feat(T13): parse text documents with source provenance`.
+
+- **T13-A01 results (COMPLETE effective only after successful inspected commit):** SourceIdentity/ParsedDocument/Block/schema1 + synchronous parser port, registry/subprocess worker, Docling native PDF, python-docx và UTF-8/MD/inert HTML; files/interfaces [S-T13-A01](implementation-summary.md#s-t13-a01). DoD-1 **PASS**: 19 real parser tests, EN/VI multi-page PDF/printed labels, DOCX page break/bảng/nested/header/footer, paragraph/XML/Unicode offsets round-trip, corrupt/AES encrypted errors. DoD-2 **PASS** riêng: 8 safety tests; MIME/byte/page/archive/output/time limits, SHA mismatch, original bytes + sandbox cleanup cả lỗi, actual HTML HTTP canary0 requests, external content không execute/fetch, bounded concurrent parse. [H-T13-A01](handoffs.md#h-t13-a01). D1 task/deps/diff PASS; D2 locked101/Ruff/mypy38/regression325 PASS; D3 từng DoD thật PASS; D4 README/RUNBOOK matrix/limits/offset semantics/commands, task/handoff/summary và docs check; D5 schema/lock/scope/secrets review; D6 scoped14-file commit `feat(T13): parse text documents with source provenance`, actual hash/remote equality báo sau commit/push. README/RUNBOOK đều cập nhật; không N/A. Limits: Windows host verified, chưa worker Docker/OCR/scan/general PDF semantic tables/RAM benchmark, partial PDF phải OCR trước ready; không đổi T03 API/DB/index/session semantics. T14 dependency T13 ready sau completion commit; **STOP AFTER T13**.
 
 <a id="t14"></a>
 ### T14 — XLSX, CSV, PPTX và bảng
