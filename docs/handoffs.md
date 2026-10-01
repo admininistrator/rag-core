@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-01 / T16-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, no subagents; baseline main/T15 `e1e348d45b7a83872c420f5b6f647551db21e751` equals origin/main. Pinned BGE-M3 tokenizer, structural512/64 chunks, source segments/table header-row groups/stable IDs/trusted profiles implemented. DoD-1 final17 actual-tokenizer PASS; DoD-2 final10 parser/source PASS; additional actual worker T15 OCR output mappings PASS. [T16 evidence](#h-t16-a01). Ruff/mypy45/native42/locked117/OpenAPI/docs/scope/secrets pass; full regression341PASS with shorter basetemp, initial10Windows long-path failures retained. Final review27tests PASS including header format metadata. README/RUNBOOK updated. Completion subject `feat(T16): chunk documents with stable source mappings`; actual hash/remote equality reported after commit/push, resolve by subject. Inherited T07 scratch preserved. No unresolved T16 blocker; T17 dependencies T16/T02 ready after closure. **STOP AFTER T16**.
+
 - **Current 2026-10-01 / T15-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, no subagents; baseline main/`cc6345dfb4b957a8f57d0ff6b3e9d31a016e606c` equals origin/main, inherited T07 scratch retained. CPU Docling/Tesseract vie+eng OCR/image runtime, provenance/quality/process bounds implemented; final DoD-1 actual20PASS and separate DoD-2 status13PASS in non-root Linux worker image, source SHA42/testSHA2 equal. Native42/regression325/Ruff/mypy42/locked112/OpenAPI/docs/scope/secrets pass. Full acceptance peak810.703MiB, status peak867.703MiB including21.6MP stress below25MP cap; fixture measurements, not full-stack budget. [T15 evidence](#h-t15-a01). Completion subject `feat(T15): support Vietnamese and English OCR`; actual hash/remote equality returned post-commit/push, resolve by subject. No T15 blocker; T16 dependencies ready after closure. **STOP AFTER T15**.
 
 - **Current 2026-10-01 / T14-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort not exposed, no subagents. Baseline `main`/T13 `d3e57b29de892ff360e2e255e9d1680bf179faaf` equals origin/main. XLSX/CSV/PPTX tables, formula/cache/source context and common bounded OOXML preflight implemented; final DoD-1 23PASS, separate DoD-2 9PASS, regression344PASS, Ruff/mypy41/locked105/OpenAPI/docs/scope/secrets review PASS. [T14 evidence](#h-t14-a01). Completion subject `feat(T14): preserve spreadsheet and table evidence`; actual hash/remote equality reported post-commit/push (resolve by subject). Inherited T07 scratch untouched. No T14 blocker; T15 dependencies ready after closure. **STOP AFTER T14**.
@@ -5629,3 +5631,361 @@ D1–D5 **PASS**. D6 candidate exact scoped15-file commit reviewed; command
 `git push origin main` and remote hash equality. Actual post-commit/remote output
 reported to user; not written into this same commit, no amend/rewrite. T15 COMPLETE
 only with successful inspected completion commit; T16 then ready, **STOP AFTER T15**.
+
+<a id="h-t16-a01"></a>
+## H-T16-A01 — Phase 3 / Structural chunks and source locators, 2026-10-01
+
+Direct Codex agent (GPT-6 family; exact model/effort not exposed), no subagents.
+All host commands cwd `C:\Users\Admin\Documents\GitHub\rag-core`, Windows PowerShell,
+Python3.12.4/uv0.11.16/pytest9.1.1; `UV_CACHE_DIR=<repo>\.uv-cache`.
+AGENTS/session prompt, T13/T14/T15 COMPLETE notes/interfaces/evidence, P01/P03/P04/P07/P13,
+README/RUNBOOK/current checkpoint read before code. No unfinished T16 source.
+User authorizes scoped commit and normal push origin/current branch; no force/merge/deploy.
+
+`git status --short; git branch --show-current; git rev-parse HEAD; git remote -v`
+exit0, baseline output:
+
+```text
+?? .ptmp-t07-a02/
+?? .tmp-t07-a02/
+main
+e1e348d45b7a83872c420f5b6f647551db21e751
+origin https://github.com/admininistrator/rag-core.git (fetch)
+origin https://github.com/admininistrator/rag-core.git (push)
+```
+
+Inherited scratch/global-ignore ACL warnings retained; no paths there touched.
+Initial sandbox `git ls-remote origin refs/heads/main` exit128, connection refused.
+Same approved network command exit0:
+
+```text
+e1e348d45b7a83872c420f5b6f647551db21e751 refs/heads/main
+```
+
+`git var GIT_AUTHOR_IDENT | Out-Null; if ($LASTEXITCODE -eq 0) { Write-Output 'Git author configured' }`
+exit0, `Git author configured`; no identity changed or printed.
+Exact13 allowed paths: README/RUNBOOK/tasks/handoffs/implementation-summary,
+pyproject/uv.lock, scripts/setup_tokenizer.py, adapters/tokenizer.py,
+domain/chunking.py, ports/tokenizer.py, tests/unit/test_chunking.py,
+tests/integration/test_source_locators.py. No existing parser/OCR/API/DB/Compose/corpus change.
+
+### Dependencies and real tokenizer artifact
+
+Verified official [BGE-M3 model revision](https://huggingface.co/BAAI/bge-m3/tree/5617a9f61b028005a4858fdac845db406aefb181)
+and [tokenizer config](https://huggingface.co/BAAI/bge-m3/raw/5617a9f61b028005a4858fdac845db406aefb181/tokenizer_config.json).
+Installed tokenizers0.22.2 API supplies encoding offsets/counts; local adapter disables
+truncation/padding and slices original Unicode, not normalized decode. No model weights,
+inference/provider/service/credentials needed; source fixtures synthetic EN/VI.
+
+Approved dependency command, exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv add --group ingestion 'tokenizers==0.22.2' --no-sync; if ($LASTEXITCODE -eq 0) { uv sync --locked --group dev --group api --group ingestion }
+```
+
+```text
+Resolved 117 packages in 1.60s
+Resolved 117 packages in 1ms
+Prepared 6 packages in 1.43s
+Uninstalled 1 package in 3ms
+Installed 6 packages in 268ms
++ filelock==4.0.8
++ fsspec==2026.9.0
++ hf-xet==1.6.0
++ huggingface-hub==1.33.0
++ tokenizers==0.22.2
+```
+
+Initial explicit download used stdlib `urllib.request.urlopen` on exact pinned
+`https://huggingface.co/BAAI/bge-m3/resolve/5617a9f61b028005a4858fdac845db406aefb181/tokenizer.json`,
+timeout60s/read<=32MiB, ignored local path `.local/tokenizers/bge-m3/tokenizer.json`.
+Exit0, actual output:
+
+```text
+tokenizer.json bytes 17098108 sha256 21106b6d7dab2952c1d496fb21d5dc9db75c28ed361a05f5020bbba27810dd08
+```
+
+`uv run --no-sync python scripts/setup_tokenizer.py` exit0, existing real artifact
+verified and local manifest written; no claim of a second cold download:
+
+```text
+VERIFIED BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181/21106b6d7dab2952c1d496fb21d5dc9db75c28ed361a05f5020bbba27810dd08/tokenizers-0.22.2; bytes=17098108
+```
+
+Tests never download/skip/fake tokenization. Missing/corrupt runtime artifacts fail.
+
+### Retained diagnostics and scope decisions
+
+Initial PowerShell ASCII-to-Python task-heading lookup failed `ValueError: substring not found`
+without edits; applied UTF-8 patch and used `$OutputEncoding=[System.Text.UTF8Encoding]::new($false)`
+for subsequent non-ASCII stdin. First source lint exit1 `E741 Ambiguous variable name: l`;
+mypy exit1 role typing/list annotation/locator union, corrected locally, no strictness reduction.
+Initial unit14PASS, expanded unit16PASS; final extra >8192-token input check17PASS below.
+First actual source integration `.local/t16-source1.log` exit1:
+
+```text
+E   rag_core.domain.chunking.ChunkingError: unmapped_table_header
+1 failed, 8 passed in 6.85s
+```
+
+CSV emits separate records with header context; added original-first-record header mapping
+and adjacent record groups. Same original fixture/parser/source assertions retained.
+Combined unit/source `.local/t16-source2.log` exit0 `25 passed in 7.39s`.
+Reviewed merged XLSX header-only rows to avoid duplicating their raw cells in context/body.
+Whole row/header >budget returns safe explicit error, preserving the no-cell-split DoD;
+no silent truncation/oversized success. Empty separators/policy annotations have no source quote.
+
+### DoD-1 — Actual tokenizer budgets/Unicode/long blocks/tables/overlap/stable identity
+
+Expected512total embedding tokens including special tokens, <=64content-token overlap,
+Unicode/combining/emoji/unbroken/special-token-text exact source coverage, long table
+whole-row groups with repeated source headers, rerun stable IDs, new version/different
+parser/tokenizer/config/generation fingerprint changes. Real BGE-M3 artifact above;
+no provider/model weights/services. Initial official16PASS command exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_NO_SYNC='1'; $env:PYTEST_ADDOPTS='--basetemp=.local/t16-dod1 -o cache_dir=.local/t16-dod1-cache'; uv run pytest tests/unit/test_chunking.py -v --tb=short *> .local/t16-dod1.log
+```
+
+Final17PASS adds >8192tokens original input without tokenizer truncation, same512budget.
+Command/exit0, `.local/t16-unitfinal.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/unit/test_chunking.py -q --tb=short --basetemp=.local/t16-unitfinal -o cache_dir=.local/t16-unitfinal-cache *> .local/t16-unitfinal.log
+```
+
+```text
+.................                                                        [100%]
+17 passed in 2.35s
+```
+
+All17 unskipped tests are actual tokenizer-backed, including artifact checksum refusal,
+source quote identity/ranges/output bounds, trusted custom profile/unknown-domain failure
+and refusal to chunk partial PDF. Source tests independently validate original bytes.
+
+### DoD-2 — Actual parsers and independently reopened PDF/DOCX/XLSX/PPTX source
+
+Expected chunk maps stay within physical PDF pages/table/units/sheet/PPTX shape,
+real originals and source XML/cells independently reopened; no PDF off-by-one and no
+fabricated Office pages. Also CSV/TXT/MD/HTML quote-normalization/original raw spans.
+Command exit0, `.local/t16-dod2.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_NO_SYNC='1'; $env:PYTEST_ADDOPTS='--basetemp=.local/t16-dod2 -o cache_dir=.local/t16-dod2-cache'; uv run pytest tests/integration/test_source_locators.py -v -s --tb=short *> .local/t16-dod2.log
+```
+
+```text
+collecting ... collected 9 items
+PDF: physical pages=[1, 2, 3], chunks=6, printed=i/ii/iii
+DOCX: tables=[0, 1], chunks=15, no invented pages
+XLSX: chunks=8, mapped cells=104, merged/header/units retained
+PPTX: slides=[1, 2], chunks=18, shape/table boundaries preserved
+test_other_text_and_table_formats_keep_normalized_quote_and_original_span[txt] PASSED
+test_other_text_and_table_formats_keep_normalized_quote_and_original_span[md] PASSED
+test_other_text_and_table_formats_keep_normalized_quote_and_original_span[html] PASSED
+test_other_text_and_table_formats_keep_normalized_quote_and_original_span[csv] PASSED
+test_original_table_unit_too_large_explicit_error PASSED
+9 passed in 6.23s
+```
+
+Actual test-only profile96/12 forces repeated table/paragraph splits, and unit gate
+uses baseline512/64; budget measured including header/policy metadata. XLSX fixtures
+use merged header,30data rows,0% formats, blank-region currency switch and missing
+formula cache. DOCX2tables/VND-USD, PPTX2slides and source XPath, PDF3physical pages
+vs printed Roman labels. Original binary unchanged and parser sandbox empty asserted.
+RUNBOOK T16 documents config/error/reindex implications; HTTP resolver remains T24.
+
+### Additional actual OCR word regrouping/source mapping
+
+Existing verified T15 Linux worker image `rag-core-ocr-test:t15`, Python3.12.13,
+Tesseract5.3.0/Docling slim2.132.0, CPU2/2GiB/network-none/non-root/init. No image/source
+deployment. Ignored `.local/t16-ocr/export_ocr.py` reuses actual T15 fixture generators,
+ParserRegistry OCR engine, asserts unchanged input/sandbox cleanup, exports original
+ParsedDocument JSON and traineddata hashes. Host parses UTF-8 JSON, actual T16 tokenizer
+maps every word back to original block/locator/bbox and checks required extraction config.
+
+```powershell
+$taskEvidence=(Resolve-Path -LiteralPath .local/t16-ocr).Path; docker run --rm --init --network none --memory=2g --cpus=2 --mount "type=bind,source=$taskEvidence,target=/evidence" rag-core-ocr-test:t15 python /evidence/export_ocr.py
+uv run --no-sync python .local/t16-ocr/verify_chunks.py *> .local/t16-ocr-verify.log
+```
+
+Both exit0 after correcting host JSON locale decoding (`read_text(encoding='utf-8')`).
+Initial host helper phrase assertion exit1 from cp1252 mojibake, output itself was
+UTF-8/correct; original phrase/gold/engine/source unchanged. Actual output:
+
+```text
+png actual OCR blocks 8 engine 5.3.0
+pdf actual OCR blocks 15 engine 5.3.0
+png actual OCR word mapping PASS; blocks 8 chunks 1 mapped 8 tokens [11] excerpt Doanh thu quý một đạt 120 triệu đồng.
+pdf actual OCR word mapping PASS; blocks 15 chunks 2 mapped 15 tokens [11, 11] excerpt Doanh thu quý một đạt 120 triệu đồng.
+```
+
+Actual eng SHA `7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2`,
+vie SHA `79df64caf7bcfb2a27df5042ecb6121e196eada34da774956995747636d5bfa1`,
+OSD SHA `9cf5d576fcc47564f11265841e5ca839001e7e6f38ff7f7aacf46d15a96b00ff`.
+Extractor config digest additionally includes5.3.0/vie+eng/216dpi/Docling2.132.0/PSM3;
+same OCR text/provenance with changed elapsed/RSS gives same chunk IDs.
+These are synthetic fixtures and reused real OCR runtime, not new OCR quality/full-stack
+RAM/latency acceptance, model inference, source storage, corpus benchmark or ingestion.
+
+### D1–D6 quality, review and closure
+
+D1 scope/dependency review and `git diff --check` exit0/no stdout; baseline scratch preserved.
+D2 commands each exit0, exact output/logs:
+
+```powershell
+uv run --no-sync ruff check src tests scripts corpus-documents/scripts
+uv run --no-sync mypy src
+uv lock --check --offline
+uv sync --locked --offline --group dev --group api --group ingestion
+uv run --no-sync pytest tests/integration/test_text_parsers.py tests/integration/test_office_tables.py -q --tb=short --basetemp=.local/t16-native -o cache_dir=.local/t16-native-cache
+uv run --no-sync python scripts/export_openapi.py --check
+```
+
+```text
+All checks passed!
+Success: no issues found in 45 source files
+Resolved 117 packages in 38ms
+Resolved 117 packages in 1ms
+Checked 116 packages in 27ms
+42 passed in 33.72s
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+Full logs `.local/t16-ruff.log`, `t16-mypy.log`, `t16-native.log`, `t16-openapi.log`.
+Initial full regression exit1 `.local/t16-regression.log`:
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/t16-regression -o cache_dir=.local/t16-regression-cache
+```
+
+```text
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Admin\\Documents\\GitHub\\rag-core\\.local\\t16-regression\\test_prepare_and_rerun_preserv0\\.downloads\\default-stage-dfcd6a16e273434b9a414fc6cd134ffe\\default\\documents\\.hotpot_9dbd5ec2781ec2df0e16c49e80e045fbaaa9ae12ac61765348937d72a88b3648.md.6ajljkzo.part'
+10 failed, 331 passed in 88.33s (0:01:28)
+```
+
+Windows path-length failure in existing corpus temporary stage writer, reproduced and
+retained. No corpus/test/gold/security change. Same suite rerun with fresh shorter
+basetemp `.local/u16`; outcome and final docs/scope/commit steps appended below.
+D3 individual real DoDs PASS as above. D4 README/RUNBOOK/notes/summary/evidence updated;
+new internal source maps, tokenizer setup/pins, mandatory OCR config, reindex/generation
+and limits explicitly described. D5/D6 review/staging/commit/push remain pending here.
+
+No DB/API/index migration. T17/T19 must include chunk pipeline fingerprint plus model/index
+revision, mount verified tokenizer offline and authorize source/generation separately.
+T24 must enforce active session before resolving maps. No full corpus chunk tuning,
+weights/inference/retrieval/LLM, worker T16 deployment or full-stack resource measurement.
+Chunk/table source precision is measured on fixtures, not a general layout/accuracy claim.
+Completion subject `feat(T16): chunk documents with stable source mappings`; actual hash
+and origin/main equality reported after successful inspected commit/push; no self-reference.
+**STOP AFTER T16**, do not start T17.
+
+### Final regression and review fixes
+
+Same full suite, shorter **fresh** basetemp, cwd/config as above; exit0,
+`.local/t16-regression-short.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/u16 -o cache_dir=.local/c16 *> .local/t16-regression-short.log
+```
+
+```text
+........................................................................ [ 21%]
+........................................................................ [ 42%]
+........................................................................ [ 63%]
+........................................................................ [ 84%]
+.....................................................                    [100%]
+341 passed in 108.10s (0:01:48)
+```
+
+Collected before the final extra >8192-token unit case; final17-unit gate independently
+covers that new case. No older test/gold/schema changed or skipped. No scratch deleted.
+Review found header-only numeric Excel cells also need number-format/cell metadata.
+Header policy now retained with source cells, synthetic policy text explicitly unquotable;
+new original-XLSX integration test guards percent-header units. Combined real gates
+`.local/t16-review-tests.log` exit0 `27 passed in 12.11s`.
+Ruff/mypy rerun after source correction exit0:
+`All checks passed!` / `Success: no issues found in 45 source files`.
+
+Final **separate** DoD gates on reviewed source, each exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_NO_SYNC='1'; $env:PYTEST_ADDOPTS='--basetemp=.local/t16-close-unit -o cache_dir=.local/t16-close-unit-cache'; uv run pytest tests/unit/test_chunking.py -q --tb=short *> .local/t16-close-unit.log
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_NO_SYNC='1'; $env:PYTEST_ADDOPTS='--basetemp=.local/t16-close-source -o cache_dir=.local/t16-close-source-cache'; uv run pytest tests/integration/test_source_locators.py -v -s --tb=short *> .local/t16-close-source.log
+```
+
+```text
+17 passed in 2.51s
+collecting ... collected 10 items
+PDF: physical pages=[1, 2, 3], chunks=6, printed=i/ii/iii
+DOCX: tables=[0, 1], chunks=15, no invented pages
+XLSX: chunks=8, mapped cells=104, merged/header/units retained
+PPTX: slides=[1, 2], chunks=18, shape/table boundaries preserved
+test_xlsx_header_number_format_metadata_is_preserved_and_not_a_quote PASSED
+10 passed in 7.53s
+```
+
+Final OCR helper rerun initially failed solely printing Unicode to default cp1252
+(`UnicodeEncodeError`), not mapping/assertions; setting UTF-8 stdout, same sources/engine/
+phrase/assertions, command exit0 `.local/t16-ocr-close.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:PYTHONIOENCODING='utf-8'; uv run --no-sync python .local/t16-ocr/verify_chunks.py *> .local/t16-ocr-close.log
+```
+
+```text
+png actual OCR word mapping PASS; blocks 8 chunks 1 mapped 8 tokens [11] excerpt Doanh thu quý một đạt 120 triệu đồng.
+pdf actual OCR word mapping PASS; blocks 15 chunks 2 mapped 15 tokens [11, 11] excerpt Doanh thu quý một đạt 120 triệu đồng.
+```
+
+D4 `uv run --no-sync python scripts/check_docs.py` exit0 before final result-note additions:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 306
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+D5 reviewed all13task paths/source/diff; ignored review helper checks existing lock versions,
+unchanged API/dev/metadata/inference/OCR groups, UTF-8/path allowlist and added-text
+private-key/JWT markers + local credential exact-value comparisons without printing values.
+`uv run --no-sync python .local/t16-review.py` exit0:
+
+```text
+PASS existing lock versions unchanged; five added tokenizer packages; total 117
+PASS API/dev/metadata/inference/OCR groups unchanged; ingestion adds only tokenizers pin
+PASS exact13 task paths UTF-8; added text has no credential markers/local secret values; corpus/plan/API/Compose/parsers untouched
+```
+
+D1-D5 PASS. D6 explicit13-file staging/inspection, final docs check and completion commit
+are final closure steps. COMPLETE fields are conditional on successful inspected commit.
+Actual commit/output/authorized origin-main push/equality reported after execution,
+without adding self-hash to this commit or amending. T17 T16/T02 dependencies ready only
+with T16 inspected completion; **STOP AFTER T16**.
+
+### D6 staged review
+
+`git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md pyproject.toml uv.lock scripts/setup_tokenizer.py src/rag_core/adapters/tokenizer.py src/rag_core/domain/chunking.py src/rag_core/ports/tokenizer.py tests/unit/test_chunking.py tests/integration/test_source_locators.py`
+approved repository Git write, exit0. Expected Git CRLF-to-LF warnings for three
+Python-written docs; staged content has UTF-8/LF. Initial ignored review helper exact
+worktree-byte comparison failed `AssertionError` solely from that Git newline conversion.
+Correct comparison uses Git's own `hash-object --path <path> <path>` vs `rev-parse :<path>`
+to apply the declared Git text filters, while exact13path/UTF-8/secrets/lock checks remain.
+No source/test/gate changed. Cached whitespace check exit0/no output.
+
+Final docs validation after results notes exit0:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 308
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Staged scope before this append:13files/1791insertions/12deletions; source/corpus/model
+artifacts/scratch all excluded except the13 explicitly listed task files. Review outputs
+and final commit/push/hash equality are returned directly after execution. No amend,
+force push/merge/deploy. Final evidence-only append is restaged before commit.

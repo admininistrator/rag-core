@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T15 IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup/tải mới/rerun đã kiểm. Auth, metadata, read-only storage, registration/outbox và native text/Office tables đã kiểm thật. T15 thêm CPU Tesseract vie/eng qua Docling stage trong worker image, source locators/quality/cancel. API chỉ mount health; business HTTP/query/SSE và Celery ingestion orchestration vẫn DESIGNED. T16–T36 chưa bắt đầu.
+> **T01–T16 IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup/tải mới/rerun đã kiểm. Auth, metadata, read-only storage, registration/outbox và native text/Office tables đã kiểm thật. T15 CPU OCR đã kiểm trong worker image; T16 thêm chunking512/64 với tokenizer thật và source maps. API chỉ mount health; business HTTP/query/SSE và Celery ingestion orchestration vẫn DESIGNED. T17–T36 chưa bắt đầu.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -26,7 +26,8 @@
 | PDF text/DOCX/TXT/MD/HTML parsers | VERIFIED real native parsers trên fixtures EN/VI; chưa nối worker | T13 |
 | XLSX/CSV/PPTX tables | VERIFIED real parsers, locators/header/unit/formula cache và archive safety; chưa nối worker | T14 |
 | OCR scan/mixed PDF, PNG/JPEG | VERIFIED worker image, engine thật EN/VI + locator/status/limits/cancel | T15 |
-| Chunking/index ingestion orchestration | DESIGNED | T16–T19 |
+| Structural chunks/source maps | VERIFIED real tokenizer + parser fixtures trên host, actual worker OCR output mapped | T16 |
+| Embedding/index ingestion orchestration | DESIGNED | T17–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
@@ -554,7 +555,7 @@ T35 sẽ thêm client FastAPI/HTTPX độc lập chạy thật, xử lý chunk b
 <a id="r08"></a>
 ## R08. Citations, xóa chat và retained index
 
-**T03 locator structural schemas, T10 PG session scope/lifecycle và T13–T15 text/table/OCR provenance VERIFIED; chunk mapping/citation resolver/stream revalidation DESIGNED — T16/T24/T25.**
+**T03 locator schemas, T10 PG session scope/lifecycle và T13–T16 text/table/OCR/chunk provenance VERIFIED; citation resolver/stream revalidation DESIGNED — T24/T25.**
 
 | Format | Vị trí nguồn |
 | --- | --- |
@@ -580,7 +581,7 @@ Không có auto-delete derivative khi session hết link ở bản đầu. Admin
 <a id="r09"></a>
 ## R09. Ingestion, formats và xử lý lỗi
 
-**T13–T14 VERIFIED trên Windows/Python3.12.4; T15 OCR VERIFIED trong Linux worker/Python3.12.13; chunking/index orchestration DESIGNED — T16–T19.**
+**T13–T14 và T16 VERIFIED trên Windows/Python3.12.4; T15 OCR VERIFIED trong Linux worker/Python3.12.13; embedding/index orchestration DESIGNED — T17–T19.**
 
 | Format / MIME (extension allowlist) | Extraction và locator đã kiểm | Trạng thái / giới hạn |
 | --- | --- | --- |
@@ -618,7 +619,7 @@ trong worker, một slot không queue (`parser_busy`). T19 chưa nối parser v�
 `ParsedDocument` schema1 có source, format, parser_revision, blocks, page_count,
 quality, needs_ocr_pages và warnings; `Block` giữ text/kind/T03 SourceLocator,
 heading_path, rows, XML source_part/source_path hoặc native PDF bbox. Bảng DOCX/HTML
-giữ hàng/cột cùng header/units, không tách ô khi extraction; T14 thêm common normalization/context, T16 mới token chunking.
+giữ hàng/cột cùng header/units, không tách ô khi extraction; T14 thêm common normalization/context, T16 token chunking được mô tả bên dưới.
 Mọi offsets là half-open **Unicode character**, không byte: TXT/MD vào original decoded
 source (kể cả BOM/CRLF); HTML span vào original HTML gồm tags/entities, decoded text
 không nhất thiết bằng raw substring. PDF vào canonical page text = native textline
@@ -688,7 +689,7 @@ first nonempty row và các text-only leading rows trước data numeric/formula
 sau blank row; numeric year headers được giữ. Đây là source context convention,
 không cam kết tự nhận diện mọi bảng phức tạp. Merged header context lặp anchor text
 trong các cột liên quan; raw rows không fill giá trị giả, cells giữ anchor mapping.
-Mỗi XLSX block là một source row/range + context; T16 phải giữ context khi chia chunks.
+Mỗi XLSX block là một source row/range + context; T16 giữ context khi chia chunks.
 Source part lấy từ workbook relationships; XPath dùng prefix `s` với namespace
 `http://schemas.openxmlformats.org/spreadsheetml/2006/main`. Locators không có page.
 
@@ -769,7 +770,7 @@ OCR PDF bbox là page points, **top-left**; native PDF bbox vẫn native coordin
 Ảnh giữ `format=image`, image ID=source SHA256, `ocr_block` và T03 bbox trong raw
 source pixels/top-left. EXIF orientation/DPI được strip trên bản copy để bbox trỏ
 raw pixels gốc; không hứa camera EXIF auto-rotation. PNG/JPEG single frame, MIME
-và suffix phải khớp decoder. T16 cần regroup words nhưng giữ source locators.
+và suffix phải khớp decoder. T16 regroup words bằng khoảng trắng và giữ source locators.
 
 `quality=text` khi native-only, `ocr` khi OCR thành công (kể cả mixed), `partial`
 khi còn failed PDF pages. `ocr` là extraction method, không calibrated accuracy.
@@ -816,6 +817,90 @@ Additive intermediate fields, existing T03 locator/API unchanged; no PG/index mi
 OCR config/order/DPI/Docling+engine+traineddata revisions must enter T16/T19 pipeline
 fingerprints before reuse. Engine/data package versions pinned; transitive OS packages
 use Debian repositories at build time, no claim of byte-identical future apt rebuilds.
+
+<a id="r09-t16"></a>
+### Structural chunking T16: tokenizer, source mapping và reindex
+
+**VERIFIED**: actual tokenizer + native parsers/independent original source round-trip,
+và actual T15 OCR word mapping; [H-T16-A01](docs/handoffs.md#h-t16-a01).
+Không cần PG/Qdrant/LLM key để nghiệm thu T16. API/job/ready không được nối ở task này.
+
+```powershell
+uv sync --locked --group dev --group api --group ingestion
+uv run --no-sync python scripts/setup_tokenizer.py
+uv run --no-sync pytest tests/unit/test_chunking.py --basetemp=.local/t16-unit-check
+uv run --no-sync pytest tests/integration/test_source_locators.py --basetemp=.local/t16-source-check
+```
+
+Chọn basetemp mới mỗi lần. Operator setup tải HTTPS tokenizer JSON của
+`BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181`, SHA256
+`21106b6d7dab2952c1d496fb21d5dc9db75c28ed361a05f5020bbba27810dd08`,
+17,098,108bytes, runtime `tokenizers==0.22.2`. Local artifact và manifest nằm trong
+`.local/tokenizers/bge-m3/`, không commit. Existing corrupt file không bị overwrite;
+adapter kiểm hash/runtime rồi disable truncation/padding, không download khi ingest.
+Container mount/cache wiring và model weights/inference thuộc T17/T19.
+
+```python
+from rag_core.adapters.tokenizer import BgeM3Tokenizer
+from rag_core.domain.chunking import ChunkProfiles, StructuralChunker
+
+profile = ChunkProfiles().for_domain("document")  # trusted operator/domain config
+chunker = StructuralChunker(BgeM3Tokenizer(tokenizer_path), profile)
+chunks = chunker.chunk(parsed_document, generation_id=generation_id,
+                       extraction_fingerprint=extraction_config_fingerprint)
+```
+
+Đây là synchronous CPU API, async worker caller phải offload. `default`, `document`,
+`multilingual` cùng baseline512/64; static `ChunkProfiles({...})` là hook cho trusted
+code/config. Unknown domain báo `unknown_chunk_profile`, không fallback rộng scope.
+Client/upload/history không được đăng ký hook hoặc override config.
+
+`ChunkProfile(name, revision, max_tokens=512, overlap_tokens=64)` đếm **embedding tokens
+gồm special tokens**, tối đa8192; overlap đếm riêng content tokens, là upper bound
+chứ không hứa luôn đúng64 vì Unicode/biên token/paragraph. Token offsets dùng để cắt
+**original Unicode characters**, rồi tokenize lại mỗi chunk; không cắt theo số ký tự
+hoặc decode token IDs đã normalization. Prefer paragraph/heading boundaries; long
+block dùng token windows. Overlap ở cùng đơn vị, không qua heading, PDF page,
+PPTX slide/shape, native/OCR boundary hoặc bảng. OCR words ghép space, native blocks LF.
+
+Bảng giữ cả ô/hàng, grouping consecutive XLSX/CSV rows cùng context/vùng; DOCX/PPTX/
+HTML/MD table riêng. Blank XLSX row, sheet, table hoặc unit/header context đổi là biên.
+Header repeated mapping về source cells; merged XLSX context trỏ stored anchor thật.
+Formula expressions chỉ ở `cells` metadata, không là embedding text; formats/cache
+policy note có trong text nhưng không là source quote. Không infer cell layout từ
+native/OCR PDF; native PDF không có normalized rows chỉ chunk text provenance.
+Row/header không vừa budget báo `table_row_too_large`/`table_header_too_large`; operator
+xử lý/reindex với trusted profile hoặc source mới, không silently split cell/drop units.
+
+`Chunk` giữ UUID/document/version/source SHA/generation/ordinal, checksum, token_count,
+pipeline/parsed fingerprints, heading path, source segments và cell metadata. Segment
+có half-open chunk chars và normalized block/cell chars, zero-based block/row/column,
+original locator/XML part/path/bbox, role content/context/overlap. PDF page luôn physical
+one-based; DOCX/XLSX không có page. `chunk.quotes(parsed, start, end)` rechecks exact
+parsed/source identity và substring, trả từng `MappedQuote`; separators và policy notes
+không có quote. Original offsets chỉ được thu hẹp khi chúng mô tả verbatim block text;
+HTML entities/MD table syntax giữ coarse raw span + exact normalized cell coordinates.
+Không lấy một locator của chunk ghép làm vị trí cho toàn quote. T24 phải authorize
+app/user/current session/link/ready version-generation trước khi resolve; UUID chỉ là
+provenance, không là quyền. Chunker không đọc storage, attach link, publish hoặc query.
+
+`structure-v1` pipeline fingerprint gồm chunker revision, full trusted profile,
+tokenizer model/revision/artifact SHA/runtime, parser_revision và extraction fingerprint.
+IDs còn gồm document/version/SHA, generation, parsed content/maps digest, ordinal/checksum.
+Same input/config/generation cho IDs như nhau; source version hoặc bất kỳ thành phần
+trên đổi thì IDs đổi. Parsed digest bỏ elapsed/RSS để OCR measurements không gây drift.
+Native standard config có default `native-v1`; custom extraction phải supply full config
+fingerprint. OCR bắt buộc supply fingerprint engine/version/traineddata SHA/language
+order/DPI/PSM/Docling/config; thiếu trả `missing_extraction_fingerprint`.
+T17/T19 phải compose tiếp embedding model/index revision vào full index fingerprint.
+
+Config/tokenizer/parser/extraction/model revision đổi cần **generation/reindex mới**,
+không reuse/overwrite generation cũ. T19 mới triển khai atomic ready publication: giữ
+generation cũ đến khi generation mới đủ chunks/vectors/PG publication. T16 không có
+DB/API migration, không tự reindex retained data, không đổi session retention semantics.
+Partial extraction bị từ chối `partial_extraction`; output vượt100000chunks hoặc32Mi
+characters báo `chunk_output_limit`, không trả partial success. Khả năng hình/bảng phức
+tạp và corpus throughput/RAM/tuning chưa đo; chưa có calibrated retrieval quality.
 
 <a id="r10"></a>
 ## R10. UI quản trị

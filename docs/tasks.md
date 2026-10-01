@@ -284,7 +284,7 @@
 <a id="t16"></a>
 ### T16 — Chunking theo cấu trúc và source locators
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T15, T13, T14.
 - **Tham chiếu kế hoạch:** [P03](plan.md#p03), [P07](plan.md#p07), [P04](plan.md#p04).
 - **Công việc:** Token-aware chunks 512/64 baseline, table row groups/context, stable IDs/versioned fingerprints, citation source maps, domain chunk profile hooks.
@@ -292,7 +292,9 @@
   1. `uv run pytest tests/unit/test_chunking.py` PASS với tokenizer thật: token budgets, Unicode, long block/table, overlap, stable rerun IDs, different source version tạo ID khác.
   2. `uv run pytest tests/integration/test_source_locators.py` chứng minh chunk->PDF/DOCX/XLSX/PPTX source đúng, không vượt bảng/đơn vị và không off-by-one trang; config/reindex implications trong RUNBOOK.
 - **Cạm bẫy:** Không cắt token theo ký tự; không để overlap biến citation quote sai vị trí; không thay tokenizer mà giữ fingerprint cũ.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `feat(T16): chunk documents with stable source mappings`.
+- **Ghi chú thực thi:** T16-A01 | direct Codex agent (GPT-6 family; exact model/effort not exposed), no subagents | Started 2026-10-01. Baseline main/e1e348d45b7a83872c420f5b6f647551db21e751 equals origin/main; inherited T07 scratch preserved, no unfinished T16. Read AGENTS/session prompt, dependency T13–T15 notes/interfaces/evidence, P01/P03/P04/P07/P13, living docs and checkpoint. Allowed: chunk domain/port/tokenizer adapter/setup script, real tokenizer/parser tests, necessary dependency/lock and five living docs. Plan: pinned BGE-M3 tokenizer, 512/64 structural chunks, whole table rows/header context, precise source segments/stable versioned fingerprints and trusted profile hooks; separate DoD/D1–D6, scope review, commit/push/remote verification, STOP AFTER T16. Commit dự kiến `feat(T16): chunk documents with stable source mappings`.
+
+- **T16-A01 results (COMPLETE effective only after successful inspected completion commit):** Implemented pinned offline BGE-M3 tokenizer/structure-v1 chunks512total tokens/64maximum overlap, whole table row groups/source header-unit-context, OCR word regrouping and exact segment quotes, stable source-version-generation/fingerprint UUIDs and trusted domain profiles. Exact13 files/interfaces [S-T16-A01](implementation-summary.md#s-t16-a01). DoD-1 **PASS** final17actual-tokenizer tests incl Unicode/combining/emoji/>8192input/long table/overlap/identities/corrupt artifact/partial-source/output refusal. DoD-2 **PASS** final10actual source-parser round-trips: PDF3physicalpages/Roman labels, DOCX2unit tables/XML, XLSX104mappedcells/merged/blank currency region/formula/header number-format, PPTX2slides/shapes, CSV/TXT/MD/HTML; RUNBOOK config/reindex documented. Additional actual T15 engine8PNGwords/15PDFwords maps PASS; no mock/live substitution. [H-T16-A01](handoffs.md#h-t16-a01). D1 scope/deps/diff PASS; D2 Ruff/mypy45/locked117/native42/OpenAPI/regression341PASS (Windows long-path initial10fail retained, shorter fresh basetemp pass; final27review recheck PASS); D3 individual17+10gates PASS; D4 README/RUNBOOK/notes/summary/evidence/docs PASS; D5 exact13files/existing lock versions/groups/API/corpus/secrets PASS; D6 explicit13file stage/inspection + completion subject `feat(T16): chunk documents with stable source mappings`, actual hash/authorized push/origin-main equality reported after execution. README/RUNBOOK updated, no N/A. No DB/API/index migration or existing parser/Compose change; no corpus tuning/full-stack resource/model inference/T16container wiring. OCR requires trusted extraction fingerprint, oversized table rows explicit fail, T19 publication/T24 auth resolver remain DESIGNED. No unresolved blockers; ended after inspected completion commit2026-10-01. T17 dependencies T16/T02 ready after closure; **STOP AFTER T16**.
 
 <a id="t17"></a>
 ### T17 — Embedding/reranker inference service
