@@ -1,0 +1,12 @@
+# Opt-in isolated T18 vector service; application/Scarlet volumes are untouched.
+# Combine with compose.metadata-test.yaml; random collections are owned by each fixture.
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.19.1-unprivileged@sha256:801777072776dc81b2a9dd2007b2ed487571f21ecd30efffd15ddb1671f2193d
+    ports: ["127.0.0.1:56333:6333"]
+    tmpfs: ["/qdrant/storage:uid=1000,gid=1000,mode=0700"]
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333'"]
+      interval: 2s
+      timeout: 3s
+      retries: 20

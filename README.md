@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: T01–T17 IMPLEMENTED/VERIFIED local.** T17 thêm một inference service dùng chung BGE-M3 dense/sparse và reranker EN/VI, CPU/GPU Docker smoke thật. T16 có chunking512/64/source maps; T15 CPU OCR EN/VI; T13–T14 native/Office parsers. T12 registration/outbox đã kiểm PostgreSQL/Redis/MinIO, jobs vẫn queued đến T19. Compose có PostgreSQL17/Qdrant/Redis/API health, profiles `local-storage`, `registration`, `inference`. Corpus Default100QA/986documents, Document150QA/84PDF, Bilingual240paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion orchestration, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T18–T36 còn trong backlog; status COMPLETE requires the inspected T17 completion commit.
+> **Trạng thái: T01–T18 IMPLEMENTED/VERIFIED local.** T18 có Qdrant repository bắt buộc scope từ PG, named dense/sparse vectors, neighbor lookup và generation cleanup đã kiểm dịch vụ thật. T17 có shared BGE-M3/reranker CPU/GPU; T13–T16 parsers/OCR/chunking/source maps. T12 registration/outbox đã kiểm PostgreSQL/Redis/MinIO, jobs vẫn queued đến T19. Compose có PostgreSQL17/Qdrant/Redis/API health, profiles `local-storage`, `registration`, `inference`. Corpus Default100QA/986documents, Document150QA/84PDF, Bilingual240paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion orchestration, retrieval pipeline, LLM, SSE runtime và admin UI chưa hoạt động. T19–T36 còn trong backlog; status COMPLETE requires the inspected T18 completion commit.
 
 ## Phạm vi đã chốt
 
@@ -132,7 +132,7 @@ uv run pytest tests/integration/test_metadata_migrations.py -v -s --tb=short
 Tests cần `RAG_TEST_DATABASE_URL` tới service riêng, không tự thay PG bằng mock.
 Evidence: [H-T10-A01](docs/handoffs.md#h-t10-a01). Business routes vẫn chưa mount theo
 R05/T26; storage reader đã VERIFIED ở T11, registration/outbox dispatch đã VERIFIED ở T12;
-worker/chunks/vector T19 chưa triển khai. Snapshot phải được consumer revalidate trước khi phát evidence/answer.
+worker/chunk persistence T19 chưa triển khai; vector repository T18 đã VERIFIED bên dưới. Snapshot phải được consumer revalidate trước khi phát evidence/answer.
 
 ## Upload registration và outbox T12
 
@@ -273,6 +273,31 @@ chưa chạy, giữ native slot đến hết batch hiện tại. Raw rerank scor
 answer đúng. [RUNBOOK T17](RUNBOOK.md#r09-t17) có named volume, CPU/GPU smoke,
 startup/latency/RAM/VRAM, errors và fingerprint/reindex. Chưa có retrieval/public query API.
 
+## Scoped Qdrant repository T18
+
+**VERIFIED trên Qdrant1.19.1/PostgreSQL17.11 thật**: `QdrantVectorRepository`
+nhận immutable `ScopeSnapshot` từ T10, kiểm lại PG trước/sau read. Dense/sparse và
+cả hai hybrid prefetch đều có app/owner AND các cặp document/version/generation;
+fetch/neighbor có cùng scope và language policy. Scope rỗng không gửi query/scroll.
+Collection versioned theo fingerprint T17; PG xác minh và khóa generation khi ghi/
+count/cleanup. Active generation không được ghi đè hoặc cleanup; retry giữ point IDs.
+
+```powershell
+docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml up -d --wait postgres qdrant
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+uv run --no-sync pytest tests/integration/test_qdrant_scope.py -v -s --tb=short --basetemp=.local/18-new
+docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml stop postgres qdrant
+```
+
+Prerequisites: locked dev+api+ingestion groups và test secret T10 theo
+[RUNBOOK R04](RUNBOOK.md#r04). Dùng basetemp mới. Test dùng vectors synthetic để
+chứng minh quyền/filter trên server thật; không là benchmark embedding hay live
+model gate T17. Collection configuration, internal interfaces, reindex/retention
+và giới hạn tại [RUNBOOK T18](RUNBOOK.md#r09-t18); [evidence](docs/handoffs.md#h-t18-a01).
+Chưa nối ingestion worker, chunk persistence hay public retrieval pipeline (T19–T26).
+
 ## Corpus T04–T08: setup và tái tạo
 
 T08 nghiệm thu tải mới vào output root/cache độc lập, all-domain validation và rerun. Workflow hiện hành là một task/session theo [AGENTS.md](AGENTS.md). Bằng chứng corpus và giới hạn tại [H-T08-A01](docs/handoffs.md#h-t08-a01).
@@ -333,7 +358,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T14 VERIFIED Office tables:** XLSX sheet/cells/formula cache, CSV records và PPTX slide/shape; common headers/units và archive bounds.
 - **T15 VERIFIED OCR:** Docker CPU Tesseract vie/eng + Docling stage, page/image provenance, quality/error/cancel/process bounds; 20 full + 13 separate status checks thật.
 - **T17 VERIFIED:** shared inference/offline model setup, CPU/GPU real smoke, batching/queue/query priority/cancel and resource measurements.
-- **T18–T19:** scoped index và ingestion orchestration commands.
+- **T18 VERIFIED:** exact-pair scoped Qdrant search/fetch/neighbors, versioned collections, idempotent upserts và PG-guarded generation cleanup.
+- **T19:** ingestion orchestration và atomic publication vẫn DESIGNED.
 - **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.
 - **T27–T29:** admin URL/login, UI workflows.
 - **T30–T34:** benchmark reports, performance, reliability, backup/restore.

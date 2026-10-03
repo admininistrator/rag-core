@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-03 / T18-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent/no subagents; baseline main/T17 `919d4e43ab58158f1421982ae9dee6b95809396c` equals origin/main, inherited T07 scratch preserved. Versioned dense/sparse Qdrant repository, exact-pair filters in every branch/fetch/neighbor, before/after PG snapshot revalidation, stable point IDs and PG-locked scoped generation write/count/cleanup implemented. Final17real PG/Qdrant tests and separate4DoD-2 PASS;363unit/contract/security +19real PG dependency tests, Ruff/mypy60/lock/OpenAPI PASS. Evidence [H-T18-A01](#h-t18-a01), interfaces [S-T18-A01](implementation-summary.md#s-t18-a01). Exact12task paths, completion subject `feat(T18): enforce scoped Qdrant access`; actual commit and authorized origin/main equality reported post-execution, no self-hash/amend. No unresolved blocker; synthetic vectors are authorization fixtures, not quality benchmark. Worker/chunk persistence/atomic publication remain T19. Own test PG/Qdrant stopped, no source/volume cleanup. T19 dependencies T18/T12/T15/T16 ready after closure; **STOP AFTER T18**, no merge/deploy/drain.
+
 - **Current 2026-10-03 / T17-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct agent/no subagents; resumed existing code/logs on main/T16 `9633cfcb872a89ccb1f472e6361c201e94d83588`, preserving inherited T07 scratch. Final real CPU8/GPU8, HTTP CPU/GPU smokes and both Compose profiles PASS; one inference owner/two fixed models, four clients samePID. Final21unit, full361regression,29real parser/source, Ruff/mypy55/lock169/OpenAPI/docs/scope/secrets PASS; source55 plus config/setup/test/smoke hashes equal in four images. Evidence [H-T17-A01](#h-t17-a01). Final exact27file stage/inspection, commit `feat(T17): add bounded multilingual model inference`, authorized origin/main push and remote equality are closure steps; actual hash returned after execution, no self-hash/amend. No T17 blocker; local synthetic resources are not full-stack SLA. Inference stopped after verification, cache retained. T18 dependencies T17/T10 ready after inspected completion; **STOP AFTER T17**, no merge/deploy.
 
 - **Current 2026-10-01 / T16-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, no subagents; baseline main/T15 `e1e348d45b7a83872c420f5b6f647551db21e751` equals origin/main. Pinned BGE-M3 tokenizer, structural512/64 chunks, source segments/table header-row groups/stable IDs/trusted profiles implemented. DoD-1 final17 actual-tokenizer PASS; DoD-2 final10 parser/source PASS; additional actual worker T15 OCR output mappings PASS. [T16 evidence](#h-t16-a01). Ruff/mypy45/native42/locked117/OpenAPI/docs/scope/secrets pass; full regression341PASS with shorter basetemp, initial10Windows long-path failures retained. Final review27tests PASS including header format metadata. README/RUNBOOK updated. Completion subject `feat(T16): chunk documents with stable source mappings`; actual hash/remote equality reported after commit/push, resolve by subject. Inherited T07 scratch preserved. No unresolved T16 blocker; T17 dependencies T16/T02 ready after closure. **STOP AFTER T16**.
@@ -6486,3 +6488,340 @@ hash comparisons and exact27scope/no new credential markers/local secret values 
 This evidence-only append is restaged and Git-filtered hashes/cached whitespace rechecked
 before the completion commit. Actual commit/remote hashes returned post-commit; historical
 scratch/cache/weights/logs remain outside staged scope. No unresolved T17 blocker.
+
+
+<a id="h-t18-a01"></a>
+## H-T18-A01 — Phase 3 / Scoped Qdrant repository, 2026-10-03
+
+Direct Codex agent (GPT-6 family; exact model/effort unavailable), no subagents.
+Every command CWD: `C:\Users\Admin\Documents\GitHub\rag-core`.
+Baseline main/HEAD `919d4e43ab58158f1421982ae9dee6b95809396c`; authorized
+`git ls-remote origin refs/heads/main` exit0 returned the same hash.
+Read AGENTS/task-session prompt, T17/T10 COMPLETE notes and dependency interfaces/evidence,
+P01/P04/P08/P13, checkpoint/implementation-summary/README/RUNBOOK. No prior T18 candidate.
+Baseline untracked `.ptmp-t07-a02/`, `.tmp-t07-a02/` and permission warnings on inherited
+`.pytmp-t07-a02/`, nested temp, `UsersAdminAppDataLocalTempt07a03/`, global Git ignore
+preserved; no user scratch touched. Allowed12paths listed at D6 below.
+T17 actual completion commit verified by HEAD/git log; older checkpoint's conditional
+commit language is historical, not missing current T17 completion. User authorizes
+scoped commit and origin/main push, no force/merge/deploy/Scarlet/task drain.
+
+### Environment, retained diagnostics and real service setup
+
+Host Python3.12.4, pytest9.1.1, qdrant-client1.19.0 already installed/locked; no new
+dependency. PG17.11 and Qdrant1.19.1-unprivileged pinned digests from repo. No provider
+or inference model called in T18; synthetic vectors are fixtures for real server isolation.
+Full model CPU/GPU evidence remains T17, not claimed newly verified here.
+
+All test/quality commands set `$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'`.
+Real integration commands additionally set:
+
+```powershell
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+```
+
+Existing T10 test secret retained, never printed. Fixtures create/drop only UUID-named
+own test DBs and random-profile Qdrant collections. No existing data/volume deleted.
+Initial sandbox `docker ps --format '{{.Names}} {{.Image}} {{.Ports}}'` could not access
+Docker config/daemon pipe; scoped escalation succeeded, showed only other existing stacks,
+which were untouched. No approval rejection or unresolved permission remains.
+
+`docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml config --quiet`
+exit0, no output. Initial `... up -d --wait postgres qdrant` exit1:
+
+```text
+container rag-core-metadata-test-qdrant-1 exited (1)
+```
+
+`docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml logs --no-color --tail 30 qdrant`
+exit0, actual excerpt:
+
+```text
+Version: 1.19.1
+Unable to check mmap functionality for storage path ./storage. Details: Data will be lost on system restart - tmpfs is memory-based, error: failed to open file `./storage/.qdrant_fs_check.tmp`: Permission denied (os error 13)
+Error: Service internal error: Failed to write file: Permission denied (os error 13) at path "/qdrant/./storage/.atomicwriteBdqC02"
+```
+
+`docker image inspect qdrant/qdrant:v1.19.1-unprivileged --format '{{.Config.User}}'`
+initially reported no tag (digest-pinned image already used); `docker run --rm --network none --entrypoint id qdrant/qdrant:v1.19.1-unprivileged`
+exit0 after tag resolution to same digest, actual `uid=1000(qdrant) gid=1000(qdrant) groups=1000(qdrant)`.
+Fixed only test tmpfs uid1000/gid1000/mode0700, kept non-root and no host-mounted data.
+Corrected `docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml up -d --wait postgres qdrant`
+exit0, actual `Container rag-core-metadata-test-postgres-1 Healthy` and
+`Container rag-core-metadata-test-qdrant-1 Healthy`. Compose orphan warning for stopped
+inherited registration-test Redis retained; no `--remove-orphans`/prune/delete used.
+
+Initial focused Ruff found unsorted UUID import and unused UUID in new test (exit1),
+fixed by focused `ruff check ... --fix` and format; initial mypy60PASS. Initial DoD17not
+yet present: `.local/t18-dod1-initial.log` recorded13PASS11.97s. Added real detach tests
+for fetch/anchor/neighbor expansion, actual PG lock-waiter proof and malformed/404 error
+checks; `.local/t18-dod1.log` then17PASS11.93s. Review added rejection of quantized dense
+and nonconfigured sparse index; final gates below apply to final source.
+Intermediate docs command failed1 `Missing anchor ... docs/handoffs.md#h-t18-a01`
+while evidence was pending; final docs check follows after this actual evidence append.
+Read-only exploratory file/path searches returned missing paths before rg inventory;
+no code/test input overwritten based on those diagnostics.
+
+### DoD-1 — Real scoped dense/sparse/neighbor access
+
+Expected: network Qdrant/PG, every candidate branch filtered before top-k, current
+session-only exact pairs, empty scope no calls, stale/forged/raced scope rejected.
+Actual command exit0; full final output `.local/t18-dod1-final.log`:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_qdrant_scope.py -v -s --tb=short --basetemp=.local/18d -o cache_dir=.local/18cache *> .local/t18-dod1-final.log
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Admin\Documents\GitHub\rag-core\.venv\Scripts\python.exe
+cachedir: .local\18cache
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 17 items
+
+tests/integration/test_qdrant_scope.py::test_isolation_every_branch_and_exact_pairs[dense] Real PostgreSQL: separate database t10_test_fd5cb9e989a74f79826f4cca73868011, public tables before migration=0
+Real PostgreSQL: migrated separate database t10_test_fd5cb9e989a74f79826f4cca73868011
+PASS dense: 2apps/2users/same-owner 2sessions, stale/crossed pairs, prefiltered top1/subset
+PASSED
+tests/integration/test_qdrant_scope.py::test_isolation_every_branch_and_exact_pairs[sparse] PASS sparse: 2apps/2users/same-owner 2sessions, stale/crossed pairs, prefiltered top1/subset
+PASSED
+tests/integration/test_qdrant_scope.py::test_isolation_every_branch_and_exact_pairs[hybrid] PASS hybrid: 2apps/2users/same-owner 2sessions, stale/crossed pairs, prefiltered top1/subset
+PASSED
+tests/integration/test_qdrant_scope.py::test_fetch_neighbors_and_languages PASS fetch/neighbor: scoped anchor + unit/ordinal/language; foreign chunk IDs return empty
+PASSED
+tests/integration/test_qdrant_scope.py::test_empty_scope_no_qdrant_request PASS empty allowed set: zero Qdrant query/scroll calls across all read methods
+PASSED
+tests/integration/test_qdrant_scope.py::test_pg_snapshot_is_authority[detach] PASS PG detach: stale/forged snapshot rejected before Qdrant; retained4vectors
+PASSED
+tests/integration/test_qdrant_scope.py::test_pg_snapshot_is_authority[delete] PASS PG delete: stale/forged snapshot rejected before Qdrant; retained4vectors
+PASSED
+tests/integration/test_qdrant_scope.py::test_pg_snapshot_is_authority[reindex] PASS PG reindex: stale/forged snapshot rejected before Qdrant; retained4vectors
+PASSED
+tests/integration/test_qdrant_scope.py::test_pg_snapshot_is_authority[forged] PASS PG forged: stale/forged snapshot rejected before Qdrant; retained4vectors
+PASSED
+tests/integration/test_qdrant_scope.py::test_detach_after_actual_query_rejects_result[query] PASS actual query completed then PG detach committed: no stale result returned
+PASSED
+tests/integration/test_qdrant_scope.py::test_detach_after_actual_query_rejects_result[fetch] PASS actual fetch completed then PG detach committed: no stale result returned
+PASSED
+tests/integration/test_qdrant_scope.py::test_detach_after_actual_query_rejects_result[neighbor-anchor] PASS actual neighbor-anchor completed then PG detach committed: no stale result returned
+PASSED
+tests/integration/test_qdrant_scope.py::test_detach_after_actual_query_rejects_result[neighbor-expansion] PASS actual neighbor-expansion completed then PG detach committed: no stale result returned
+PASSED
+tests/integration/test_qdrant_scope.py::test_idempotent_update_cleanup_and_retention PASS update/retry stableIDs count4; exact cleanup0; active/other owner retained4; new session empty
+PASSED
+tests/integration/test_qdrant_scope.py::test_publication_waits_for_acknowledged_write PASS PG publication blocked by generation write lock until actual Qdrant wait=true ack
+PASSED
+tests/integration/test_qdrant_scope.py::test_payload_corruption_and_real_dependency_failure PASS actual corrupted payload rejected; actual missing collection -> sanitized technical error
+PASSED
+tests/integration/test_qdrant_scope.py::test_collection_config_and_invalid_requests PASS dense1024 Cosine/sparse/noIDF/9payload indexes/versioned fingerprint; incompatible rejected
+PASSED
+
+============================= 17 passed in 10.38s =============================
+```
+
+### DoD-2 — Empty scope/idempotency/cleanup/collection semantics
+
+Expected/actual PASS: zero empty-scope network reads, stable retry/update IDs and count4, cleanup only target inactive generation; active/other owner retained4; PG UPDATE blocked until actual ack, config validation and RUNBOOK reindex/retention documented.
+Command exit0; actual output `.local/t18-dod2-final.log`:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_qdrant_scope.py -k 'empty_scope or idempotent_update or publication_waits or collection_config' -v -s --tb=short --basetemp=.local/18e -o cache_dir=.local/18cache *> .local/t18-dod2-final.log
+```
+
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Admin\Documents\GitHub\rag-core\.venv\Scripts\python.exe
+cachedir: .local\18cache
+rootdir: C:\Users\Admin\Documents\GitHub\rag-core
+configfile: pyproject.toml
+plugins: anyio-4.15.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 17 items / 13 deselected / 4 selected
+
+tests/integration/test_qdrant_scope.py::test_empty_scope_no_qdrant_request Real PostgreSQL: separate database t10_test_724c95272c7b437f8dc5083cb92c24b0, public tables before migration=0
+Real PostgreSQL: migrated separate database t10_test_724c95272c7b437f8dc5083cb92c24b0
+PASS empty allowed set: zero Qdrant query/scroll calls across all read methods
+PASSED
+tests/integration/test_qdrant_scope.py::test_idempotent_update_cleanup_and_retention PASS update/retry stableIDs count4; exact cleanup0; active/other owner retained4; new session empty
+PASSED
+tests/integration/test_qdrant_scope.py::test_publication_waits_for_acknowledged_write PASS PG publication blocked by generation write lock until actual Qdrant wait=true ack
+PASSED
+tests/integration/test_qdrant_scope.py::test_collection_config_and_invalid_requests PASS dense1024 Cosine/sparse/noIDF/9payload indexes/versioned fingerprint; incompatible rejected
+PASSED
+
+====================== 4 passed, 13 deselected in 3.95s =======================
+```
+
+### D2 — Real dependency PG regression
+
+Expected/actual PASS: existing scope/retention/concurrency and isolated empty migration reproduction remain intact;19tests.
+Command exit0; actual output `.local/t18-pg-regression.log`:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_session_scope.py tests/integration/test_metadata_migrations.py -q -s --tb=short --basetemp=.local/18p -o cache_dir=.local/18pcache *> .local/t18-pg-regression.log
+```
+
+```text
+Real PostgreSQL: separate database t10_test_d4ee7d22263e4538b2d52c45924b5793, public tables before migration=0
+Real PostgreSQL: migrated separate database t10_test_d4ee7d22263e4538b2d52c45924b5793
+PASS isolation: app/user/current-session, explicit new registration, independent detach
+...........PASS repeated/concurrent delete: one revision, retained rows byte-equivalent, no resurrection
+.PASS real lock race: old coherent snapshot then revision invalidation; replay stays detached
+......Real PostgreSQL: separate database t10_test_b53aef68b5714826a81bd8c5a433f9ba, public tables before migration=0
+Real PostgreSQL: migrated separate database t10_test_b53aef68b5714826a81bd8c5a433f9ba
+PASS separate empty PG migration -> repeat head -> downgrade base -> upgrade head: identical schema
+.
+19 passed in 5.56s
+```
+
+### D2 — Unit/contract/security regression
+
+Expected/actual PASS363tests, no skipped tests or relaxed gate/gold/auth semantics.
+Command exit0; actual output `.local/t18-regression.log`:
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/18r -o cache_dir=.local/18rcache *> .local/t18-regression.log
+```
+
+```text
+........................................................................ [ 19%]
+........................................................................ [ 39%]
+........................................................................ [ 59%]
+........................................................................ [ 79%]
+........................................................................ [ 99%]
+...                                                                      [100%]
+363 passed in 112.65s (0:01:52)
+```
+
+### D2 — Quality, environment and unchanged API contracts
+
+Each command below exit0; Ruff has inherited inaccessible-scratch warnings, not findings.
+Mypy final source60PASS and Ruff rechecked after collection-validation review. Actual
+sync included host CPU inference group to preserve the existing installed T17 environment;
+an earlier **dry-run** without inference proposed uninstalling33model packages, no mutation
+occurred from that diagnostic. Actual sync below kept current148installed packages.
+
+```powershell
+uv run --no-sync ruff check . *> .local/t18-ruff.log
+uv run --no-sync mypy src *> .local/t18-mypy.log
+uv sync --locked --offline --group dev --group api --group ingestion --group inference *> .local/t18-sync.log
+uv lock --check --offline
+uv run --no-sync python scripts/export_openapi.py --check
+```
+
+```text
+All checks passed!
+Success: no issues found in 60 source files
+Resolved 169 packages in 1ms
+Checked 148 packages in 60ms
+Resolved 169 packages in 1ms
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+### D1/D4/D5 — Scope, docs, review and limitations
+
+D1 PASS: reviewed task/dependencies and exact12paths; `git diff --check` exit0/no output.
+No AGENTS/plan/prompt/corpus/Scarlet/default Compose/dependency/DB/public schema changes.
+D3 PASS: individual DoD-1/DoD-2 actual gates above; no mock substitution/provider requirement.
+D4: five living docs updated with verified/designed boundaries, README commands, RUNBOOK
+profile/collection/payload/index/interfaces/budgets/reindex/retention/ack/cleanup/race rules.
+D5 review: all new source/tests read; exact prefilters and PG revalidation on every read;
+private SDK handle, no raw/unscoped search port; async SDK/PG, bounded I/O; no text in
+payload/error logs. Scoped generation cleanup holds PG row locks and rejects active;
+generation publication remains T19, no distributed atomicity claim. Pipeline must supply
+stable T16 hard-boundary unit IDs and persist original chunks, revalidate again before
+prompt/final. Fingerprint/model mismatches/config/errors fail technically, not insufficient.
+No model quality/corpus/end-to-end ingestion/public query/provider/load claim from T18.
+Future publication UPDATE locks same PG rows; do not hold own locking transaction while
+calling adapter on another connection. Migration N/A: no schema change; index migration
+uses new collection/generation, old active retained until validated publication.
+
+Final actual service inspection before stopping, all exit0:
+
+```powershell
+docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml config --quiet
+docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml ps postgres qdrant
+docker inspect rag-core-metadata-test-qdrant-1 --format '{{.Config.User}} | {{json .HostConfig.Tmpfs}} | {{json .HostConfig.PortBindings}}'
+docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml stop postgres qdrant
+```
+
+```text
+rag-core-metadata-test-postgres-1 postgres:17.11-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0 ... Up 8 minutes (healthy) 127.0.0.1:55432->5432/tcp
+rag-core-metadata-test-qdrant-1 qdrant/qdrant:v1.19.1-unprivileged@sha256:801777072776dc81b2a9dd2007b2ed487571f21ecd30efffd15ddb1671f2193d ... Up 8 minutes (healthy) 127.0.0.1:56333->6333/tcp
+1000:1000 | {"/qdrant/storage":"uid=1000,gid=1000,mode=0700"} | {"6333/tcp":[{"HostIp":"127.0.0.1","HostPort":"56333"}]}
+Container rag-core-metadata-test-qdrant-1 Stopped
+Container rag-core-metadata-test-postgres-1 Stopped
+```
+
+Whitespace formatting/columns elided in service table above; values are actual.
+Test services stopped, inherited containers/network/volumes/sources untouched.
+Exact12completion paths:
+
+```text
+README.md
+RUNBOOK.md
+docs/tasks.md
+docs/handoffs.md
+docs/implementation-summary.md
+compose.qdrant-test.yaml
+src/rag_core/domain/vectors.py
+src/rag_core/ports/vectors.py
+src/rag_core/adapters/persistence/vector_generations.py
+src/rag_core/adapters/vectors/__init__.py
+src/rag_core/adapters/vectors/qdrant.py
+tests/integration/test_qdrant_scope.py
+```
+
+D6 completion subject `feat(T18): enforce scoped Qdrant access`; actual scoped staging,
+secret/artifact/hash/docs checks below, inspected commit and authorized origin/main
+push/equality reported after execution, no self-hash/amend/force/merge/deploy.
+COMPLETE effective only after successful inspected commit. T19 dependencies T18/T12/T15/T16
+ready after closure; STOP AFTER T18. No unresolved T18 blocker.
+
+### Final D4/D5/D6 — Docs and exact staged candidate
+
+Final docs command `uv run --no-sync python scripts/check_docs.py` with workspace
+UV_CACHE_DIR exit0; actual output:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 323
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+The first whitespace check after append caught an accidental whitespace-only line2
+in implementation-summary; removed it, `git diff --check` exit0 thereafter. This was
+documentation whitespace only; final code/DoD tests unchanged. Git warns CRLF will
+be normalized to LF for handoffs; content reviewed with Git filters, no encoding loss.
+
+Explicit staging/review command `.venv/Scripts/python.exe .local/t18-stage.py` exit0.
+Helper invokes `git add -- <the exact12paths listed above>` (no wildcard), checks
+cached path equality/whitespace/UTF8, compares Git-filtered worktree blob hashes to
+index blobs, scans exact local secret bytes without printing them and rejects new
+private-key markers relative to HEAD. Actual output before this evidence-only append:
+
+```text
+12 files changed, 1637 insertions(+), 8 deletions(-)
+PASS exact12 task paths / UTF8 / no local secret values or new private-key markers / Git-filtered worktree=index / cached whitespace
+PASS no tracked unstaged changes; inherited scratch/cache/logs/secrets absent from index
+```
+
+Read/reviewed all12task files and staged changes. Git author already configured and
+unchanged. New source/config/test/README/RUNBOOK and dependency scope reviewed; no
+secrets/raw licensed data/model weights/cache/scratch or .local helper/logs included.
+D1–D5 PASS with individual evidence above. Restage this append, rerun docs and exact
+stage/hash/whitespace check, then D6 create `feat(T18): enforce scoped Qdrant access`,
+inspect actual commit12paths with `git show --check`, and authorized `git push origin main`.
+Compare actual HEAD against `git ls-remote origin refs/heads/main`; post-execution hash
+and outcome go in direct user report, not fabricated self-hash inside this commit.

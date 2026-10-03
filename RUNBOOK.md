@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T17 IMPLEMENTED/VERIFIED local.** Corpus/auth/metadata/storage/registration/native/Office/OCR/chunking đã kiểm; T17 thêm shared BGE-M3 dense/sparse và reranker, real CPU/GPU Docker smoke và resource evidence. API chỉ mount health; business HTTP/query/SSE và ingestion orchestration vẫn DESIGNED. T18–T36 chưa bắt đầu. Task COMPLETE requires inspected completion commit.
+> **T01–T18 IMPLEMENTED/VERIFIED local.** T18 scoped Qdrant repository đã kiểm PG/Qdrant thật; corpus/auth/metadata/storage/registration/parsers/OCR/chunking và T17 shared inference CPU/GPU đã kiểm. API chỉ mount health; business HTTP/query/SSE, retrieval pipeline và ingestion orchestration vẫn DESIGNED. T19–T36 chưa bắt đầu. Task COMPLETE requires inspected completion commit.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -28,7 +28,8 @@
 | OCR scan/mixed PDF, PNG/JPEG | VERIFIED worker image, engine thật EN/VI + locator/status/limits/cancel | T15 |
 | Structural chunks/source maps | VERIFIED real tokenizer + parser fixtures trên host, actual worker OCR output mapped | T16 |
 | Shared embedding/reranker service | VERIFIED real CPU/GPU weights/HTTP, queue/limits/cancel and resource smoke | T17 |
-| Scoped vector/index ingestion orchestration | DESIGNED | T18–T19 |
+| Scoped Qdrant repository | VERIFIED real PG/Qdrant; chưa nối public query/worker | T18 |
+| Index ingestion orchestration/publication | DESIGNED | T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
@@ -114,7 +115,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | --- | --- | --- |
 | Runtime | APP_ENV, LOG_LEVEL, API_BIND/API_PORT, request timeout đã typed; body limits còn DESIGNED | T01–T02 |
 | Metadata/broker | DATABASE_URL, REDIS_URL | T02/T10/T12 |
-| Vector/model | QDRANT_URL typed T02; T17 MODEL_CACHE/MODEL_DEVICE riêng internal service, immutable pins + injected trusted client URL/fingerprint; vector key/index config T18 | T02/T17–T18 |
+| Vector/model | QDRANT_URL typed T02; T17 MODEL_CACHE/MODEL_DEVICE riêng internal service; T18 IndexProfile từ trusted model fingerprint + injected async Qdrant client, không nhận collection từ query body | T02/T17–T18 |
 | App identity | cấu hình app_id, service-key hash/reference, JWT issuer/audience/JWKS, algorithms | T09 |
 | Source storage | `STORAGE_CONFIG_FILE` trỏ JSON app/alias/endpoint/region/bucket/prefix và credential file read-only | T11 |
 | Providers | DEEPSEEK_API_KEY/MODEL, ANTHROPIC_API_KEY/MODEL; base URLs phía server | T23 |
@@ -1004,6 +1005,105 @@ PID, slots, runtime/fingerprint/device, load/warmup/startup seconds, RSS và GPU
 Chẩn đoán cache bằng setup verifier; lỗi không sửa manifest cho pass. OOM giảm batch/queue
 trong cùng kiến trúc hoặc báo blocker, không spawn thêm model owners. Readiness/load số đo
 fixtures không phải benchmark15–20users/corpus/full-stack budget của T33.
+
+<a id="r09-t18"></a>
+### Scoped Qdrant repository T18
+
+**VERIFIED local**, [H-T18-A01](docs/handoffs.md#h-t18-a01). SDK `qdrant-client1.19.0`
+đã có trong locked ingestion group; server `1.19.1-unprivileged` pin cùng digest với
+Compose chính. Không thêm dependency, public route, DB migration hoặc worker ở T18.
+
+Internal DI: `QdrantVectorRepository(client, IndexProfile(model_fingerprint),
+sessions, PostgresGenerationAuthority(engine))`. Operator tạo async network client
+(khuyến nghị timeout5s, `trust_env=False`); adapter giới hạn mỗi I/O10s. Client/network
+lifecycle thuộc caller. Không truyền `:memory:`/local Qdrant thay service thật.
+`ensure_collection()` phải chạy khi setup trước phục vụ; không tự tạo/recreate
+collection khi search gặp lỗi. Collection sai config bị reject, không tự sửa vector
+dimension/revision, xóa collection hoặc đổi alias để vượt lỗi.
+
+| Thành phần | Hợp đồng |
+| --- | --- |
+| Collection | `rag_chunks_v1_<64hex index fingerprint>`; hash schema1 + full T17 model/runtime fingerprint + dense1024/Cosine + sparse BGE-M3 không IDF |
+| Named vectors | `dense`:1024/Cosine; `sparse`:token indices/weights, in-memory sparse index, không IDF modifier |
+| Collection metadata | exact `index_fingerprint`; khác tên/dimension/distance/multivector/modifier/metadata bị reject |
+| Keyword indexes | app_id, owner_id, document_id, document_version_id, index_generation, chunk_id, language, unit_id |
+| Integer index | ordinal |
+| Payload | các identity fields trên, language en/vi/und, ordinal, unit_id, T03 source locator; không text/answers/transcripts/storage keys |
+| Point identity | UUIDv5 của JSON app+owner+document+version+generation+T16 chunk UUID; cùng input/retry thay đúng point, không nhân bản |
+
+`VectorWrite(VectorChunk(...), Embedding)` nhận kết quả T16/T17; chunk metadata giữ
+document/version/generation/ID/ordinal và locator thật. `unit_id` do trusted ingestion
+caller xác định từ cùng structural source unit của T16 (page/heading/table region/
+sheet region/slide shape), phải ổn định và không gộp qua hard boundary; không lấy từ
+query body. Original chunks/text/source segments nằm ở PG, persistence T19 chưa có.
+Neighbor lookup lấy anchor qua scoped fetch rồi giới hạn cùng pair + unit_id +
+ordinal ±radius(0–3); tối đa7 metadata points. Fetch tối đa100IDs; search limit1–100,
+mặc định30; upsert tối đa64points/request và không cho duplicate chunkIDs trong batch.
+
+Read methods `search(scope, embedding, model_fingerprint, branch=...)`,
+`fetch(scope, chunk_ids)` và `fetch_neighbors(scope, anchor_id)` bắt buộc snapshot
+PG từ current authenticated principal/session. Không có method raw/unscoped search
+trên port. Empty pairs trả empty, không gửi Qdrant query/scroll; T10 public semantics
+vẫn là `no_session_documents`, không biến session rỗng thành query trên toàn index.
+Mọi read thực sự gọi server đều validate PG trước/sau; forged/stale/detached/deleted/
+reindexed snapshot trả `session_scope_changed`, kể cả publication không bump revision.
+Caller phải tiếp tục revalidate trước rerank/prompt/final ở T21–T25.
+
+Filter: app AND owner AND OR của **từng** document/version/generation tuple,
+không ba MatchAny lists độc lập. Dense, sparse và cả hai hybrid RRF prefetch đều có
+filter trước top-k, outer fusion cũng có filter. Optional languages chỉ thu hẹp cùng
+scope, áp dụng cả anchors/neighbors. Sparse query rỗng trả empty ở sparse branch;
+hybrid dùng dense scoped branch. Không fallback global/user-wide. Returned payload/IDs/
+score được kiểm thêm, sai hoặc malformed là lỗi kỹ thuật; post-check không thay server
+prefilter. RRF score chưa là confidence; domain fusion/rerank policy thuộc T21/T22.
+Official reference: [Qdrant hybrid queries](https://qdrant.tech/documentation/search/hybrid-queries/),
+[nested filters](https://qdrant.tech/documentation/search/filtering/).
+
+Write/count/cleanup dùng `GenerationScope(principal, VersionGeneration(...))` internal.
+PG kiểm exact owner/document/version/generation và generation.index_fingerprint.
+`PostgresGenerationAuthority.access` giữ row locks document_version+generation trong
+transaction riêng cho đến Qdrant `wait=true` acknowledgement; write chỉ staging và
+không active. Cleanup chỉ một generation **inactive** cụ thể trong collection đúng
+fingerprint; active bị reject, owner khác không bị tác động, repeated cleanup idempotent.
+Không có delete session/doc/source hoặc auto-purge trong vector adapter. Count exact
+generation phục vụ reconciliation; không là public content/query/admin console.
+Caller không giữ transaction khóa cùng version rồi gọi adapter bằng connection khác;
+count/upsert hoàn tất trước transaction publication. T19 publication UPDATE cùng rows
+sẽ chờ các locks này; PG và Qdrant vẫn không có distributed transaction. Timeout hoặc
+network failure có thể đã ghi một phần, cần retry stable IDs/count/reconciliation;
+không đánh ready khi chưa chứng minh đủ chunks, không claim atomic ingestion ở T18.
+
+Reindex/model/device/precision/runtime revision đổi: tạo profile/collection mới và
+generation staging mới; giữ collection/generation cũ phục vụ đến khi T19 verify đủ và
+publish trong PG. Cùng model mà đổi parser/chunker/pipeline cũng cần generation mới.
+Không trộn fingerprint mới vào collection cũ. Sau publication, scope snapshot cũ
+invalid; collection cũ được giữ, cleanup derivative chỉ explicit owner/version/generation,
+không tự xóa theo chat deletion. Session mới phải có registration/link mới dù còn vector.
+
+Reproduce gate từ root (secret T10 tạo exclusive theo R04, dev+api+ingestion đã locked
+sync). Service Qdrant test dùng loopback56333/tmpfs uid1000/gid1000/mode0700, giữ non-root;
+PG loopback55432 riêng. Không chạm main Compose/Scarlet hoặc xóa named volumes.
+
+```powershell
+docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml config --quiet
+docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml up -d --wait postgres qdrant
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+uv run --no-sync pytest tests/integration/test_qdrant_scope.py -v -s --tb=short --basetemp=.local/18-new
+uv run --no-sync pytest tests/integration/test_qdrant_scope.py -k 'empty_scope or idempotent_update or publication_waits or collection_config' -v -s --tb=short --basetemp=.local/18-new2
+docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml stop postgres qdrant
+```
+
+Tests tạo/drop random PG databases và random-profile Qdrant collections của fixture;
+thiếu service/URL sai thì FAIL, không skip/mock. Vectors synthetic có distractors
+stronger để chứng minh server prefilter/top1 và crossed-pair isolation; không là
+embedding quality/model smoke. Corrupted payload bị reject; real server404 được đổi
+thành `vector_dependency_unavailable` không upstream text. Model mismatch là
+`index_model_mismatch`, config mismatch `incompatible_vector_collection` hoặc
+`incompatible_payload_index`; không đổi thành insufficient evidence. Giới hạn:
+chưa có end-to-end source/index publication/HTTP citations hoặc corpus benchmark.
 
 <a id="r10"></a>
 ## R10. UI quản trị
