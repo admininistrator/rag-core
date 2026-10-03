@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T01–T20 VERIFIED local.** T19 nối durable ingestion và atomic publication; T20 thêm registry/domain preparation, scoped read capability, history budget bằng tokenizer thật và rewrite port đã kiểm với provider test. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. API chỉ mount health; hybrid pipeline, provider thật, generation/SSE/admin còn thuộc T21–T36. [Evidence T20](docs/handoffs.md#h-t20-a01).
+> **T01–T21 VERIFIED local.** T19 nối durable ingestion và atomic publication; T20 thêm registry/domain preparation, scoped read capability, history budget bằng tokenizer thật và rewrite port đã kiểm với provider test. T21 thêm bounded dense/hybrid retrieval, optional scoped neighbors và redacted trace, kiểm với BGE-M3/PG/Qdrant thật. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. API chỉ mount health; evidence selection, provider thật, generation/SSE/admin còn thuộc T22–T36. [Evidence T21](docs/handoffs.md#h-t21-a01).
 
 ## Phạm vi đã chốt
 
@@ -18,7 +18,7 @@ RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp tr
 
 ## Kiến trúc hiện tại và dự kiến
 
-T02 có Python3.12/FastAPI health skeleton, PostgreSQL17/Qdrant/Redis và MinIO tùy chọn. T12 thêm dispatcher; T13–T16 có native/Office/OCR parsers và chunking. T17 thêm dedicated inference process dùng BGE-M3 + multilingual reranker qua CPU hoặc GPU override. T19 thêm Celery worker và PG chunk persistence/publication. Retrieval/generation và Admin UI thuộc các task sau.
+T02 có Python3.12/FastAPI health skeleton, PostgreSQL17/Qdrant/Redis và MinIO tùy chọn. T12 thêm dispatcher; T13–T16 có native/Office/OCR parsers và chunking. T17 thêm dedicated inference process dùng BGE-M3 + multilingual reranker qua CPU hoặc GPU override. T19 thêm Celery worker và PG chunk persistence/publication. T20–T21 thêm domain preparation và retrieval pipeline; evidence/generation và Admin UI thuộc các task sau.
 
 Máy mục tiêu: RAM16GB, RTX4060Laptop8GB, nguồn<=1GB và15–20users. T17 đã đo inference trên synthetic fixtures, xem RUNBOOK/evidence; chưa có benchmark chất lượng/tải/full-stack budget.
 
@@ -305,7 +305,7 @@ Prerequisites: locked dev+api+ingestion groups và test secret T10 theo
 chứng minh quyền/filter trên server thật; không là benchmark embedding hay live
 model gate T17. Collection configuration, internal interfaces, reindex/retention
 và giới hạn tại [RUNBOOK T18](RUNBOOK.md#r09-t18); [evidence](docs/handoffs.md#h-t18-a01).
-T19 nối worker/chunk persistence; public retrieval pipeline vẫn thuộc T20–T26.
+T19 nối worker/chunk persistence, T21 bounded retrieval VERIFIED; public query HTTP thuộc T26.
 
 ## Durable ingestion T19
 
@@ -331,6 +331,41 @@ docker compose -f compose.ingestion-test.yaml stop
 Fixtures synthetic EN/VI, actual MinIO/PG/Redis/Qdrant/BGE-M3/Tesseract; không ingest
 QA/gold. Standard Compose setup và compatibility ở [RUNBOOK T19](RUNBOOK.md#r09-t19).
 HTTP registration/query vẫn chưa mount trước T26. [Evidence](docs/handoffs.md#h-t19-a01).
+
+## Dense/hybrid retrieval T21
+
+**VERIFIED với CPU BGE-M3, PostgreSQL17.11 và Qdrant1.19.1 thật:**
+`RetrievalPipeline(models, model_fingerprint).retrieve(scoped_context)` nhận context T20,
+embed question với query priority, search trong scope/language đã bind, trả tối đa20
+candidate metadata cho T22. Profile server `hybrid-v1` dùng RRF, `dense-v1` là baseline;
+mặc định30 candidates mỗi branch, chọn20 seeds, neighbors tắt cho tới khi trusted
+profile chừa budget và bật anchors. Neighbors cùng version/generation/source unit,
+dedup và dùng chung candidate budget. PG revalidate cả trước/sau model/search/neighbor
+và trước return; detach/delete/reindex làm abort. Không có query cache hoặc gold input.
+
+`result.trace.model_dump_json()` chỉ chứa policy/hash/model fingerprint/language,
+counts/timing/score kind; không query/history/text/identity/chunk IDs. `candidates`
+là metadata riêng tư có scope, không phải log. RRF/cosine chưa xác định đủ bằng chứng;
+unrelated dense query vẫn có thể trả candidates. Rerank/hydration/evidence T22 và
+public query T26 còn DESIGNED; full corpus quality T31 chưa đo.
+
+Setup model image/cache theo [RUNBOOK T17](RUNBOOK.md#r09-t17), test secrets theo R03:
+
+```powershell
+docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+uv run --no-sync pytest tests/integration/test_retrieval.py
+uv run --no-sync pytest tests/unit/test_retrieval_policy.py tests/integration/test_retrieval.py::test_real_dense_hybrid_toggle_reproducible_and_max_budget
+docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop
+```
+
+Host dùng locked dev/api/ingestion groups; whole-source mypy thêm inference group.
+Use fresh short ignored basetemp như R11. Services test loopback/tmpfs, cache read-only,
+không application volumes; fixtures synthetic index mọi source/distractor, không QA/gold.
+Tunables/DI/limits: [RUNBOOK T21](RUNBOOK.md#r06-t21); [evidence](docs/handoffs.md#h-t21-a01).
 
 ## Corpus T04–T08: setup và tái tạo
 
@@ -394,7 +429,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T17 VERIFIED:** shared inference/offline model setup, CPU/GPU real smoke, batching/queue/query priority/cancel and resource measurements.
 - **T18 VERIFIED:** exact-pair scoped Qdrant search/fetch/neighbors, versioned collections, idempotent upserts và PG-guarded generation cleanup.
 - **T19 VERIFIED:** ingestion orchestration, fenced leases/recovery, durable chunks/source maps và atomic ready publication; gates/evidence ở trên.
-- **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.
+- **T20–T21 VERIFIED:** domain registry/scoped preparation/history rewrite port và bounded dense/hybrid retrieval với redacted trace.
+- **T22–T26:** evidence selection, query JSON/SSE, citations, provider configuration và live smoke.
 - **T27–T29:** admin URL/login, UI workflows.
 - **T30–T34:** benchmark reports, performance, reliability, backup/restore.
 - **T35–T36:** quickstart tích hợp đã kiểm chứng và trạng thái nghiệm thu cuối.

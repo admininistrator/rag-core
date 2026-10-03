@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T19 VERIFIED local.** T19 durable ingestion/publication nối services/models thật; API chỉ mount health, HTTP/query/LLM/SSE/admin thuộc T20–T36. [Evidence T19](docs/handoffs.md#h-t19-a01).
+> **T01–T21 VERIFIED local.** T19 durable ingestion/publication nối services/models thật; T20 scoped domain preparation/history port và T21 bounded dense/hybrid retrieval đã kiểm. API chỉ mount health, evidence/HTTP/LLM/SSE/admin thuộc T22–T36. [Evidence T21](docs/handoffs.md#h-t21-a01).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -30,7 +30,9 @@
 | Shared embedding/reranker service | VERIFIED real CPU/GPU weights/HTTP, queue/limits/cancel and resource smoke | T17 |
 | Scoped Qdrant repository | VERIFIED real PG/Qdrant; chưa nối public query; worker T19 đã VERIFIED | T18 |
 | Index ingestion orchestration/publication | VERIFIED real MinIO/PG/Redis/Qdrant/CPU model/OCR; evidence ở dưới | T19 |
-| Query/domains/LLM/SSE | DESIGNED | T20–T26 |
+| Domain preparation/history rewrite port | VERIFIED scoped PG/Qdrant/tokenizer; explicit provider test, real LLM adapters pending | T20 |
+| Dense/hybrid retrieval | VERIFIED CPU BGE-M3/PG/Qdrant; bounded metadata candidates/neighbors/redacted trace | T21 |
+| Evidence/query/LLM/SSE | DESIGNED | T22–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
@@ -513,7 +515,7 @@ Compatibility: đây là design v1 đầu tiên, không có client business/runt
 <a id="r06"></a>
 ## R06. Query, history và languages
 
-**T03 contracts và T20 domain preparation/history budgets VERIFIED; hybrid retrieval/generation/public query HTTP còn DESIGNED — T21–T26.**
+**T03 contracts, T20 domain preparation/history budgets và T21 dense/hybrid retrieval VERIFIED; evidence/generation/public query HTTP còn DESIGNED — T22–T26.**
 
 - Bắt buộc session_id và câu hỏi; `domain` mặc định `default` nếu vắng mặt. Examples gửi rõ domain để người tích hợp dễ đối chiếu.
 - Default: tất cả ready documents của session; không nhận document subset.
@@ -541,7 +543,7 @@ Response đầy đủ: `request_id`, `session_id`, `scope_revision`, `domain`, `
 `DomainRegistry(builtin_domains())` được inject vào `QueryPreparation(registry, sessions,
 vectors, tokenizer, rewriter)`. `DomainDefinition`/`DomainConfig` frozen, forbid extra fields;
 ID/version/subset policy và retrieval/chunking/prompt/evidence/citation/evaluation profile
-references là cấu hình server. T20 chỉ khai báo các references; consumers tương ứng ở T21–T24/T30
+references là cấu hình server. T21 triển khai retrieval profiles bên dưới; consumers còn lại ở T22–T24/T30
 sẽ triển khai profiles. Không tự reindex, đổi tokenizer/model hoặc ghi đè generation cũ
 khi đổi domain config; fingerprint/index publication vẫn là T16–T19. Không có query cache.
 
@@ -590,7 +592,107 @@ includes these explicit real-service gates; running all `tests/security` also ne
 [H-T20-A01](docs/handoffs.md#h-t20-a01) records56PASS with actual PG17.11/Qdrant1.19.1/tokenizer,
 synthetic1024D vectors only for authorization, and separate12PASS rewrite/language provider-test
 cases. This does not verify real LLM behavior, retrieval quality or factual answer generation;
-those gates remain T21–T26/T31. No provider keys are required for T20.
+T21 verifies retrieval below; real LLM/generation/held-out gates remain T22–T26/T31. No provider keys are required for T20.
+
+<a id="r06-t21"></a>
+### T21 bounded dense/hybrid retrieval
+
+**VERIFIED local** với actual BGE-M3 CPU weights qua shared T17 HTTP service,
+PG17.11 và Qdrant1.19.1. [H-T21-A01](docs/handoffs.md#h-t21-a01) lưu từng DoD và logs.
+Đây là retrieval trên synthetic source fixtures, chưa là full corpus benchmark/answer generation.
+
+DI: `RetrievalPipeline(model_inference, expected_model_fingerprint, policies=None)`;
+`await pipeline.retrieve(context)` với context từ T20 preparation. Expected fingerprint
+lấy từ trusted index/worker config T17–T19, không lấy từ query hoặc tự đổi theo response.
+`HttpModelInference` chỉ chạy HTTP; API không load thêm model. Response sai revision,
+shape hoặc model token budget trả technical error, không chuyển thành empty success.
+Model request một question, `operation=embed`, `priority=query`, deadline theo profile;
+actual tokenizer T17 giới hạn512tokens, không tự truncate/translate/chunk query dài.
+
+Server-only immutable profile map mặc định `hybrid-v1`/`dense-v1`; domain config
+`retrieval_policy` chọn key trước preparation. Unknown key fail trước dependency I/O.
+Registry/config vẫn server-owned; public query không có branch/top-k/budget override.
+Baseline: đặt DomainDefinition.config.retrieval_policy=`dense-v1` trong trusted registry;
+hybrid: `hybrid-v1`. `RetrievalPolicy.model_dump_json()` round-trip và `.fingerprint`
+(SHA256 đầy đủ policy) lưu reproducible config cho evaluator, không đổi index revision.
+Ví dụ trusted profile để chừa budget cho neighbors:
+
+```python
+profiles = {
+    "hybrid-v1": RetrievalPolicy(top_k=5, candidate_budget=12, neighbor_anchors=2),
+    "dense-v1": RetrievalPolicy(branch="dense"),
+}
+pipeline = RetrievalPipeline(models, expected_model_fingerprint, profiles)
+```
+
+| Tunable | Default / enforced boundary |
+| --- | --- |
+| branch | hybrid; dense baseline; sparse available only in a trusted explicit profile |
+| fusion | fixed `qdrant-rrf-k2-v1`, equal weights, zero-based rank +2, server1.19.1 |
+| prefetch_limit | 30 each branch; integer1–100; final Qdrant fused response also capped here |
+| top_k | 20 ranked seeds; integer1–20, <=prefetch_limit and candidate_budget |
+| candidate_budget | 20 total seeds+neighbors; integer1–20 for downstream rerank ceiling |
+| neighbor_anchors | 0 (off); integer0–20 and <=top_k; stop when total budget full |
+| neighbor_radius | 1; integer0–3, same exact pair + T16 structural unit, <=7points/lookup |
+| timeout_seconds | 60.0; finite0<timeout<=120, bounds model+search+neighbor+PG stages together |
+
+RRF implementation belongs to the T18 server query, not a sum of dense/sparse scores.
+Each prefetch and fused result has identical authenticated app/owner/exact ready pairs
+and explicit corpus language filter; no answer-language inference of corpus language.
+See [Qdrant hybrid query reference](https://qdrant.tech/documentation/search/hybrid-queries/).
+Hybrid with empty sparse vector uses dense fallback **within the same scope**, trace
+score_kind=`cosine`; normal hybrid=`rrf`, lexical=`sparse-dot`. Never compare RRF to
+a cosine threshold or interpret any score as factual confidence. Dense nearest-neighbor
+search can return irrelevant candidates; T22 evidence policy makes the support decision.
+
+Seeds sorted by score descending, tie by chunk UUID; unique chunk IDs. Optional
+neighbors follow ranked seeds in anchor/ordinal order, remain unscored (`None`),
+dedup and share the total budget. No unrestricted second query/document fetch.
+Result `candidates` contains scoped VectorHit metadata/locator anchors; PG text/source
+map hydration, rerank and full citation rendering remain T22–T24. T19 chunks remain
+source truth, QA/answers/justifications never enter retrieval. No gold IDs or QA path in
+pipeline API; integration fixture indexes all six synthetic sources plus unrelated
+appendix pages and retained foreign/same-owner-other-session documents.
+
+Scope validation before embedding, after embedding and before final return includes
+the existing before/after PG validation on every bound vector stage. Empty actual
+session is T10 `no_session_documents`; hand-built empty context fails snapshot validation
+before model/vector I/O. Valid ready subset with an opposite EN/VI filter may return
+zero candidates; lexical no-token-match returns zero. No global/user-wide fallback.
+Detach during embedding/search/neighbor aborts with `session_scope_changed`.
+Whole deadline returns `retrieval_timeout`; caller cancellation propagates to model HTTP
+cleanup; provider/vector failures remain technical. No query/history/embedding cache.
+
+Only `result.trace.model_dump_json()` is the redacted eval diagnostic: fixed schema1,
+full trusted policy/config hash/model fingerprint, corpus languages, allowed document
+count, seed/neighbor/candidate counts, score kind, elapsed_ms. No question/history,
+content, app/user/session/chunk/document IDs, storage keys, vectors or raw exceptions.
+`result.candidates` is private scoped data and must not be logged as trace. No automatic
+log exporter, raw-score confidence, unmeasured recall/latency/SLA claim.
+
+Prepare model cache/image by R09-T17 (CPU tag `rag-core-inference:t17-cpu`) and own T10
+test secret by R03. Host groups dev/api/ingestion suffice; no host Torch/model load:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+uv sync --locked --group dev --group api --group ingestion
+docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+uv run --no-sync pytest tests/integration/test_retrieval.py
+uv run --no-sync pytest tests/unit/test_retrieval_policy.py tests/integration/test_retrieval.py::test_real_dense_hybrid_toggle_reproducible_and_max_budget
+docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop
+```
+
+Use new short ignored basetemp per R11; no skip/fake fallback when services missing.
+Test only serially on this dedicated tmpfs Qdrant: fixtures delete only their model
+fingerprint collection on that isolated server and UUID-named PG databases. Loopback
+58080 exposes unauthenticated **internal inference for opt-in tests only**, never publish
+to a network interface; standard Compose keeps inference internal. External named model
+cache read-only, no data/source/volume deletion. CPU test resource readings are fixture
+observations; T17 GPU and T31/T33 full benchmark/load gates are unchanged requirements.
 
 ### App gọi LLM viết lại
 
@@ -973,7 +1075,7 @@ Service nội bộ có một Uvicorn process/one native executor; BGE-M3 và rer
 một lần khi startup, warmup cả hai trước ready. API/Celery chỉ inject
 `HttpModelInference(httpx.AsyncClient(base_url=trusted_url), expected_fingerprint)`.
 Không cần model dependency trong API/ingestion groups, không tạo FlagModels trong
-API workers. T19 đã nối indexing caller; T21/T22 sẽ nối query callers đã resolve session scope; inference không
+API workers. T19 đã nối indexing caller, T21 nối query embed đã resolve session scope; T22 nối rerank. Inference không
 search storage/index hoặc cấp quyền tài liệu, không có cache kết quả/text/history.
 
 Pins ở `configs/model-artifacts.json`, từ official HF metadata và immutable revisions:
@@ -1115,7 +1217,7 @@ filter trước top-k, outer fusion cũng có filter. Optional languages chỉ t
 scope, áp dụng cả anchors/neighbors. Sparse query rỗng trả empty ở sparse branch;
 hybrid dùng dense scoped branch. Không fallback global/user-wide. Returned payload/IDs/
 score được kiểm thêm, sai hoặc malformed là lỗi kỹ thuật; post-check không thay server
-prefilter. RRF score chưa là confidence; domain fusion/rerank policy thuộc T21/T22.
+prefilter. RRF score chưa là confidence; T21 bounded fusion profiles VERIFIED, rerank policy thuộc T22.
 Official reference: [Qdrant hybrid queries](https://qdrant.tech/documentation/search/hybrid-queries/),
 [nested filters](https://qdrant.tech/documentation/search/filtering/).
 

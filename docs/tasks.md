@@ -373,7 +373,7 @@
 <a id="t21"></a>
 ### T21 — Dense/sparse hybrid retrieval
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T20, T18, T17.
 - **Tham chiếu kế hoạch:** [P08](plan.md#p08), [P03](plan.md#p03), [P11](plan.md#p11).
 - **Công việc:** Dense baseline, sparse lexical BGE-M3, RRF, bounded candidates, language filters, same-scope neighbors; retrieval trace đã redacted cho eval.
@@ -381,7 +381,13 @@
   1. `uv run pytest tests/integration/test_retrieval.py` trên vector/model thật PASS với multi-doc, keyword/numeric, EN->VI/VI->EN, distractor và empty/no-match; xác minh language filter trong mỗi branch.
   2. Dense/hybrid toggle cấu hình tái tạo được, top-k/budget có boundary tests; retrieved chunks không lấy từ QA ground truth; RUNBOOK mô tả tunables và giới hạn.
 - **Cạm bẫy:** RRF scores không so trực tiếp cosine threshold; sparse branch không được quên auth; không dùng query gold document IDs để làm đẹp recall.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `feat(T21): add scoped hybrid multilingual retrieval`.
+- **Ghi chú thực thi:** T21-A01 | direct Codex agent, exact model/effort unavailable, no subagents | Started 2026-10-03 Asia/Bangkok. Baseline main/938bee71ac537e386e8472efc6f9eed7951026d1 equals origin/main; inherited T07 scratch preserved; no T21 candidate. T20/T18/T17 COMPLETE notes/interfaces/evidence, AGENTS/session prompt, P01/P03/P08/P11/P13 and living docs read. Allowed: retrieval domain/application, bound scope validation, isolated inference test Compose, actual model/PG/Qdrant integration and focused boundary tests, five living docs. Plan: trusted immutable dense/hybrid profiles, bounded candidates/neighbors, query-priority model call, scope revalidation and redacted reproducible trace; separate actual DoD gates/D1–D6, scoped commit/push/remote equality, STOP T21. Commit dự kiến `feat(T21): add scoped hybrid multilingual retrieval`.
+
+- **Results T21-A01 / COMPLETE effective only after successful inspected completion commit:** ended 2026-10-03 Asia/Bangkok, direct agent/no subagents. Implemented11paths: three source modules (retrieval profile/result/trace +pipeline +bound validation), isolated test Compose, actual integration +supplemental unit suite, five living docs. No dependency/lock/API/index/DB migration/corpus changes. Interfaces [S-T21-A01](implementation-summary.md#s-t21-a01).
+- **DoD-1 PASS:** final16tests42.73s on actual CPU BGE-M3/PG17.11/Qdrant1.19.1. Multi-doc, keyword/numeric, EN->VI/VI->EN dense/hybrid, distractors and retained same-owner-other-session/other app/user, language/owner/exact ready pairs in both actual prefetches; EN/VI neighbor adds1 same page/pair/language and detach abort, no-match/empty scope, model token rejection, detach during embedding/search. Evidence [H-T21-A01](handoffs.md#h-t21-a01).
+- **DoD-2 PASS:** separate29tests5.25s. Trusted dense/hybrid JSON roundtrip/hash and repeat identical candidates; actual24current-session chunks prove exact candidate20 ceiling with zero neighbor overflow, plus exact minimum1. Strict min/max/invalid budgets/frozen/constructed config, unknown/stale/empty/no-model-call, timeout/cancel/revision/shape boundaries. QA/gold never pipeline input; RUNBOOK tunables/limits documented. Supplemental unit collaborators synthetic only for failure/control boundaries, never substitute for actual model/vector gates.
+- **D1 PASS:** dependency/scope/whitespace, baseline scratch untouched; **D2 PASS:** Ruff/format, mypy73, locked169,459regression135.41s and35realPG/Qdrant dependency13.79s, unchanged OpenAPI. **D3 PASS:** separate DoD gates. **D4 PASS:** README/RUNBOOK status/DI/profile/budgets/model/trace/empty/score/test commands and ledgers updated; docs validator. **D5 PASS:** exact11path code/tests/config/docs/secret/artifact review, no source/cache deletion or corpus changes. **D6:** explicit scoped stage +inspected completion subject `feat(T21): add scoped hybrid multilingual retrieval`; actual hash/authorized origin/main equality returned post-execution, no self-hash/amend/force/merge/deploy.
+- **Limits/next:** no unresolved T21 blocker. Result candidates scoped metadata, private input to T22 text/source-map hydration/rerank/evidence; only trace is redacted log payload. Scores are rankings, unrelated dense query may return candidates; no full-corpus quality/answer generation/HTTP/provider/load/GPU remeasurement claim. Own test project stopped, model cache/volumes/source/Scarlet preserved. T22 dependencies T21/T17 ready after closure; stays TODO. **STOP AFTER T21**.
 
 <a id="t22"></a>
 ### T22 — Reranking và đánh giá đủ bằng chứng

@@ -67,6 +67,10 @@ class ScopedVectors:
         self.__scope = scope
         self.__languages = languages
 
+    async def validate_scope(self) -> None:
+        """Revalidate even when a pipeline stage has no vector I/O (embedding/empty)."""
+        await self.__sessions.validate_snapshot(self.__scope)
+
     async def _checked(self, hits: tuple[VectorHit, ...]) -> tuple[VectorHit, ...]:
         await self.__sessions.validate_snapshot(self.__scope)
         if any(

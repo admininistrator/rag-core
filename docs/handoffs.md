@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-03 / T21-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T20 `938bee71ac537e386e8472efc6f9eed7951026d1` equals origin/main, inherited T07 scratch retained. Bounded dense/hybrid pipeline/trusted profiles/optional same-scope neighbors/redacted trace implemented. Real CPU BGE-M3/PG/Qdrant DoD-1 **16PASS42.73s**, separate DoD-2 **29PASS5.25s**; **459regressionPASS135.41s**, **35dependencyPASS13.79s**, Ruff/mypy73/locked169/OpenAPI PASS. Evidence [H-T21-A01](#h-t21-a01), interfaces [S-T21-A01](implementation-summary.md#s-t21-a01). Final docs/scope/secrets/staging/commit/push review is closure boundary. Subject `feat(T21): add scoped hybrid multilingual retrieval`; actual hash/authorized origin/main equality returned post-execution. Candidate metadata is private, trace redacted, text hydration/rerank/evidence remain T22; real providers/public query/full corpus/load remain future gates. Own test services stopped at closure without source/cache/volume deletion; Scarlet untouched. T22 dependencies T21/T17 ready after closure; stays TODO. **STOP AFTER T21**, no merge/deploy/drain.
+
 - **Current 2026-10-03 / T20-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T19 `0b3d6f40dfc85034788c3dd9a3c285749cd19449` equals origin/main; inherited T07 scratch preserved. Registry/scoped preparation/history budgeting/rewrite port implemented; final DoD-1 **56PASS30.56s** with actual PG/Qdrant/tokenizer, DoD-2 **12PASS7.53s** provider-test schema/language matrix, **431regressionPASS146.59s**. [H-T20-A01](#h-t20-a01), [S-T20-A01](implementation-summary.md#s-t20-a01). Ruff/mypy71/locked169/OpenAPI PASS; final docs/scope/secrets/commit review is closure boundary. Own PG/Qdrant test services stopped without volume deletion; Scarlet untouched. Subject `feat(T20): compose extensible session-scoped domains`; actual hash/authorized origin/main push equality returned post-execution. Real rewrite adapters T23, public HTTP T26, no live provider claim. T21 dependencies T20/T18/T17 ready after closure; stays TODO. **STOP AFTER T20**, no merge/deploy/drain.
 
 - **Current 2026-10-03 / T19-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T18 `969b402e9f21e4ca38bea4f37f7c23839078eeec` equals origin/main; inherited T07 scratch preserved. Durable ingestion/Celery lease fences/recovery/chunks/atomic publication/default Compose implemented and VERIFIED. Final real DoD-1 12PASS106.74s and separate DoD-2 4PASS39.02s,363regression +12newstorage-security +36realPG/migration/Qdrant PASS; Ruff/mypy68/lock/OpenAPI/config/images PASS. Evidence [H-T19-A01](#h-t19-a01), interfaces [S-T19-A01](implementation-summary.md#s-t19-a01). Exact task paths reviewed, completion subject `feat(T19): complete durable document ingestion`; actual hash/authorized origin/main push equality reported after execution. No unresolved blocker; business HTTP/query and trusted language annotation/computation reuse limits documented. Own test services stopped, model cache/source/app volumes retained; Scarlet untouched. T20 dependencies ready after closure, stays TODO; **STOP AFTER T19**, no merge/deploy/drain.
@@ -7432,3 +7434,339 @@ Restage this evidence-only append and repeat same exact13path review/docs/whites
 then execute completion commit and authorized push. D1–D5/individual DoD all PASS;
 D6 becomes PASS only when inspected completion commit succeeds. Actual commit hash/
 remote equality reported outside its own commit; no amend/merge/deploy/task drain.
+
+<a id="h-t21-a01"></a>
+## H-T21-A01 — Phase 4 / dense/sparse hybrid retrieval
+
+Runtime direct Codex agent, exact model/effort unavailable, no subagents; date2026-10-03
+Asia/Bangkok. All commands cwd `C:\Users\Admin\Documents\GitHub\rag-core`.
+Baseline `git status --short; git branch --show-current; git rev-parse HEAD; git remote -v`
+exit0, actual:
+
+```text
+?? .ptmp-t07-a02/
+?? .tmp-t07-a02/
+main
+938bee71ac537e386e8472efc6f9eed7951026d1
+origin https://github.com/admininistrator/rag-core.git (fetch)
+origin https://github.com/admininistrator/rag-core.git (push)
+```
+
+Inherited global-ignore/inaccessible T07 scratch warnings retained, files untouched.
+Authorized `git ls-remote origin refs/heads/main` exit0:
+`938bee71ac537e386e8472efc6f9eed7951026d1 refs/heads/main`.
+Read AGENTS/session prompt/fullT20/T18/T17 notes/interfaces/evidence, P01/P03/P08/P11/P13,
+checkpoint/summary/README/RUNBOOK before implementation; no prior T21 candidate.
+Scope11paths: five living docs, application query/retrieval +domain retrieval,
+compose.retrieval-test.yaml, actual integration suite and supplemental policy unit suite.
+No dependency/lock/model/publicAPI/index/DB migration/corpus change.
+
+### Environment and retained diagnostics
+
+Initial sandbox `docker ps --format '{{.Names}} {{.Status}}'; git ls-remote origin refs/heads/main`
+exit1, actual `permission denied while trying to connect to the docker API at npipe:////./pipe/docker_engine`
+and `Failed to connect to github.com port 443`. Scoped elevated calls succeeded; no
+approval rejection/credential blocker. Existing model cache/image reused read-only.
+First attempt to write task metadata through `uv run --no-sync python -` exit1:
+`Failed to initialize cache at C:\Users\Admin\AppData\Local\uv\cache` / `Access is denied`.
+Set repo UV_CACHE_DIR. Subsequent PowerShell-piped non-ASCII replacements did not match
+Vietnamese task labels (only line endings changed); caught on actual diff/read, corrected
+with UTF-8 patch. Task is T21-A01; no gate/semantics changed to hide either diagnostic.
+
+Actual service command (elevated) exit0:
+
+```powershell
+docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
+```
+
+Actual output:
+
+```text
+Network rag-core-t21-test_default Created
+Container rag-core-t21-test-qdrant-1 Healthy
+Container rag-core-t21-test-postgres-1 Healthy
+Container rag-core-t21-test-inference-1 Healthy
+```
+
+Only own dedicated test project; no application/Scarlet mutation. PG17.11 and
+Qdrant1.19.1 pinned digests from T18, loopback55432/56333 tmpfs. Inference loopback58080,
+T17 CPU image and read-only `rag-core_model_cache`. Host uses existing locked groups;
+no host model execution. Model BGE-M3 revision5617a9f61b028005a4858fdac845db406aefb181;
+full CPU runtime fingerprint f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b.
+Reranker revision953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e loaded once by shared T17
+service, not invoked by retrieval. No LLM provider/key/live-generation claim.
+
+Commands each exit0:
+
+```powershell
+docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml config --quiet
+docker inspect --format '{{.Name}} {{.Config.Image}} {{.Image}} {{.State.Health.Status}}' rag-core-t21-test-postgres-1 rag-core-t21-test-qdrant-1 rag-core-t21-test-inference-1
+docker stats --no-stream --format '{{.Name}} {{.MemUsage}} {{.CPUPerc}}' rag-core-t21-test-inference-1
+```
+
+Actual output excerpt (config command no output):
+
+```text
+/rag-core-t21-test-postgres-1 postgres:17.11-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0 sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0 healthy
+/rag-core-t21-test-qdrant-1 qdrant/qdrant:v1.19.1-unprivileged@sha256:801777072776dc81b2a9dd2007b2ed487571f21ecd30efffd15ddb1671f2193d sha256:801777072776dc81b2a9dd2007b2ed487571f21ecd30efffd15ddb1671f2193d healthy
+/rag-core-t21-test-inference-1 rag-core-inference:t17-cpu sha256:4b79b3c9e877d07eebef37c0d1e580f3a23708dad0e4380cfdba4f877cd6e2ac healthy
+rag-core-t21-test-inference-1 2.196GiB / 7GiB 0.11%
+```
+
+Tests observed one PID8/two model instances, CPU load66.551s. Snapshot memory is not
+peak/load/full-stack SLA. Inference image is existing T17 artifact; new retrieval code
+runs from current host source via HTTP client, no claim new source packaged in that image.
+Official Qdrant hybrid reference confirms default equal-weight RRF k2; pinned T18
+FusionQuery used, no raw-score sum/cosine threshold/algorithm migration.
+
+Common test environment, credential only loaded from file, never printed:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+```
+
+First DoD-1 command exit1, full local log ignored `.local/t21-dod1-first.log`:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_retrieval.py -q -s --tb=short --basetemp=.local/t21-a1 -o cache_dir=.local/t21-c1 *> .local/t21-dod1-first.log
+```
+
+Actual failure excerpt:
+
+```text
+E AttributeError: 'Session' object has no attribute 'revision'
+1 failed, 13 passed in 37.01s
+```
+
+Corrected test uses real `scope_revision` and retains T10 empty-session
+`no_session_documents`/snapshot rejection; no change to persistence semantics.
+Added actual neighbor-return EN/VI assertions and unrelated appendix embeddings,
+not merely vacuous iteration over empty expanded set. Initial Ruff unused imports
+fixed and formatting applied; no skipped/relaxed tests.
+
+### DoD-1 — PASS, separate real-service command
+
+```powershell
+uv run --no-sync pytest tests/integration/test_retrieval.py -q -s --tb=short --basetemp=.local/t21-a2 -o cache_dir=.local/t21-c2 *> .local/t21-dod1-second.log
+```
+
+Exit0; expected actual multi-doc/keyword/numeric/EN->VI/VI->EN/distractor/no-match,
+language filter at each branch, same-scope bounded neighbors and invalidation.
+Actual output excerpts, complete local log above (synthetic IDs only, no secrets):
+
+```text
+T21 REAL MODEL device=cpu pid=8 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=66.551s
+T21 REAL dense corpus=vi top1=capital-vi scope/filter/trace PASS
+T21 REAL hybrid corpus=vi top1=capital-vi scope/filter/trace PASS
+T21 REAL dense corpus=en top1=capital-en scope/filter/trace PASS
+T21 REAL hybrid corpus=en top1=capital-en scope/filter/trace PASS
+T21 REAL dense corpus=en top1=finance-en scope/filter/trace PASS
+T21 REAL hybrid corpus=en top1=finance-en scope/filter/trace PASS
+T21 REAL dense corpus=vi top1=finance-vi scope/filter/trace PASS
+T21 REAL hybrid corpus=vi top1=finance-vi scope/filter/trace PASS
+T21 REAL multi-doc labels=['capital-en', 'finance-en'] candidates=4 neighbor_calls=2
+T21 REAL no-match language -> zero candidates; empty session rejected before model/vector
+T21 REAL neighbor corpus=en adds1 same-page/pair/filter; detach on scroll aborts
+T21 REAL neighbor corpus=vi adds1 same-page/pair/filter; detach on scroll aborts
+T21 REAL sparse absent lexical tokens -> zero candidates
+T21 REAL detach after model / Qdrant -> abort, no stale candidates
+T21 REAL reproducible dense/hybrid, prefetch100/candidate20/anchors20 boundaries PASS
+16 passed in 42.50s
+```
+
+Actual model token-budget rejection also passes without vector search. Both prefetch
+filters observed on real requests; owner/exact pairs/language checked before top-k,
+foreign2apps/2users/same-owner-other-session actual embeddings retained but excluded.
+All six synthetic documents plus distractors/appendices indexed, no QA/gold/doc selection
+for relevance. Negative no-match uses user-selected EN source +valid VI filter; no
+ground-truth narrowing. No factual answer/held-out corpus quality measurement claimed.
+
+### DoD-2 — PASS, separate reproducibility/boundary command
+
+```powershell
+uv run --no-sync pytest tests/unit/test_retrieval_policy.py tests/integration/test_retrieval.py::test_real_dense_hybrid_toggle_reproducible_and_max_budget -q -s --tb=short --basetemp=.local/t21-d2 -o cache_dir=.local/t21-dc2 *> .local/t21-dod2.log
+```
+
+Exit0; expected JSON config roundtrip/hash, dense/hybrid repeat same scored candidates,
+actual prefetch100/candidate20/anchors20, min/max/invalid budgets, immutable profile,
+unknown/stale/empty/cancel/deadline/revision/shape failure boundaries. Actual:
+
+```text
+T21 REAL reproducible dense/hybrid, prefetch100/candidate20/anchors20 boundaries PASS
+29 passed in 6.83s
+```
+
+Supplemental28unit cases use explicitly synthetic stalled/error protocol collaborators
+for cancellation/deadline/config, not model/retrieval success. RUNBOOK tunables, score
+semantics, revalidation, trace vs private candidates, no QA/gold API and limitations
+updated. No pipeline corpus file access or gold filter; source metadata from scoped
+repository only. Trace has no question/history/identity/IDs/vectors/storage key.
+
+### D2 — Quality, regression and dependency gates
+
+Each command exit0, logs at the exact ignored local paths shown:
+
+```powershell
+uv run --no-sync ruff check . *> .local/t21-ruff.log
+uv run --no-sync mypy src *> .local/t21-mypy.log
+uv lock --check --offline *> .local/t21-lock.log
+uv run --no-sync python scripts/export_openapi.py --check *> .local/t21-openapi.log
+uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/r21 -o cache_dir=.local/c21 *> .local/t21-regression.log
+uv run --no-sync pytest tests/integration/test_qdrant_scope.py tests/integration/test_session_scope.py -q --tb=short --basetemp=.local/t21-dep -o cache_dir=.local/t21-depc *> .local/t21-dependencies.log
+```
+
+Actual output excerpts:
+
+```text
+All checks passed!
+Success: no issues found in 73 source files
+Resolved 169 packages in 35ms
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+459 passed in 135.41s (0:02:15)
+35 passed in 13.79s
+```
+
+Ruff root traversal warns three inherited inaccessible directories, no task errors;
+explicit changed-path checks/format also run at closure. Existing environment keeps
+inference group installed for whole-source T17 imports in mypy; no uv.lock change.
+
+### D1/D3/D4/D5/D6 — Closure review boundary
+
+D1: read dependencies/P01, preserve baseline scratch, review exact11paths and whitespace.
+D2: quality/regression/actual dependency gates above. D3: two DoD commands individually.
+D4: README/RUNBOOK updated together with status/DI/tunables/commands/errors/limits;
+task notes/summary/checkpoint/evidence added, docs validator run at closure.
+D5: review no secrets/rawQA/weights/cache/logs/prompt changes; additive validation method,
+no dependency/API/DB/index migration, no source deletion. D6: explicit scoped stage and
+completion subject `feat(T21): add scoped hybrid multilingual retrieval`; COMPLETE only
+after successful inspected commit. Actual hash/authorized origin/main push equality
+reported after execution, no self-hash/amend/force/merge/deploy.
+T22 dependencies T21/T17 ready after closure; leave TODO and STOP AFTER T21.
+
+### Final reviewed fixture — actual cap20, min1 and accurate language metadata
+
+Review found intermediate fixture had18current-session chunks, so the max20 test
+had not exercised overflow. Final fixture has24actual embedded chunks (6sources ×4),
+with EN/VI appendix texts matching each language annotation, plus actual retained
+foreign/same-owner-other-session vectors. Final max test requires **exactly20** candidates
+and zero neighbor calls when budget full, and minimum prefetch/top_k/total1 requires
+exactly1 candidate. Same-scope neighbor gate still requires actual additional1point.
+No model/pipeline/scope/gold/DoD change; both DoD commands rerun after test changes.
+
+Same scoped Compose `up -d --wait` and final `stop` commands above exit0; inference
+restarted as PID7 with same full CPU model/runtime fingerprint and loaded two fixed
+models, load33.590s. No application services/volumes/cache/source deletion.
+
+Final DoD-1 command exit0:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_retrieval.py -q -s --tb=short --basetemp=.local/t21-fin1 -o cache_dir=.local/t21-fc1 *> .local/t21-dod1-final.log
+```
+
+Final actual excerpt:
+
+```text
+T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=33.590s
+T21 REAL neighbor corpus=en adds1 same-page/pair/filter; detach on scroll aborts
+T21 REAL neighbor corpus=vi adds1 same-page/pair/filter; detach on scroll aborts
+T21 REAL sparse absent lexical tokens -> zero candidates
+T21 REAL detach after model / Qdrant -> abort, no stale candidates
+T21 REAL reproducible dense/hybrid, prefetch100/candidate20/anchors20 boundaries PASS
+16 passed in 42.73s
+```
+
+Final DoD-2 command exit0:
+
+```powershell
+uv run --no-sync pytest tests/unit/test_retrieval_policy.py tests/integration/test_retrieval.py::test_real_dense_hybrid_toggle_reproducible_and_max_budget -q -s --tb=short --basetemp=.local/t21-fin2 -o cache_dir=.local/t21-fc2 *> .local/t21-dod2-final.log
+```
+
+```text
+T21 REAL reproducible dense/hybrid, prefetch100/candidate20/anchors20 boundaries PASS
+29 passed in 5.25s
+```
+
+Actual final D2/D4 commands each exit0:
+
+```powershell
+uv run --no-sync ruff check src/rag_core/domain/retrieval.py src/rag_core/application/retrieval.py src/rag_core/application/query.py tests/integration/test_retrieval.py tests/unit/test_retrieval_policy.py
+uv run --no-sync ruff format --check src/rag_core/domain/retrieval.py src/rag_core/application/retrieval.py tests/integration/test_retrieval.py tests/unit/test_retrieval_policy.py
+uv run --no-sync python scripts/check_docs.py
+```
+
+```text
+All checks passed!
+4 files already formatted
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 351
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Initial D4 checker exit1 `Missing anchor ... #h-t21-a01`; added exact explicit anchor,
+fixed current README/RUNBOOK/summary stale retrieval status; same validator PASS above.
+Earlier passing459unit/contract/security and35dependency checks still apply to identical
+production/unit source; final changes only strengthen T21 integration fixtures and docs.
+
+Final service commands exit0:
+
+```powershell
+docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop
+docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml ps --all --format '{{.Name}} {{.State}}'
+```
+
+```text
+Container rag-core-t21-test-qdrant-1 Stopped
+Container rag-core-t21-test-postgres-1 Stopped
+Container rag-core-t21-test-inference-1 Stopped
+rag-core-t21-test-inference-1 exited
+rag-core-t21-test-postgres-1 exited
+rag-core-t21-test-qdrant-1 exited
+```
+
+### Final D1/D4/D5/D6 — exact staged candidate review
+
+Explicit stage/inspection commands each exit0:
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md src/rag_core/application/query.py src/rag_core/application/retrieval.py src/rag_core/domain/retrieval.py compose.retrieval-test.yaml tests/integration/test_retrieval.py tests/unit/test_retrieval_policy.py
+git diff --cached --check
+git diff --cached --stat
+uv run --no-sync python .local/t21_review.py
+uv run --no-sync python scripts/check_docs.py
+git diff --cached --name-only
+```
+
+Actual output excerpt before this evidence/status-only append:
+
+```text
+11 files changed, 1299 insertions(+), 15 deletions(-)
+Existing marker metadata only: docs/handoffs.md current=(1, 0, 0) HEAD=(1, 0, 0)
+PASS exact11 staged paths; added credential markers/local-secret/size/UTF8 checks; AGENTS/plan/lock/dependency/corpus unchanged; worktree=index and whitespace clean
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 351
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Actual index lists exactly README/RUNBOOK, three ledgers, three source modules,
+one test Compose and two test suites. Existing Git identity configured, no fake
+author/global settings. Source/diff independently read/reviewed, no raw licensed
+data/QA/weights/cache/local helper/logs/credentials staged; inherited historical
+private-key-marker count unchanged and every added line checked. Local review helper
+does not print secret values, UTF-8/stat/markers only; ignored and not staged.
+
+Restage this evidence/status-only append, repeat same scope/whitespace/docs audit,
+then completion commit. All task DoD/D1–D5 PASS; D6/COMPLETE effective only with
+successful inspected `feat(T21): add scoped hybrid multilingual retrieval` commit.
+Actual hash/authorized origin/main equality reported outside its own commit; no
+amend/force/merge/deploy, T22 remains TODO and STOP AFTER T21.

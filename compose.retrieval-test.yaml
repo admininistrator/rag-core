@@ -1,0 +1,20 @@
+# Combine with metadata-test/qdrant-test. Opt-in loopback inference for real T21 tests.
+services:
+  inference:
+    image: rag-core-inference:t17-cpu
+    environment: {MODEL_CACHE: /models, MODEL_DEVICE: cpu}
+    volumes: ["model_cache:/models:ro"]
+    ports: ["127.0.0.1:58080:8080"]
+    init: true
+    mem_limit: 7g
+    cpus: 2
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready', timeout=2).read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+      start_period: 60s
+volumes:
+  model_cache:
+    external: true
+    name: rag-core_model_cache
