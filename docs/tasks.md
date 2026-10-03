@@ -354,7 +354,7 @@
 <a id="t20"></a>
 ### T20 — Domain registry, scope policies và hội thoại
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T19, T03, T10.
 - **Tham chiếu kế hoạch:** [P01](plan.md#p01), [P03](plan.md#p03), [P08](plan.md#p08).
 - **Công việc:** Register default/document/multilingual, ScopedRetrievalContext, config validation, history budgeting và rewrite port; provider thật nối T23. Custom test domain chứng minh extension không sửa router.
@@ -362,7 +362,13 @@
   1. `uv run pytest tests/contract/test_domain_registry.py tests/security/test_history_scope.py` PASS: unknown domain, empty subset, ID ngoài session, history stale citations/system injection, custom hook không bypass repository scope.
   2. Follow-up query rewrite dùng provider test có schema rõ và giữ session; API language defaults/overrides nhất quán. README/RUNBOOK domain matrix cập nhật.
 - **Cạm bẫy:** History chỉ hỗ trợ hiểu câu hỏi, không là factual evidence; không biến bilingual dataset thành runtime domain thứ tư; không cho registry chạy code từ request.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `feat(T20): compose extensible session-scoped domains`.
+- **Ghi chú thực thi:** T20-A01 | direct Codex agent, exact model/effort unavailable, no subagents | Started 2026-10-03. Baseline main/T19 `0b3d6f40dfc85034788c3dd9a3c285749cd19449`; inherited `.ptmp-t07-a02/`, `.tmp-t07-a02/` preserved. AGENTS/task-session-prompt, T19/T03/T10 notes, P01/P03/P08/P13, handoffs/summary/README/RUNBOOK read. Allowed: domain registry/history/rewrite port/application preparation, contract/security and real PG/Qdrant integration tests, README/RUNBOOK and three task ledgers. Plan: immutable scoped context, trusted registry/config/hooks, bound read-only repository capability, actual-tokenizer history budgets and typed rewrite with before/after scope validation; provider test per DoD, real providers T23. Run each DoD/D1–D6, scoped commit and authorized origin/main push; stop T20. Commit dự kiến `feat(T20): compose extensible session-scoped domains`.
+
+- **T20-A01 results (COMPLETE effective only after successful inspected completion commit):** Implemented13paths: three framework/SDK-free domain/application/port modules, two suites+synthetic protocol helper, security selector-loop hook, pytest local namespace config, README/RUNBOOK and three ledgers. Interfaces [S-T20-A01](implementation-summary.md#s-t20-a01).
+- **DoD-1 PASS:** separate56tests30.56s; actual PG17.11/Qdrant1.19.1/BGE-M3 tokenizer, unknown/bilingual/config/subset/history roles/injection and immutable context; custom test hook dense/sparse/hybrid EN/VI top1/fetch/neighbor cannot access retained same-owner other-session documents, no scope/language overrides, before/after detach/delete/generation invalidation. Rewrite failure/schema/timeout/cancel boundaries safe. [H-T20-A01](handoffs.md#h-t20-a01).
+- **DoD-2 PASS:** separate12tests7.53s provider-test follow-up standalone question/schema/current session and EN/VI default/override/corpus-filter matrix in3domains; README/RUNBOOK domain matrix updated. Synthetic rewriter is explicitly required by this task; real provider adapters/live gates T23/T26 unchanged, no live claim.
+- **D1 PASS:** dependency notes/scope/whitespace, inherited scratch preserved. **D2 PASS:** Ruff/format, strict mypy71, locked169,431regressionPASS146.59s; additional40contractPASS13.85s with only dev/api/ingestion groups. Whole-src mypy requires inference group, restored offline and PASS; no gate relaxation. **D3 PASS:** separate DoD commands above. **D4 PASS:** README/RUNBOOK DI/profile references/port/language/budgets/test commands/status, task/handoff/summary and docs checker. **D5 PASS:** scope/source/secret/artifact review; no dependency/lock/API/DB/index/corpus changes; pytest namespace setting only. **D6:** scoped completion subject `feat(T20): compose extensible session-scoped domains`; actual hash/authorized origin/main push equality returned post-execution, no self-hash/amend.
+- **Limits/next:** no unresolved blocker. Profile consumers T21–T24/T30, real rewrite T23, public query HTTP/warnings mapping T24–T26 remain future tasks. History core-token budget differs from provider billing; raw old citation strings only untrusted rewrite data, never evidence. Python hooks are trusted code, not sandboxed. Own test services stopped, original volumes/storage/Scarlet unchanged. T21 dependencies T20/T18/T17 ready after closure; T21 stays TODO. **STOP AFTER T20**, no merge/deploy/drain.
 
 <a id="t21"></a>
 ### T21 — Dense/sparse hybrid retrieval

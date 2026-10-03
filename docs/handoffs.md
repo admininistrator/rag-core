@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-03 / T20-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T19 `0b3d6f40dfc85034788c3dd9a3c285749cd19449` equals origin/main; inherited T07 scratch preserved. Registry/scoped preparation/history budgeting/rewrite port implemented; final DoD-1 **56PASS30.56s** with actual PG/Qdrant/tokenizer, DoD-2 **12PASS7.53s** provider-test schema/language matrix, **431regressionPASS146.59s**. [H-T20-A01](#h-t20-a01), [S-T20-A01](implementation-summary.md#s-t20-a01). Ruff/mypy71/locked169/OpenAPI PASS; final docs/scope/secrets/commit review is closure boundary. Own PG/Qdrant test services stopped without volume deletion; Scarlet untouched. Subject `feat(T20): compose extensible session-scoped domains`; actual hash/authorized origin/main push equality returned post-execution. Real rewrite adapters T23, public HTTP T26, no live provider claim. T21 dependencies T20/T18/T17 ready after closure; stays TODO. **STOP AFTER T20**, no merge/deploy/drain.
+
 - **Current 2026-10-03 / T19-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T18 `969b402e9f21e4ca38bea4f37f7c23839078eeec` equals origin/main; inherited T07 scratch preserved. Durable ingestion/Celery lease fences/recovery/chunks/atomic publication/default Compose implemented and VERIFIED. Final real DoD-1 12PASS106.74s and separate DoD-2 4PASS39.02s,363regression +12newstorage-security +36realPG/migration/Qdrant PASS; Ruff/mypy68/lock/OpenAPI/config/images PASS. Evidence [H-T19-A01](#h-t19-a01), interfaces [S-T19-A01](implementation-summary.md#s-t19-a01). Exact task paths reviewed, completion subject `feat(T19): complete durable document ingestion`; actual hash/authorized origin/main push equality reported after execution. No unresolved blocker; business HTTP/query and trusted language annotation/computation reuse limits documented. Own test services stopped, model cache/source/app volumes retained; Scarlet untouched. T20 dependencies ready after closure, stays TODO; **STOP AFTER T19**, no merge/deploy/drain.
 
 - **Current 2026-10-03 / T18-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent/no subagents; baseline main/T17 `919d4e43ab58158f1421982ae9dee6b95809396c` equals origin/main, inherited T07 scratch preserved. Versioned dense/sparse Qdrant repository, exact-pair filters in every branch/fetch/neighbor, before/after PG snapshot revalidation, stable point IDs and PG-locked scoped generation write/count/cleanup implemented. Final17real PG/Qdrant tests and separate4DoD-2 PASS;363unit/contract/security +19real PG dependency tests, Ruff/mypy60/lock/OpenAPI PASS. Evidence [H-T18-A01](#h-t18-a01), interfaces [S-T18-A01](implementation-summary.md#s-t18-a01). Exact12task paths, completion subject `feat(T18): enforce scoped Qdrant access`; actual commit and authorized origin/main equality reported post-execution, no self-hash/amend. No unresolved blocker; synthetic vectors are authorization fixtures, not quality benchmark. Worker/chunk persistence/atomic publication remain T19. Own test PG/Qdrant stopped, no source/volume cleanup. T19 dependencies T18/T12/T15/T16 ready after closure; **STOP AFTER T18**, no merge/deploy/drain.
@@ -7165,3 +7167,268 @@ PASS staged exactly32paths, cached whitespace, Git-filtered worktree=index; no t
 Restage this evidence-only append with same exact32path checks, run docs/whitespace
 again, create inspected completion commit, push origin/main and compare remote hash.
 All D1–D5 and individual DoD gates PASS; D6 depends on actual successful commit.
+
+<a id="h-t20-a01"></a>
+## H-T20-A01 — Phase 4 / domain registry, scoped preparation and conversation
+
+Runtime: direct Codex agent/no subagents; exact model/effort unavailable. Date2026-10-03
+Asia/Bangkok. All commands cwd `C:\Users\Admin\Documents\GitHub\rag-core`.
+Baseline `git status --short` exit0: only inherited untracked `.ptmp-t07-a02/`,
+`.tmp-t07-a02/`; inaccessible T07 scratch/global ignore warnings retained. Branch
+`main`, HEAD/initial authorized `git ls-remote origin refs/heads/main` both
+`0b3d6f40dfc85034788c3dd9a3c285749cd19449`. Origin verified
+`https://github.com/admininistrator/rag-core.git`; existing Git identity configured.
+Read AGENTS/task-session-prompt, T20+T19/T03/T10 complete notes, P01/P03/P08/P13,
+checkpoint/summary/README/RUNBOOK before source edits. No prior T20 candidate.
+
+Scope13files: README/RUNBOOK, docs tasks/handoffs/implementation-summary,
+pyproject pytest-local-pythonpath only, src domain/query/application/query/ports/rewrite,
+tests contract/test_domain_registry/security/test_history_scope/fixtures/query_support,
+security/conftest selector-loop hook. No dependency/lock/API/migration/index changes.
+
+### Environment and service evidence
+
+Initial sandbox Docker read failed (permission denied on Docker named pipe), and
+initial sandbox `git ls-remote` could not connect443. Authorized elevated commands
+then succeeded; no approval rejection or unresolved credential blocker. Only the
+dedicated T20 test project was started/stopped; application/Scarlet services unchanged.
+
+Command exit0:
+
+```powershell
+docker compose -p rag-core-t20-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml up -d --wait
+```
+
+Actual output excerpt:
+
+```text
+Network rag-core-t20-test_default Created
+Container rag-core-t20-test-postgres-1 Healthy
+Container rag-core-t20-test-qdrant-1 Healthy
+```
+
+Post-tests `docker compose ... ps` and
+`docker inspect --format '{{.Name}} {{.Config.Image}} {{.State.Health.Status}}' rag-core-t20-test-postgres-1 rag-core-t20-test-qdrant-1`
+each exit0, actual:
+
+```text
+/rag-core-t20-test-postgres-1 postgres:17.11-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0 healthy
+/rag-core-t20-test-qdrant-1 qdrant/qdrant:v1.19.1-unprivileged@sha256:801777072776dc81b2a9dd2007b2ed487571f21ecd30efffd15ddb1671f2193d healthy
+```
+
+Loopback55432/56333; PG/Qdrant tmpfs, random isolated DBs/collections cleaned by
+existing fixtures. Tokenizer actual offline BGE-M3, not a count mock or model inference.
+Rewrite provider `tests.fixtures.query_support.TestRewriter`, explicit schema-bound
+synthetic protocol per T20 DoD; no LLM provider/model/credential or live claim.
+Synthetic1024D vectors are authorization fixtures, not retrieval/model quality.
+
+Common test environment (no secret values printed):
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+```
+
+### DoD-1 — PASS (separate final command)
+
+```powershell
+uv run --no-sync pytest tests/contract/test_domain_registry.py tests/security/test_history_scope.py -q -s --tb=short --basetemp=.local/t20-f1 -o cache_dir=.local/t20-fc1 *> .local/t20-dod1-final.log
+```
+
+Exit0; expected all unknown/subset/config/history/rewrite/custom-scope boundaries pass
+with actual services/tokenizer; actual excerpt:
+
+```text
+Real PostgreSQL: separate database t10_test_7360c37b12a94a38a5a250b41b4fb347, public tables before migration=0
+Real PostgreSQL: migrated separate database t10_test_7360c37b12a94a38a5a250b41b4fb347
+T20 real PG/Qdrant: custom hook dense top1/fetch/neighbor current-session en only
+T20 real PG/Qdrant: custom hook sparse top1/fetch/neighbor current-session en only
+T20 real PG/Qdrant: custom hook hybrid top1/fetch/neighbor current-session en only
+T20 real PG/Qdrant: custom hook dense top1/fetch/neighbor current-session vi only
+T20 real PG/Qdrant: custom hook sparse top1/fetch/neighbor current-session vi only
+T20 real PG/Qdrant: custom hook hybrid top1/fetch/neighbor current-session vi only
+T20 real PG: detach during provider-test rewrite -> session_scope_changed
+T20 real PG: delete during provider-test rewrite -> session_scope_changed
+T20 real PG: generation during provider-test rewrite -> session_scope_changed
+56 passed in 30.56s
+```
+
+Also proves foreign subset/identity rejected before provider/hook, context cannot be
+used after detach, detach during custom hook aborts, every hybrid prefetch carries
+same exact-pair/language filter. History old assistant citation/foreign chunk IDs
+remain untrusted rewrite data only; no history/citations/evidence member in retrieval
+context, no structured citation/system/developer/tool role accepted. Injected text
+cannot select scope/config or obtain SDK/write/cleanup through the hook interface.
+Trusted Python is not sandboxed; production repository independently enforces scope.
+
+### DoD-2 — PASS (separate provider-test/language matrix)
+
+```powershell
+uv run --no-sync pytest tests/contract/test_domain_registry.py::test_followup_rewrite_schema_session_and_language_defaults -v --tb=short --basetemp=.local/t20-f2 -o cache_dir=.local/t20-fc2 *> .local/t20-dod2-final.log
+```
+
+Exit0, expected follow-up standalone-question schema, same session, original-question
+language default/explicit overrides and unchanged opposite corpus filter in all3domains.
+Actual excerpt (all12 combinations in local log):
+
+```text
+collecting ... collected 12 items
+test_followup_rewrite_schema_session_and_language_defaults[en-None-default] PASSED
+test_followup_rewrite_schema_session_and_language_defaults[vi-None-multilingual] PASSED
+test_followup_rewrite_schema_session_and_language_defaults[en-vi-document] PASSED
+test_followup_rewrite_schema_session_and_language_defaults[vi-en-multilingual] PASSED
+============================= 12 passed in 7.53s ==============================
+```
+
+README/RUNBOOK domain matrix and port/system-data separation updated. Real provider
+adapters T23 and live T26 are unchanged requirements, not skipped T20 gates.
+
+### D1–D5 quality, review and failure history
+
+Regression command common environment above, exit0 `.local/t20-regression.log`:
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/r20 -o cache_dir=.local/c20 *> .local/t20-regression.log
+```
+
+```text
+431 passed in 146.59s (0:02:26)
+```
+
+Quality commands/outputs each exit0 unless initial format failure noted below:
+
+```powershell
+uv run --no-sync ruff check . *> .local/t20-ruff.log
+uv run --no-sync mypy src *> .local/t20-mypy.log
+uv lock --check --offline *> .local/t20-lock.log
+uv run --no-sync python scripts/export_openapi.py --check *> .local/t20-openapi.log
+```
+
+```text
+All checks passed!
+Success: no issues found in 71 source files
+Resolved 169 packages in 36ms
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+Ruff root traversal emits3inherited Access-is-denied warnings, not task errors; changed
+paths also explicitly checked. Initial mypy1domain override error resolved with a documented
+internal-only widening suppression; public QueryRequest still closed. Initial RUF005/F811
+fixed (tuple unpack, fixture module imports). First pytest collection exit2 `No module named
+'tests'` in `.local/t20-dod1-first.log`; minimal pytest pythonpath fixes shared test namespace,
+second full51PASS27.39s in `.local/t20-dod1-second.log`. No gate removed. Later strict-result
+revalidation/error-redaction and EN/VI real filter cases expand final gate to56PASS.
+Format check initially1file failed after EN/VI print edit; only formatting changed and final
+same7paths format check exit0 `7 files already formatted`.
+
+After acceptance, `uv sync --locked --group dev --group api --group ingestion --offline`
+exit0 resolved169packages/build local package; removed34unrequested inference-only installed
+extras from host `.venv`, no lock changes. Tests above used inherited locked dev/api/ingestion
+plus inference extras; relevant tokenizer/provider/persistence versions unchanged after sync.
+Runtime inspection exit0 actual:
+
+```text
+3.12.4
+{'pydantic': '2.13.5', 'tokenizers': '0.22.2', 'psycopg': '3.3.5', 'qdrant-client': '1.19.0', 'pytest': '9.1.1', 'pytest-asyncio': '1.4.0'}
+BAAI/bge-m3@5617a9f61b028005a4858fdac845db406aefb181/21106b6d7dab2952c1d496fb21d5dc9db75c28ed361a05f5020bbba27810dd08/tokenizers-0.22.2
+```
+
+`docker compose -p rag-core-t20-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml stop`
+exit0: both own test containers Stopped; no volume/source/cache deletion.
+
+D1 dependency+exact task scope/whitespace review; D2 separate checks+critical behavior;
+D3 both above gates; D4 README/RUNBOOK +task/handoff/summary; D5 source/config/contracts
+review (no API/migration/index change, no secret/raw corpus/cache staging). Final docs/scope/
+secrets/cached checks appended at closure. D6 is actual inspected scoped completion commit
+`feat(T20): compose extensible session-scoped domains`; hash/push equality returned after
+execution, never self-hash/amend. T21 dependencies ready only after closure, stays TODO.
+
+### Final environment/docs/format checks
+
+After reducing host extras, focused contract command exit0:
+
+```powershell
+uv run --no-sync pytest tests/contract/test_domain_registry.py -q --tb=short --basetemp=.local/t20-post -o cache_dir=.local/t20-postc *> .local/t20-postsync.log
+```
+
+Actual `40 passed in 13.85s` proves T20 does not require Torch/FlagEmbedding inference.
+Whole-source mypy immediately after that reduced sync exited1 (`.local/t20-mypy-close.log`):
+
+```text
+Cannot find implementation or library stub for module named "torch" [import-not-found]
+Unused "type: ignore" comment [unused-ignore]
+Cannot find implementation or library stub for module named "FlagEmbedding" [import-not-found]
+Found 3 errors in 1 file (checked 71 source files)
+```
+
+These are T17 adapter environment imports, not T20 source/type failures. Restored
+existing locked inference group offline, no code/typing-gate/lock modification:
+
+```powershell
+uv sync --locked --group dev --group api --group ingestion --group inference --offline *> .local/t20-sync-close.log
+uv run --no-sync mypy src *> .local/t20-mypy-final.log
+uv run --no-sync ruff check src/rag_core/domain/query.py src/rag_core/application/query.py src/rag_core/ports/rewrite.py tests/contract/test_domain_registry.py tests/security/test_history_scope.py tests/fixtures/query_support.py tests/security/conftest.py *> .local/t20-ruff-final.log
+uv run --no-sync ruff format --check src/rag_core/domain/query.py src/rag_core/application/query.py src/rag_core/ports/rewrite.py tests/contract/test_domain_registry.py tests/security/test_history_scope.py tests/fixtures/query_support.py tests/security/conftest.py *> .local/t20-format-final.log
+uv run --no-sync python scripts/check_docs.py *> .local/t20-docs-final.log
+```
+
+Each exit0; actual:
+
+```text
+Resolved 169 packages in 1ms
+Installed 33 packages in 5.59s
+Success: no issues found in 71 source files
+All checks passed!
+7 files already formatted
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 340
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Docs check count above was before final task result/closure additions, rerun at staging.
+
+### Scoped staging and closure review
+
+Exact staging command (exit0):
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md pyproject.toml src/rag_core/domain/query.py src/rag_core/application/query.py src/rag_core/ports/rewrite.py tests/contract/test_domain_registry.py tests/security/test_history_scope.py tests/fixtures/query_support.py tests/security/conftest.py
+git diff --cached --check
+git diff --cached --stat
+git diff --cached -- pyproject.toml tests/security/conftest.py
+git diff --cached --name-only
+uv run --no-sync python .local/t20_review.py *> .local/t20-review-close.log
+uv run --no-sync python scripts/check_docs.py *> .local/t20-docs-close.log
+```
+
+Each exit0; actual before this evidence-only append:
+
+```text
+13 files changed, 1241 insertions(+), 6 deletions(-)
+Existing marker metadata only: docs/handoffs.md current=(1, 0, 0) HEAD=(1, 0, 0)
+PASS exact13 staged paths; new credential markers/local-secret/size/UTF8 checks; AGENTS/plan/lock/corpus unchanged; worktree=index and whitespace clean
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 342
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Initial entire-history marker scan exited1 (`credential marker in task file`), because
+one pre-existing key-marker occurrence already exists in HEAD handoff history. It prints
+no key value and no content. Review checks unchanged baseline marker counts and **all
+added diff lines**, plus absence of actual own local credential across all13files; no
+new key/JWT/AWS marker added. Historical evidence preserved. Local review helper/logs
+ignored, never staged; no corpus/cache/weights/source/storage credentials in index.
+
+Restage this evidence-only append and repeat same exact13path review/docs/whitespace,
+then execute completion commit and authorized push. D1–D5/individual DoD all PASS;
+D6 becomes PASS only when inspected completion commit succeeds. Actual commit hash/
+remote equality reported outside its own commit; no amend/merge/deploy/task drain.

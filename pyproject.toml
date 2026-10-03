@@ -101,6 +101,7 @@ warn_unreachable = true
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"
 testpaths = ["tests"]
+pythonpath = ["."]  # Shared test fixtures are imported through the local tests namespace.
 markers = [
   "unit: isolated tests without external services or network access",
   "integration: tests against real local service dependencies",

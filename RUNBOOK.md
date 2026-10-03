@@ -513,7 +513,7 @@ Compatibility: đây là design v1 đầu tiên, không có client business/runt
 <a id="r06"></a>
 ## R06. Query, history và languages
 
-**T03 structural contracts VERIFIED; retrieval/history processing/generation runtime DESIGNED — T20–T26.**
+**T03 contracts và T20 domain preparation/history budgets VERIFIED; hybrid retrieval/generation/public query HTTP còn DESIGNED — T21–T26.**
 
 - Bắt buộc session_id và câu hỏi; `domain` mặc định `default` nếu vắng mặt. Examples gửi rõ domain để người tích hợp dễ đối chiếu.
 - Default: tất cả ready documents của session; không nhận document subset.
@@ -521,14 +521,76 @@ Compatibility: đây là design v1 đầu tiên, không có client business/runt
 - Multilingual: toàn bộ session hoặc subset, optional `corpus_languages`, `answer_language`; chỉ EN/VI được nghiệm thu bản đầu.
 - Empty array là lỗi, không “all”. Tài liệu selected chưa ready không âm thầm bị loại khỏi câu trả lời.
 - Default không nhận `document_ids`, kể cả explicit null; serialization Pydantic tự bỏ `document_ids=None` để request hợp lệ round-trip. Với Multilingual, bỏ/null subset nghĩa toàn bộ tài liệu hợp lệ trong session; `[]` vẫn invalid. `bilingual` là nhãn corpus, không là API domain.
-- App gửi history `user/assistant` trong request, core không lưu transcript mặc định. Giới hạn mục tiêu 20 messages/8.000 tokens; trả metadata khi truncation.
-- Schema chấp nhận history vượt processing budget, không cắt/reject theo token ước lượng. Runtime T20 phải cắt bằng tokenizer thật; SSE `meta.history` và JSON `warnings[{code:history_truncated,message,history}]` báo received/retained message và token counts + `truncated`. Token counts chưa đo dùng cả hai null; không bịa 0. Schema kiểm count consistency, không hứa đã xử lý history.
+- App gửi history `user/assistant` trong request; T20 không lưu transcript. `budget_history` dùng pinned BGE-M3 tokenizer, charge từng message bằng `count(role + "\n" + content)` gồm special tokens. Giữ suffix mới nhất tối đa20messages/8000tokens, bỏ nguyên message cũ thay vì cắt nội dung; newest message vượt budget thì suffix rỗng. Tokenization chạy trong thread, không block async caller. Đây là budget core tái tạo được, không phải billable tokens của provider.
+- Schema chấp nhận history vượt processing budget. T20 trả immutable received/retained counts thật + `truncated`, và `context.warnings` có `history_truncated` khi cần. T24/T25/T26 sẽ nối warnings vào JSON/SSE `meta.history`; HTTP chưa serve. History không có structured citations/context fields; old assistant claims/citation strings chỉ có thể tồn tại trong untrusted rewrite data, không là evidence hoặc quyền của query mới.
 - History giúp rewrite câu hỏi nối tiếp; không cung cấp factual evidence từ session/tài liệu khác. Core chỉ trích dẫn passages vừa được xác minh current scope.
 - Default answer language theo câu hỏi; có override cho evaluation/app. Cross-lingual evaluation dùng language của gold answer, không nhầm với default sản phẩm.
 
 Response đầy đủ: `request_id`, `session_id`, `scope_revision`, `domain`, `answer`, `answerability`, `reason_code`, `citations`, `contexts`, `usage`, `timings_ms`, `warnings` theo [P06](docs/plan.md#p06).
 
 `ContractLimits` giữ defaults: 50 documents/session, 104857600 bytes/file (100 MiB), 1000 pages/file, 20 history messages/8000 tokens, question 4000 characters, context 8000/output 1024 tokens. Question/subset/metadata/file measurements có boundary tests; file bytes/pages phải đo từ nguồn và enforce ở ingestion, tổng session docs ở lifecycle, context/output/history tokens bằng tokenizer runtime. Client không override limit/provider/model/system instructions/identity trong body. `usage.provider/model/input_tokens/output_tokens` và `timings_ms.retrieval/generation/total` chưa có dùng null; ví dụ không có measurement giả.
+
+### T20 registry, rewrite port và scoped context
+
+| Domain/version | Subset policy | Declared profile differences |
+| --- | --- | --- |
+| `default`/1 | all current-session ready links; subset forbidden | `grounded-v1`, `session-v1` |
+| `document`/1 | nonempty subset required | `document-structure-v1`, `session-v1` |
+| `multilingual`/1 | optional nonempty subset | `grounded-en-vi-v1`, `xquad-en-vi-v1` |
+
+`DomainRegistry(builtin_domains())` được inject vào `QueryPreparation(registry, sessions,
+vectors, tokenizer, rewriter)`. `DomainDefinition`/`DomainConfig` frozen, forbid extra fields;
+ID/version/subset policy và retrieval/chunking/prompt/evidence/citation/evaluation profile
+references là cấu hình server. T20 chỉ khai báo các references; consumers tương ứng ở T21–T24/T30
+sẽ triển khai profiles. Không tự reindex, đổi tokenizer/model hoặc ghi đè generation cũ
+khi đổi domain config; fingerprint/index publication vẫn là T16–T19. Không có query cache.
+
+`prepare(authenticated_principal, QueryRequest)` revalidate request, chọn registry entry,
+resolve PG scope trước tokenizer/provider/hook, revalidate sau rewrite, sau hook và trước
+return. Context frozen giữ snapshot+revision/exact pairs, rewritten question, answer language,
+corpus filter, history metadata và `ScopedVectors`. Context không chứa transcript/citations
+hay factual evidence. `ScopedVectors.search/fetch/fetch_neighbors` không nhận scope/language
+override, không expose write/cleanup/raw SDK; before/after PG validation và repository T18
+prefilters mọi branch/fetch/neighbor. Python hook chỉ là trusted application code, không là
+sandbox chạy code client. Custom test entry qua internal `DomainQuery` dùng cùng dispatcher;
+public v1 vẫn đúng ba domain, `bilingual` bị reject. Thêm public domain tương lai cần cập nhật
+schema/response inventory cùng task của domain đó, không sửa dispatch logic.
+
+`QueryRewriter.rewrite(RewriteInput)` là async port framework/SDK-free. Input schema chỉ
+`question` và tuple `history[{role:user|assistant,content}]`, mọi text là untrusted data.
+T23 adapter phải tách system policy khỏi JSON data, không tools hoặc nâng history thành
+instructions. Result strict chỉ `{standalone_question, question_language:en|vi}`, question
+nonblank<=4000chars; classify **câu hỏi gốc** ngay cả khi rewrite dịch query. Port được gọi
+cả khi không có history để lấy ngôn ngữ. `answer_language` explicit thắng result; corpus
+filter giữ nguyên, không suy từ question/answer language. Hook chỉ đổi question, không đổi
+scope/config/languages hoặc cấp evidence. Timeout mặc định30s cho rewrite và30s cho hook,
+config strict hữu hạn<=60s; history config chỉ giảm trong ceilings20/8000. Không retry/fallback
+ẩn. `rewrite_timeout`, `rewrite_provider_error`, `domain_transform_error` là safe technical
+errors; không biến thành insufficient. Cancellation propagate; provider/model-constructed
+results được validate lại. Public error-envelope mapping thuộc T23–T26.
+
+Kiểm T20 từ repo root (existing locked dev/api/ingestion groups và tokenizer T16):
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+uv sync --locked --group dev --group api --group ingestion
+docker compose -p rag-core-t20-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml up -d --wait
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+uv run --no-sync pytest tests/contract/test_domain_registry.py tests/security/test_history_scope.py
+uv run --no-sync pytest tests/contract/test_domain_registry.py::test_followup_rewrite_schema_session_and_language_defaults -v
+docker compose -p rag-core-t20-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml stop
+```
+
+Use a fresh short ignored basetemp per R11. Reuse the own T10 test password setup in R03;
+test services use tmpfs and random private databases/collections, never application volumes.
+Missing tokenizer, PG or Qdrant fails; no skips/mock persistence fallback. Security suite now
+includes these explicit real-service gates; running all `tests/security` also needs these envs.
+[H-T20-A01](docs/handoffs.md#h-t20-a01) records56PASS with actual PG17.11/Qdrant1.19.1/tokenizer,
+synthetic1024D vectors only for authorization, and separate12PASS rewrite/language provider-test
+cases. This does not verify real LLM behavior, retrieval quality or factual answer generation;
+those gates remain T21–T26/T31. No provider keys are required for T20.
 
 ### App gọi LLM viết lại
 

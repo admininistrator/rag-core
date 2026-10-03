@@ -1,5 +1,6 @@
 """Local real HTTP key service and generated RSA material; no fixed credentials."""
 
+import asyncio
 import json
 import threading
 import time
@@ -10,6 +11,11 @@ from types import SimpleNamespace
 import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
+
+
+def pytest_asyncio_loop_factories():
+    # T20 real PG scope gates use Psycopg, which requires selector I/O on Windows.
+    return {"selector": asyncio.SelectorEventLoop}
 
 
 @pytest.fixture(scope="session")

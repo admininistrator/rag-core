@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T01–T19 VERIFIED local.** T19 nối storage → parse/OCR → chunk → shared inference → Qdrant → atomic PG publication, durable lease/retry/recovery. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. API chỉ mount health, business HTTP/query/LLM/SSE/admin thuộc T20–T36. [Evidence T19](docs/handoffs.md#h-t19-a01).
+> **T01–T20 VERIFIED local.** T19 nối durable ingestion và atomic publication; T20 thêm registry/domain preparation, scoped read capability, history budget bằng tokenizer thật và rewrite port đã kiểm với provider test. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. API chỉ mount health; hybrid pipeline, provider thật, generation/SSE/admin còn thuộc T21–T36. [Evidence T20](docs/handoffs.md#h-t20-a01).
 
 ## Phạm vi đã chốt
 
@@ -75,6 +75,18 @@ uv run python scripts/export_openapi.py --check
 ```
 
 [OpenAPI v1 thiết kế](docs/api/openapi-v1.designed.json) có 13 operations với `x-served`/`x-implementation-status`; [OpenAPI đang serve](docs/api/openapi.served.json) chỉ có 2 health routes. [37 examples](docs/api/examples-v1.json) là dữ liệu synthetic minh họa, không phải response runtime. Export kiểm OpenAPI model, JSON Schema Draft 2020-12 và examples bằng cả JSON Schema/Pydantic; không đọc secret hoặc chạy dependency/provider probes. Hợp đồng và các gate runtime còn thiếu nằm ở [RUNBOOK R05–R08](RUNBOOK.md#r05), actual evidence [H-T03-A02](docs/handoffs.md#h-t03-a02); [H-T03-A01](docs/handoffs.md#h-t03-a01) ghi recovery do runtime quota trước commit.
+
+## Domain preparation và hội thoại T20
+
+`QueryPreparation` resolve scope từ authenticated principal/current session trước rewrite hoặc domain hook. Hook chỉ nhận `ScopedRetrievalContext` với read capability cố định scope/languages; search/fetch/neighbor vẫn được PG/Qdrant kiểm quyền. Registry tĩnh chỉ nạp code/config tin cậy; custom test domain dùng cùng dispatcher, không thành domain public thứ tư.
+
+| Domain | Tập tài liệu | Language policy |
+| --- | --- | --- |
+| `default` | Tất cả ready links trong session; không nhận subset | Answer theo câu hỏi gốc hoặc `answer_language` |
+| `document` | `document_ids` nonempty, mọi ID thuộc session | Cùng default; profile cấu trúc tài liệu |
+| `multilingual` | Session hoặc subset nonempty | EN/VI; `corpus_languages` lọc độc lập với answer language |
+
+History chỉ là dữ liệu cho rewrite, không vào retrieval/evidence context. Giữ suffix gần nhất trong 20 messages/8000 tokens đo bằng pinned BGE-M3 tokenizer, trả counts và warning khi cắt. Rewrite output chỉ có câu hỏi độc lập và ngôn ngữ câu hỏi gốc; lỗi/timeout là lỗi kỹ thuật, scope thay đổi thì dừng. Provider test đã kiểm cả ba domain và EN/VI overrides; real DeepSeek/Anthropic adapters thuộc T23, live smoke T26. [RUNBOOK R06](RUNBOOK.md#r06) ghi DI/schema, budgets và lệnh kiểm chứng trên PG/Qdrant thật. Chưa có query HTTP handler hoặc factual-answer verification trong T20.
 
 ## Authentication T09
 
