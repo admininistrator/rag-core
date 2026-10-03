@@ -1,0 +1,16 @@
+# Same dedicated process/cache, CUDA12.8/FP16; never needed for API startup.
+services:
+  inference:
+    image: rag-core-inference:t17-gpu
+    build:
+      args:
+        MODEL_GROUP: inference-gpu
+    environment:
+      MODEL_DEVICE: cuda:0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

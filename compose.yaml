@@ -1,6 +1,30 @@
 name: rag-core
 
 services:
+  inference:
+    profiles: [inference]
+    image: rag-core-inference:t17-cpu
+    build:
+      context: .
+      dockerfile: docker/inference.Dockerfile
+      target: inference
+    environment:
+      MODEL_CACHE: /models
+      MODEL_DEVICE: cpu
+    volumes:
+      - model_cache:/models:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 60s
+    init: true
+    mem_limit: 7g
+    cpus: 2
+    restart: unless-stopped
+    networks: [backend]
+
   postgres:
     image: postgres:17.11-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0
     environment:
@@ -152,6 +176,7 @@ networks:
     driver: bridge
 
 volumes:
+  model_cache:
   postgres_data:
   qdrant_data:
   redis_data:

@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T16 IMPLEMENTED/VERIFIED local.** Default100QA/986documents, Document150QA/84PDF, Bilingual240EN+240VI và1190QA mỗi slice; all-domain setup/tải mới/rerun đã kiểm. Auth, metadata, read-only storage, registration/outbox và native text/Office tables đã kiểm thật. T15 CPU OCR đã kiểm trong worker image; T16 thêm chunking512/64 với tokenizer thật và source maps. API chỉ mount health; business HTTP/query/SSE và Celery ingestion orchestration vẫn DESIGNED. T17–T36 chưa bắt đầu.
+> **T01–T17 IMPLEMENTED/VERIFIED local.** Corpus/auth/metadata/storage/registration/native/Office/OCR/chunking đã kiểm; T17 thêm shared BGE-M3 dense/sparse và reranker, real CPU/GPU Docker smoke và resource evidence. API chỉ mount health; business HTTP/query/SSE và ingestion orchestration vẫn DESIGNED. T18–T36 chưa bắt đầu. Task COMPLETE requires inspected completion commit.
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -27,7 +27,8 @@
 | XLSX/CSV/PPTX tables | VERIFIED real parsers, locators/header/unit/formula cache và archive safety; chưa nối worker | T14 |
 | OCR scan/mixed PDF, PNG/JPEG | VERIFIED worker image, engine thật EN/VI + locator/status/limits/cancel | T15 |
 | Structural chunks/source maps | VERIFIED real tokenizer + parser fixtures trên host, actual worker OCR output mapped | T16 |
-| Embedding/index ingestion orchestration | DESIGNED | T17–T19 |
+| Shared embedding/reranker service | VERIFIED real CPU/GPU weights/HTTP, queue/limits/cancel and resource smoke | T17 |
+| Scoped vector/index ingestion orchestration | DESIGNED | T18–T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
@@ -55,7 +56,7 @@ Không import module nội bộ RAG core vào Scarlet, không dùng DB chat củ
 <a id="r02"></a>
 ## R02. Local prerequisites và cấu hình
 
-**T01 IMPLEMENTED/VERIFIED cho Python/settings/quality; T02 IMPLEMENTED/VERIFIED cho Docker local và health; model runtime vẫn DESIGNED cho T17.**
+**T01–T02 Python/settings/Docker health và T17 shared model runtime VERIFIED local.**
 
 - Windows/PowerShell, Git, Python 3.12, uv và Docker Desktop chạy Linux containers. T01/T02 chạy thật với uv 0.11.16 + CPython 3.12.4 trên host; `pyproject.toml`/`uv.lock` khóa interpreter ở `3.12.*`. API image dùng Python 3.12.13 pin digest. Docker daemon đã verify server 29.5.2.
 - RAM 16 GB, GPU NVIDIA 8 GB tùy chọn cho inference; CPU path dùng để xác minh chức năng. Driver/WSL GPU passthrough phải kiểm thực tế.
@@ -89,7 +90,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | api | IMPLEMENTED/VERIFIED T02 | FastAPI, HTTPX, Uvicorn, psycopg, Redis client; health-only API process, không có business routes |
 | ingestion | T11–T15 VERIFIED adapters/OCR worker runtime; orchestration T19 DESIGNED | Metadata, boto3, Celery, Qdrant/Redis; Docling Parse7.22.1/slim2.132.0 convert-core, pandas3.0.6, PDFium5.13.0, Office/native parsers; CPU OCR image có Tesseract5.3.0 + eng/vie/osd, không Torch/layout/VLM weights |
 | metadata | IMPLEMENTED/VERIFIED T10 | SQLAlchemy2.0.53 async + greenlet3.5.6, Psycopg, Alembic1.20.0; được include bởi api/ingestion |
-| inference | RESERVED/DESIGNED | Rỗng có chủ đích; T17 pin model runtime/revisions sau capability checks |
+| inference / inference-gpu | VERIFIED T17 | Separate mutually exclusive CPU/CUDA runtime; FlagEmbedding1.3.5/transformers4.57.6/torch2.9.1, not in API/ingestion groups |
 
 ### Typed settings đã triển khai
 
@@ -113,7 +114,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | --- | --- | --- |
 | Runtime | APP_ENV, LOG_LEVEL, API_BIND/API_PORT, request timeout đã typed; body limits còn DESIGNED | T01–T02 |
 | Metadata/broker | DATABASE_URL, REDIS_URL | T02/T10/T12 |
-| Vector/model | QDRANT_URL đã typed T02; API key, INFERENCE_URL, model IDs/revisions/device/batches còn DESIGNED | T02/T17–T18 |
+| Vector/model | QDRANT_URL typed T02; T17 MODEL_CACHE/MODEL_DEVICE riêng internal service, immutable pins + injected trusted client URL/fingerprint; vector key/index config T18 | T02/T17–T18 |
 | App identity | cấu hình app_id, service-key hash/reference, JWT issuer/audience/JWKS, algorithms | T09 |
 | Source storage | `STORAGE_CONFIG_FILE` trỏ JSON app/alias/endpoint/region/bucket/prefix và credential file read-only | T11 |
 | Providers | DEEPSEEK_API_KEY/MODEL, ANTHROPIC_API_KEY/MODEL; base URLs phía server | T23 |
@@ -838,7 +839,7 @@ Chọn basetemp mới mỗi lần. Operator setup tải HTTPS tokenizer JSON c�
 17,098,108bytes, runtime `tokenizers==0.22.2`. Local artifact và manifest nằm trong
 `.local/tokenizers/bge-m3/`, không commit. Existing corrupt file không bị overwrite;
 adapter kiểm hash/runtime rồi disable truncation/padding, không download khi ingest.
-Container mount/cache wiring và model weights/inference thuộc T17/T19.
+T17 model cache mount/weights/inference đã VERIFIED; chunker/ingestion worker wiring thuộc T19.
 
 ```python
 from rag_core.adapters.tokenizer import BgeM3Tokenizer
@@ -901,6 +902,108 @@ DB/API migration, không tự reindex retained data, không đổi session reten
 Partial extraction bị từ chối `partial_extraction`; output vượt100000chunks hoặc32Mi
 characters báo `chunk_output_limit`, không trả partial success. Khả năng hình/bảng phức
 tạp và corpus throughput/RAM/tuning chưa đo; chưa có calibrated retrieval quality.
+
+<a id="r09-t17"></a>
+### Shared model inference T17
+
+**VERIFIED real CPU/GPU weights và HTTP; [individual acceptance/resource evidence](docs/handoffs.md#h-t17-a01).**
+Service nội bộ có một Uvicorn process/one native executor; BGE-M3 và reranker load
+một lần khi startup, warmup cả hai trước ready. API/Celery chỉ inject
+`HttpModelInference(httpx.AsyncClient(base_url=trusted_url), expected_fingerprint)`.
+Không cần model dependency trong API/ingestion groups, không tạo FlagModels trong
+API workers. T21/T22/T19 sẽ nối callers đã resolve session scope; inference không
+search storage/index hoặc cấp quyền tài liệu, không có cache kết quả/text/history.
+
+Pins ở `configs/model-artifacts.json`, từ official HF metadata và immutable revisions:
+embedding `5617a9f61b028005a4858fdac845db406aefb181` (cùng tokenizer T16), reranker
+`953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e`. Manifest kiểm từng byte-size và SHA256
+LFS/Git-blobSHA1 config; tải4,588,661,382bytes gồm tokenizer và heads. Không dùng
+remote code/ColBERT output; FlagEmbedding vẫn yêu cầu colbert head artifact để load.
+Thiếu/corrupt/unexpected cache file là startup error. Setup giữ artifact có sẵn đã
+verified, mismatch dừng; không download ở request/startup và không silently đổi revision.
+Cache/weights không thuộc Git. Runtime lock: FlagEmbedding1.3.5, transformers4.57.6,
+tokenizers0.22.2, sentence-transformers5.1.2, peft0.17.1, torch2.9.1+cpu hoặc+cu128.
+Hai dependency groups CPU/GPU mutually exclusive; `inference-runtime` chỉ là nhóm
+include nội bộ, operator chọn `inference` hoặc `inference-gpu`.
+
+Host CPU gates từ repo root, fresh basetemp mỗi lần:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+uv sync --locked --group dev --group api --group ingestion --group inference
+uv run --no-sync python scripts/setup_models.py
+uv run --no-sync pytest tests/integration/test_model_inference.py -v -s --tb=short --basetemp=.local/t17-check
+uv run --no-sync pytest tests/unit/test_inference_scheduler.py tests/unit/test_model_client.py
+```
+
+Docker standard: dedicated named volume `rag-core_model_cache`, runtime mount read-only,
+non-root10001, init,7GiB memory/2CPU, no host port. `inference` profile không là dependency
+để health-only API khởi động. Operator có thể chạy setup trực tiếp vào volume mới:
+
+```powershell
+docker build --target inference -f docker/inference.Dockerfile -t rag-core-inference:t17-cpu .
+docker volume create rag-core_model_cache
+docker run --rm --user 0 --mount type=volume,source=rag-core_model_cache,target=/models rag-core-inference:t17-cpu python scripts/setup_models.py --cache /models
+docker compose --profile inference up -d --wait inference
+docker compose --profile inference ps inference
+docker compose exec inference python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8080/health/ready').read().decode())"
+```
+
+Explicit setup urllib download không bị offline HF env chặn; runtime Flag/Transformers
+offline. Local T17 acceptance seed volume từ cache host đã verified rồi chạy setup
+verify/reuse trong container; named volume không thay/xóa source hoặc existing DB volumes.
+`MODEL_CACHE=/models`, `MODEL_DEVICE=cpu|cuda:0` là env riêng của service; pins cố định
+ở `/app/configs/model-artifacts.json`. Trong network Compose, client URL
+`http://inference:8080`; public API không mount internal inference routes. Network backend
+là trust boundary; không publish internal inference cho browser/app bên ngoài.
+
+Real Docker acceptance và CPU smoke (service child + four independent HTTP clients):
+
+```powershell
+docker build --target inference-test -f docker/inference.Dockerfile -t rag-core-inference-test:t17-cpu .
+docker run --rm --init --network none --memory=7g --cpus=2 --mount type=volume,source=rag-core_model_cache,target=/models,readonly rag-core-inference-test:t17-cpu
+docker run --rm --init --network none --memory=7g --cpus=2 --mount type=volume,source=rag-core_model_cache,target=/models,readonly rag-core-inference-test:t17-cpu python scripts/smoke_inference.py --spawn
+```
+
+GPU host/container capability check trước smoke; nếu container không có CUDA capability
+thì ghi NOT_AVAILABLE cùng output thật, không coi GPU là PASS. Khi khả dụng:
+
+```powershell
+nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
+docker run --rm --gpus all python:3.12.13-slim-bookworm nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
+docker build --target inference-test --build-arg MODEL_GROUP=inference-gpu -f docker/inference.Dockerfile -t rag-core-inference-test:t17-gpu .
+docker run --rm --init --gpus all --network none --memory=7g --cpus=2 -e MODEL_DEVICE=cuda:0 --mount type=volume,source=rag-core_model_cache,target=/models,readonly rag-core-inference-test:t17-gpu python scripts/smoke_inference.py --spawn
+docker compose -f compose.yaml -f compose.gpu.yaml --profile inference up -d --build --wait inference
+```
+
+Override chọn locked CUDA12.8 wheel, cùng process/cache và FP16; không tự fallback CPU
+khi operator yêu cầu CUDA. Không chạy hai inference owners CPU/GPU đồng thời trong flow
+mặc định. Model/tokenizer/precision/device/runtime/policy vào fingerprint; client đối chiếu
+fingerprint đã lưu cùng index config, mismatch là `model_revision_mismatch`. Đổi fingerprint
+cần new collection/generation/reindex T18/T19, không đổi revision trong collection cũ.
+
+Transport: `POST /internal/infer/{uuid}` với operation `embed|rerank`, priority `query|index`,
+nonempty texts, optional query chỉ rerank, timeout_seconds>0<=120 (default60).
+`DELETE` cùng UUID cancel idempotent, không lưu tombstone/result. Response có fingerprint,
+embeddings gồm dense/sparse_indices/sparse_values (sorted unique token IDs, positive weights),
+hoặc raw finite scores đúng thứ tự input. Client tự tạo UUID; duplicate active UUID409.
+CPU2Torch threads/native batch2, model max32embedding texts hoặc20rerank pairs; mỗi text
+<=32768chars, actual token512embedding/768query-passage pair, tổng<=16384tokens. Queue32
+bao gồm running jobs, indexing<=24; query được chọn giữa batches, không preempt native call.
+Text không được truncate âm thầm. Timeout/cancel giữ slot native đến hết batch hiện tại,
+bỏ batch sau; không hứa kill kernel đang chạy. HTTP1MiB body, streamed-body deadline5s,
+Uvicorn concurrency64; overload429 hoặc framework concurrency503. Technical errors không
+thành `insufficient_evidence`, không provider/model fallback.
+
+Errors:429 `model_busy`;422 `invalid_model_request|model_token_limit`;409
+`model_cancelled|duplicate_inference_id`;504 `model_timeout`;503
+`model_failed|model_unavailable`;413 `model_body_limit`;408 `model_body_timeout`.
+Client bổ sung `model_invalid_response|model_revision_mismatch`. Validation/error chỉ code,
+không echo raw text/exception; access logs disabled. Ready chỉ operational metadata:
+PID, slots, runtime/fingerprint/device, load/warmup/startup seconds, RSS và GPU memory.
+Chẩn đoán cache bằng setup verifier; lỗi không sửa manifest cho pass. OOM giảm batch/queue
+trong cùng kiến trúc hoặc báo blocker, không spawn thêm model owners. Readiness/load số đo
+fixtures không phải benchmark15–20users/corpus/full-stack budget của T33.
 
 <a id="r10"></a>
 ## R10. UI quản trị
@@ -1025,7 +1128,7 @@ no automatic deletion or lock bypass. Network failures remain failures, never sy
 <a id="r12"></a>
 ## R12. Hiệu năng và observability
 
-**DESIGNED — T17/T25/T32–T33.**
+**T17 inference resource smoke VERIFIED; streaming/load/full-stack gates DESIGNED T25/T32–T33.**
 
 Target 15–20 virtual users; chưa có SLA latency. Một inference process, bounded queue, ingestion concurrency=1, query ưu tiên hơn indexing. API không load model mỗi worker.
 
@@ -1033,7 +1136,13 @@ Metrics: request/job stage timings, queue depth, active streams, admitted/reject
 
 Logs JSON có request/job ID nhưng không ghi raw prompts/docs/tokens/service keys/presigned signatures. `/metrics` được bảo vệ và không dùng user/query làm labels.
 
-Điền sau đo: CPU/GPU profiles, model revisions, batching/concurrency/timeouts, actual RAM/VRAM, latency/throughput/429/error rates, reference hardware, giới hạn được biết và cách nhận biết overload.
+T17 Docker2CPU/7GiB/network-none fixtures: CPU load23.58s/warmup1.50s/2texts embed0.504s/2pairs rerank0.434s,
+peak sampled model-process-tree RSS3.324GiB. GPU CUDA12.8/FP16 on RTX4060Laptop8188MiB/driver576.88:
+final smoke load26.78s/warmup8.53s/embed0.160s/rerank0.034s, startup peak RSS4.344GiB,
+Torch peak VRAM reserved2.148GiB; nvidia-smi total3782MiB includes other host GPU users.
+Actual final image/Compose smoke values and fingerprints are recorded in T17 evidence; these
+single tiny-fixture measurements are not corpus quality,20users,throughput,p95 or full-stack
+budget evidence. T33 remains required for target15–20users and Docker<=10GiB/VRAM<=7GiB.
 
 <a id="r13"></a>
 ## R13. Backup, restore và thay đổi index/schema

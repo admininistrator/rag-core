@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-03 / T17-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct agent/no subagents; resumed existing code/logs on main/T16 `9633cfcb872a89ccb1f472e6361c201e94d83588`, preserving inherited T07 scratch. Final real CPU8/GPU8, HTTP CPU/GPU smokes and both Compose profiles PASS; one inference owner/two fixed models, four clients samePID. Final21unit, full361regression,29real parser/source, Ruff/mypy55/lock169/OpenAPI/docs/scope/secrets PASS; source55 plus config/setup/test/smoke hashes equal in four images. Evidence [H-T17-A01](#h-t17-a01). Final exact27file stage/inspection, commit `feat(T17): add bounded multilingual model inference`, authorized origin/main push and remote equality are closure steps; actual hash returned after execution, no self-hash/amend. No T17 blocker; local synthetic resources are not full-stack SLA. Inference stopped after verification, cache retained. T18 dependencies T17/T10 ready after inspected completion; **STOP AFTER T17**, no merge/deploy.
+
 - **Current 2026-10-01 / T16-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, no subagents; baseline main/T15 `e1e348d45b7a83872c420f5b6f647551db21e751` equals origin/main. Pinned BGE-M3 tokenizer, structural512/64 chunks, source segments/table header-row groups/stable IDs/trusted profiles implemented. DoD-1 final17 actual-tokenizer PASS; DoD-2 final10 parser/source PASS; additional actual worker T15 OCR output mappings PASS. [T16 evidence](#h-t16-a01). Ruff/mypy45/native42/locked117/OpenAPI/docs/scope/secrets pass; full regression341PASS with shorter basetemp, initial10Windows long-path failures retained. Final review27tests PASS including header format metadata. README/RUNBOOK updated. Completion subject `feat(T16): chunk documents with stable source mappings`; actual hash/remote equality reported after commit/push, resolve by subject. Inherited T07 scratch preserved. No unresolved T16 blocker; T17 dependencies T16/T02 ready after closure. **STOP AFTER T16**.
 
 - **Current 2026-10-01 / T15-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, no subagents; baseline main/`cc6345dfb4b957a8f57d0ff6b3e9d31a016e606c` equals origin/main, inherited T07 scratch retained. CPU Docling/Tesseract vie+eng OCR/image runtime, provenance/quality/process bounds implemented; final DoD-1 actual20PASS and separate DoD-2 status13PASS in non-root Linux worker image, source SHA42/testSHA2 equal. Native42/regression325/Ruff/mypy42/locked112/OpenAPI/docs/scope/secrets pass. Full acceptance peak810.703MiB, status peak867.703MiB including21.6MP stress below25MP cap; fixture measurements, not full-stack budget. [T15 evidence](#h-t15-a01). Completion subject `feat(T15): support Vietnamese and English OCR`; actual hash/remote equality returned post-commit/push, resolve by subject. No T15 blocker; T16 dependencies ready after closure. **STOP AFTER T15**.
@@ -5989,3 +5991,498 @@ Staged scope before this append:13files/1791insertions/12deletions; source/corpu
 artifacts/scratch all excluded except the13 explicitly listed task files. Review outputs
 and final commit/push/hash equality are returned directly after execution. No amend,
 force push/merge/deploy. Final evidence-only append is restaged before commit.
+
+<a id="h-t17-a01"></a>
+## Phase 3 / T17 / T17-A01 — Shared model inference
+
+Direct Codex agent, exact runtime model/effort not exposed, no subagents; started2026-10-01
+(Asia/Bangkok). CWD for all commands below:
+`C:/Users/Admin/Documents/GitHub/rag-core`. Baseline main/`9633cfcb872a89ccb1f472e6361c201e94d83588`
+equals live origin/main; T16/T02 COMPLETE notes/interfaces/evidence read. Only inherited
+untracked `.ptmp-t07-a02/` and `.tmp-t07-a02/`, with historical inaccessible T07 scratch
+warnings, preserved. No prior T17 implementation. User authorizes scoped commit/push;
+no subagent/drain/merge/deploy/Scarlet edits or unrelated service mutation.
+
+### Environment, pins and actual failures
+
+Initial unprivileged `docker info --format '{{.OSType}} {{.MemTotal}}'` failed with
+`permission denied while trying to connect to the docker API at npipe:////./pipe/docker_engine`;
+initial `git ls-remote origin refs/heads/main` exit128 connection failed. Approved escalation
+ran the same read-only checks exit0:
+
+```text
+linux 8325890048
+9633cfcb872a89ccb1f472e6361c201e94d83588 refs/heads/main
+```
+
+Host and Docker GPU checks each exit0:
+`nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader`
+and `docker run --rm --gpus all python:3.12.13-slim-bookworm nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader`:
+
+```text
+NVIDIA GeForce RTX 4060 Laptop GPU, 8188 MiB, 576.88
+```
+
+Thus GPU capability AVAILABLE, GPU smoke required; NOT_AVAILABLE not used. First official
+PyPI metadata probe assumed FlagEmbedding wheel and exited1 `StopIteration`: upstream1.3.5
+is sdist-only. Corrected official sdist API inspection succeeded, no vendor source copied
+to repo; helper source only ignored `.local`. First Ruff failed3style findings; first mypy
+failed2missing list annotations; corrected, no test/gate change. Optional Windows OS memory
+CIM inspection denied access, no host total-RAM measurement claimed. Docker actual capacity
+above and process RSS used instead. Logs are local/ignored, no private source text/keys.
+
+`$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv lock *> .local/t17-lock.log`
+exit0, `Resolved 169 packages in 8.42s`. Lock has166unique package names/169entries including
+CPU/CUDA alternatives. Existing117packages retained except required compatibility downgrades
+`huggingface-hub1.33.0 ->0.36.2` (transformers4.57 requires<1) and `fsspec2026.9.0 ->2026.6.0`
+(datasets dependency). No other existing version changed. API/ingestion remain without
+Torch/FlagEmbedding model imports/runtime groups. Real parser/source/chunk regressions below.
+
+`$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv sync --locked --group dev --group api --group ingestion --group inference *> .local/t17-sync.log`
+exit0; actual CPython3.12.4 host, torch2.9.1+cpu, FlagEmbedding1.3.5, transformers4.57.6,
+tokenizers0.22.2, sentence-transformers5.1.2, peft0.17.1. GPU group mutually exclusive,
+locked2.9.1+cu128 from official PyTorch index. Python/uv Docker base digests unchanged.
+Immutable official HF API pins/checksums captured in `configs/model-artifacts.json`:
+embedding5617a9f61b028005a4858fdac845db406aefb181 (T16tokenizer unchanged),
+reranker953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e. URLs:
+[BGE-M3](https://huggingface.co/BAAI/bge-m3),
+[reranker](https://huggingface.co/BAAI/bge-reranker-v2-m3),
+[FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding).
+
+`.venv/Scripts/python.exe scripts/setup_models.py *> .local/t17-download.log` exit0;
+expected4,588,661,382total artifact bytes including tokenizer/config/heads, actual checksum/
+size verification PASS; exact real excerpt:
+
+```text
+DOWNLOADED embedding/pytorch_model.bin 2271145830B
+DOWNLOADED embedding/sparse_linear.pt 3516B
+DOWNLOADED embedding/colbert_linear.pt 2100674B
+DOWNLOADED reranker/model.safetensors 2271071852B
+MODEL CACHE VERIFIED
+```
+
+### DoD-1 actual CPU weights
+
+First command exit0 `.local/t17-real1.log`:
+`$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/integration/test_model_inference.py -v -s --tb=short --basetemp=.local/t17-real1 -o cache_dir=.local/t17-c1 *> .local/t17-real1.log`.
+Real final scheduler/token-ID provenance command exit0 `.local/t17-real2.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_NO_SYNC='1'; $env:PYTEST_ADDOPTS='--basetemp=.local/t17-real2 -o cache_dir=.local/t17-cr2'; uv run pytest tests/integration/test_model_inference.py -v -s --tb=short *> .local/t17-real2.log
+```
+
+```text
+REAL RERANK elapsed=17.469s raw_scores=(5.891203880310059, -11.034421920776367)
+test_actual_tokenizer_refuses_silent_truncation[embed] PASSED
+test_actual_tokenizer_refuses_silent_truncation[rerank] PASSED
+REAL CANCEL/TIMEOUT/RECOVERY PASS; shared native executor slots=1
+6 passed in 145.91s (0:02:25)
+```
+
+First6passed82.42s; second under concurrent Docker-build/regression contention, latency
+not advertised as isolated SLA. Both use actual offline weights, no skip/fake vectors.
+Dense1024/unit norm/finite vectors, sparse sorted unique positive weights with actual token
+IDs, EN/VI cross-language relevant cosine >distractor, two real raw rerank relevance checks,
+embed/pair token-limit rejection, native cancel/deadline/slot/recovery checked. Dedicated
+final Linux image gate and resource smoke append below.
+
+### D2 quality/regression and retained failure
+
+First full command exit1, `.local/t17-regression.log`:
+`$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/u17 -o cache_dir=.local/c17 *> .local/t17-regression.log`:
+
+```text
+FAILED tests/security/test_auth.py::test_service_key_and_app_binding_even_with_shared_jwks
+E rag_core.auth.AuthUnavailable
+1 failed, 354 passed in 286.66s (0:04:46)
+```
+
+Observed during concurrent real host model/build, inferred timing contention, not proven
+root cause. No auth code/threshold/test relaxed. Same failed test plus new19tests command
+exit0 `.local/t17-target3.log`:
+`$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/security/test_auth.py::test_service_key_and_app_binding_even_with_shared_jwks tests/unit/test_model_client.py tests/unit/test_inference_scheduler.py -q --tb=short --basetemp=.local/t17-target3 -o cache_dir=.local/t17-ct3 *> .local/t17-target3.log`:
+`20 passed in 2.92s`.
+
+Full final rerun exit0 `.local/t17-regression2.log`:
+`$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/v17 -o cache_dir=.local/d17 *> .local/t17-regression2.log`:
+`361 passed in 151.97s (0:02:31)`.
+
+Relevant real parsers/source mappings after shared-dependency changes exit0 `.local/t17-parsers.log`:
+`$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/integration/test_source_locators.py tests/integration/test_text_parsers.py -q --tb=short --basetemp=.local/t17-parsers -o cache_dir=.local/t17-cp *> .local/t17-parsers.log`:
+`29 passed in 39.59s`.
+
+Final current source checks each exit0: `uv run --no-sync ruff check .` →`All checks passed!`
+(inherited inaccessible scratch warnings); `uv run --no-sync mypy src` →
+`Success: no issues found in 55 source files`; `uv run --no-sync python scripts/export_openapi.py --check` →
+`PASS designed_operations=13 served_health_routes=2 synthetic_examples=37` /48schemas /
+`CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)`.
+`git diff --check` exit0/no whitespace error; expected Git CRLF→LF warnings for Python-written
+files. New19tests prove queue32/reserved query admission, query preemption between batches,
+single executor thread, running timeout slot ownership, queued cancellation, safe failure/
+recovery/duplicate/shutdown/bounds and HTTP client revision/result/error/cancel protocol.
+Synthetic unit transport is not real model/HTTP acceptance; DoD weights and smoke separate.
+
+### DoD-2 CPU Docker HTTP/resource smoke
+
+Final CPU test image build exit0, `.local/t17-build-cpu-final.log`:
+`docker build --target inference-test -f docker/inference.Dockerfile -t rag-core-inference-test:t17-cpu . *> .local/t17-build-cpu-final.log`.
+Actual image manifest `sha256:566b9caa5f3c28224f08ae67337453664f689347d4a70e6604ea8d0191886c16`,
+Python3.12.13, non-root10001, locked CPU group, no model files in image.
+Seed command created `rag-core_model_cache` then copied from bind-read-only workspace
+`.local/models` using Python3.12.13 helper in new empty volume, refusing nonempty target,
+exit0 `MODEL CACHE COPIED; verification remains required in runtime`. No source/other volume
+deleted. Runtime full cache checksum verified, model volume read-only.
+
+CPU command exit0, `.local/t17-cpu-smoke1.log`:
+
+```powershell
+docker run --rm --init --network none --memory=7g --cpus=2 --mount type=volume,source=rag-core_model_cache,target=/models,readonly rag-core-inference-test:t17-cpu python scripts/smoke_inference.py --spawn *> .local/t17-cpu-smoke1.log
+```
+
+Actual excerpt (ready JSON abbreviated to fields actually emitted):
+
+```text
+device=cpu pid=8 active_jobs=0 capacity=32 model_instances=2 inference_processes=1
+fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b
+load_seconds=28.59250352300296 warmup_seconds=2.3855132530006813 startup_seconds=30.97802516900265
+HTTP embed latency_seconds=0.363
+HTTP rerank latency_seconds=0.398
+FOUR_CLIENT_SHARED_PID [8, 8, 8, 8]
+FINAL_RESOURCES {"vram_allocated_bytes": 0, "vram_peak_reserved_bytes": 0}
+SMOKE PASS elapsed_seconds=34.946 peak_process_tree_rss_bytes=3572674560 final_rss_bytes=3572674560
+```
+
+Expected: actual HTTP vectors/raw relevant scores, four independent HTTP clients share PID,
+cancel then recovery/zero outstanding jobs, actual tokenizer limit422, validation does not
+echo input, >1MiB body413, finite operation outcome. Actual all PASS. Peak3.327GiB RSS
+is sampled50ms model process tree, not Docker cache/cgroup/full-stack10GiB/load20users gate.
+One CPU owner with two fixed models, native slot1/batch2; no per-client model copy.
+GPU smoke/final Compose/source-image/scope/docs/commit evidence follow below.
+
+### Final acceptance / resume 2026-10-03 — DoD-1 CPU and GPU
+
+Continued the same T17-A01 candidate/checkpoint, no code discarded, no new task/agent.
+CPU final image CMD (exact command in `docker/inference.Dockerfile`):
+
+```text
+uv run --no-sync pytest tests/integration/test_model_inference.py -v -s --tb=short --basetemp=/tmp/models -o cache_dir=/tmp/pytest-cache
+```
+
+Executed in final CPU test image, actual real offline model volume `/models` read-only,
+`MODEL_DEVICE=cpu`, Python3.12.13/Torch2.9.1+cpu/Flag1.3.5, memory7GiB/2CPU,
+network none; exit0 `.local/t17-dod1-cpu-final.log`:
+
+```text
+REAL FULL BUDGET embed tokens=512 elapsed=3.944s PASS
+REAL FULL BUDGET rerank tokens=768 elapsed=6.282s PASS
+REAL CANCEL/TIMEOUT/RECOVERY PASS; shared native executor slots=1
+REAL MODEL RESOURCES {'vram_allocated_bytes': 0, 'vram_peak_reserved_bytes': 0}
+8 passed in 76.88s (0:01:16)
+```
+
+Additional first full-budget fixture check exit1 `.local/t17-full-budget.log` retained:
+`AssertionError: assert 1019 == 512`, `assert 1528 == 768`, `2 failed, 6 deselected in 21.16s`.
+Incorrect assumption that repeating `hello ` gives linear token count was corrected by
+selecting fixture repetitions using actual pinned tokenizer lengths; exact512/768 and
+limit+1 refusal remain enforced. No production truncation/token limit/gold relaxed.
+Corrected host focused gate exit0 `.local/t17-full-budget2.log` `2 passed in 42.98s`;
+final Linux CPU8/GPU8 gates include both cases.
+
+GPU final command, exit0 `.local/t17-dod1-gpu-acceptance.log`:
+
+```powershell
+docker run --rm --network none --gpus all --memory 7g --cpus 2 -v rag-core_model_cache:/models:ro -e MODEL_CACHE=/models -e MODEL_DEVICE=cuda:0 rag-core-inference-test:t17-gpu uv run --no-sync pytest tests/integration/test_model_inference.py -v -s --tb=short --basetemp=/tmp/models -o cache_dir=/tmp/pytest-cache *> .local/t17-dod1-gpu-acceptance.log
+```
+
+```text
+REAL MODEL LOAD seconds=22.792 device=cuda:0
+runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cu128', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'}
+fingerprint=e48fa22cdf955a46390b9fb1aa33a947d1d327d86bbc3fde618a1b9eee99c6b1
+REAL EMBED elapsed=2.979s dense=1024 sparse_counts=[8, 9, 9] cross_language=0.7212 distractor=0.3706
+REAL RERANK elapsed=3.622s raw_scores=(4.15234375, -11.03125)
+REAL RERANK elapsed=0.041s raw_scores=(5.88671875, -11.03125)
+REAL FULL BUDGET embed tokens=512 elapsed=0.053s PASS
+REAL FULL BUDGET rerank tokens=768 elapsed=0.061s PASS
+REAL CANCEL/TIMEOUT/RECOVERY PASS; shared native executor slots=1
+REAL MODEL RESOURCES {'vram_allocated_bytes': 2292524032, 'vram_peak_reserved_bytes': 2334130176}
+8 passed in 30.23s
+```
+
+Expected dense1024/unit norm/finite values, sparse actual token IDs/positive weights,
+EN/VI relevant>irrelevant, raw rerank ordering, no silent truncation, actual native
+cancel/timeout/slot/recovery and configured budgets. Actual all PASS, no fake/skip.
+
+Resume initially found previous `.local/t17-dod1-gpu-final.log` empty; no success claimed.
+One newly launched invocation accidentally used `RAG_MODEL_CACHE`/`RAG_INFERENCE_DEVICE`
+instead of the implemented `MODEL_CACHE`/`MODEL_DEVICE`:
+
+```powershell
+docker run --rm --network none --gpus all --memory 7g --cpus 2 -v rag-core_model_cache:/models:ro -e RAG_MODEL_CACHE=/models -e RAG_INFERENCE_DEVICE=cuda:0 -e UV_NO_SYNC=1 rag-core-inference-test:t17-gpu python -m pytest -q -s tests/integration/test_model_inference.py *> .local/t17-dod1-gpu-final.log
+```
+
+Default CPU confirmed with `docker exec suspicious_kalam printenv MODEL_DEVICE` →`cpu`.
+Stopped only this owned T17 container via `docker stop --time 10 suspicious_kalam`
+exit0 `suspicious_kalam`; test exit137 from explicit stop, log retained, not GPU PASS.
+Correct invocation above is the GPU acceptance. Docker startup was slow after resume;
+no Docker daemon restart, prune or unrelated container/volume mutation performed.
+Automatic approval review rejected a proposed full-container-environment print due to
+possible credential exposure; no environment printed. Safer single `MODEL_DEVICE`
+inspection succeeded. A Go-template attempt to select that one variable failed1
+`template parsing error: ... bad character U+003D '='`; corrected with `printenv MODEL_DEVICE`.
+No blocked approval remains.
+
+### Final DoD-2 CPU/GPU HTTP, resources and shared ownership
+
+CPU final smoke command exit0 `.local/t17-cpu-smoke-close.log`:
+
+```powershell
+docker run --rm --init --network none --memory=7g --cpus=2 --mount type=volume,source=rag-core_model_cache,target=/models,readonly rag-core-inference-test:t17-cpu python scripts/smoke_inference.py --spawn *> .local/t17-cpu-smoke-close.log
+```
+
+Actual ready fields and output:
+
+```text
+device=cpu pid=8 active_jobs=0 capacity=32 model_instances=2 inference_processes=1
+fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b
+load_seconds=23.5780972270004 warmup_seconds=1.4956517460013856 startup_seconds=25.073754554003244
+HTTP embed latency_seconds=0.504
+HTTP rerank latency_seconds=0.434
+FOUR_CLIENT_SHARED_PID [8, 8, 8, 8]
+FINAL_RESOURCES {"vram_allocated_bytes": 0, "vram_peak_reserved_bytes": 0}
+SMOKE PASS elapsed_seconds=28.850 peak_process_tree_rss_bytes=3568619520 final_rss_bytes=3569012736
+```
+
+Peak is model-process-tree RSS sampled50ms; final RSS may exceed sampled peak slightly.
+GPU final smoke command exit0 `.local/t17-gpu-smoke-close.log`:
+
+```powershell
+docker run --rm --init --gpus all --network none --memory=7g --cpus=2 -e MODEL_DEVICE=cuda:0 --mount type=volume,source=rag-core_model_cache,target=/models,readonly rag-core-inference-test:t17-gpu python scripts/smoke_inference.py --spawn *> .local/t17-gpu-smoke-close.log
+```
+
+```text
+device=cuda:0 pid=8 active_jobs=0 capacity=32 model_instances=2 inference_processes=1
+fingerprint=e48fa22cdf955a46390b9fb1aa33a947d1d327d86bbc3fde618a1b9eee99c6b1
+load_seconds=26.77680169999985 warmup_seconds=8.533143319999908 startup_seconds=35.310270283000136
+HTTP embed latency_seconds=0.160
+HTTP rerank latency_seconds=0.034
+FOUR_CLIENT_SHARED_PID [8, 8, 8, 8]
+GPU_VRAM_USED_MIB 3782 CUDA 12.8
+FINAL_RESOURCES {"vram_allocated_bytes": 2282955776, "vram_peak_reserved_bytes": 2306867200}
+SMOKE PASS elapsed_seconds=43.789 peak_process_tree_rss_bytes=4664487936 final_rss_bytes=1922301952
+```
+
+Expected/actual PASS: real HTTP2text embedding/2pair raw rerank, four independent clients
+same model PID, remote cancel/recovery/zero outstanding jobs, overlimit422, sanitized422
+without caller text and body413. Both model revisions/cache verified on every startup;
+CPU/GPU fingerprints differ deliberately for precision/runtime/device. No model copy per
+client/API worker. Native slot1/model batch2; priority/reserved queue behavior separately
+verified by scheduler tests. GPU peak reserved2.148GiB; nvidia-smi total3.693GiB includes
+other host GPU users. Synthetic tiny-fixture latency/resources are not full-stack/corpus/
+20user/p95/SLA evidence. Native kernels only cooperatively cancel between batches.
+
+### Compose/profile and exact image proof
+
+Each configuration check exit0/no output:
+
+```powershell
+docker compose --profile inference config --quiet
+docker compose -f compose.yaml -f compose.gpu.yaml --profile inference config --quiet
+```
+
+CPU up command exit0 `.local/t17-compose-cpu.log`:
+`docker compose --profile inference up -d --no-build --wait --wait-timeout 180 inference`.
+Actual `rag-core-inference-1` healthy, no host port; readyPID7/CPU fingerprint above,
+load23.181791537994286/warmup3.7952118709945353/startup26.97701052499906,
+RSS3562618880B. Inspect actual
+`10001:10001 | {} | 7516192768 | 2000000000 | rag-core_model_cache RW=false`.
+`docker compose --profile inference stop inference` exit0. CPU then GPU, no dual owners.
+
+GPU up command exit0 `.local/t17-compose-gpu.log`:
+
+```powershell
+docker compose -f compose.yaml -f compose.gpu.yaml --profile inference up -d --no-build --wait --wait-timeout 180 inference *> .local/t17-compose-gpu.log
+docker compose -f compose.yaml -f compose.gpu.yaml --profile inference ps inference
+docker compose -f compose.yaml -f compose.gpu.yaml exec -T inference python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8080/health/ready').read().decode())"
+docker inspect rag-core-inference-1 --format '{{.Config.User}} | {{json .HostConfig.PortBindings}} | {{.HostConfig.Memory}} | {{.HostConfig.NanoCpus}} | {{json .HostConfig.DeviceRequests}} | {{range .Mounts}}{{.Name}} RW={{.RW}}{{end}}'
+docker compose -f compose.yaml -f compose.gpu.yaml --profile inference stop inference
+```
+
+All exit0; actual output excerpts, ready metadata fields abbreviated:
+
+```text
+Container rag-core-inference-1 Healthy
+rag-core-inference-1 rag-core-inference:t17-gpu inference Up About a minute (healthy) PORTS=<empty>
+status=ready pid=7 model_instances=2 inference_processes=1 active_jobs=0 capacity=32 device=cuda:0
+fingerprint=e48fa22cdf955a46390b9fb1aa33a947d1d327d86bbc3fde618a1b9eee99c6b1
+startup_seconds=30.246293197999876 load_seconds=23.01318720800009 warmup_seconds=7.23309678700025
+resources={"vram_allocated_bytes":2282955776,"vram_peak_reserved_bytes":2306867200} rss_bytes=2806624256
+10001:10001 | {} | 7516192768 | 2000000000 | [{"Capabilities":[["gpu"]],"Count":1,"DeviceIDs":null,"Driver":"nvidia","Options":null}] | rag-core_model_cache RW=false
+Container rag-core-inference-1 Stopped
+```
+
+Compose warning retained: `volume "rag-core_model_cache" already exists but was not created
+by Docker Compose. Use external: true to use an existing volume`. Acceptance manually
+seeded this named volume once with verified host artifacts; missing Compose creation labels
+does not change the mounted read-only volume. No volume deleted/recreated to suppress it.
+Other services/Scarlet untouched, no server deployment.
+
+Four final image IDs inspected/actually executed:
+
+| Image | Manifest SHA-256 |
+| --- | --- |
+| rag-core-inference-test:t17-cpu | 644e23e5e27c4ec917fa106a785561e19fa621828990f8928c7ee7c579920317 |
+| rag-core-inference:t17-cpu | 4b79b3c9e877d07eebef37c0d1e580f3a23708dad0e4380cfdba4f877cd6e2ac |
+| rag-core-inference-test:t17-gpu | 8090758b3c63188644a9daaaaf0a5b0f6b66a671e2bc712b6a357a42f4b48856 |
+| rag-core-inference:t17-gpu | 633de2ab095ea01199ad01152cc4a69e0e5b641812aca38e35e54e632b1ece59 |
+
+GPU build logs `.local/t17-accept-gpu-build.log` / `.local/t17-gpu-runtime-build.log`
+end at unpacking after manifest/tag publication; session transition lost final build exit.
+Do not infer build exit0 from truncated logs. Final tag availability is proven by actual
+GPU8tests/HTTP smoke/runtime Compose startup and content-hash comparison, no stale source.
+CPU final build logs `.local/t17-accept-cpu-build.log` and runtime image verified likewise.
+
+D5 current command exit0 `.local/t17-review-close.log`:
+`$env:PYTHONIOENCODING='utf-8'; .venv/Scripts/python.exe .local/t17-review.py`.
+Helper compares every55installed Python source against workspace SHA-256 in all four
+offline containers; compares config/setup plus tests/smoke in test images; UTF-8/size/
+27path scope/new private-key markers/local exact-secret-value checks without printing secrets.
+
+```text
+SOURCE_IMAGE_SHA256_EQUAL rag-core-inference-test:t17-cpu 55 Python files
+CONFIG_SETUP_TEST_SMOKE_SHA256_EQUAL rag-core-inference-test:t17-cpu 4 files
+SOURCE_IMAGE_SHA256_EQUAL rag-core-inference:t17-cpu 55 Python files
+CONFIG_SETUP_TEST_SMOKE_SHA256_EQUAL rag-core-inference:t17-cpu 2 files
+SOURCE_IMAGE_SHA256_EQUAL rag-core-inference-test:t17-gpu 55 Python files
+CONFIG_SETUP_TEST_SMOKE_SHA256_EQUAL rag-core-inference-test:t17-gpu 4 files
+SOURCE_IMAGE_SHA256_EQUAL rag-core-inference:t17-gpu 55 Python files
+CONFIG_SETUP_TEST_SMOKE_SHA256_EQUAL rag-core-inference:t17-gpu 2 files
+PASS exact27files UTF8/size/no private-key markers/local secret values; models/cache/logs absent
+```
+
+Existing historical key-marker quotations are compared with HEAD counts, not deleted;
+no new marker or exact local credential value found. Model weights/cache/logs/corpus/
+scratch are ignored and not task candidates. No public API/DB schema migration; next
+T18/T19 must use model fingerprint as index revision/new generation, never silent overwrite.
+Internal callers must authorize current-session scope before supplying model text.
+
+### Final D1–D6 closure
+
+D1 PASS: read dependency notes and plan, preserved baseline scratch, reviewed exact27paths,
+`git diff --check` exit0. No prompt/AGENTS/plan/Scarlet/history rewrite.
+D2 PASS: full361regression and29real parser/source tests above; final21scheduler/client
+cases include malformed non-dict/non-string remote errors. Final Ruff/mypy commands each
+exit0 `.local/t17-ruff-close.log` / `.local/t17-mypy-close.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync ruff check . *> .local/t17-ruff-close.log
+uv run --no-sync mypy src *> .local/t17-mypy-close.log
+uv lock --check --offline
+uv run --no-sync python scripts/export_openapi.py --check
+```
+
+```text
+All checks passed!
+Success: no issues found in 55 source files
+Resolved 169 packages in 45ms
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+Ruff has inherited inaccessible scratch warnings. An ignored helper edit initially failed
+Python quoting (`SyntaxError: unexpected character after line continuation character`),
+corrected via direct file patch; source/test/gates unaffected. Optional isolated uv dry-run
+failed a user-level Python lock permission; actual locked sync and offline lock check PASS,
+no runtime/package change based on the diagnostic failure.
+D3 PASS: separate real CPU/GPU DoD-1 and CPU/GPU HTTP/resource DoD-2 above.
+D4: README/RUNBOOK/task/handoffs/summary updated, docs validator output appended at staging.
+D5 PASS: manual code/tests/transport/scheduler/cache/lock/Compose review and exact hashes/
+secrets checks above. Safe internal errors/no text cache or unscoped retrieval path;
+compatible HF/fsspec changes covered by real source regressions.
+D6: explicit27task paths staging/cached inspection, completion commit
+`feat(T17): add bounded multilingual model inference`, actual hash/commit paths/push/remote
+equality reported after execution. COMPLETE only with successful inspected commit; if
+commit fails task must remain unfinished. No self-hash/amend/force/merge/deploy.
+No unresolved T17 blocker. T18 T17/T10 dependencies ready after inspected commit, T18 TODO;
+**STOP AFTER T17**. Model/cache named volume retained, inference stopped.
+
+### D4/D6 final documentation and stage boundary
+
+Final focused unit command exit0 `.local/t17-closure-unit.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/unit/test_inference_scheduler.py tests/unit/test_model_client.py -q --tb=short --basetemp=.local/t17-closure-unit -o cache_dir=.local/t17-closure-cache *> .local/t17-closure-unit.log
+```
+
+Actual `21 passed in 0.40s`. No changed old test/gold/auth semantics.
+First final docs invocation omitted the repository UV_CACHE_DIR and failed user cache
+permission: `failed to open file ... uv/cache/sdists-v9/.git: Access is denied. (os error 5)`.
+Correct cache setting, same docs validator command, exit0 `.local/t17-docs-close.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python scripts/check_docs.py *> .local/t17-docs-close.log
+```
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 314
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Exact27paths staged with structured argv (no wildcard); initial index must be empty.
+Command: `.venv/Scripts/python.exe .local/t17-stage.py`. It runs
+`git add -- <the27 explicit task paths>` and `git diff --cached --check`, verifies cached
+path set equals the documented task set, then compares Git-filtered worktree object IDs
+with each index blob (`git hash-object --path <path> <path>` vs `git rev-parse :<path>`).
+Expected Git CRLF-to-LF warnings are not missing source; filters applied to comparison.
+Actual scope/hash/whitespace results are reported before completion commit and actual
+commit/push/hash verification after execution; no fabricated self-referential hash.
+
+Completion task paths:
+
+```text
+README.md
+RUNBOOK.md
+docs/tasks.md
+docs/handoffs.md
+docs/implementation-summary.md
+compose.yaml
+compose.gpu.yaml
+configs/model-artifacts.json
+docker/inference.Dockerfile
+docker/inference.Dockerfile.dockerignore
+pyproject.toml
+uv.lock
+scripts/setup_models.py
+scripts/smoke_inference.py
+src/rag_core/adapters/models/__init__.py
+src/rag_core/adapters/models/artifacts.py
+src/rag_core/adapters/models/flag.py
+src/rag_core/adapters/models/http.py
+src/rag_core/domain/models.py
+src/rag_core/ports/models.py
+src/rag_core/inference/__init__.py
+src/rag_core/inference/__main__.py
+src/rag_core/inference/app.py
+src/rag_core/inference/scheduler.py
+tests/integration/test_model_inference.py
+tests/unit/test_inference_scheduler.py
+tests/unit/test_model_client.py
+```
+
+Final stage helper exit0 `.local/t17-stage.log`, actual output:
+
+```text
+27 files changed, 2896 insertions(+), 47 deletions(-)
+PASS staged exact27 task paths / Git-filtered worktree=index / cached whitespace
+```
+
+After staging, `uv run --no-sync python scripts/check_docs.py` with workspace UV_CACHE_DIR
+exit0, actual14files/314links/37tasks/81edges/acyclic PASS; `git diff --cached --check`
+exit0/no output and `git diff --name-only` exit0/empty. Final source/image/secrets helper
+same command exit0 `.local/t17-review-final.log`, all four source55/config/setup/test/smoke
+hash comparisons and exact27scope/no new credential markers/local secret values PASS.
+This evidence-only append is restaged and Git-filtered hashes/cached whitespace rechecked
+before the completion commit. Actual commit/remote hashes returned post-commit; historical
+scratch/cache/weights/logs remain outside staged scope. No unresolved T17 blocker.

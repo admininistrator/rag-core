@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **Trạng thái: T01–T16 IMPLEMENTED/VERIFIED local.** T16 thêm chunking cấu trúc 512/64 bằng tokenizer BGE-M3 thật, nhóm hàng bảng/header/đơn vị và ánh xạ nguồn ổn định. T15 CPU Tesseract EN/VI qua Docling trong worker image đã kiểm scan/mixed PDF và PNG/JPEG. T14 thêm XLSX/CSV/PPTX; T13 native text/provenance. T12 registration/outbox đã kiểm trên PostgreSQL/Redis/MinIO; ingestion jobs vẫn queued đến T19. Compose chạy PostgreSQL 17, Qdrant, Redis và API health skeleton; profile `local-storage` thêm MinIO, `registration` thêm dispatcher. Default có 100 QA/986 documents; Document có 150 QA/84 PDF; Bilingual có 240 paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion orchestration, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T17–T36 còn trong backlog.
+> **Trạng thái: T01–T17 IMPLEMENTED/VERIFIED local.** T17 thêm một inference service dùng chung BGE-M3 dense/sparse và reranker EN/VI, CPU/GPU Docker smoke thật. T16 có chunking512/64/source maps; T15 CPU OCR EN/VI; T13–T14 native/Office parsers. T12 registration/outbox đã kiểm PostgreSQL/Redis/MinIO, jobs vẫn queued đến T19. Compose có PostgreSQL17/Qdrant/Redis/API health, profiles `local-storage`, `registration`, `inference`. Corpus Default100QA/986documents, Document150QA/84PDF, Bilingual240paragraphs mỗi ngôn ngữ và bốn XQuAD slices. Business HTTP API, ingestion orchestration, retrieval, LLM, SSE runtime và admin UI chưa hoạt động. T18–T36 còn trong backlog; status COMPLETE requires the inspected T17 completion commit.
 
 ## Phạm vi đã chốt
 
@@ -18,9 +18,9 @@ RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp tr
 
 ## Kiến trúc hiện tại và dự kiến
 
-T02 đã có Python 3.12/FastAPI health skeleton, PostgreSQL 17, Qdrant, Redis và MinIO tùy chọn trong Docker Compose trên Windows. T12 thêm outbox dispatcher qua Celery/Redis trong profile `registration`; T13 thêm registry với Docling native PDF và các text adapters. Worker nhận và xử lý task, Tesseract OCR, BGE-M3 + multilingual reranker, DeepSeek/Anthropic adapters và Admin UI Jinja2/CSS/JavaScript vẫn là thiết kế cho task sau. Compose chưa khai báo worker/inference.
+T02 có Python3.12/FastAPI health skeleton, PostgreSQL17/Qdrant/Redis và MinIO tùy chọn. T12 thêm dispatcher; T13–T16 có native/Office/OCR parsers và chunking. T17 thêm dedicated inference process dùng BGE-M3 + multilingual reranker qua CPU hoặc GPU override. Worker orchestration, retrieval/generation và Admin UI vẫn thuộc các task sau; Compose chưa có ingestion worker.
 
-Máy mục tiêu: RAM 16 GB, RTX 4060 Laptop 8 GB VRAM; tài liệu nguồn khoảng <=1 GB; kiểm thử 15–20 người dùng đồng thời. Chưa có số đo RAM/VRAM/độ trễ hoặc benchmark chất lượng.
+Máy mục tiêu: RAM16GB, RTX4060Laptop8GB, nguồn<=1GB và15–20users. T17 đã đo inference trên synthetic fixtures, xem RUNBOOK/evidence; chưa có benchmark chất lượng/tải/full-stack budget.
 
 ## Prerequisites, quality và local Docker
 
@@ -36,7 +36,7 @@ uv run python scripts/export_openapi.py --check
 uv run python scripts/check_docs.py
 ```
 
-Trong sandbox hoặc máy không ghi được cache uv của user, đặt `UV_CACHE_DIR` và `UV_PYTHON_INSTALL_DIR` vào `.uv-cache`/`.uv-python` trong repository trước khi chạy; hai thư mục đã được ignore. `uv sync` tạo `.venv` từ lock. Nhóm `api` đã IMPLEMENTED cho health skeleton và bao gồm nhóm `metadata` từ T10 (SQLAlchemy async, Psycopg, Alembic); nhóm `ingestion` bao gồm metadata nhưng worker vẫn DESIGNED. Nhóm `inference` để trống đến T17.
+Trong sandbox hoặc máy không ghi được cache user, đặt `UV_CACHE_DIR` và `UV_PYTHON_INSTALL_DIR` vào `.uv-cache`/`.uv-python` trong repo (ignored). `uv sync` tạo `.venv` từ lock. API/ingestion include metadata nhưng không include model runtime; chọn thêm group `inference` cho CPU hoặc `inference-gpu` cho CUDA. Ingestion orchestration vẫn DESIGNED.
 
 Typed settings đọc environment hoặc `.env`: `DATABASE_URL`, `REDIS_URL` và `QDRANT_URL` là bắt buộc; `DATABASE_PASSWORD_FILE` cho phép API đọc Docker secret tách khỏi DSN. Biến rỗng trong example được bỏ qua, DSN/credential không xuất hiện trong repr hoặc traceback chuẩn hóa. Bảng đầy đủ nằm ở [RUNBOOK R02](RUNBOOK.md#r02).
 
@@ -250,7 +250,28 @@ là lỗi. `StructuralChunker` nhận parsed source/generation và trusted profi
 không biến separators/metadata thành citation. Quyền resolver/session vẫn ở T24.
 [RUNBOOK T16](RUNBOOK.md#r09-t16) nêu API nội bộ, fingerprint/reindex và lỗi;
 [evidence](docs/handoffs.md#h-t16-a01) ghi từng DoD và OCR thật bổ sung.
-T17 embedding/reranker và T19 ingestion/publication vẫn DESIGNED.
+T19 ingestion/publication vẫn DESIGNED.
+
+## Shared inference T17
+
+**VERIFIED trên real weights và Docker CPU/GPU; [evidence T17](docs/handoffs.md#h-t17-a01).**
+Một process nội bộ dùng chung BGE-M3 dense1024+sparse và reranker-v2-m3; API/Celery
+chỉ dùng async HTTP client, không load weights. CPU FP32 mặc định, CUDA12.8/FP16 qua
+override. Cache tải rõ ràng, checksum/revision pin; runtime offline, cache read-only.
+
+```powershell
+uv sync --locked --group dev --group api --group ingestion --group inference
+uv run --no-sync python scripts/setup_models.py
+uv run --no-sync pytest tests/integration/test_model_inference.py -v -s --tb=short --basetemp=.local/t17-check
+docker build --target inference-test -f docker/inference.Dockerfile -t rag-core-inference-test:t17-cpu .
+```
+
+Queue32 jobs, tối đa24 indexing để chừa query; batch2 và query được ưu tiên giữa
+các batch. Embed tối đa32 texts/512tokens mỗi text, rerank20pairs/768tokens mỗi pair;
+quá giới hạn báo lỗi, không truncate âm thầm. Cancel/deadline bỏ queue và các batch
+chưa chạy, giữ native slot đến hết batch hiện tại. Raw rerank score không là xác suất
+answer đúng. [RUNBOOK T17](RUNBOOK.md#r09-t17) có named volume, CPU/GPU smoke,
+startup/latency/RAM/VRAM, errors và fingerprint/reindex. Chưa có retrieval/public query API.
 
 ## Corpus T04–T08: setup và tái tạo
 
@@ -311,7 +332,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T13 VERIFIED text parsers:** PDF native text, DOCX, TXT/MD/HTML EN/VI; provenance và process/MIME/size/archive/time/cleanup gates.
 - **T14 VERIFIED Office tables:** XLSX sheet/cells/formula cache, CSV records và PPTX slide/shape; common headers/units và archive bounds.
 - **T15 VERIFIED OCR:** Docker CPU Tesseract vie/eng + Docling stage, page/image provenance, quality/error/cancel/process bounds; 20 full + 13 separate status checks thật.
-- **T17–T19:** model setup, index và ingestion commands; chunking T16 đã kiểm độc lập.
+- **T17 VERIFIED:** shared inference/offline model setup, CPU/GPU real smoke, batching/queue/query priority/cancel and resource measurements.
+- **T18–T19:** scoped index và ingestion orchestration commands.
 - **T20–T26:** query JSON/SSE, history, citations, provider configuration và live smoke.
 - **T27–T29:** admin URL/login, UI workflows.
 - **T30–T34:** benchmark reports, performance, reliability, backup/restore.
