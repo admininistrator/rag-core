@@ -28,6 +28,8 @@ class StorageLocation(BaseModel):
     access_key_file: Path = Field(repr=False)
     secret_key_file: Path = Field(repr=False)
     allow_loopback_http: bool = False
+    # Exact local Compose service name only; never an arbitrary internal hostname.
+    allow_compose_http: bool = False
     max_bytes: int = Field(default=100 * 1024 * 1024, gt=0, le=1024 * 1024 * 1024)
     timeout_seconds: int = Field(default=10, ge=1, le=60)
 
@@ -35,6 +37,7 @@ class StorageLocation(BaseModel):
     def validate_location(self) -> Self:
         url = urlsplit(self.endpoint)
         local = self.allow_loopback_http and url.hostname in {"127.0.0.1", "::1"}
+        local = local or (self.allow_compose_http and url.hostname == "minio" and url.port == 9000)
         if (
             not url.hostname
             or (url.scheme != "https" and not (url.scheme == "http" and local))
@@ -84,7 +87,8 @@ def load_storage_registry(path: Path, *, production: bool = False) -> StorageReg
         if path.stat().st_size > 262144:
             raise ValueError("oversized registry")
         registry = StorageRegistry.model_validate_json(path.read_bytes())
-        if production and any(location.allow_loopback_http for location in registry.locations):
+        if production and any(location.allow_loopback_http or location.allow_compose_http
+                              for location in registry.locations):
             raise ValueError("development transport in production")
         return registry
     except (OSError, ValueError, ValidationError):

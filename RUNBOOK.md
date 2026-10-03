@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T18 IMPLEMENTED/VERIFIED local.** T18 scoped Qdrant repository đã kiểm PG/Qdrant thật; corpus/auth/metadata/storage/registration/parsers/OCR/chunking và T17 shared inference CPU/GPU đã kiểm. API chỉ mount health; business HTTP/query/SSE, retrieval pipeline và ingestion orchestration vẫn DESIGNED. T19–T36 chưa bắt đầu. Task COMPLETE requires inspected completion commit.
+> **T01–T19 VERIFIED local.** T19 durable ingestion/publication nối services/models thật; API chỉ mount health, HTTP/query/LLM/SSE/admin thuộc T20–T36. [Evidence T19](docs/handoffs.md#h-t19-a01).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -21,15 +21,15 @@
 | Corpus | Ba domain và all-domain clean reproduction VERIFIED local | T04–T08 |
 | Service identity/JWT/JWKS/local issuer | VERIFIED local HTTP; protected endpoint chỉ trong tests | T09 |
 | Session/schema/scope repository | VERIFIED real PostgreSQL; HTTP routes chưa mount | T10 |
-| S3/MinIO read adapter | VERIFIED real local MinIO; chưa nối HTTP/job | T11 |
-| Upload registration, job repository/outbox | VERIFIED real PG/MinIO/Redis; HTTP chưa mount, worker chưa có | T12 |
-| PDF text/DOCX/TXT/MD/HTML parsers | VERIFIED real native parsers trên fixtures EN/VI; chưa nối worker | T13 |
-| XLSX/CSV/PPTX tables | VERIFIED real parsers, locators/header/unit/formula cache và archive safety; chưa nối worker | T14 |
+| S3/MinIO read adapter | VERIFIED real local MinIO; đã nối worker T19; HTTP chưa mount | T11 |
+| Upload registration, job repository/outbox | VERIFIED real PG/MinIO/Redis; HTTP chưa mount; worker T19 đã VERIFIED | T12 |
+| PDF text/DOCX/TXT/MD/HTML parsers | VERIFIED real native parsers trên fixtures EN/VI; đã nối worker T19 | T13 |
+| XLSX/CSV/PPTX tables | VERIFIED real parsers, locators/header/unit/formula cache và archive safety; đã nối worker T19 | T14 |
 | OCR scan/mixed PDF, PNG/JPEG | VERIFIED worker image, engine thật EN/VI + locator/status/limits/cancel | T15 |
 | Structural chunks/source maps | VERIFIED real tokenizer + parser fixtures trên host, actual worker OCR output mapped | T16 |
 | Shared embedding/reranker service | VERIFIED real CPU/GPU weights/HTTP, queue/limits/cancel and resource smoke | T17 |
-| Scoped Qdrant repository | VERIFIED real PG/Qdrant; chưa nối public query/worker | T18 |
-| Index ingestion orchestration/publication | DESIGNED | T19 |
+| Scoped Qdrant repository | VERIFIED real PG/Qdrant; chưa nối public query; worker T19 đã VERIFIED | T18 |
+| Index ingestion orchestration/publication | VERIFIED real MinIO/PG/Redis/Qdrant/CPU model/OCR; evidence ở dưới | T19 |
 | Query/domains/LLM/SSE | DESIGNED | T20–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
@@ -89,7 +89,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | base | IMPLEMENTED/VERIFIED | Pydantic v2 + pydantic-settings cho typed config |
 | dev | IMPLEMENTED/VERIFIED | Ruff, mypy, pytest, pytest-asyncio; jsonschema 4.26.0 từ T03 để validate exported schemas/examples, không vào API image |
 | api | IMPLEMENTED/VERIFIED T02 | FastAPI, HTTPX, Uvicorn, psycopg, Redis client; health-only API process, không có business routes |
-| ingestion | T11–T15 VERIFIED adapters/OCR worker runtime; orchestration T19 DESIGNED | Metadata, boto3, Celery, Qdrant/Redis; Docling Parse7.22.1/slim2.132.0 convert-core, pandas3.0.6, PDFium5.13.0, Office/native parsers; CPU OCR image có Tesseract5.3.0 + eng/vie/osd, không Torch/layout/VLM weights |
+| ingestion | T11–T15 VERIFIED adapters/OCR worker runtime; orchestration T19 VERIFIED | Metadata, boto3, Celery, Qdrant/Redis; Docling Parse7.22.1/slim2.132.0 convert-core, pandas3.0.6, PDFium5.13.0, Office/native parsers; CPU OCR image có Tesseract5.3.0 + eng/vie/osd, không Torch/layout/VLM weights |
 | metadata | IMPLEMENTED/VERIFIED T10 | SQLAlchemy2.0.53 async + greenlet3.5.6, Psycopg, Alembic1.20.0; được include bởi api/ingestion |
 | inference / inference-gpu | VERIFIED T17 | Separate mutually exclusive CPU/CUDA runtime; FlagEmbedding1.3.5/transformers4.57.6/torch2.9.1, not in API/ingestion groups |
 
@@ -130,7 +130,7 @@ Các lệnh sau đã chạy thật từ root repository. Script bootstrap tạo 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap_local.ps1
 docker compose config --quiet
-docker compose --profile local-storage up -d --build
+docker compose --profile local-storage up -d --build postgres qdrant redis api minio minio-bootstrap
 docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
 docker compose --profile local-storage ps --all
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps1
@@ -150,14 +150,14 @@ Stop/start giữ nguyên named volumes và fixtures:
 
 ```powershell
 docker compose --profile local-storage stop
-docker compose --profile local-storage up -d
+docker compose --profile local-storage up -d postgres qdrant redis api minio minio-bootstrap
 docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps1
 ```
 
 Không dùng `docker compose down -v` trong flow mặc định. Không commit `.local/`, `.env`, key hoặc database files. MinIO/MC dùng release community lịch sử đã pin từ official Quay cho local simulation; server/cloud deployment ngoài scope.
 
-Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` rồi `docker compose logs --no-color <service>`; không render `docker compose config` đầy đủ vào ticket vì có thể lộ config khi operator tự thêm biến. Business quickstart (migration, ingest/query, model, admin) vẫn DESIGNED cho các task sau. Host auth/local issuer đã VERIFIED ở R03; Compose mặc định chưa mount app registry hay issuer.
+Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` rồi `docker compose logs --no-color <service>`; không render `docker compose config` đầy đủ vào ticket vì có thể lộ config khi operator tự thêm biến. Migration/internal ingestion/model có commands tại R09 T19; business HTTP/query/admin quickstart vẫn DESIGNED cho các task sau. Host auth/local issuer đã VERIFIED ở R03; Compose mặc định chưa mount app registry hay issuer.
 
 <a id="r03"></a>
 ## R03. Auth, app registration và trust boundary
@@ -265,7 +265,7 @@ repository/scope gate bên dưới, không thay auth hoặc mount query/registra
 <a id="r04"></a>
 ## R04. Session mapping và upload registration
 
-**T10 schema/session repository/scope VERIFIED trên PG thật; T11 storage reader VERIFIED trên MinIO thật; T12 registration/outbox VERIFIED trên PG/MinIO/Redis thật; business HTTP/worker vẫn DESIGNED — T26/T19.**
+**T10 schema/session repository/scope VERIFIED trên PG thật; T11 storage reader VERIFIED trên MinIO thật; T12 registration/outbox VERIFIED trên PG/MinIO/Redis thật; business HTTP vẫn DESIGNED — T26; worker T19 đã VERIFIED.**
 
 ### Schema ownership và migration T10
 
@@ -277,8 +277,7 @@ trong registry T09, owner là JWT subject, không tạo user-account database. R
 và app+owner+session+external upload ID.
 Composite foreign keys mang app+owner xuyên session/link/document/version/generation/
 job/outbox. FK không cascade delete; lifecycle chỉ UPDATE session/link. Source references
-và retained generation/job/outbox rows được giữ. Binary nguồn, transcript và chunks
-chưa có trong schema này; chunks/ingestion theo task sau.
+và retained generation/job/outbox rows được giữ. Binary nguồn và transcript không lưu trong PG. T19 migration `0003_ingestion_publication` thêm durable chunks và generation manifests/fences.
 
 Từ checkout root, sync dev+api (hoặc nhóm metadata cho migration-only). Alembic đọc
 **process environment**, không tự load `.env`, không cần Redis/Qdrant/auth config:
@@ -409,7 +408,7 @@ uv sync --locked --group dev --group api --group ingestion
 uv run --no-sync pytest -q tests/integration/test_storage_reader.py --basetemp .local/t11-pytest
 ```
 
-Fixture script enables versioning only on `rag-core-storage-test`, creates separate reader/uploader IAM users and policies. Test uses unique object key, deletes only its own fixture via uploader, and checks real GET, denied prefix, old version, source change, oversized body, interrupted stream/temp cleanup, denied PUT/DELETE, redirect target not reached and source hash unchanged. [H-T11-A01](docs/handoffs.md#h-t11-a01) contains actual outputs. T12 nối reader vào registration; worker T19 chưa có; API readiness vẫn chỉ kiểm PG/Redis/Qdrant.
+Fixture script enables versioning only on `rag-core-storage-test`, creates separate reader/uploader IAM users and policies. Test uses unique object key, deletes only its own fixture via uploader, and checks real GET, denied prefix, old version, source change, oversized body, interrupted stream/temp cleanup, denied PUT/DELETE, redirect target not reached and source hash unchanged. [H-T11-A01](docs/handoffs.md#h-t11-a01) contains actual outputs. T12 nối reader vào registration; worker T19 đã VERIFIED; API readiness vẫn chỉ kiểm PG/Redis/Qdrant.
 
 ### Upload registration T12 — service/dispatcher VERIFIED, HTTP contract DESIGNED
 
@@ -419,7 +418,7 @@ Luồng app bắt buộc:
 2. App upload vào S3/MinIO của app; xác minh quyền object thuộc user và upload của session đó.
 3. App tạo/resolve core session bằng external_session_id; lưu core session UUID trong metadata app.
 4. App backend register upload cho core session với Idempotency-Key; không dùng UUID browser gửi mà bỏ ownership checks. T12 service nội bộ hoạt động, HTTP route sẽ mount ở T26.
-5. Khi HTTP route được mount, nhận 202 với document/job IDs và poll job đến ready hoặc lỗi có cấu trúc. Trước T19, job chỉ có thể `queued` hoặc bị huỷ/thất bại qua fixture; chưa có worker tạo `ready`.
+5. Khi HTTP route được mount, nhận 202 với document/job IDs và poll job đến ready hoặc lỗi có cấu trúc. T19 worker tạo ready sau đủ chunks/vectors và PG publication; HTTP route vẫn chưa mount trước T26.
 6. Chỉ query tập tài liệu ready, đúng core session; document subset ngoài session bị từ chối.
 
 Payload mục tiêu cho `POST /v1/sessions/{session_id}/documents`:
@@ -445,7 +444,7 @@ Session mới không tự dùng index cũ. Upload registration mới của cùng
 
 Idempotency-Key scope app+owner+session+request hash; cùng key/body trả cùng job, khác body 409. External upload ID dùng lại với key khác cũng trả409; một registration đã detach replay vẫn detached. App retry lỗi transport bằng cùng key; không tạo upload mới chỉ vì HTTP response bị mất. Đọc nguồn được thực hiện qua thread trước PG transaction; app xác nhận user/session ownership bằng identity đã xác thực, còn core đối chiếu storage config và bytes/version/hash thật. Core không thể suy ownership từ S3 key hay ACL.
 
-T12 ghi document/version/job/registration/link/outbox trong một transaction. Outbox dispatcher phát Celery task `rag_core.ingest` vào queue `rag_core_ingestion` trên Redis rồi đánh dấu dispatched trong PG. Crash sau publish trước PG commit có thể tạo hai message cùng event ID; `claim_job` chỉ chuyển `queued -> fetching` một lần, tăng attempts/lease một lần. Dispatcher và consumer kiểm session/link hiện hành, nên deleted/detached session không được hồi sinh. Khi broker lỗi, transaction rollback giữ event pending; rerun phát lại. T19 sẽ triển khai worker parser và lease recovery; chưa gọi `ready` hoặc claim live ingestion.
+T12 ghi document/version/job/registration/link/outbox trong một transaction. Outbox dispatcher phát Celery task `rag_core.ingest` vào queue `rag_core_ingestion` trên Redis rồi đánh dấu dispatched trong PG. Crash sau publish trước PG commit có thể tạo hai message cùng event ID; `claim_job` chỉ chuyển `queued -> fetching` một lần, tăng attempts/lease một lần. Dispatcher và consumer kiểm session/link hiện hành, nên deleted/detached session không được hồi sinh. Khi broker lỗi, transaction rollback giữ event pending; rerun phát lại. T19 consumer dùng fenced claim/generation mới, heartbeat, bounded retry và watchdog recovery; xem R09 T19.
 
 Chạy trên host từ root với env `DATABASE_URL`, optional `DATABASE_PASSWORD_FILE`, `REDIS_URL` trỏ các service đã kiểm; migration thực hiện riêng trước dispatcher:
 
@@ -456,7 +455,7 @@ uv run python -m rag_core.adapters.broker.dispatcher --once
 uv run python -m rag_core.adapters.broker.dispatcher
 ```
 
-`--once` phát tối đa một event và exit0 khi không có event; lỗi broker/PG exit1, event vẫn chờ. `--interval` 0.1–60 giây, mặc định1. Compose image riêng `rag-core-dispatcher:t12` ở profile `registration`; chỉ bật sau migration và khi muốn publish vào Redis. Chưa có worker nhận queue trước T19. Stop/start giữ PG/Redis volumes; không dùng down-v. Isolated acceptance: `docker compose -f compose.metadata-test.yaml -f compose.registration-test.yaml up -d --wait postgres redis`, MinIO T11 test fixture theo R04, đặt `RAG_TEST_DATABASE_URL`/`DATABASE_PASSWORD_FILE` như T10 và chạy `uv run pytest tests/integration/test_registration_jobs.py -v -s`; Redis test ở loopback16379/DB15 và đo queue delta, không flush dữ liệu. [H-T12-A01](docs/handoffs.md#h-t12-a01) ghi output thực.
+`--once` phát tối đa một event và exit0 khi không có event; lỗi broker/PG exit1, event vẫn chờ. `--interval` 0.1–60 giây, mặc định1. Compose chuẩn bật `rag-core-dispatcher:t19` và worker/inference; migration/config/model cache phải được chuẩn bị trước start. Chỉ có HTTP business routes vẫn chưa mount. Stop/start giữ PG/Redis volumes; không dùng down-v. Isolated acceptance: `docker compose -f compose.metadata-test.yaml -f compose.registration-test.yaml up -d --wait postgres redis`, MinIO T11 test fixture theo R04, đặt `RAG_TEST_DATABASE_URL`/`DATABASE_PASSWORD_FILE` như T10 và chạy `uv run pytest tests/integration/test_registration_jobs.py -v -s`; Redis test ở loopback16379/DB15 và đo queue delta, không flush dữ liệu. [H-T12-A01](docs/handoffs.md#h-t12-a01) ghi output thực.
 
 **Ví dụ HTTP mục tiêu, chưa serve trước T26:** `POST /v1/sessions/{session_id}/documents` với `Idempotency-Key: <opaque-key>` và payload trên → `202` cùng `session_id`, `scope_revision`, `document` và `job` (`state: queued`, `retryable: false`). `GET /v1/jobs/{job_id}` poll trạng thái; `POST /v1/jobs/{job_id}/retry` chỉ khi `failed` và `attempts < max_attempts`, chuyển lại `queued`, thêm outbox event; retry cùng lúc khi đã `queued` trả cùng job. Cùng key khác body → `409 idempotency_conflict`; ngoài owner → `404 not_found`; session deleted → `410 session_deleted`; source đổi → `409 source_changed`; broker lỗi không làm register thất bại, job vẫn `queued`. Đừng coi ví dụ là response runtime HTTP đã verify.
 
@@ -583,7 +582,7 @@ Không có auto-delete derivative khi session hết link ở bản đầu. Admin
 <a id="r09"></a>
 ## R09. Ingestion, formats và xử lý lỗi
 
-**T13–T14 và T16 VERIFIED trên Windows/Python3.12.4; T15 OCR VERIFIED trong Linux worker/Python3.12.13; embedding/index orchestration DESIGNED — T17–T19.**
+**T13–T14 và T16 VERIFIED trên Windows/Python3.12.4; T15 OCR VERIFIED trong Linux worker/Python3.12.13; T17 shared inference đã VERIFIED, T19 embedding/index orchestration VERIFIED trên services/models thật.**
 
 | Format / MIME (extension allowlist) | Extraction và locator đã kiểm | Trạng thái / giới hạn |
 | --- | --- | --- |
@@ -616,7 +615,7 @@ SHA-256 phải bằng bytes được copy, source document/version UUIDs là met
 không chứng minh quyền truy xuất. Chỉ gọi với T11 `DownloadedSource` của registration
 đã được T12/worker authorize; parser không tìm bucket, không auto-attach/reuse index.
 Đây là synchronous CPU boundary: future async callers phải offload; share một registry
-trong worker, một slot không queue (`parser_busy`). T19 chưa nối parser vào job/ready.
+trong worker, một slot không queue (`parser_busy`). T19 đã nối parser vào job/ready với publication gates.
 
 `ParsedDocument` schema1 có source, format, parser_revision, blocks, page_count,
 quality, needs_ocr_pages và warnings; `Block` giữ text/kind/T03 SourceLocator,
@@ -739,7 +738,7 @@ MD/HTML `table-v2` phải vào pipeline fingerprints T16/T19 khi tái sử dụn
 **VERIFIED: full20tests và separate13status checks trong worker image.** Build/test commands trong
 [README OCR](README.md#ocr-envi-t15). `worker` target là non-root10001 parser runtime;
 `ocr-test` kế thừa runtime này và thêm pytest/DejaVu font cho synthetic fixtures.
-T19 mới nối Celery/job/ready/index. Không chạy service ingestion giả trong Compose.
+T19 nối Celery/job/ready/index trong Compose chuẩn, actual acceptance bên dưới.
 
 ```python
 from rag_core.adapters.parsers import ParserRegistry
@@ -912,7 +911,7 @@ Service nội bộ có một Uvicorn process/one native executor; BGE-M3 và rer
 một lần khi startup, warmup cả hai trước ready. API/Celery chỉ inject
 `HttpModelInference(httpx.AsyncClient(base_url=trusted_url), expected_fingerprint)`.
 Không cần model dependency trong API/ingestion groups, không tạo FlagModels trong
-API workers. T21/T22/T19 sẽ nối callers đã resolve session scope; inference không
+API workers. T19 đã nối indexing caller; T21/T22 sẽ nối query callers đã resolve session scope; inference không
 search storage/index hoặc cấp quyền tài liệu, không có cache kết quả/text/history.
 
 Pins ở `configs/model-artifacts.json`, từ official HF metadata và immutable revisions:
@@ -938,15 +937,14 @@ uv run --no-sync pytest tests/unit/test_inference_scheduler.py tests/unit/test_m
 ```
 
 Docker standard: dedicated named volume `rag-core_model_cache`, runtime mount read-only,
-non-root10001, init,7GiB memory/2CPU, no host port. `inference` profile không là dependency
-để health-only API khởi động. Operator có thể chạy setup trực tiếp vào volume mới:
+non-root10001, init,7GiB memory/2CPU, no host port. Inference/worker/dispatcher bật mặc định ở T19. API không phụ thuộc model để khởi động; start explicit services khi chỉ cần health skeleton. Operator có thể chạy setup trực tiếp vào volume mới:
 
 ```powershell
 docker build --target inference -f docker/inference.Dockerfile -t rag-core-inference:t17-cpu .
 docker volume create rag-core_model_cache
 docker run --rm --user 0 --mount type=volume,source=rag-core_model_cache,target=/models rag-core-inference:t17-cpu python scripts/setup_models.py --cache /models
-docker compose --profile inference up -d --wait inference
-docker compose --profile inference ps inference
+docker compose up -d --wait inference
+docker compose ps inference
 docker compose exec inference python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8080/health/ready').read().decode())"
 ```
 
@@ -974,7 +972,7 @@ nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
 docker run --rm --gpus all python:3.12.13-slim-bookworm nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
 docker build --target inference-test --build-arg MODEL_GROUP=inference-gpu -f docker/inference.Dockerfile -t rag-core-inference-test:t17-gpu .
 docker run --rm --init --gpus all --network none --memory=7g --cpus=2 -e MODEL_DEVICE=cuda:0 --mount type=volume,source=rag-core_model_cache,target=/models,readonly rag-core-inference-test:t17-gpu python scripts/smoke_inference.py --spawn
-docker compose -f compose.yaml -f compose.gpu.yaml --profile inference up -d --build --wait inference
+docker compose -f compose.yaml -f compose.gpu.yaml up -d --build --wait inference
 ```
 
 Override chọn locked CUDA12.8 wheel, cùng process/cache và FP16; không tự fallback CPU
@@ -1035,7 +1033,7 @@ dimension/revision, xóa collection hoặc đổi alias để vượt lỗi.
 document/version/generation/ID/ordinal và locator thật. `unit_id` do trusted ingestion
 caller xác định từ cùng structural source unit của T16 (page/heading/table region/
 sheet region/slide shape), phải ổn định và không gộp qua hard boundary; không lấy từ
-query body. Original chunks/text/source segments nằm ở PG, persistence T19 chưa có.
+query body. Original chunks/text/source segments nằm ở PG qua T19 `chunks`; vector metadata locator chỉ là anchor, citation quote phải dùng source segments.
 Neighbor lookup lấy anchor qua scoped fetch rồi giới hạn cùng pair + unit_id +
 ordinal ±radius(0–3); tối đa7 metadata points. Fetch tối đa100IDs; search limit1–100,
 mặc định30; upsert tối đa64points/request và không cho duplicate chunkIDs trong batch.
@@ -1103,7 +1101,112 @@ embedding quality/model smoke. Corrupted payload bị reject; real server404 đ�
 thành `vector_dependency_unavailable` không upstream text. Model mismatch là
 `index_model_mismatch`, config mismatch `incompatible_vector_collection` hoặc
 `incompatible_payload_index`; không đổi thành insufficient evidence. Giới hạn:
-chưa có end-to-end source/index publication/HTTP citations hoặc corpus benchmark.
+end-to-end source/index publication thuộc T19 bên dưới; HTTP citations và corpus benchmark chưa có.
+
+<a id="r09-t19"></a>
+### Durable ingestion và atomic publication T19
+
+**VERIFIED:** 12 real-stack tests và 4 DoD-2 checks riêng; [H-T19-A01](docs/handoffs.md#h-t19-a01).
+Celery consumer `rag_core.ingest(job_uuid)` nhận duy nhất internal job ID, resolve
+owner/session/upload/source từ PG. Không nhận arbitrary storage URL/owner/generation từ
+message. Một prefork child/concurrency1/prefetch1, late ACK/reject-on-worker-lost; Redis
+visibility3700s, soft/hard limit3610/3630s. PG lease mặc định120s, heartbeat5s, worker
+deadline1800s. Model HTTP indexing batch32, query priority theo T17, một inference process.
+
+Migration additive `0003_ingestion_publication` thêm chunks + generation job/fence,
+pipeline fingerprint, count và manifest. T12 queued jobs được worker tiếp quản sau
+upgrade; T18 retained generations có nullable job/fence và không bị sửa. Backup PG
+trước migration; operator chạy `uv run alembic upgrade head` riêng. Không migrate tự
+động trong worker/API. `downgrade` chỉ rehearsal trên fixture DB riêng, không undo job.
+
+Internal factory: `workers.runtime.run_job(job_uuid, WorkerConfig)` →
+`application.ingestion.IngestionPipeline`; persistence `PostgresIngestionRepository`
+có claim/heartbeat/advance/stage_chunks/publish/fail/recover_one/request_reindex.
+Ports/core không import SDK/Celery. Storage/parse/chunk chạy ngoài event loop; parse
+cancel kill/reap trước release file tạm. Worker không có Torch hoặc model weights runtime.
+
+Claim khóa session/job/version, xác minh attached+active, attempts<3 và cấp lease token
+ngẫu nhiên cùng generation mới. Heartbeat, PG mutations và vector writes đều fence
+lease; quá hạn không được publish/write. Dispatcher watchdog thu hồi lease hết hạn,
+đánh generation failed, enqueue outbox với backoff2/4s; attempt3 kết thúc failed.
+Queued message thất lạc trong Redis được phát lại sau5phút từ durable outbox, không
+phụ thuộc Celery redelivery để bảo toàn job. Same-key registration và duplicate delivery
+không tạo link/job/chunks đang phục vụ trùng; không reuse computation giữa registrations
+trong T19, dù plan cho phép dedup cùng owner. Session mới vẫn cần registration/link mới.
+
+PG chunks giữ text/SHA/token count/language/source maps/cells/heading/checksums;
+chunk_source_map schema là T16 serialized Chunk trừ text (text ở column riêng).
+Không lưu binary nguồn. Pipeline hash có parser code/runtime/limits, OCR engine + cả
+eng/vie/osd traineddata SHA, order/DPI/PSM/Docling config, chunk code/profile/tokenizer,
+T17 model/index fingerprint. Task fingerprint=hash(content SHA+pipeline); đổi config
+cần reindex/generation mới. Language `und` khi chưa có trusted language annotation;
+T19 không tự đoán language của file. Vector neighbor unit conservative theo source
+block/page/table/heading, không mở qua hard boundary.
+
+Mỗi bounded batch upsert wait=true rồi retrieve đúng IDs, kiểm exact owner/payload,
+dense1024/sparse indices+weights (float tolerance1e-5). Sau tất cả batch kiểm exact
+generation count. PG transaction publication kiểm live link/lease, manifest IDs/order/
+text SHA/source-map digest và staging state, rồi cùng lúc g.state=ready,
+v.active_generation/state/fingerprints và job.ready/progress100/clear lease.
+Snapshot chỉ thấy old-ready hoặc new-ready, không staging. Không có distributed
+transaction; uncertain writes bỏ lại generation failed, attempt mới dùng ID/generation
+mới. Active generation immutable, failed reindex không làm mất old-ready.
+
+Detached/deleted link được kiểm giữa các stage/heartbeat và tại publication; job
+cancelled, không tự attach lại. Source/chunks/vector giữ lại. Failed/stale derivative
+cleanup chỉ explicit `GenerationScope(app,owner,document,version,generation)` qua T18,
+active bị reject; không auto-purge do xóa chat. Manual retry dùng T12 owner+active-link
+checks và attempts budget. Technical errors code-only; không đưa nguồn/keys vào logs.
+
+Standard Compose bây giờ bật inference/worker/dispatcher mặc định, MinIO vẫn optional.
+CPU index fingerprint trong example là actual Linux T17 CPU; CUDA dùng actual GPU
+fingerprint T17 và collection/generation riêng, không silently đổi CPU collection.
+
+1. Bootstrap local secrets T02/T11 và chuẩn bị `rag-core_model_cache` theo T17.
+2. Copy `configs/worker.example.json` → `.local/worker.json` và
+   `configs/storage.compose.example.json` → `.local/storage.json`; điền authenticated
+   app ID/storage alias/bucket/prefix và reader credential files đã provision.
+3. Registry default HTTPS. Local simulation opt-in `allow_compose_http=true` chỉ cho
+   exact `http://minio:9000` trên network Compose tin cậy; arbitrary host/redirect bị
+   từ chối, production cấm flag này cùng allow_loopback_http. Credentials core chỉ đọc.
+4. Start explicit PG/Qdrant/Redis/MinIO, chạy migration bằng host CLI tới target đã kiểm
+   hoặc one-off migration container có checkout `alembic.ini`/`migrations`, rồi mới start
+   worker/dispatcher. Không publish PG/broker/model mặc định để chạy migration từ host.
+5. `docker compose --profile local-storage up -d --build --wait` sau khi đủ config/cache/
+   migration. API vẫn health-only; không claim business HTTP hay Scarlet đã tích hợp.
+
+Full stack commands sau khi chuẩn bị hai JSON configs, IAM reader và model cache:
+
+`````powershell
+docker compose --profile local-storage up -d --wait postgres qdrant redis minio
+docker compose build worker dispatcher
+docker compose run --rm --no-deps worker alembic upgrade head
+docker compose run --rm --no-deps worker alembic current
+docker compose --profile local-storage up -d --build --wait
+```
+
+Chỉ cần health skeleton, dùng explicit services `postgres qdrant redis api` (thêm
+MinIO theo nhu cầu), thay vì start full stack khi thiếu worker config/model cache.
+
+Acceptance độc lập từ root:
+
+```powershell
+docker compose -f compose.ingestion-test.yaml config --quiet
+docker build --target ingestion-test -f docker/worker.Dockerfile -t rag-core-ingestion-test:t19 .
+docker compose -f compose.ingestion-test.yaml up -d --wait postgres redis qdrant minio inference storage-fixture
+docker compose -f compose.ingestion-test.yaml run --rm ingestion-tests
+docker compose -f compose.ingestion-test.yaml run --rm ingestion-tests uv run --no-sync pytest tests/integration/test_ingestion_pipeline.py -k 'scan_xlsx or visibility or duplicate_pending' -v -s --tb=short --basetemp=/tmp/ingestion-visibility -o cache_dir=/tmp/pytest-cache
+docker compose -f compose.ingestion-test.yaml stop
+```
+
+Test project dùng tmpfs PG/MinIO/Redis/Qdrant riêng, không host ports, model cache
+T17 external read-only. Missing dependency/config FAIL, không skip/mock; migrations
+chạy trong random `t10_test_*` DB riêng. EN/VI scan PDF/XLSX/TXT fixtures tự tạo,
+real BGE-M3 inference PID dùng chung. Fault proxy là lỗi HTTP trên actual server,
+không fake vectors/parser/model success. SIGKILL actual Celery prefork worker, chờ
+lease10s thật trong test, watchdog/outbox/restart chứng minh resume. DoD-2 chọn riêng
+visibility/detach/delete và source checks; full suite báo job/count/locators/excerpts.
+Các số đo synthetic không là benchmark corpus/20users/full-stack budget T33.
 
 <a id="r10"></a>
 ## R10. UI quản trị

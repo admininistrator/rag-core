@@ -24,9 +24,13 @@ class PostgresGenerationAuthority:
                 (
                     await conn.execute(
                         text("""
-                SELECT g.state, g.index_fingerprint, v.active_generation_id
+                SELECT g.state, g.index_fingerprint, v.active_generation_id,
+                    g.job_id, g.lease_owner, j.lease_owner AS current_lease,
+                    (j.lease_until > now()) AS lease_valid
                 FROM document_versions v JOIN index_generations g
                     ON g.app_id=v.app_id AND g.owner_id=v.owner_id AND g.version_id=v.version_id
+                LEFT JOIN ingestion_jobs j ON (j.app_id,j.owner_id,j.job_id)=
+                    (g.app_id,g.owner_id,g.job_id)
                 WHERE v.app_id=:app AND v.owner_id=:owner AND v.document_id=:doc
                     AND v.version_id=:version AND g.generation_id=:generation
                 FOR UPDATE OF v, g
@@ -49,6 +53,10 @@ class PostgresGenerationAuthority:
                 raise VectorError("active_generation_immutable")
             if operation == "write" and row["state"] != "staging":
                 raise VectorError("generation_not_staging")
+            if operation == "write" and row["job_id"] is not None and (
+                row["lease_owner"] != row["current_lease"] or not row["lease_valid"]
+            ):
+                raise VectorError("generation_lease_lost")
             # Retain these locks through the bounded Qdrant wait=true acknowledgement.
             # T19 publication UPDATE of v/g necessarily waits on the same rows.
             yield

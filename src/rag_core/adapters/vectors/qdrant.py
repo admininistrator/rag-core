@@ -367,6 +367,37 @@ class QdrantVectorRepository:
             ]
         )
 
+    async def verify_generation(
+        self, scope: GenerationScope, points: tuple[VectorWrite, ...]
+    ) -> None:
+        """Bounded reconciliation of acknowledged IDs, metadata and both actual vectors."""
+        if not points or len(points) > 64 or any(p.chunk.pair != scope.pair for p in points):
+            raise VectorError("invalid_vector_write")
+        async with self._generations.access(scope, self._profile.fingerprint, "count"):
+            rows = await self._call(self._client.retrieve(
+                self._collection, ids=[str(point_id(scope.principal, p.chunk)) for p in points],
+                with_payload=True, with_vectors=True,
+            ))
+            actual = {str(r.id): r for r in rows}
+            for p in points:
+                row = actual.get(str(point_id(scope.principal, p.chunk)))
+                expected = {**p.chunk.model_dump(mode="json"), "app_id": scope.principal.app_id,
+                            "owner_id": scope.principal.user_id}
+                if row is None or row.payload != expected or not isinstance(row.vector, dict):
+                    raise VectorError("vector_manifest_mismatch")
+                dense = row.vector.get("dense")
+                sparse = row.vector.get("sparse")
+                if (not isinstance(dense, list) or len(dense) != 1024
+                    or any(not isinstance(a, (int, float)) or not math.isfinite(a)
+                           or abs(a-b) > 0.00001
+                           for a, b in zip(dense, p.embedding.dense, strict=True))
+                    or not isinstance(sparse, qm.SparseVector)
+                    or sparse.indices != list(p.embedding.sparse_indices)
+                    or len(sparse.values) != len(p.embedding.sparse_values)
+                    or any(not math.isfinite(a) or abs(a-b) > 0.00001 for a, b in
+                           zip(sparse.values, p.embedding.sparse_values, strict=True))):
+                    raise VectorError("vector_manifest_mismatch")
+
     async def count_generation(self, scope: GenerationScope) -> int:
         async with self._generations.access(scope, self._profile.fingerprint, "count"):
             result = await self._call(

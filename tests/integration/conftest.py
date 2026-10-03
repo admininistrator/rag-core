@@ -48,7 +48,9 @@ def pg_url() -> Iterator[URL]:
         pytest.fail("RAG_TEST_DATABASE_URL is required; this suite never substitutes SQLite/mocks")
     password_file = os.environ.get("DATABASE_PASSWORD_FILE")
     admin_url = database_url(value, Path(password_file) if password_file else None)
-    if admin_url.database != "t10_acceptance" or admin_url.host not in {"127.0.0.1", "localhost"}:
+    isolated_compose = os.environ.get("RAG_TEST_COMPOSE_ISOLATED") == "1"
+    hosts = {"127.0.0.1", "localhost"} | ({"postgres"} if isolated_compose else set())
+    if admin_url.database != "t10_acceptance" or admin_url.host not in hosts:
         pytest.fail("Use the isolated loopback t10_acceptance PostgreSQL service")
     name = "t10_test_" + uuid4().hex
     dsn = admin_url.set(drivername="postgresql").render_as_string(hide_password=False)

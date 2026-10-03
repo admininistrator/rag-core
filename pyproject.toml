@@ -27,6 +27,7 @@ ingestion = [
   {include-group = "metadata"},
   "boto3>=1.39,<2",
   "celery>=5.5,<6",
+  "httpx>=0.28,<1",
   "defusedxml==0.7.1",
   "docling-parse==7.22.1",
   "docling-slim[convert-core]==2.132.0",
@@ -60,6 +61,7 @@ inference-runtime = [
 inference = [{include-group = "inference-runtime"}, "torch==2.9.1"]
 inference-gpu = [{include-group = "inference-runtime"}, "torch==2.9.1"]
 ocr-test = ["pytest>=8.4,<10"]
+ingestion-test = [{include-group = "ocr-test"}, "pytest-asyncio>=1.1,<2"]
 dev = [
   "jsonschema>=4.25,<5",
   "mypy>=1.17,<2",

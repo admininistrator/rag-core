@@ -1,0 +1,13 @@
+{
+  "locations": [{
+    "app_id": "replace-with-authenticated-app-id",
+    "alias": "app-store",
+    "endpoint": "http://minio:9000",
+    "region": "us-east-1",
+    "bucket": "rag-core-storage-test",
+    "prefix": "allowed/",
+    "access_key_file": "/run/secrets/minio_reader_user",
+    "secret_key_file": "/run/secrets/minio_reader_password",
+    "allow_compose_http": true
+  }]
+}

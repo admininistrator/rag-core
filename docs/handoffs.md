@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-03 / T19-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T18 `969b402e9f21e4ca38bea4f37f7c23839078eeec` equals origin/main; inherited T07 scratch preserved. Durable ingestion/Celery lease fences/recovery/chunks/atomic publication/default Compose implemented and VERIFIED. Final real DoD-1 12PASS106.74s and separate DoD-2 4PASS39.02s,363regression +12newstorage-security +36realPG/migration/Qdrant PASS; Ruff/mypy68/lock/OpenAPI/config/images PASS. Evidence [H-T19-A01](#h-t19-a01), interfaces [S-T19-A01](implementation-summary.md#s-t19-a01). Exact task paths reviewed, completion subject `feat(T19): complete durable document ingestion`; actual hash/authorized origin/main push equality reported after execution. No unresolved blocker; business HTTP/query and trusted language annotation/computation reuse limits documented. Own test services stopped, model cache/source/app volumes retained; Scarlet untouched. T20 dependencies ready after closure, stays TODO; **STOP AFTER T19**, no merge/deploy/drain.
+
 - **Current 2026-10-03 / T18-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent/no subagents; baseline main/T17 `919d4e43ab58158f1421982ae9dee6b95809396c` equals origin/main, inherited T07 scratch preserved. Versioned dense/sparse Qdrant repository, exact-pair filters in every branch/fetch/neighbor, before/after PG snapshot revalidation, stable point IDs and PG-locked scoped generation write/count/cleanup implemented. Final17real PG/Qdrant tests and separate4DoD-2 PASS;363unit/contract/security +19real PG dependency tests, Ruff/mypy60/lock/OpenAPI PASS. Evidence [H-T18-A01](#h-t18-a01), interfaces [S-T18-A01](implementation-summary.md#s-t18-a01). Exact12task paths, completion subject `feat(T18): enforce scoped Qdrant access`; actual commit and authorized origin/main equality reported post-execution, no self-hash/amend. No unresolved blocker; synthetic vectors are authorization fixtures, not quality benchmark. Worker/chunk persistence/atomic publication remain T19. Own test PG/Qdrant stopped, no source/volume cleanup. T19 dependencies T18/T12/T15/T16 ready after closure; **STOP AFTER T18**, no merge/deploy/drain.
 
 - **Current 2026-10-03 / T17-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct agent/no subagents; resumed existing code/logs on main/T16 `9633cfcb872a89ccb1f472e6361c201e94d83588`, preserving inherited T07 scratch. Final real CPU8/GPU8, HTTP CPU/GPU smokes and both Compose profiles PASS; one inference owner/two fixed models, four clients samePID. Final21unit, full361regression,29real parser/source, Ruff/mypy55/lock169/OpenAPI/docs/scope/secrets PASS; source55 plus config/setup/test/smoke hashes equal in four images. Evidence [H-T17-A01](#h-t17-a01). Final exact27file stage/inspection, commit `feat(T17): add bounded multilingual model inference`, authorized origin/main push and remote equality are closure steps; actual hash returned after execution, no self-hash/amend. No T17 blocker; local synthetic resources are not full-stack SLA. Inference stopped after verification, cache retained. T18 dependencies T17/T10 ready after inspected completion; **STOP AFTER T17**, no merge/deploy.
@@ -6825,3 +6827,341 @@ stage/hash/whitespace check, then D6 create `feat(T18): enforce scoped Qdrant ac
 inspect actual commit12paths with `git show --check`, and authorized `git push origin main`.
 Compare actual HEAD against `git ls-remote origin refs/heads/main`; post-execution hash
 and outcome go in direct user report, not fabricated self-hash inside this commit.
+
+
+<a id="h-t19-a01"></a>
+## H-T19-A01 — Phase 3 / durable ingestion and atomic publication
+
+- Started 2026-10-03 Asia/Bangkok. Direct Codex agent, exact model/effort unavailable;
+  no subagents. Cwd for every command: `C:/Users/Admin/Documents/GitHub/rag-core`.
+  Baseline main/969b402e9f21e4ca38bea4f37f7c23839078eeec; origin/main same. User
+  authorizes scoped commit/push, no merge/deploy/drain. Inherited T07 scratch retained.
+- Read AGENTS/session prompt/T19/dependency execution notes T18/T12/T15/T16 and
+  interfaces T10/T11/T13/T14/T17, P01/P04/P07/P12/P13, living docs/checkpoint before code.
+- Initial sandbox Docker pipe access denied and git remote could not connect.
+  Scoped escalation succeeded: remote output
+  `969b402e9f21e4ca38bea4f37f7c23839078eeec refs/heads/main`. Unrelated Scarlet running;
+  no operation against it. Real acceptance uses separate rag-core-ingestion-test project.
+- `uv lock --offline` + locked sync dev/api/ingestion: PASS169packages. Initial mypy
+  without inference group failed3existing Torch/Flag imports. Restored locked inference
+  group; no source gate reduction. `uv run --no-sync mypy src` exit0:
+  `Success: no issues found in 68 source files`. Ruff exit0 `All checks passed!`
+  with inherited scratch ACL warnings. OpenAPI --check exit0 unchanged13designed/
+  2served/37examples/48schemas. Windows inline documentation append quoting failed
+  SyntaxError exit1 (no file mutation); switched to local UTF-8 script.
+- `uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short
+  --basetemp=.local/19r1 -o cache_dir=.local/19rc1` exit0:
+  `363 passed in 130.90s (0:02:10)`. Full synthetic log `.local/t19-regression.log`.
+- Docker config/up started separate PG17.11/Redis8.10.1/Qdrant1.19.1/pinned MinIO/
+  CPU BGE-M3 service, MinIO provisioner exit0. One concurrent build failed exit1:
+  `ERROR: failed to build: failed to solve: frontend grpc server closed unexpectedly`
+  (`.local/t19-build-current.log`). Sequential second/third builds exit0; own inference
+  temporarily stopped while building, then healthy. Removed recursive chown /app;
+  UID10001 runtime uses readable root-owned install and temp-only writes. No volume deletion.
+- DoD-1 initial run in progress: actual scan PDF/XLSX/TXT Celery prefork ingestion
+  ready with1chunk each, Vietnamese OCR phrase preserved, original object/file SHA
+  unchanged, real source locators; case20.489s / peak1240.090MiB / shared model PID7.
+  Remaining gates and final D1–D6 pending; no completion commit yet.
+
+### Failure correction and final acceptance — DoD-1
+
+The first actual run `docker compose -f compose.ingestion-test.yaml run --rm ingestion-tests`
+ended exit2 after SIGINT of the task's test container: `.local/t19-dod1-initial.log`.
+The scan/XLSX/text case passed; duplicate claim waited behind Qdrant's generation/version
+lock until the intentionally held HTTP ACK timed out. Actual failure excerpt:
+
+```text
+test_duplicate_pending_generation_invisible
+assert await task == "ready"
+E AssertionError: assert 'vector_depen...y_unavailable' == 'ready'
+1 failed, 1 passed in 316.85s (0:05:16)
+```
+
+Fixed fast queued-state claim check (locked recheck still arbitrates races) and moved
+heartbeat to session/job locks so slow bounded Qdrant I/O does not block lease renewal.
+Replaced the CPU-heavy long text multi-batch fixture with34 XLSX sheets producing34
+actual structural chunks; same batch32/partial ACK/failure/reindex gate, no model fake
+or scope/gate reduction. The interrupted third case is not a PASS. Second real suite
+exit0 `.local/t19-dod1-second.log`: `12 passed in 112.39s (0:01:52)`.
+
+**Final DoD-1 command**, cwd `C:/Users/Admin/Documents/GitHub/rag-core`:
+
+```powershell
+docker compose -f compose.ingestion-test.yaml run --rm ingestion-tests
+```
+
+Container command: `uv run --no-sync pytest tests/integration/test_ingestion_pipeline.py
+-v -s --tb=short --basetemp=/tmp/ingestion-tests -o cache_dir=/tmp/pytest-cache`.
+Exit0; full synthetic log `.local/t19-dod1-final.log`. Expected: all named real
+ingestion/fault/retry/retention/publication gates pass, no service/model success mock.
+Actual output excerpts:
+
+```text
+Real PostgreSQL: migrated separate database t10_test_4ceff503043141819b7a161ccb78d9f2
+{"job": "280506d0-1a2e-47cc-8a11-f3a50a28d06a", "state": "ready", "chunks": 1, "locator": {"kind": "pdf", "page": 1, "block": 0, "offsets": {"end": 5, "start": 0}, "printed_page_label": "1"}, "excerpt": "Doanh thu quý một đạt 120 triệu đồng."}
+REAL reindex: initial multi-batch source ingestion
+REAL reindex: acknowledged first batch, next write forced HTTP503
+REAL reindex: retry new generation with retained old publication
+{"job": "88284cf6-ebf5-4328-bd93-96c5feafae61", "state": "ready", "chunks": 34, "locator": {"kind": "xlsx", "unit": null, "sheet": "Quarter 0", "headers": ["Quarter\tRevenue (million VND)"], "cell_range": "A1"}, "excerpt": "Quarter\tRevenue (million VND)\n0\t120"}
+REAL detach during indexing: cancelled, attached_links=0, chunks retained
+REAL delete during indexing: cancelled, attached_links=0, chunks retained
+REAL Celery worker killed exit=-9; expired lease fenced, resume attempts=2
+PASSEDREAL ingestion case elapsed=27.105s test_container_peak_mib=1342.242 shared_model_pid=7
+REAL retry budget: attempts=3, failed, durable events=3, further retry denied
+12 passed in 106.74s (0:01:46)
+```
+
+All12actual tests include VI scanned PDF, XLSX cell B2/source segments, TXT/real Celery
+prefork, duplicate/staging invisibility + live lease renewal during gated ACK, acknowledged
+first32points + HTTP503 on second batch + failed scoped generation cleanup32→0 while
+old ready34 retained + successful retry34, checksum-only changed source refusal,
+detach/delete retention/no resurrection, actual process group SIGKILL/recovery through
+Redis/outbox, missing acknowledged vector rejection, partial OCR refusal before model,
+max3retry/outbox enforcement, and staged PG text/source-map tamper rejection. Source
+file/object SHA checks and direct actual retained vector count checks pass. All random
+fixture databases created/migrated and dropped separately from application DB.
+
+Actual services: PG17.11, Redis8.10.1, Qdrant1.19.1, MinIO RELEASE.2025-07-23T15-54-02Z,
+pinned images in compose.ingestion-test.yaml; real BGE-M3+multilingual reranker CPU
+T17 image, one model process PID7/two fixed models. Actual model fingerprint
+`f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b`;
+FlagEmbedding1.3.5/Torch2.9.1+cpu/Transformers4.57.6/tokenizers0.22.2,
+sentence-transformers5.1.2/peft0.17.1; actual Tesseract5.3.0 with eng/vie/osd.
+Real test config: lease10s/heartbeat1s, CPU model cache mounted read-only, worker2GiB/2CPU,
+inference7GiB/2CPU. Test-container peak1342.242MiB includes parser subprocesses;
+this is fixture observation, not20user/full-stack SLA or corpus-quality benchmark.
+MinIO reader IAM is separate from fixture uploader; core does only HEAD/GET.
+
+### Separate DoD-2 — visibility, source/retention and reports
+
+Command from same cwd, exit0, `.local/t19-dod2-final.log`:
+
+```powershell
+docker compose -f compose.ingestion-test.yaml run --rm ingestion-tests uv run --no-sync pytest tests/integration/test_ingestion_pipeline.py -k 'scan_xlsx or visibility or duplicate_pending' -v -s --tb=short --basetemp=/tmp/ingestion-visibility -o cache_dir=/tmp/pytest-cache
+```
+
+Expected: ready-only scoped repository visibility; unchanged source SHA, no delete/detach
+link resurrection, actual retained PG chunks/Qdrant vectors; ready job/count/locator
+reports and README/RUNBOOK real flow. Actual output excerpts:
+
+```text
+collecting ... collected 12 items / 8 deselected / 4 selected
+{"job": "455f0c21-e728-4b0a-a3c5-b8bb0eef7e26", "state": "ready", "chunks": 1, "locator": {"kind": "pdf", "page": 1, "block": 0, "offsets": {"end": 5, "start": 0}, "printed_page_label": "1"}, "excerpt": "Doanh thu quý một đạt 120 triệu đồng."}
+{"job": "abeea78c-12f5-4a9f-ba47-0e648a68f5f2", "state": "ready", "chunks": 1, "locator": {"kind": "xlsx", "unit": null, "sheet": "Revenue VND", "headers": ["Quarter\tRevenue (million VND)"], "cell_range": "A1"}, "excerpt": "Quarter\tRevenue (million VND)\nQ1\t120\nQ2\t150"}
+REAL detach during indexing: cancelled, attached_links=0, chunks retained
+REAL delete during indexing: cancelled, attached_links=0, chunks retained
+PASSEDREAL ingestion case elapsed=3.032s test_container_peak_mib=1182.871 shared_model_pid=7
+4 passed, 8 deselected in 39.02s
+```
+
+Visibility through actual T18 scoped vector/PG repositories, public HTTP/query still
+unmounted. Source hashes/counts/cell B2/source maps are asserted against actual source;
+logs show synthetic excerpts only. Documentation now VERIFIED with acceptance commands,
+operators' config/cache/IAM/migration prerequisites, fences/backoff/cleanup/retention.
+
+### D1/D2/D3 — scope, quality and dependency services
+
+All commands cwd repo above; host UV_CACHE_DIR set to absolute workspace `.uv-cache`.
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/19r1 -o cache_dir=.local/19rc1
+```
+
+Exit0 `.local/t19-regression.log`: `363 passed in 130.90s (0:02:10)`.
+Separate real dependency services started with
+`docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml up -d --wait postgres qdrant`
+exit0. RAG_TEST_DATABASE_URL=`postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance`,
+DATABASE_PASSWORD_FILE workspace `.local/secrets/t10_postgres_password` (value never printed),
+RAG_TEST_QDRANT_URL=`http://127.0.0.1:56333`. Command:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_session_scope.py tests/integration/test_metadata_migrations.py tests/integration/test_qdrant_scope.py -v -s --tb=short --basetemp=.local/19p1 -o cache_dir=.local/19pc1
+```
+
+Exit0 `.local/t19-dependency-services.log` actual excerpts:
+
+```text
+PASS update/retry stableIDs count4; exact cleanup0; active/other owner retained4; new session empty
+PASS PG publication blocked by generation write lock until actual Qdrant wait=true ack
+PASS dense1024 Cosine/sparse/noIDF/9payload indexes/versioned fingerprint; incompatible rejected
+36 passed in 20.52s
+```
+
+Migration test includes clean upgrade/repeat/downgrade/reupgrade with identical actual
+schema/FKs/checks/indexes, including chunks/fencing migration0003. Existing protected
+AGENTS/plan/corpus check `git diff --quiet -- AGENTS.md docs/plan.md corpus-documents` exit0.
+`git diff --check` exit0 after doc edits, inherited T07 ACL warnings/scratch untouched.
+
+Quality commands all exit0 (logs `.local/t19-{ruff,mypy,lock,openapi}-final.log`):
+
+```text
+uv run --no-sync ruff check .
+All checks passed!
+uv run --no-sync mypy src
+Success: no issues found in 68 source files
+uv lock --check --offline
+Resolved 169 packages in 31ms
+uv run --no-sync python scripts/export_openapi.py --check
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+PowerShell redirection wraps native stderr progress/warnings in NativeCommandError
+decorations in some logs; recorded native exit codes are0, these are not test failures.
+Initial Ruff test style/duplicate import findings fixed; final gate unchanged.
+
+### D4/D5 — living docs, reproducible runtime, reviewed boundaries
+
+README/RUNBOOK/tasks/handoffs/implementation-summary updated together. Closure doc
+helper initially hit an overlapping replacement assertion after updating README/RUNBOOK;
+fixed ordering and reran successfully (no code/test/gate changes). Fixed an accidental
+single-backtick RUNBOOK fence to proper Markdown. Final docs/explicit review output
+appended below. Historical attempt evidence retained.
+
+`docker compose config --quiet` and
+`docker compose -f compose.ingestion-test.yaml config --quiet` exit0.
+Sequential final test image build exit0 `.local/t19-build-final.log`;
+`docker compose build worker dispatcher` exit0 `.local/t19-runtime-build.log`:
+`Image rag-core-dispatcher:t19 Built`, `Image rag-core-worker:t19 Built`.
+`.venv/Scripts/python.exe .local/t19-image-check.py` exit0,
+full output `.local/t19-image-proof.log`:
+
+```text
+PASS rag-core-worker:t19: 68 installed source hashes equal, uid10001, Python3.12.13, no Torch
+PASS rag-core-dispatcher:t19: 68 installed source hashes equal, uid10001, Python3.12.13, no Torch
+PASS rag-core-ingestion-test:t19: 68 installed source hashes equal, uid10001, Python3.12.13, no Torch
+PASS worker packaged migration0003
+```
+
+New schema additive; operator backups/manual upgrade documented. No API contract
+changes. Dependencies'169locked versions unchanged; HTTPX already present, uv lock
+normalized NVIDIA extras markers. Worker no inference group/weights. Config examples
+are trusted operator data, no credentials. Language und until trusted annotation;
+no cross-registration computation reuse, conservative neighbor unit; no public route,
+corpus benchmark/LLM provider/Scarlet/server deployment claim. No unresolved T19 blocker.
+
+Task services stopped, both commands exit0:
+
+```powershell
+docker compose -f compose.ingestion-test.yaml stop
+docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml stop postgres qdrant
+```
+
+Actual output `.local/t19-stop-ingestion.log` / `.local/t19-stop-metadata.log`:
+`rag-core-ingestion-test-inference-1 Stopped`, postgres/redis/qdrant/minio/storage-fixture
+Stopped; `rag-core-metadata-test-postgres-1 Stopped`, qdrant Stopped. No down-v,
+no application/source/model cache volume deletion, unrelated Scarlet untouched.
+
+### D6 — completion boundary
+
+Completion subject `feat(T19): complete durable document ingestion`. Exact scoped
+stage/scope/secret/hash/whitespace/docs review below; COMPLETE is effective only after
+successful inspected commit. Actual hash and user-authorized `git push origin main`
+plus HEAD/remote equality returned after execution, no fabricated self-hash/amend.
+T20 dependencies T19/T03/T10 ready after closure; T20 remains TODO. STOP AFTER T19.
+
+### Final D4/D5/D6 review and exact task paths
+
+Final docs check `uv run --no-sync python scripts/check_docs.py` exit0
+(`.local/t19-docs-final.log`, before removing one duplicate sentence):
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 336
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Initial explicit31path stage/review helper exit0 `.local/t19-stage-final.log`:
+
+```text
+PASS exact31 task files UTF8/size/no local secret values/JWT/new key markers; 169 locked versions unchanged; AGENTS/plan/corpus unchanged
+PASS staged exactly31paths, cached whitespace, Git-filtered worktree=index; no tracked unstaged changes; scratch/logs/secrets/cache absent from index
+```
+
+Final staged document review removed a duplicated README evidence sentence and
+remaining T19 in-progress wording. Review identified the new Compose development
+HTTP flag lacked negative config tests. Added one task security test file (final32
+paths) proving only explicitly opted-in minio:9000 origin is allowed, arbitrary
+host/port/metadata IP/credentials/path/query/fragment rejected, and production denies
+both development flags even on HTTPS. No runtime source/config/model changes.
+Separate command exit0 `.local/t19-storage-security.log`:
+
+```powershell
+uv run --no-sync pytest tests/security/test_ingestion_storage_config.py -v --tb=short --basetemp=.local/19s1 -o cache_dir=.local/19sc1
+```
+
+Actual `12 passed in 0.67s`; preceding363regression remain a separate run, no fabricated
+375count. `uv run --no-sync ruff check .` exit0 `.local/t19-ruff-review.log`:
+`All checks passed!` (inherited scratch ACL warnings only). Mypy68/images/real DoD
+code unchanged. Final docs + exact32stage helper rerun after this append.
+
+Exact authorized task paths, no broad git add:
+
+```text
+.env.example
+README.md
+RUNBOOK.md
+compose.yaml
+compose.ingestion-test.yaml
+configs/storage.compose.example.json
+configs/worker.example.json
+docker/worker.Dockerfile
+docker/worker.Dockerfile.dockerignore
+docs/handoffs.md
+docs/implementation-summary.md
+docs/tasks.md
+migrations/versions/0003_ingestion_publication.py
+pyproject.toml
+uv.lock
+src/rag_core/adapters/broker/dispatcher.py
+src/rag_core/adapters/persistence/ingestion.py
+src/rag_core/adapters/persistence/vector_generations.py
+src/rag_core/adapters/storage/s3.py
+src/rag_core/adapters/vectors/qdrant.py
+src/rag_core/application/__init__.py
+src/rag_core/application/ingestion.py
+src/rag_core/domain/ingestion.py
+src/rag_core/ports/ingestion.py
+src/rag_core/ports/vectors.py
+src/rag_core/workers/__init__.py
+src/rag_core/workers/celery.py
+src/rag_core/workers/runtime.py
+tests/integration/conftest.py
+tests/integration/test_ingestion_pipeline.py
+tests/integration/test_metadata_migrations.py
+tests/security/test_ingestion_storage_config.py
+```
+
+Read/reviewed code/tests/diffs, additive migration/FKs/legacy compatibility, async
+offload/cancel/lease locks, actual vector reconciliation, shared model/Compose boundaries,
+operator examples and docs. Git author already configured, unchanged. Stage helper
+compares exact local credential bytes without printing them, rejects JWT/new private
+key markers and oversized artifacts, checks169locked versions unchanged, protected
+AGENTS/plan/corpus unchanged, then exact32path cached set/whitespace/UTF8/filtered blob
+equality and no tracked unstaged changes. No raw restricted corpus/models/weights/logs/
+secrets/ignored helpers/T07 scratch in index. Completion subject and inspected commit
+are D6; actual commit/hash and authorized remote equality reported after execution.
+
+Final closure docs command above exit0 `.local/t19-docs-closure.log`:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 335
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Final `.venv/Scripts/python.exe .local/t19-stage.py` exit0,
+`.local/t19-stage-closure.log`, actual output before this evidence-only append:
+
+```text
+PASS exact32 task files UTF8/size/no local secret values/JWT/new key markers; 169 locked versions unchanged; AGENTS/plan/corpus unchanged
+32 files changed, 2144 insertions(+), 77 deletions(-)
+PASS staged exactly32paths, cached whitespace, Git-filtered worktree=index; no tracked unstaged changes; scratch/logs/secrets/cache absent from index
+```
+
+Restage this evidence-only append with same exact32path checks, run docs/whitespace
+again, create inspected completion commit, push origin/main and compare remote hash.
+All D1–D5 and individual DoD gates PASS; D6 depends on actual successful commit.

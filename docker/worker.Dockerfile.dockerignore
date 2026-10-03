@@ -26,6 +26,11 @@ tests/*
 tests/integration/*
 !tests/integration/test_ocr.py
 !tests/integration/test_text_parsers.py
+!tests/integration/conftest.py
+!tests/integration/test_ingestion_pipeline.py
+!tests/fixtures
+tests/fixtures/*
+!tests/fixtures/ingestion
 *.log
 *.pem
 *.key

@@ -333,7 +333,7 @@
 <a id="t19"></a>
 ### T19 — Ingestion worker end-to-end và atomic index publication
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T18, T12, T15, T16.
 - **Tham chiếu kế hoạch:** [P04](plan.md#p04), [P07](plan.md#p07), [P12](plan.md#p12).
 - **Công việc:** Nối storage->parse/OCR->chunk->embed->Qdrant->PG publication, Celery lease/retry/redelivery/cancel/progress; generation cleanup có scope. Bật worker/dispatcher/inference trong Compose chuẩn.
@@ -341,7 +341,13 @@
   1. `uv run pytest tests/integration/test_ingestion_pipeline.py` với MinIO/PG/Redis/Qdrant/model thật: ingest PDF scan+XLSX+text, retry duplicate, partial Qdrant failure, source changed, worker kill/resume đều PASS.
   2. Query visibility chỉ generation ready; delete/detach trong job không hồi sinh link; source hash không đổi; report job/count/locator và README/RUNBOOK luồng ingest thật.
 - **Cạm bẫy:** Celery redelivery có thể lặp; PG và Qdrant không cùng transaction; không báo ready trước đủ chunks; không xóa generation đang phục vụ khi reindex thất bại.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `feat(T19): complete durable document ingestion`.
+- **Ghi chú thực thi:** T19-A01 | direct Codex agent, exact model/effort unavailable, no subagents | Started 2026-10-03 Asia/Bangkok. Baseline main/969b402e9f21e4ca38bea4f37f7c23839078eeec equals origin/main; inherited T07 scratch retained. Dependencies T18/T12/T15/T16 COMPLETE and notes/plan/checkpoint/summary/README/RUNBOOK read. Allowed: ingestion domain/ports/persistence and additive migration, worker/runtime/broker recovery, bounded vector reconciliation, Compose/image/config/test harness, real integration tests and five living docs. Plan: lease fencing and durable retries/recovery, staged PG chunks and exact vector verification before atomic publication; real isolated MinIO/PG/Redis/Qdrant/shared CPU model/OCR gates plus D1–D6, scoped commit/push and stop. Commit dự kiến `feat(T19): complete durable document ingestion`.
+
+- **Results/files:** T19-A01 ended 2026-10-03 Asia/Bangkok; direct agent/model/effort unavailable. Framework-free pipeline/ports/lease manifest; PG chunk persistence + additive migration0003; Celery consumer/runtime/fingerprints; dispatcher watchdog; Qdrant reconciliation/fenced writes; exact development MinIO transport; default Compose worker/dispatcher/inference and isolated real-stack harness. Exact task paths/evidence at [H-T19-A01](handoffs.md#h-t19-a01), interfaces at [S-T19-A01](implementation-summary.md#s-t19-a01).
+- **DoD-1: PASS** — actual MinIO/PG/Redis/Qdrant/BGE-M3/Tesseract, final12PASS106.74s: scan/XLSX/text, duplicate, partial acknowledged Qdrant write + retained old generation/retry, source changed, actual Celery SIGKILL/lease recovery; additional partial OCR, lost vectors, max attempts and PG text/map tamper gates. No mock model/parser/service success.
+- **DoD-2: PASS** — separate4PASS39.02s: reports ready job/count/locators + unchanged source SHA; staging invisible, duplicate remains one attempt, heartbeat renews while actual Qdrant ACK waits; detach/delete cancel without link resurrection, retain PG chunks/Qdrant vectors/source. Visibility uses real T18 scoped repository, public HTTP/query remains T20–T26.
+- **D1: PASS** — dependency notes read, diff/scope check, inherited scratch untouched, AGENTS/plan/corpus unchanged. **D2: PASS** — Ruff, strict mypy68,363unit/contract/security +12newstorage-security checks and36real PG/migration/Qdrant regression. **D3: PASS** — individual DoD commands above. **D4: PASS** — README/RUNBOOK operational status/commands/config/fences/compatibility and task/handoff/summary updated; docs checker. **D5: PASS** — scoped source/tests/config/migration/image/lock/secrets/artifacts review; packaged source68hashes equal in3images, no Torch in workers. **D6:** scoped completion commit `feat(T19): complete durable document ingestion`; COMPLETE effective only after successful inspected commit. Actual hash + authorized origin/main push/equality returned after execution, no self-hash/amend.
+- **Limits/next:** no unresolved T19 blocker. CPU real ingestion verified; no full-stack20user/SLA/corpus-quality/provider/HTTP/Scarlet/deployment claim. Language und without trusted annotation; no cross-registration computation reuse; failed derivatives retained until explicit scoped cleanup, active generations protected. T20 dependencies T19/T03/T10 ready after closure, T20 stays TODO; **STOP AFTER T19**.
 
 ## Phase 4 — Retrieval và domains
 

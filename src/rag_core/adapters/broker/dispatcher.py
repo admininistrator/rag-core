@@ -7,6 +7,7 @@ import sys
 
 from rag_core.adapters.broker.celery import CeleryJobPublisher
 from rag_core.adapters.persistence.database import build_engine, database_url_from_env
+from rag_core.adapters.persistence.ingestion import PostgresIngestionRepository
 from rag_core.adapters.persistence.registrations import OutboxDispatcher
 
 
@@ -16,9 +17,11 @@ async def _run(*, once: bool, interval: float) -> int:
         raise ValueError("REDIS_URL is required")
     engine = build_engine(database_url_from_env())
     dispatcher = OutboxDispatcher(engine, CeleryJobPublisher(broker_url))
+    recovery = PostgresIngestionRepository(engine)
     try:
         while True:
             try:
+                await recovery.recover_one()
                 dispatched = await dispatcher.dispatch_one()
             except Exception:
                 # No exception text: broker/DB exceptions can contain credentials.

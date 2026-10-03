@@ -2,7 +2,6 @@ name: rag-core
 
 services:
   inference:
-    profiles: [inference]
     image: rag-core-inference:t17-cpu
     build:
       context: .
@@ -58,8 +57,7 @@ services:
     networks: [backend]
 
   dispatcher:
-    profiles: [registration]
-    image: rag-core-dispatcher:t12
+    image: rag-core-dispatcher:t19
     build:
       context: .
       dockerfile: docker/dispatcher.Dockerfile
@@ -73,6 +71,31 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
+    networks: [backend]
+
+  worker:
+    image: rag-core-worker:t19
+    build:
+      context: .
+      dockerfile: docker/worker.Dockerfile
+      target: worker
+    environment:
+      DATABASE_URL: postgresql://rag_core@postgres:5432/rag_core
+      DATABASE_PASSWORD_FILE: /run/secrets/postgres_password
+      REDIS_URL: redis://redis:6379/0
+      WORKER_CONFIG_FILE: /run/secrets/worker_config
+    secrets: [postgres_password, worker_config, storage_config, minio_reader_user, minio_reader_password]
+    volumes: ["model_cache:/models:ro"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      qdrant: {condition: service_healthy}
+      inference: {condition: service_healthy}
+    init: true
+    mem_limit: 2g
+    cpus: 2
+    stop_grace_period: 70s
     restart: unless-stopped
     networks: [backend]
 
@@ -183,6 +206,14 @@ volumes:
   minio_data:
 
 secrets:
+  worker_config:
+    file: ./.local/worker.json
+  storage_config:
+    file: ./.local/storage.json
+  minio_reader_user:
+    file: ./.local/secrets/minio_reader_user
+  minio_reader_password:
+    file: ./.local/secrets/minio_reader_password
   postgres_password:
     file: ./.local/secrets/postgres_password
   minio_root_user:

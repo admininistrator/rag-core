@@ -57,6 +57,7 @@ def test_migrations_reproduce_schema_on_separate_database(
         "ingestion_jobs",
         "outbox_events",
         "upload_registrations",
+        "chunks",
     }
     assert migration_runner(pg_url, "upgrade", "head").returncode == 0
     assert schema() == before

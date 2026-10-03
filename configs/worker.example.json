@@ -1,0 +1,7 @@
+{
+  "inference_url": "http://inference:8080",
+  "qdrant_url": "http://qdrant:6333",
+  "model_fingerprint": "f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b",
+  "storage_config": "/run/secrets/storage_config",
+  "tokenizer_path": "/models/embedding/tokenizer.json"
+}
