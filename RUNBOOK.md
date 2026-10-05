@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T22 VERIFIED local.** T19 durable ingestion/publication, T20 domain preparation/history port, T21 dense/hybrid retrieval và T22 scoped passage/rerank/evidence gates đã kiểm. API chỉ mount health, public query/LLM/SSE/admin thuộc T23–T36. [Evidence T22](docs/handoffs.md#h-t22-a02).
+> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration.** T19 durable ingestion/publication, T20 domain preparation/history port, T21 dense/hybrid retrieval và T22 scoped passage/rerank/evidence gates đã kiểm. T23 thêm DeepSeek/Anthropic adapters; live verification vẫn ở T26. API chỉ mount health, public query/generation/SSE/admin thuộc T24–T36. [Evidence T23](docs/handoffs.md#h-t23-a01).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -30,10 +30,11 @@
 | Shared embedding/reranker service | VERIFIED real CPU/GPU weights/HTTP, queue/limits/cancel and resource smoke | T17 |
 | Scoped Qdrant repository | VERIFIED real PG/Qdrant; chưa nối public query; worker T19 đã VERIFIED | T18 |
 | Index ingestion orchestration/publication | VERIFIED real MinIO/PG/Redis/Qdrant/CPU model/OCR; evidence ở dưới | T19 |
-| Domain preparation/history rewrite port | VERIFIED scoped PG/Qdrant/tokenizer; explicit provider test, real LLM adapters pending | T20 |
+| Domain preparation/history rewrite port | VERIFIED scoped PG/Qdrant/tokenizer; adapters T23 protocol-verified, live pending T26 | T20/T23 |
 | Dense/hybrid retrieval | VERIFIED CPU BGE-M3/PG/Qdrant; bounded metadata candidates/neighbors/redacted trace | T21 |
 | Evidence selection | VERIFIED real CPU reranker/PG/Qdrant; bounded passages, conservative numeric conflicts and scoped context gate | T22 |
-| Query/LLM/SSE | DESIGNED | T23–T26 |
+| Provider adapters/config | VERIFIED synthetic protocols; DeepSeek HTTPX/Anthropic SDK; live pending T26 | T23 |
+| Query/generation assembly/public SSE | DESIGNED | T24–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
@@ -91,7 +92,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | --- | --- | --- |
 | base | IMPLEMENTED/VERIFIED | Pydantic v2 + pydantic-settings cho typed config |
 | dev | IMPLEMENTED/VERIFIED | Ruff, mypy, pytest, pytest-asyncio; jsonschema 4.26.0 từ T03 để validate exported schemas/examples, không vào API image |
-| api | IMPLEMENTED/VERIFIED T02 | FastAPI, HTTPX, Uvicorn, psycopg, Redis client; health-only API process, không có business routes |
+| api | VERIFIED T02/T23 | FastAPI, HTTPX, Uvicorn, psycopg, Redis client; Anthropic1.11.0 SDK (HTTPX2); health-only API process, không có business routes |
 | ingestion | T11–T15 VERIFIED adapters/OCR worker runtime; orchestration T19 VERIFIED | Metadata, boto3, Celery, Qdrant/Redis; Docling Parse7.22.1/slim2.132.0 convert-core, pandas3.0.6, PDFium5.13.0, Office/native parsers; CPU OCR image có Tesseract5.3.0 + eng/vie/osd, không Torch/layout/VLM weights |
 | metadata | IMPLEMENTED/VERIFIED T10 | SQLAlchemy2.0.53 async + greenlet3.5.6, Psycopg, Alembic1.20.0; được include bởi api/ingestion |
 | inference / inference-gpu | VERIFIED T17 | Separate mutually exclusive CPU/CUDA runtime; FlagEmbedding1.3.5/transformers4.57.6/torch2.9.1, not in API/ingestion groups |
@@ -791,6 +792,138 @@ T21; chỉ chạy suites nối model nối tiếp vì dùng collection theo CPU 
 trên server riêng. Fixture nguồn synthetic, không ingest QA/gold, không full-corpus
 quality/live LLM/provider/load/GPU remeasurement claim. Chưa có thay đổi
 dependency/API/DB/index schema hoặc migration; giữ dữ liệu/chunks/vector khi detach.
+
+<a id="r06-t23"></a>
+### T23 provider adapters, configuration và planned live gates
+
+**VERIFIED protocol/configuration; no live provider PASS in T23.**
+Private `domain.llm` and `ports.llm.LlmProvider` have no SDK/FastAPI dependency.
+`GenerationRequest(system, user_data, max_output_tokens=1024, json_output=False)`
+is trusted internal input, never a public request schema. `system` is server policy;
+`user_data` carries untrusted serialized question/evidence. No tool parameters,
+identity, storage URLs, retrieval or history-backed factual evidence. T24 must call
+the T22 context gate and revalidate current scope before prompt/final; adapters have
+no repositories and cannot grant session access.
+
+DI examples (construct selected provider only; callers own HTTP pool lifetime):
+
+```python
+import httpx
+import httpx2
+from rag_core.adapters.llm.config import DeepSeekSettings, AnthropicSettings
+from rag_core.adapters.llm.deepseek import DeepSeekProvider
+from rag_core.adapters.llm.anthropic import AnthropicProvider
+
+# Choose one provider in trusted application composition; not from public query body.
+async with httpx.AsyncClient(trust_env=False, follow_redirects=False) as pool:
+    deepseek = DeepSeekProvider(DeepSeekSettings(), pool)
+    # await deepseek.generate(internal_request), or deepseek.rewrite(rewrite_input)
+async with httpx2.AsyncClient(trust_env=False, follow_redirects=False) as pool:
+    claude = AnthropicProvider(AnthropicSettings(), pool)
+    # await claude.generate(internal_request), or claude.rewrite(rewrite_input)
+```
+
+These are composition examples, not a live smoke command. SDK1.11.0 uses
+HTTPX2 2.13.1, distinct from existing HTTPX0.28.1; do not alias the packages globally.
+API group pins `anthropic==1.11.0`; lock retains existing versions and adds eight SDK
+dependencies. No Torch/weights enter API. Anthropic receives top-level `system`,
+user-only `messages`, explicit `model/max_tokens`, SDK API-key/version headers;
+SDK retries are disabled (`max_retries=0`). Raw streamed response API allows bounded
+success-body/SSE decoding. Anthropic pools that follow redirects are rejected.
+DeepSeek receives system/user `messages`, Bearer key, `thinking.type=disabled`,
+explicit model/max_tokens, `response_format=json_object` when requested and
+`stream_options.include_usage=true`. DeepSeek disables redirects per request.
+No automatic provider/model change, hidden tool execution, or citation repair here.
+
+| Variable suffix (each has its own `DEEPSEEK_` / `ANTHROPIC_` prefix) | Default / bounds |
+| --- | --- |
+| `API_KEY` | Required only for selected provider; SecretStr, excluded from repr; invalid values never echoed by `load_provider_settings` |
+| `MODEL` | Required, no default; operator chooses currently available model ID, independently for each provider |
+| `BASE_URL` | `https://api.deepseek.com` / `https://api.anthropic.com`; HTTPS origin or `/v1`, no userinfo/query/fragment; trusted server config only |
+| `TIMEOUT_SECONDS` | 30; finite >0, <=300; one deadline across request/reads/retries/backoff |
+| `MAX_ATTEMPTS` | 2; 1–3 total attempts, not additional retry count |
+| `RETRY_BASE_SECONDS` | 0.25; finite >0, <=2; exponential delay capped2s, jitter0.5–1.0 |
+| `MAX_INPUT_TOKENS` | 32768; 512–131072 conservative processing units |
+| `CONTEXT_WINDOW_TOKENS` | 65536; 1536–262144; operator must set at/below selected model's actual context capacity |
+
+Settings read environment then ignored `.env`, ignore empty values. Missing/unusable
+provider configuration fails safely even if the other provider is fully configured.
+`load_provider_settings('deepseek'|'anthropic')` reports only provider/invalid field
+names. Pydantic errors hide inputs; credentials never go into prompt or response.
+Pool setup/exception handling must keep raw SDK/transport errors out of logs.
+Adapters raise code-only `LlmError` with suppressed upstream traceback chaining.
+
+Before sending, revalidate internal request/config instances (including constructed
+copies). Prompt charge is UTF-8 bytes of full system+user data plus256 framing units;
+reject if over `MAX_INPUT_TOKENS` or charge+reserved output exceeds context window.
+JSON mode adds a trusted JSON instruction before charging. This intentionally
+conservative charge is not the provider tokenizer or billable measurement; long
+valid prompts can be rejected. T24 must budget the entire assembled prompt, including
+system/question/evidence, and handle limit errors; no silent truncation. Provider
+`max_tokens` enforces requested output1–1024. Additional guards: successful JSON body
+or SSE wire <=2MiB, each SSE frame <=64KiB, accumulated answer UTF-8 <=64KiB. These
+wire guards cover successful response decoding; SDK handles HTTP error bodies.
+
+`generate` returns `GenerationResult(text, usage)`. `stream` emits `LlmDelta(text)*`
+then one `LlmCompleted(usage)` only after normal provider terminal; this is private
+upstream protocol, not public T03/T25 SSE. EOF/length/tool/malformed events remain
+technical errors, never `insufficient_evidence` or a valid completion. Reasoning is
+not emitted as answer text. Anthropic unknown named events are ignored per provider
+versioning policy; known text block/index/message order is checked. DeepSeek accepts
+usage on final finish chunk and legacy empty-choice usage-only chunk before `[DONE]`.
+
+Usage records actual returned model plus nullable input/output counts. Missing stays
+`null`, not zero or guessed. Anthropic input totals uncached+reported cache-read+
+cache-creation tokens; streaming output updates are cumulative, never summed. No
+prompt/output/history text in repr. `rewrite` wraps the T20 untrusted `RewriteInput`
+as JSON under fixed policy, requests JSON, strictly validates only standalone question
+and original EN/VI question language, and never answers or promotes old citations.
+Anthropic JSON mode uses system instruction plus strict local validation, without
+model-specific structured-output/tool features. Invalid rewrite has no hidden repair.
+
+Retry transient transport/timeout, HTTP408/429/5xx and Anthropic in-band
+rate-limit/overloaded errors within total deadline. Permanent HTTP/auth errors,
+malformed data and budget failures are not retried. Once any answer delta is emitted
+(even whitespace), all retry is disabled. Cancellation propagates, closes the active
+upstream response, and preserves caller-owned pool. Use `async with aclosing(provider.stream(request))`
+for early consumer exit; no timeout context stays active while yielding to caller.
+Backpressure consumes remaining deadline but cannot asynchronously cancel unrelated
+caller work while paused. Scope checking, query admission and public SSE buffering
+belong to T24–T26.
+
+Safe error codes: `llm_invalid_config`, `llm_invalid_provider`, `llm_invalid_request`,
+`llm_input_limit`, `llm_output_limit`, `llm_response_limit`, `llm_invalid_response`,
+`llm_invalid_rewrite`, `llm_stream_incomplete`, `llm_timeout`, `llm_rate_limited`,
+`llm_auth_failed`, `llm_request_rejected`, `llm_unavailable`. No provider failure is
+converted to a factual answer or document insufficiency.
+
+Reproduce T23 from repo root, without keys/services/network calls:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+uv sync --locked --group dev --group api
+uv run --no-sync pytest tests/contract/test_llm_providers.py -q --tb=short --basetemp=.local/t23-new
+uv run --no-sync pytest tests/contract/test_llm_providers.py -k 'config or redirect_following' -q --tb=short --basetemp=.local/t23-config-new
+```
+
+Use new basetemp paths. Fixtures are synthetic protocol bytes passed through real
+HTTPX transports and Anthropic SDK; they verify request/stream/error handling, not
+model behavior or availability. [H-T23-A01](docs/handoffs.md#h-t23-a01) holds actual
+DoD outputs, revisions, retained diagnostics and quality/regression evidence.
+
+**Planned T26 live verification (not executed here):** supply independent funded keys
+and currently available model IDs; verify each provider through mounted authenticated
+`POST /v1/query` and `/v1/query/stream` for EN/VI, answer/citation/usage, insufficient
+evidence and disconnect/error handling as T26 requires. Commands/tests for that gate
+are still planned until T26 creates them: `uv run python scripts/smoke_llm.py --provider deepseek`
+and `uv run python scripts/smoke_llm.py --provider anthropic`. Never label these fixtures as live PASS.
+
+Official references checked 2026-10-06:
+[DeepSeek Chat Completions](https://api-docs.deepseek.com/api/create-chat-completion/),
+[DeepSeek JSON output](https://api-docs.deepseek.com/guides/json_mode/),
+[Anthropic Messages](https://platform.claude.com/docs/en/api/messages/create),
+[Anthropic streaming](https://platform.claude.com/docs/en/build-with-claude/streaming),
+[Anthropic Python SDK](https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/python).
 
 ### App gọi LLM viết lại
 

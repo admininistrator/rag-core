@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-06 / T23-A01 acceptance closure:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T22 `3e6821b814282ef0a6859a9414ecf8f8d29fdf72` equals origin/main (read-only escalation verified). No partial T23 candidate; inherited T07 scratch preserved. DeepSeek HTTPX and Anthropic SDK1.11.0 generate/stream/rewrite implemented with distinct schemas, independent configuration, prompt/output bounds, nullable usage, shared total deadline/bounded retries/no retry after emitted delta/cancel cleanup. DoD-1 synthetic127PASS4.63s and separate DoD-2 config18PASS2.22s; 645regressionPASS200.23s, Ruff/format/mypy85/lock177/OpenAPI/docs/review PASS; final staged commit/push boundary below. Evidence [H-T23-A01](#h-t23-a01), interfaces [S-T23-A01](implementation-summary.md#s-t23-a01). No live provider/model behavior claim; T26 retains real-provider gates. Completion subject `feat(T23): support DeepSeek and Anthropic generation`, COMPLETE effective only after inspected commit succeeds; actual hash/authorized origin/main equality reported post-execution. T24 remains TODO, dependencies ready after closure; STOP T23, no drain/merge/deploy/Scarlet/source/cache/scratch deletion.
+
 - **Current 2026-10-06 / T22-A02 acceptance closure:** direct Codex agent, exact model/effort unavailable, no subagents. User delegates optimal conflict-policy choice; numeric-claim-v1 mapped-source baseline implemented over A01 checkpoint `74bb13019410bc2baf1fe911a2183ff5933716ea` (origin/main verified equal), preserving all partial work/scratch. DoD-1 **14actualCPUreranker/PG/Qdrant PASS103.34s**, separate DoD-2 **14PASS65.89s**,45focused unitPASS0.32s; final regression/quality/review/commit/push at closure below. Evidence [H-T22-A02](#h-t22-a02), interfaces [S-T22-A02](implementation-summary.md#s-t22-a02). Conflict cannot disappear under passage budget, scope/history/foreign guards retained. Threshold calibration T31 pending; semantic contradiction/translation/unit-conversion/full-corpus accuracy not claimed. Completion subject `feat(T22): select ranked evidence with answerability state`; COMPLETE effective only with successful inspected commit. Actual hash/authorized origin/main equality returned post-execution. T23 dependencies T22/T20 ready after closure, remains TODO. **STOP T22**, no drain/merge/deploy/Scarlet/source/cache deletion.
 
 - **Current 2026-10-06 / T22-A01 PARTIAL, NOT COMPLETE:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T21 `2c84157ba5bcac83560191573d8a26fa944bb1cf` verified equal origin/main; T07 scratch retained. Scoped PG source-map hydration, real rerank, whole-passage budgets and generation-context guards implemented; current conflict detection is absent, pending user decision (same-label/unit numeric baseline or semantic contradiction coverage before LLM). DoD-1 cannot close without this decision/test; no threshold calibration claim (T31 pending). Evidence [H-T22-A01](#h-t22-a01), interfaces [S-T22-A01](implementation-summary.md#s-t22-a01). Checkpoint review/commit/push hash reported after actual execution; this is not a completion commit. Preserve partial work and logs, resume only T22. T23 is not dependency-ready. **STOP T22**, no task drain/merge/deploy; Scarlet/source/cache unchanged.
@@ -8393,3 +8395,393 @@ checker/logs ignored. Restage only this evidence append and repeat same exact13
 filtered hashes/docs/whitespace before completion commit. D1-D5 PASS, D6 actual
 commit inspection/push/hash equality returned after execution. No unresolved blocker,
 raw threshold pending T31 and conservative semantic limits documented. STOP T22.
+
+
+<a id="h-t23-a01"></a>
+## H-T23-A01 - Phase 5 / provider adapters / 2026-10-06
+
+### Identity, scope, baseline and official references
+
+Direct Codex agent, exact model/effort unavailable, no subagents. Cwd for every
+command in this entry: `C:/Users/Admin/Documents/GitHub/rag-core`. Client date/timezone:
+2026-10-06 Asia/Bangkok. Assigned T23 only; user authorizes scoped commit and
+origin/current branch push, no force/merge/deploy/drain. Initial main HEAD
+`3e6821b814282ef0a6859a9414ecf8f8d29fdf72` (T22 completion), T22/T20 COMPLETE notes,
+interfaces, P01/P02/P05/P09/P13, AGENTS/session prompt and living docs read.
+No partial tracked T23 source. Initial `git status --short` exit0:
+
+```text
+?? .ptmp-t07-a02/
+?? .tmp-t07-a02/
+```
+
+Known inaccessible legacy scratch warnings retained, no cleanup. `git branch --show-current`
+exit0 `main`; `git rev-parse HEAD` exit0 hash above; `git remote -v` exit0 origin fetch/push
+`https://github.com/admininistrator/rag-core.git`. Initial sandbox
+`git ls-remote origin refs/heads/main` exit128:
+
+```text
+fatal: unable to access 'https://github.com/admininistrator/rag-core.git/': Failed to connect to github.com port 443 after 38 ms: Could not connect to server
+```
+
+Same read-only command with network escalation exit0:
+
+```text
+3e6821b814282ef0a6859a9414ecf8f8d29fdf72	refs/heads/main
+```
+
+No permission rejection or user approval blocker. Secrets never printed. Initial
+PowerShell-to-Python document update did not match Vietnamese text due to console
+encoding; detected with Git diff and corrected via UTF-8 apply_patch. Task status/
+notes are now explicit T23-A01; no fabricated prior mutation/verification claim.
+
+Official sources checked with web tool before adapter code, not copied into corpus:
+[DeepSeek Chat Completions](https://api-docs.deepseek.com/api/create-chat-completion/),
+[DeepSeek JSON mode](https://api-docs.deepseek.com/guides/json_mode/),
+[Anthropic Messages](https://platform.claude.com/docs/en/api/messages/create),
+[Anthropic streaming](https://platform.claude.com/docs/en/build-with-claude/streaming),
+[Anthropic Python SDK](https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/python).
+Direct DeepSeek opens timed out; official indexed reference content retrieved by
+search contains native request/finish/SSE/usage schema. Current DeepSeek final
+finish chunk carries usage; legacy usage-only chunk remains explicitly tested.
+Anthropic native top-level system, message/block stream flow/cumulative usage,
+SDK retries/timeout/raw response and distinct HTTPX2 behavior checked. No default
+model ID inferred from examples or hardcoded. Live-provider verification belongs
+T26 per original T23 DoD, no missing keys used to bypass a gate.
+
+### Environment and SDK pin
+
+Actual setup command (network escalation; workspace cache/interpreter paths):
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:UV_PYTHON_INSTALL_DIR=Join-Path (Get-Location) '.uv-python'; uv add --group api anthropic
+```
+
+Exit0 actual output excerpt:
+
+```text
+Resolved 177 packages in 11.21s
+Prepared 8 packages in 6.10s
+Installed 8 packages in 910ms
+ + anthropic==1.11.0
+ + docstring-parser==0.18.0
+ + httpcore2==2.13.1
+ + httpx2==2.13.1
+ + jiter==0.17.0
+ + sniffio==1.3.1
+ + truststore==0.10.4
+```
+
+Changed API specifier to exact `anthropic==1.11.0`; `uv lock --offline` exit0
+`Resolved 177 packages in 115ms`. Lock additionally includes platform-conditional
+httpx2-jsfetch1.0;169existing package versions unchanged, official PyPI URLs/hashes.
+Initial unconfigured `uv pip show anthropic` failed opening global user cache
+(Access denied); subsequent commands use workspace UV_CACHE_DIR, no bypass.
+
+Actual commands each exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv sync --locked --offline --group dev --group api --group ingestion --group inference
+uv run --no-sync python -c "import sys, anthropic, httpx, httpx2; print(sys.version); print('anthropic='+anthropic.__version__+' httpx='+httpx.__version__+' httpx2='+httpx2.__version__)"
+uv lock --check --offline
+```
+
+Output excerpts:
+
+```text
+Resolved 177 packages in 1ms
+3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 15:03:56) [MSC v.1929 64 bit (AMD64)]
+anthropic=1.11.0 httpx=0.28.1 httpx2=2.13.1
+Resolved 177 packages in 36ms
+```
+
+### DoD-1 PASS - distinct protocol fixtures, native SDK and transport lifecycle
+
+Actual command exit0 (UV_CACHE_DIR workspace as above):
+
+```powershell
+uv run --no-sync pytest tests/contract/test_llm_providers.py -q --tb=short --basetemp=.local/23-dod1 *> .local/t23-a01-dod1.log
+```
+
+Expected native request/JSON/SSE schema, missing usage, split UTF-8 frames,
+429/5xx/retry bounds, malformed event, timeout/disconnect/cancel all PASS, no
+retry after emitted delta. Actual full ignored log `.local/t23-a01-dod1.log`:
+
+```text
+........................................................................ [ 56%]
+.......................................................                  [100%]
+127 passed in 4.63s
+```
+
+Synthetic fixtures, real HTTPX0.28.1 / HTTPX2 2.13.1 MockTransport and actual
+Anthropic1.11.0 SDK request/error/raw-response API; no live model/keys/network.
+T23 specifically requires recorded/synthetic protocols, not live substitution.
+Covers JSON/native headers/model/output budgets, single-byte split multibyte EN/VI
+SSE, comments/multiline/CR-LF-CRLF, missing/cache/cumulative usage, current/legacy
+DeepSeek finish usage, native Anthropic block/message order/future event handling,
+HTTP/in-band transient retry, permanent errors, exact exhausted attempt count,
+pre-delta disconnect/timeout retry, post-delta disconnect/EOF/timeout/truncation
+without retry/completed, malformed/oversized/tool events and JSON, request/context/
+output bounds and constructed copies, cancellation/consumer-close/paused-caller
+cleanup, strict EN/VI question-only rewrite, untrusted history kept out of policy.
+No factual-answer/citation/prompt-injection-compliance model claim.
+
+### DoD-2 PASS - independent config/secrets and documented live boundary
+
+Actual separate command exit0:
+
+```powershell
+uv run --no-sync pytest tests/contract/test_llm_providers.py -k 'config or redirect_following' -q --tb=short --basetemp=.local/23-dod2 *> .local/t23-a01-dod2.log
+```
+
+Expected both providers configure independently, no other-provider key requirement
+or fallback, redaction survives malformed config/upstream errors; README/RUNBOOK
+explain T26 live gates. Actual log `.local/t23-a01-dod2.log`:
+
+```text
+..................                                                       [100%]
+18 passed, 109 deselected in 2.22s
+```
+
+Deselection is intentional separate configuration subset, not skipped acceptance;
+all127tests ran in DoD-1. Two independently configured profiles tested together,
+selected-provider missing key fails despite other valid key/model, safe repr/JSON/
+traceback, env field names and invalid constructed config, HTTPS/key/model/retry/
+timeout bounds, redirect-following Anthropic pool rejection. No plaintext key value
+committed. All key-shaped fixtures are explicit non-credential synthetic strings.
+README/RUNBOOK/.env.example enumerate selected-provider config and no model default.
+Planned T26 commands `uv run python scripts/smoke_llm.py --provider deepseek` and
+`uv run python scripts/smoke_llm.py --provider anthropic` remain planned: public routes
+and smoke script do not yet exist. No live PASS recorded, no DoD lowered.
+
+### Retained diagnostics and corrections
+
+Initial scoped Ruff found4import/unused-import findings; auto-fixed in task files.
+Initial mypy found2iterator `aclose` typing errors; corrected private `_stream` return
+to AsyncGenerator. Final whole-source type check below PASS85sources, no ignores added.
+Initial89protocol tests PASS2.65s. Expanded test run:
+
+```powershell
+uv run --no-sync pytest tests/contract/test_llm_providers.py -q --tb=short --basetemp=.local/23-second
+```
+
+Exit1 actual excerpts:
+
+```text
+E   TypeError: rag_core.adapters.llm.config.DeepSeekSettings() got multiple values for keyword argument 'retry_base_seconds'
+E   assert (0 == 1)
+5 failed, 119 passed in 3.96s
+```
+
+One fixture helper passed both default and explicit retry_base_seconds; corrected
+using settings.pop. SDK lazy request setup could consume the test-only10/30ms
+whole-operation deadlines before request, so deadlines now200ms and deterministic
+retry-base1s > remaining deadline. Same total-deadline/no-retry/cleanup behavior
+asserted, no provider acceptance gate removed. Failed correction command exited1:
+`UnicodeDecodeError: 'charmap' codec can't decode byte 0x81 in position 17023`;
+explicit UTF-8 read/write corrected it. Another patch failed atomically on formatted
+line context; corrected against actual file. No partial edits or evidence fabricated.
+
+Intermediate logs retained `.local/t23-a01-protocol-initial.log` (4failed120passed3.40s),
+`.local/t23-a01-protocol-final.log` (2failed122passed5.31s),
+`.local/t23-a01-protocol-final2.log` (2failed122passed4.66s).
+Final pre-closure127PASS log is DoD-1 above. First broad regression started before
+helper fix finished collecting, so used the old helper (all4failures from helper):
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/r23a1 -o cache_dir=.local/c23a1 *> .local/t23-a01-regression.log
+```
+
+Exit1 actual tail, `.local/t23-a01-regression.log`:
+
+```text
+4 failed, 638 passed in 210.15s (0:03:30)
+```
+
+Full rerun after all source/test fixes passes below. Intermediate documentation
+check failed because newly referenced `#h-t23-a01` evidence was not yet appended;
+this entry closes the anchor. No dependency/model/gold changes to mask failures.
+
+### D2/D3 - final regression and real dependency boundaries
+
+Test project is isolated loopback PG/Qdrant/tmpfs + existing read-only shared model
+cache, same pinned T17 CPU service image as T20/T22 acceptance. No provider credentials,
+application volumes, source writes or Scarlet changes. Real integration/security
+fixtures use PG/Qdrant/CPU inference; provider protocol tests remain synthetic.
+Actual service preparation (network/Docker escalation) exit0:
+
+```powershell
+docker compose -p rag-core-t23-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
+```
+
+Actual output includes all3services Healthy. Regression command (escalation) exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'; $env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'; $env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'; $env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'; uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/r23a1f -o cache_dir=.local/c23a1f *> .local/t23-a01-regression-final.log
+```
+
+Expected all prior518tests+127T23 tests PASS, no skip. Actual output excerpt from
+`.local/t23-a01-regression-final.log`:
+
+```text
+........................................................................ [ 89%]
+.....................................................................    [100%]
+645 passed in 200.23s (0:03:20)
+```
+
+Quality commands each exit0:
+
+```powershell
+uv run --no-sync ruff check . *> .local/t23-a01-ruff.log
+uv run --no-sync ruff format --check src/rag_core/adapters/llm src/rag_core/domain/llm.py src/rag_core/ports/llm.py tests/contract/test_llm_providers.py
+uv run --no-sync mypy src
+uv run --no-sync python scripts/export_openapi.py --check
+git diff --check
+```
+
+Actual outputs:
+
+```text
+All checks passed!
+8 files already formatted
+Success: no issues found in 85 source files
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+Ruff retains3known legacy scratch Access denied warnings; exit0. Git whitespace
+exit0 with existing CRLF-to-LF normalization warnings; no content issue. Actual
+post-regression service state/stop command (escalation) exit0:
+
+```powershell
+docker compose -p rag-core-t23-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml ps --all --format '{{.Name}} {{.State}} {{.Health}}'; docker compose -p rag-core-t23-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; docker compose -p rag-core-t23-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml ps --all --format '{{.Name}} {{.State}}'
+```
+
+Actual excerpts:
+
+```text
+rag-core-t23-test-inference-1 running healthy
+rag-core-t23-test-postgres-1 running healthy
+rag-core-t23-test-qdrant-1 running healthy
+rag-core-t23-test-inference-1 exited
+rag-core-t23-test-postgres-1 exited
+rag-core-t23-test-qdrant-1 exited
+```
+
+No down -v, no deletion/move of source/cache/scratch/original data.
+
+### D1/D4/D5/D6 - review and completion boundary
+
+All16task paths:7private domain/port/adapter source files,1contract suite, API
+pyproject/lock, env example, README/RUNBOOK and3ledgers. No public contract/route,
+DB/index/parser/model/Compose migration. Native SDK success JSON/SSE bodies bounded;
+SDK itself handles HTTP error body decoding. Input charge is conservative UTF-8
+processing units, not provider billing; T24 must enforce assembled prompt and scope.
+Live smoke/model behavior/factual quality/citations/public endpoints remain T24-T26;
+no deployment/Scarlet/server integration claim. T24 dependencies T23/T22/T16 ready
+only after successful inspected completion commit; remains TODO, STOP T23.
+
+Actual review helper command exit0:
+
+```powershell
+uv run --no-sync python .local/t23_a01_review.py
+```
+
+Actual output:
+
+```text
+PASS tracked changes within16T23allowed paths; new files explicitly reviewed
+PASS UTF8/size/new-source and added-line private-key/API-key-pattern scan (synthetic fixtures reviewed)
+PASS domain/port no transport/framework SDK imports; no public schema/migration change
+PASS169existing locked versions unchanged;8new SDK packages use official PyPI
+PASS prompt corpus unchanged; no raw sources/secrets/weights/cache/scratch staged
+PASS configured Git author; identity value not printed
+```
+
+Helper is ignored runtime evidence only, not source to commit. Final docs/staged
+checks and inspected completion commit/push boundary append below. Completion
+subject `feat(T23): support DeepSeek and Anthropic generation`; actual hash/remote
+equality reported post-execution, never self-hash/amend. COMPLETE effective only
+once inspected commit succeeds; push authorized origin/main, no force/merge/deploy.
+
+
+### Final D1-D6 documentation and review closure
+
+Initial full-history secret-pattern scan exited1 at `AssertionError: docs/handoffs.md`:
+historical evidence includes key marker text outside T23 changes. Review helper now
+scans complete new source/test/env and added lines in existing docs/config/lock, while
+retaining UTF-8/size checks on every file; no old evidence altered or credential
+printed. Final helper PASS above is actual corrected output, not initial failure.
+
+Actual final documentation/whitespace commands each exit0:
+
+```powershell
+uv run --no-sync python scripts/check_docs.py
+git diff --check
+```
+
+Output:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 371
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+D1 PASS dependency/checkpoint/scope/whitespace; D2 PASS127protocol+645regression,
+Ruff/format/mypy85/locked177/OpenAPI; D3 PASS original separate DoD1/2;
+D4 PASS README/RUNBOOK/env/notes/checkpoint/summary and documentation validator;
+D5 PASS native schemas/retry/emitted-token guard/usage/null/cancel/deadline/prompt
+data separation, new-source/added-line secrets/artifacts, all169prior locked versions
+unchanged/8new SDK packages, no public/API/DB/index/model/corpus migration.
+D6 scoped16path stage/filtered hash/cached whitespace review and completion subject
+`feat(T23): support DeepSeek and Anthropic generation`; actual inspected commit hash
+and authorized origin/main equality returned after execution. No self-hash/amend.
+No unresolved T23 blocker. Live availability/model compliance/public query/generation/
+citations remain T24-T26. T24 dependencies T23/T22/T16 ready after inspected successful
+completion commit; remains TODO. Own services stopped, sources/cache/old scratch
+unchanged; STOP T23.
+
+
+### D6 actual staged candidate
+
+Actual explicit stage command (Git escalation) exit0:
+
+```powershell
+git add -- .env.example README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md pyproject.toml uv.lock src/rag_core/domain/llm.py src/rag_core/ports/llm.py src/rag_core/adapters/llm/__init__.py src/rag_core/adapters/llm/config.py src/rag_core/adapters/llm/common.py src/rag_core/adapters/llm/deepseek.py src/rag_core/adapters/llm/anthropic.py tests/contract/test_llm_providers.py
+```
+
+Actual `uv run --no-sync python .local/t23_a01_review.py --staged` exit0:
+
+```text
+PASS exact16T23staged paths and filtered worktree/index hashes
+PASS UTF8/size/new-source and added-line private-key/API-key-pattern scan (synthetic fixtures reviewed)
+PASS domain/port no transport/framework SDK imports; no public schema/migration change
+PASS169existing locked versions unchanged;8new SDK packages use official PyPI
+PASS prompt corpus unchanged; no raw sources/secrets/weights/cache/scratch staged
+PASS configured Git author; identity value not printed
+```
+
+`git diff --cached --check` exit0, no output; `git diff --cached --stat` confirms16files
+including7source/1test/3env-dependency files/5living docs. `git status --short` shows
+only16staged task paths plus inherited `.ptmp-t07-a02/`, `.tmp-t07-a02/` untracked.
+Final docs command after task/summary closure exit0:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 373
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+This evidence append is restaged and reviewed with the same helper/whitespace/docs
+commands before `git commit -m "feat(T23): support DeepSeek and Anthropic generation"`.
+Then inspect commit/parent/exact16files, `git push origin main` without force and
+`git ls-remote origin refs/heads/main`; actual outputs/hash/equality reported directly
+to user after execution. No commit hash written into its own commit. COMPLETE only
+with successful inspected completion commit, STOP T23, T24 remains TODO.

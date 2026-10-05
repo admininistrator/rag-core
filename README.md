@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T01–T22 VERIFIED local.** T19 nối durable ingestion và atomic publication; T20 thêm domain preparation/history port, T21 bounded dense/hybrid retrieval, T22 scoped passage hydration/rerank/budgets và evidence states đã kiểm với BGE/PG/Qdrant thật. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. API chỉ mount health; provider thật, public query/generation/SSE/admin còn thuộc T23–T36. [Evidence T22](docs/handoffs.md#h-t22-a02).
+> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration.** T19 nối durable ingestion và atomic publication; T20 thêm domain preparation/history port, T21 bounded dense/hybrid retrieval, T22 scoped passage hydration/rerank/budgets và evidence states đã kiểm với BGE/PG/Qdrant thật. T23 thêm DeepSeek/Anthropic generate/stream/rewrite adapters; live verification vẫn ở T26. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. API chỉ mount health; public query/generation/SSE/admin còn thuộc T24–T36. [Evidence T23](docs/handoffs.md#h-t23-a01).
 
 ## Phạm vi đã chốt
 
@@ -97,6 +97,33 @@ uv run python scripts/export_openapi.py --check
 | `multilingual` | Session hoặc subset nonempty | EN/VI; `corpus_languages` lọc độc lập với answer language |
 
 History chỉ là dữ liệu cho rewrite, không vào retrieval/evidence context. Giữ suffix gần nhất trong 20 messages/8000 tokens đo bằng pinned BGE-M3 tokenizer, trả counts và warning khi cắt. Rewrite output chỉ có câu hỏi độc lập và ngôn ngữ câu hỏi gốc; lỗi/timeout là lỗi kỹ thuật, scope thay đổi thì dừng. Provider test đã kiểm cả ba domain và EN/VI overrides; real DeepSeek/Anthropic adapters thuộc T23, live smoke T26. [RUNBOOK R06](RUNBOOK.md#r06) ghi DI/schema, budgets và lệnh kiểm chứng trên PG/Qdrant thật. Chưa có query HTTP handler hoặc factual-answer verification trong T20.
+
+## Provider adapters T23
+
+**VERIFIED protocol/configuration tests; live verification remains T26.**
+`DeepSeekProvider` uses HTTPX Chat Completions; `AnthropicProvider` uses the pinned
+Anthropic1.11.0 SDK and native Messages schema. Both implement private
+`LlmProvider.generate/stream` and T20 `QueryRewriter.rewrite`. System policy stays
+separate from untrusted question/history/evidence; no tools or provider fallback.
+T24 assembles scoped prompts/citations; T25/T26 wire public query/SSE.
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+uv sync --locked --group dev --group api
+uv run --no-sync pytest tests/contract/test_llm_providers.py
+uv run --no-sync pytest tests/contract/test_llm_providers.py -k 'config or redirect_following'
+```
+
+No provider keys/services are needed for these synthetic protocol tests. Configure
+the selected provider's own `API_KEY` and `MODEL` in ignored `.env`/environment,
+using `DEEPSEEK_` or `ANTHROPIC_` prefixes; model IDs have no default. Independent
+HTTPS endpoints, deadlines, retry and token-budget settings are in `.env.example`.
+Usage missing from upstream stays `null`; retries stop after the first delta,
+including whitespace. Cancel/early close releases upstream. Consumers use
+`contextlib.aclosing` when ending a stream early.
+[RUNBOOK T23](RUNBOOK.md#r06-t23) documents DI, conservative prompt charge,
+nullable usage, error codes, limits and planned live gates;
+[evidence](docs/handoffs.md#h-t23-a01) records separate DoDs and quality checks.
 
 ## Authentication T09
 
@@ -440,7 +467,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T18 VERIFIED:** exact-pair scoped Qdrant search/fetch/neighbors, versioned collections, idempotent upserts và PG-guarded generation cleanup.
 - **T19 VERIFIED:** ingestion orchestration, fenced leases/recovery, durable chunks/source maps và atomic ready publication; gates/evidence ở trên.
 - **T20–T21 VERIFIED:** domain registry/scoped preparation/history rewrite port và bounded dense/hybrid retrieval với redacted trace.
-- **T23–T26:** query JSON/SSE, citations, provider configuration và live smoke.
+- **T23 VERIFIED protocol/config:** DeepSeek HTTPX và Anthropic SDK generate/stream/rewrite; synthetic fixtures, independent secrets/models/budgets. Live smoke remains T26.
+- **T24–T26:** query JSON/SSE, citations, provider wiring và live smoke.
 - **T27–T29:** admin URL/login, UI workflows.
 - **T30–T34:** benchmark reports, performance, reliability, backup/restore.
 - **T35–T36:** quickstart tích hợp đã kiểm chứng và trạng thái nghiệm thu cuối.
