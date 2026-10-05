@@ -392,7 +392,7 @@
 <a id="t22"></a>
 ### T22 — Reranking và đánh giá đủ bằng chứng
 
-- **Trạng thái:** TODO
+- **Trạng thái:** BLOCKED
 - **Phụ thuộc:** T21, T17.
 - **Tham chiếu kế hoạch:** [P08](plan.md#p08), [P09](plan.md#p09), [P11](plan.md#p11).
 - **Công việc:** Rerank top candidates, passage/token budget, evidence policy trả supported/insufficient/conflicting reason, model thresholds versioned; baseline thresholds chưa là calibration kết thúc.
@@ -400,7 +400,12 @@
   1. `uv run pytest tests/integration/test_evidence_selection.py` dùng reranker thật PASS: relevant/irrelevant/conflicting, multi-evidence, number/unit/table headers, budget/cancellation.
   2. `uv run pytest tests/security/test_evidence_scope.py` không cho passages/history ngoài scope vào LLM context; RUNBOOK ghi threshold pending calibration T31, không quảng cáo confidence xác suất.
 - **Cạm bẫy:** Có nearest neighbor không nghĩa có đáp án; không bỏ citation provenance khi rerank; không đưa hết document vào prompt để vượt thiếu evidence.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `feat(T22): select ranked evidence with answerability state`.
+- **Ghi chú thực thi:** T22-A01 | direct Codex agent, exact model/effort unavailable, no subagents | Started 2026-10-06 Asia/Bangkok. Baseline main/2c84157ba5bcac83560191573d8a26fa944bb1cf; inherited T07 scratch preserved, no partial tracked T22 candidate. Read AGENTS/session prompt, complete T21/T17 dependency notes/interfaces/evidence, P01/P08/P09/P11/P13 and living docs. Allowed: evidence domain/application/port and scoped PG chunk reader, focused real-model integration/security/boundary tests and five living docs. Plan: authorize/hydrate bounded candidates and source maps before rerank; raw-score versioned policy, whole-passage/token budgets, before/after scope checks, conservative evidence states; clarify unspecified conflict semantics with user. Separate real DoD gates/D1–D6, scoped commit and authorized origin/main push/hash verification; STOP T22. Commit dự kiến `feat(T22): select ranked evidence with answerability state`.
+- **Partial checkpoint / T22-A01 (NOT COMPLETE):** 2026-10-06 Asia/Bangkok. Eight new source/test/helper paths +five living docs implement scoped PG passage/source-map hydration, real CPU rerank, immutable raw-score baseline, whole-passage budgets and generation-context guards. Interfaces [S-T22-A01](implementation-summary.md#s-t22-a01), actual evidence [H-T22-A01](handoffs.md#h-t22-a01).
+- **DoD-1 BLOCKED:** implemented real cases9PASS70.67s including EN->VI/VI->EN relevance/irrelevant nearest neighbor/multi-source/number/unit/table headers/token boundary/actual cancel-recovery/768overlimit/full deadline/20candidates->8passages. Required conflicting-evidence semantics and real acceptance case remain absent; no claim complete DoD. User clarification pending: same-label/unit numeric baseline versus semantic contradiction coverage before LLM; no reply at checkpoint, no inferred decision or lowered gate.
+- **DoD-2 PASS:** final13realPG/Qdrant/model security tests PASS89.62s, including durable empty-map tamper guard; evidence [H-T22-A01](handoffs.md#h-t22-a01). Retained same-owner other-session/other-user/app and forged history/passages cannot enter context; RUNBOOK explicitly pending T31/non-probability. No LLM/provider call claim.
+- **D1 PASS:** scoped13paths/whitespace/dependency notes/scratch preserved. **D2 PASS:** Ruff/format/mypy77/lock169/unchanged OpenAPI,25boundary0.30s,496regression224.23s and52actual dependency/max-budget76.89s; final security recheck evidence below. **D3 BLOCKED:** missing mandatory conflict mechanism/test. **D4 PASS:** README/RUNBOOK partial IMPLEMENTED status/DI/tunables/budgets/context/error/threshold docs and ledgers updated, docs validator. **D5:** scoped code/tests/docs/secrets/artifacts reviewed before checkpoint stage. **D6:** checkpoint only `docs(T22): checkpoint reranking pending conflict policy`, not a completion commit; actual hash/authorized origin/main push equality returned post-execution.
+- **Next:** preserve partial code/tests/logs and T07 scratch; await user conflict-policy decision then implement and rerun full original DoDs/D1–D6 before completion commit. T23 dependency T22 not COMPLETE, not ready. **STOP T22**, no drain/merge/deploy/Scarlet changes.
 
 ## Phase 5 — Generation, citations và streaming
 

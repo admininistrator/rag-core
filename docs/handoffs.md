@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-06 / T22-A01 PARTIAL, NOT COMPLETE:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T21 `2c84157ba5bcac83560191573d8a26fa944bb1cf` verified equal origin/main; T07 scratch retained. Scoped PG source-map hydration, real rerank, whole-passage budgets and generation-context guards implemented; current conflict detection is absent, pending user decision (same-label/unit numeric baseline or semantic contradiction coverage before LLM). DoD-1 cannot close without this decision/test; no threshold calibration claim (T31 pending). Evidence [H-T22-A01](#h-t22-a01), interfaces [S-T22-A01](implementation-summary.md#s-t22-a01). Checkpoint review/commit/push hash reported after actual execution; this is not a completion commit. Preserve partial work and logs, resume only T22. T23 is not dependency-ready. **STOP T22**, no task drain/merge/deploy; Scarlet/source/cache unchanged.
+
 - **Current 2026-10-03 / T21-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T20 `938bee71ac537e386e8472efc6f9eed7951026d1` equals origin/main, inherited T07 scratch retained. Bounded dense/hybrid pipeline/trusted profiles/optional same-scope neighbors/redacted trace implemented. Real CPU BGE-M3/PG/Qdrant DoD-1 **16PASS42.73s**, separate DoD-2 **29PASS5.25s**; **459regressionPASS135.41s**, **35dependencyPASS13.79s**, Ruff/mypy73/locked169/OpenAPI PASS. Evidence [H-T21-A01](#h-t21-a01), interfaces [S-T21-A01](implementation-summary.md#s-t21-a01). Final docs/scope/secrets/staging/commit/push review is closure boundary. Subject `feat(T21): add scoped hybrid multilingual retrieval`; actual hash/authorized origin/main equality returned post-execution. Candidate metadata is private, trace redacted, text hydration/rerank/evidence remain T22; real providers/public query/full corpus/load remain future gates. Own test services stopped at closure without source/cache/volume deletion; Scarlet untouched. T22 dependencies T21/T17 ready after closure; stays TODO. **STOP AFTER T21**, no merge/deploy/drain.
 
 - **Current 2026-10-03 / T20-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T19 `0b3d6f40dfc85034788c3dd9a3c285749cd19449` equals origin/main; inherited T07 scratch preserved. Registry/scoped preparation/history budgeting/rewrite port implemented; final DoD-1 **56PASS30.56s** with actual PG/Qdrant/tokenizer, DoD-2 **12PASS7.53s** provider-test schema/language matrix, **431regressionPASS146.59s**. [H-T20-A01](#h-t20-a01), [S-T20-A01](implementation-summary.md#s-t20-a01). Ruff/mypy71/locked169/OpenAPI PASS; final docs/scope/secrets/commit review is closure boundary. Own PG/Qdrant test services stopped without volume deletion; Scarlet untouched. Subject `feat(T20): compose extensible session-scoped domains`; actual hash/authorized origin/main push equality returned post-execution. Real rewrite adapters T23, public HTTP T26, no live provider claim. T21 dependencies T20/T18/T17 ready after closure; stays TODO. **STOP AFTER T20**, no merge/deploy/drain.
@@ -7770,3 +7772,344 @@ then completion commit. All task DoD/D1–D5 PASS; D6/COMPLETE effective only wi
 successful inspected `feat(T21): add scoped hybrid multilingual retrieval` commit.
 Actual hash/authorized origin/main equality reported outside its own commit; no
 amend/force/merge/deploy, T22 remains TODO and STOP AFTER T21.
+
+
+<a id="h-t22-a01"></a>
+## H-T22-A01 - Phase 4 / partial reranking checkpoint, NOT COMPLETE
+
+Direct Codex agent; exact runtime model/effort unavailable; no subagents. Date
+2026-10-06 Asia/Bangkok. Every command cwd
+`C:\Users\Admin\Documents\GitHub\rag-core`. This is a partial checkpoint,
+**not task acceptance**. Required conflicting-evidence decision/test is outstanding.
+
+### Baseline, authorization and services
+
+`git status --short; git branch --show-current; git rev-parse HEAD; git remote -v`
+exit0, actual:
+
+```text
+?? .ptmp-t07-a02/
+?? .tmp-t07-a02/
+main
+2c84157ba5bcac83560191573d8a26fa944bb1cf
+origin https://github.com/admininistrator/rag-core.git (fetch)
+origin https://github.com/admininistrator/rag-core.git (push)
+```
+
+Existing global-ignore and inaccessible T07 scratch warnings retained; no cleanup.
+T21/T17 COMPLETE notes/interfaces/evidence and AGENTS/session prompt,
+P01/P08/P09/P11/P13, checkpoint/summary/README/RUNBOOK read before code.
+No partial tracked T22 candidate. User explicitly authorizes scoped commit/push,
+no force/merge/deploy/drain. No subagents/old Orchestrator/Worker/Kanban used.
+
+Initial sandbox command `docker ps --format '{{.Names}} {{.Status}}'; git ls-remote origin refs/heads/main`
+exit1: `permission denied while trying to connect to the docker API at npipe:////./pipe/docker_engine`
+and `Failed to connect to github.com port 443`. Same scoped elevated read succeeded
+exit0; remote actual `2c84157ba5bcac83560191573d8a26fa944bb1cf refs/heads/main`.
+Existing Scarlet/sub2api services observed healthy and preserved. No automatic
+approval rejection or credential blocker. `git var GIT_AUTHOR_IDENT | Out-Null`
+exit0, `Git author configured`; no identity values printed or config changed.
+
+Elevated actual command exit0:
+
+```powershell
+docker compose -p rag-core-t22-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
+```
+
+Actual output: `Network rag-core-t22-test_default Created`, containers
+`rag-core-t22-test-postgres-1 Healthy`, `rag-core-t22-test-qdrant-1 Healthy`,
+`rag-core-t22-test-inference-1 Healthy`. Isolated tmpfs PG/Qdrant, external model
+cache read-only, opt-in loopback55432/56333/58080; no source/application volumes changed.
+
+Actual elevated inspection commands each exit0:
+
+```powershell
+docker inspect --format '{{.Name}} {{.Config.Image}} {{.Image}} {{.State.Health.Status}}' rag-core-t22-test-postgres-1 rag-core-t22-test-qdrant-1 rag-core-t22-test-inference-1
+docker stats --no-stream --format '{{.Name}} {{.MemUsage}} {{.CPUPerc}}' rag-core-t22-test-inference-1
+```
+
+Output excerpt:
+
+```text
+/rag-core-t22-test-postgres-1 postgres:17.11-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0 sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0 healthy
+/rag-core-t22-test-qdrant-1 qdrant/qdrant:v1.19.1-unprivileged@sha256:801777072776dc81b2a9dd2007b2ed487571f21ecd30efffd15ddb1671f2193d sha256:801777072776dc81b2a9dd2007b2ed487571f21ecd30efffd15ddb1671f2193d healthy
+/rag-core-t22-test-inference-1 rag-core-inference:t17-cpu sha256:4b79b3c9e877d07eebef37c0d1e580f3a23708dad0e4380cfdba4f877cd6e2ac healthy
+rag-core-t22-test-inference-1 2.453GiB / 7GiB 0.12%
+```
+
+Model actual CPU fingerprint
+`f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b`,
+one PID7/two fixed models/load29.193s. BGE-M3 revision
+5617a9f61b028005a4858fdac845db406aefb181 and reranker953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e
+from verified T17 read-only cache/image. FlagEmbedding1.3.5, Torch2.9.1+cpu,
+Transformers4.57.6, tokenizers0.22.2, sentence-transformers5.1.2, peft0.17.1.
+Image remains original shared T17 model service; T22 host source calls real HTTP.
+Memory is an idle snapshot, not peak/SLA/load/full-stack/calibration measurement.
+No DeepSeek/Anthropic/LLM/provider credential or live-generation claim in T22.
+
+### Common host configuration and partial gates
+
+Actual common environment, secret value only loaded from file:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+```
+
+No uv sync/dependency changes; existing .venv reused with --no-sync and locked
+groups. All tests use serial suites on dedicated server; own random PG databases
+and fixture collections removed by existing test lifecycle, source/cache retained.
+Synthetic source fixtures are tagged explicitly; actual model/server acceptance
+does not consume official QA/gold/answer/document IDs as retrieval hints.
+
+DoD-1 is **BLOCKED** overall, even though implemented cases pass: required
+conflicting-evidence behavior and real acceptance case missing. Nearest neighbor
+irrelevant, EN->VI/VI->EN support, multi-source/number/unit/table headers/full maps,
+whole-passage budget boundary/no match, actual HTTP cancel/recovery and pair
+overlimit/deadline are already tested. Max20 real candidates/8passages checked.
+No mock score substitutes for these real gates. Raw floor0.0 is versioned baseline
+pending T31, never factual-confidence probability or tuned multi-hop completeness.
+
+Required clarification asked asynchronously: plan/task requires conflicting reason
+but does not define pre-LLM mechanism; choose numeric same-label/unit baseline or
+semantic contradiction coverage. No reply at checkpoint. Per AGENTS section2,
+do not guess product semantics, weaken DoD or silently defer required conflict gate.
+Reason enum exists, but current selector does not detect conflicts. Preserve work;
+resume conflict implementation and each original gate after decision.
+
+DoD-2 checks bound app/owner/current session/ready pair/subset/language before
+rerank/context; stale/detached/deleted scope, forged vector metadata/generation,
+foreign retained sources, forged history/passages and tampered source text/map
+fail closed. RUNBOOK now explicitly records pending T31 thresholds/non-probability
+and partial status. No LLM context/provider invocation claim: context gate for T24
+is checked directly with actual scoped durable passage inputs.
+
+### Initial implemented DoD-1 cases
+
+Command exact (exit0), expected/actual implemented checks PASS:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_evidence_selection.py -q -s --tb=short --basetemp=.local/22d1 -o cache_dir=.local/22c1 *> .local/t22-dod1-initial.log
+```
+
+Actual excerpt; full ignored log `.local/t22-dod1-initial.log`:
+
+```text
+T22 REAL cross-language en supported raw=4.9300
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+T22 REAL irrelevant nearest neighbor -> insufficient / zero context
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+T22 REAL multi-evidence=3 numeric/unit/header/source-map PASS
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+T22 REAL HTTP rerank cancelled; subsequent real rerank supported
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+.
+8 passed in 50.92s
+```
+
+### Initial DoD-2 security gate
+
+Command exact (exit0), expected/actual implemented checks PASS:
+
+```powershell
+uv run --no-sync pytest tests/security/test_evidence_scope.py -q -s --tb=short --basetemp=.local/22d2 -o cache_dir=.local/22c2 *> .local/t22-dod2-initial.log
+```
+
+Actual excerpt; full ignored log `.local/t22-dod2-initial.log`:
+
+```text
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+T22 REAL history/foreign/text/allowlist generation-context guards PASS; no LLM invoked
+.
+12 passed in 61.48s (0:01:01)
+```
+
+### Actual max budget and T21/T18/T10 dependency regression
+
+Command exact (exit0), expected/actual implemented checks PASS:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_evidence_selection.py::test_actual_twenty_candidates_eight_passages_and_reproducible_threshold tests/integration/test_retrieval.py tests/integration/test_qdrant_scope.py tests/integration/test_session_scope.py -q -s --tb=short --basetemp=.local/22dep -o cache_dir=.local/22depc *> .local/t22-dependencies.log
+```
+
+Actual excerpt; full ignored log `.local/t22-dependencies.log`:
+
+```text
+.PASS PG publication blocked by generation write lock until actual Qdrant wait=true ack
+.PASS actual corrupted payload rejected; actual missing collection -> sanitized technical error
+.PASS dense1024 Cosine/sparse/noIDF/9payload indexes/versioned fingerprint; incompatible rejected
+.Real PostgreSQL: separate database t10_test_d463721e0b2a4282b6f50afa2d342278, public tables before migration=0
+Real PostgreSQL: migrated separate database t10_test_d463721e0b2a4282b6f50afa2d342278
+PASS isolation: app/user/current-session, explicit new registration, independent detach
+...........PASS repeated/concurrent delete: one revision, retained rows byte-equivalent, no resurrection
+.PASS real lock race: old coherent snapshot then revision invalidation; replay stays detached
+......
+52 passed in 76.89s (0:01:16)
+```
+
+### Full regression before final empty-map guard case
+
+Command exact (exit0), expected/actual implemented checks PASS:
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/r22 -o cache_dir=.local/c22 *> .local/t22-regression.log
+```
+
+Actual excerpt; full ignored log `.local/t22-regression.log`:
+
+```text
+........................................................................ [ 14%]
+........................................................................ [ 29%]
+........................................................................ [ 43%]
+........................................................................ [ 58%]
+........................................................................ [ 72%]
+........................................................................ [ 87%]
+................................................................         [100%]
+496 passed in 224.23s (0:03:44)
+```
+
+### Supplemental quality/review diagnostics
+
+Actual supplemental command exit0:
+`uv run --no-sync pytest tests/unit/test_evidence_policy.py -q --tb=short --basetemp=.local/22u1 -o cache_dir=.local/22uc1`
+output `25 passed in 0.30s`. Synthetic protocol collaborators test config/response
+failure boundaries only, never replace real success gates.
+
+`uv run --no-sync ruff check . *> .local/t22-ruff-final.log` exit0,
+`All checks passed!`; existing inaccessible scratch traversal warnings retained,
+explicit eight changed Python files also format checked below. Initial import
+format/annotation diagnostics fixed, initial mypy3errors invalid dynamic type alias
+replaced with explicit EvidenceReason; no gate/semantics changed to hide failure.
+Review found empty segments could raise IndexError before safe map validation;
+reordered guard and added real durable empty-map corruption case. Initial docs
+patch failed on wrong summary header anchor (atomic no file change), corrected.
+
+Final quality commands each exit0:
+
+```powershell
+uv run --no-sync ruff format --check src/rag_core/domain/evidence.py src/rag_core/application/evidence.py src/rag_core/adapters/persistence/evidence.py src/rag_core/ports/evidence.py tests/fixtures/evidence_support.py tests/integration/test_evidence_selection.py tests/security/test_evidence_scope.py tests/unit/test_evidence_policy.py
+uv run --no-sync mypy src
+uv run --no-sync python scripts/export_openapi.py --check
+uv lock --check --offline
+git diff --check
+```
+
+Actual `8 files already formatted`; `Success: no issues found in 77 source files`;
+`PASS designed_operations=13 served_health_routes=2 synthetic_examples=37`,
+`PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic`,
+`CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)`;
+`Resolved 169 packages in 32ms`; git diff whitespace only preexisting CRLF warnings.
+No public API/schema/model/index/DB/dependency migration, prompt corpus untouched.
+`git check-ignore .local/t22-dod1-checkpoint.log .local/t22-regression.log` exit0
+printed both paths: logs/helpers remain local/ignored and do not enter commit.
+
+D1 PASS scoped13paths/dependency/whitespace/scratch preservation; D2 partial source
+quality/regression above PASS, final source-map security recheck recorded below;
+D3 BLOCKED missing conflict semantics/test, no task acceptance; D4 five living docs
+partial interfaces/commands/status/limitations/ledgers updated; D5 scoped code/tests/
+config-secrets/artifact review; D6 checkpoint only, **no completion commit**.
+Checkpoint subject `docs(T22): checkpoint reranking pending conflict policy`;
+actual hash/authorized push equality returned after execution, not inserted into
+its own commit. T23 not dependency-ready; do not start next task.
+
+### Final checkpoint rechecks (still NOT COMPLETE)
+
+Implemented DoD-1 cases; required conflict gate still BLOCKED; actual command exit0:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_evidence_selection.py -q -s --tb=short --basetemp=.local/22f1 -o cache_dir=.local/22fc1 *> .local/t22-dod1-checkpoint.log
+```
+
+Actual excerpt, full ignored `.local/t22-dod1-checkpoint.log`:
+
+```text
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+T22 REAL20 rerank candidates ->8 passages; stable config/raw ranking, calibration pending
+.
+9 passed in 70.67s (0:01:10)
+```
+
+DoD-2 PASS including real empty-map tamper recheck; actual command exit0:
+
+```powershell
+uv run --no-sync pytest tests/security/test_evidence_scope.py -q -s --tb=short --basetemp=.local/22f2 -o cache_dir=.local/22fc2 *> .local/t22-dod2-checkpoint.log
+```
+
+Actual excerpt, full ignored `.local/t22-dod2-checkpoint.log`:
+
+```text
+.T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=29.193s
+T22 REAL history/foreign/text/allowlist generation-context guards PASS; no LLM invoked
+.
+13 passed in 89.62s (0:01:29)
+```
+
+D2 final source quality PASS as above;496full regression pre-empty-map case plus
+13final real security89.62s includes the new safe-error case.52dependency76.89s,
+25unit0.30s retained. D3 overall BLOCKED only mandatory conflict decision/test.
+D4 command `uv run --no-sync python scripts/check_docs.py` exit0:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 360
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Initial sandbox stage command `git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md src/rag_core/domain/evidence.py src/rag_core/application/evidence.py src/rag_core/ports/evidence.py src/rag_core/adapters/persistence/evidence.py tests/fixtures/evidence_support.py tests/integration/test_evidence_selection.py tests/security/test_evidence_scope.py tests/unit/test_evidence_policy.py`
+failed `fatal: Unable to create 'C:/Users/Admin/Documents/GitHub/rag-core/.git/index.lock': Permission denied`.
+Compound read-check command overall exit0 masked this stage failure; nothing staged
+until same exact scoped elevated stage succeeded exit0. No approval rejection or
+request to bypass hook/history/security. Subsequent cached path/stat review exit0,
+13task files/1464insertions/3deletions before final evidence append; no scratch staged.
+Explicit D5 review of four source and four test/helper files, five living docs:
+scope before rerank, exact source-map/text, language/subset/history boundary,
+timeouts/cancel/error shape, partial status/calibration honesty. Empty-map issue
+corrected with real guard regression, no schema/contract migration.
+
+Actual `uv run --no-sync python .local/t22_review.py *> .local/t22-review.log`
+exit0 (safe ignored local checker comparing exact path set/staged Git-filtered
+hashes and added-line private-key/AWS/key markers plus cached whitespace):
+
+```text
+PASS exact13 T22 paths, staged/worktree filtered hashes, added-line key scan, whitespace
+PASS no corpus/prompt/AGENTS/lock/migration/API/secrets/raw data/cache/scratch paths staged
+T22 incomplete: checkpoint only; conflict DoD remains BLOCKED
+```
+
+Restage only task notes/handoffs evidence, repeat exact13hashes/docs/whitespace,
+then checkpoint command `git commit -m "docs(T22): checkpoint reranking pending conflict policy"`.
+Inspect actual commit parent/files/hash and push `git push origin main`, verify
+`git ls-remote origin refs/heads/main` equals HEAD. Actual outputs returned after
+execution (cannot record own hash in same commit). D6 checkpoint preservation
+only, not COMPLETE; T23 cannot start. No amend/rewrite/force/merge/deploy.
+
+Actual test cleanup command (elevated) exit0:
+
+```powershell
+docker compose -p rag-core-t22-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; docker compose -p rag-core-t22-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml ps --all --format '{{.Name}} {{.State}}'
+```
+
+Actual output excerpt:
+
+```text
+Container rag-core-t22-test-qdrant-1 Stopped
+Container rag-core-t22-test-postgres-1 Stopped
+Container rag-core-t22-test-inference-1 Stopped
+rag-core-t22-test-inference-1 exited
+rag-core-t22-test-postgres-1 exited
+rag-core-t22-test-qdrant-1 exited
+```
+
+No down/delete-volume/source/model-cache/scratch cleanup; existing application
+services not operated on. Final docs checker exit0:14files/360links/37tasks/81edges,
+`DOCUMENTATION CHECK: PASS`; final whitespace check exit0.

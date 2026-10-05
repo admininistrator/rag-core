@@ -24,6 +24,15 @@ Máy mục tiêu: RAM16GB, RTX4060Laptop8GB, nguồn<=1GB và15–20users. T17 �
 
 ## Prerequisites, quality và local Docker
 
+T22-A01 có phần IMPLEMENTED: session-authorized PG passage/source-map hydration,
+reranker thật, versioned raw-score baseline, tối đa20candidates/8passages/8000tokens,
+whole-passage budget và context gate trước generation. Các kiểm tra riêng đã chạy
+với CPU BGE/PG/Qdrant thật; **T22 chưa COMPLETE**, còn quyết định chính sách phát
+hiện conflicting evidence trước LLM. Threshold0.0 là raw reranker logit, không là
+confidence/xác suất đúng; calibration pending T31. Không dùng code này như đã đạt
+toàn bộ evidence DoD. [Checkpoint T22](docs/handoffs.md#h-t22-a01),
+[hợp đồng và cách kiểm tra](RUNBOOK.md#r06-t22).
+
 T01/T02 đã kiểm chứng trên Windows/PowerShell với uv 0.11.16, CPython 3.12.4 cho host checks, Docker Desktop Linux containers và Docker server 29.5.2. Project chấp nhận Python `3.12.*`; API image dùng Python 3.12.13 đã pin digest. Cài [uv](https://docs.astral.sh/uv/) và Docker Desktop, rồi từ root repository chạy quality:
 
 ```powershell

@@ -32,7 +32,8 @@
 | Index ingestion orchestration/publication | VERIFIED real MinIO/PG/Redis/Qdrant/CPU model/OCR; evidence ở dưới | T19 |
 | Domain preparation/history rewrite port | VERIFIED scoped PG/Qdrant/tokenizer; explicit provider test, real LLM adapters pending | T20 |
 | Dense/hybrid retrieval | VERIFIED CPU BGE-M3/PG/Qdrant; bounded metadata candidates/neighbors/redacted trace | T21 |
-| Evidence/query/LLM/SSE | DESIGNED | T22–T26 |
+| Evidence selection | IMPLEMENTED partial T22-A01; conflicting-evidence policy decision pending, not accepted COMPLETE | T22 |
+| Query/LLM/SSE | DESIGNED | T23–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
@@ -693,6 +694,81 @@ fingerprint collection on that isolated server and UUID-named PG databases. Loop
 to a network interface; standard Compose keeps inference internal. External named model
 cache read-only, no data/source/volume deletion. CPU test resource readings are fixture
 observations; T17 GPU and T31/T33 full benchmark/load gates are unchanged requirements.
+
+<a id="r06-t22"></a>
+### T22 passage hydration/rerank — partial implementation checkpoint
+
+**IMPLEMENTED, chưa nghiệm thu COMPLETE.** T22-A01 còn quyết định product về cách
+nhận diện mâu thuẫn trước LLM; selector hiện chưa phát `conflicting_evidence`.
+Không gọi rerank relevance là factual correctness hay confidence probability.
+Threshold baseline **pending calibration T31**; P11 tuning/held-out gate giữ nguyên.
+[Bằng chứng và phần còn thiếu](docs/handoffs.md#h-t22-a01).
+
+DI hiện có:
+
+```python
+repository = PostgresEvidenceRepository(engine, sessions)
+selector = EvidenceSelector(repository, models, expected_model_fingerprint, tokenizer)
+selection = await selector.select(scoped_context, retrieval_result)
+evidence_data = await selector.context_for_generation(scoped_context, selection)
+```
+
+Context lấy từ T20, retrieval từ T21; models là shared T17 `HttpModelInference`,
+tokenizer là pinned T16 `BgeM3Tokenizer`. Fingerprint phải do trusted index config
+cấp; không tự nhận fingerprint mới từ response. Profile server-only immutable
+`bounded-v1`, domain config.evidence_policy chọn key; unknown key technical error.
+Policy JSON/SHA256 roundtrip gồm revision `raw-m3-baseline-v1`, calibration
+`pending-T31`, candidate_limit20(1–20), passage_limit8(1–8, <=candidate_limit),
+context_tokens8000(1–8000), minimum_passages1(1–8, <=passage_limit),
+raw_score_floor0.0(finite raw score), timeout_seconds60.0(finite0<timeout<=120).
+Request public không override các giá trị này. Trusted domain có thể chọn profile
+riêng; chưa có domain calibration hoặc chất lượng corpus đã đo.
+
+Tối đa20chunk IDs, không đọc cả document. Bound vector fetch tái xác minh exact
+ready pairs/metadata/language trước hydration. SQL dùng authenticated app/owner,
+document/version/generation/chunk và active ready pointer; PG snapshot validate
+trước/sau read. Text SHA/source SHA, ordinal/token count/unit/locator/source-map
+ranges phải khớp. History/QA/storage keys không là nguồn passage. Rerank chỉ dùng
+text từ PG, priority=query, không đưa history hoặc vector scores vào model scoring.
+Response phải finite/exact count/exact fingerprint, không silent truncate query+
+passage quá768tokens; inference failure là technical error, không empty success.
+
+Raw score descending/UUID tie; chỉ giữ >=floor. Chọn whole passages, không cắt
+number/unit/table headers/cells/source segments. Mỗi passage `[eN]\n<text>` đo bằng
+tokenizer thật và cộng special tokens để giữ budget bảo thủ; đây là core evidence
+budget, không provider billable tokens hay toàn bộ system/question/output budget.
+T24 phải reserve/enforce provider prompt budget riêng. Source maps/cells/format/cache
+semantics giữ nguyên, chưa cấp full public citation (T24). Kết quả private gồm
+scope/answerability/reason/passages; chỉ trace schema1 metadata/counts/config/model/
+tokenizer hashes/elapsed được serialize làm log, không passage/query/IDs/identity.
+
+Hiện reason `relevant_evidence`, `no_relevant_evidence`, `context_budget_exhausted`,
+`insufficient_coverage`; supported chỉ baseline relevance + configured passage count,
+không chứng minh đáp ứng đủ mọi mệnh đề/multi-hop. Context gate refetch/hydrate/
+compare exact passages và remeasure budget/revalidate scope, loại giả history/text/
+foreign IDs. T24 phải truyền evidence như untrusted data tách system policy, kiểm
+snapshot trước provider/final; không có LLM call/prompt/HTTP endpoint mới ở T22.
+
+Lệnh kiểm tra đã tồn tại; services/weights bắt buộc, không skip/mock fallback:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+docker compose -p rag-core-t22-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+uv run --no-sync pytest tests/integration/test_evidence_selection.py
+uv run --no-sync pytest tests/security/test_evidence_scope.py
+uv run --no-sync pytest tests/unit/test_evidence_policy.py
+docker compose -p rag-core-t22-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop
+```
+
+Test project isolated/tmpfs/read-only model cache, loopback55432/56333/58080 như
+T21; chỉ chạy suites nối model nối tiếp vì dùng collection theo CPU fingerprint
+trên server riêng. Fixture nguồn synthetic, không ingest QA/gold, không full-corpus
+quality/live LLM/provider/load/GPU remeasurement claim. Chưa có thay đổi
+dependency/API/DB/index schema hoặc migration; giữ dữ liệu/chunks/vector khi detach.
 
 ### App gọi LLM viết lại
 
