@@ -44,6 +44,7 @@ FINGERPRINT = "a" * 64
         {"calibration": "complete"},
         {"revision": "unversioned"},
         {"confidence": 0.9},
+        {"conflict_policy": "unbounded-semantic-agent"},
     ],
 )
 def test_invalid_evidence_config(kwargs):

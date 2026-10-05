@@ -63,14 +63,15 @@ async def seed(f, models, tokenizer, label, language, content, *, owner=None, se
     locator = PdfLocator(kind="pdf", page=1)
     block = Block(kind="paragraph", text=content, locator=locator)
     format_ = "pdf"
-    if label == "table":
+    if label.startswith("table"):
+        amount = "12.5" if content == "table" else content
         format_ = "xlsx"
         locator = XlsxLocator(kind="xlsx", sheet="Revenue", cell_range="A1:C2", unit="million USD")
         block = Block(
             kind="table",
-            text="Company\tYear\tRevenue (million USD)\nAcme\t2025\t12.5",
+            text=f"Company\tYear\tRevenue (million USD)\nAcme\t2025\t{amount}",
             locator=locator,
-            rows=(("Company", "Year", "Revenue (million USD)"), ("Acme", "2025", "12.5")),
+            rows=(("Company", "Year", "Revenue (million USD)"), ("Acme", "2025", amount)),
             table_headers=(("Company", "Year", "Revenue (million USD)"),),
         )
     document = ParsedDocument(

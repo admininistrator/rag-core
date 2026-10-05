@@ -51,6 +51,72 @@ async def test_irrelevant_nearest_neighbor_is_insufficient(evidence_corpus):
     print("T22 REAL irrelevant nearest neighbor -> insufficient / zero context")
 
 
+@pytest.mark.parametrize(
+    "policy", [EvidencePolicy(), EvidencePolicy(passage_limit=1), EvidencePolicy(context_tokens=1)]
+)
+async def test_actual_conflicting_numbers_fail_closed_before_passage_budget(
+    evidence_corpus, policy
+):
+    e = evidence_corpus
+    ctx, retrieval, selector = await e.query(
+        "Acme revenue in 2025 in million USD?",
+        labels=("revenue", "conflict", "fish"),
+        policy=policy,
+    )
+    selected = await selector.select(ctx, retrieval)
+    assert selected.answerability == "insufficient_evidence"
+    assert selected.reason == "conflicting_evidence" and selected.trace.conflict_count == 1
+    assert selected.trace.relevant_count == 2
+    assert selected.trace.context_tokens <= policy.context_tokens
+    if policy.passage_limit > 1 and policy.context_tokens > 1:
+        assert {p.chunk.id for p in selected.passages} == {
+            e.chunks["revenue"].id,
+            e.chunks["conflict"].id,
+        }
+    else:
+        assert len(selected.passages) <= 1
+    await selector.context_for_generation(ctx, selected)
+    print(
+        f"T22 REAL conflicting12.5/14.5 million USD ->insufficient/conflicting "
+        f"passage_limit={policy.passage_limit} tokens={policy.context_tokens}"
+    )
+
+
+async def test_actual_different_periods_remain_supported(evidence_corpus):
+    ctx, retrieval, selector = await evidence_corpus.query(
+        "Acme revenue in 2024 and 2025?", labels=("revenue", "other-year")
+    )
+    selected = await selector.select(ctx, retrieval)
+    assert selected.answerability == "supported" and selected.trace.conflict_count == 0
+    assert len(selected.passages) == 2
+
+
+async def test_actual_conflicting_table_values_keep_headers_and_source_maps(evidence_corpus):
+    e = evidence_corpus
+    (
+        e.targets["table-conflict"],
+        e.chunks["table-conflict"],
+        e.vectors["table-conflict"],
+    ) = await seed(e.f, e.models, e.tokenizer, "table-conflict", "en", "14.5")
+    ctx, retrieval, selector = await e.query(
+        "Acme revenue in 2025 in million USD?", labels=("table", "table-conflict")
+    )
+    selected = await selector.select(ctx, retrieval)
+    assert (
+        selected.answerability == "insufficient_evidence"
+        and selected.reason == "conflicting_evidence"
+    )
+    assert selected.trace.conflict_count == 1 and len(selected.passages) == 2
+    assert all(
+        "Revenue (million USD)" in p.chunk.text and p.chunk.segments for p in selected.passages
+    )
+    assert all(s.locator.kind == "xlsx" for p in selected.passages for s in p.chunk.segments)
+    assert len(await selector.context_for_generation(ctx, selected)) == 2
+    print(
+        "T22 REAL conflicting XLSX14.5/12.5 ->insufficient/conflicting; both headers/maps retained"
+    )
+
+
 async def test_multiple_sources_and_number_unit_headers_preserved(evidence_corpus):
     e = evidence_corpus
     ctx, retrieval, selector = await e.query(

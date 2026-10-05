@@ -17,6 +17,7 @@ from rag_core.domain.evidence import (
     EvidenceSelection,
     EvidenceTrace,
 )
+from rag_core.domain.evidence_conflicts import numeric_conflicts
 from rag_core.domain.metadata import ScopeError
 from rag_core.domain.models import InferenceError, InferenceRequest, InferenceResult
 from rag_core.domain.retrieval import RetrievalResult
@@ -120,6 +121,15 @@ class EvidenceSelector:
                     ),
                     key=lambda item: (-item[1], str(item[0].id)),
                 )
+                # Inspect every relevant candidate before selection can hide a contradiction.
+                conflicts = await asyncio.to_thread(
+                    numeric_conflicts, tuple(c for c, _ in relevant)
+                )
+                if conflicts:
+                    opposing = {conflicts[0].first, conflicts[0].second}
+                    relevant.sort(
+                        key=lambda item: (item[0].id not in opposing, -item[1], str(item[0].id))
+                    )
                 passages: list[EvidencePassage] = []
                 tokens = skipped = 0
                 for chunk, score in relevant:
@@ -137,7 +147,9 @@ class EvidenceSelector:
                     tokens += count
                 reason: EvidenceReason
                 reason = "relevant_evidence"
-                if not relevant:
+                if conflicts:
+                    reason = "conflicting_evidence"
+                elif not relevant:
                     reason = "no_relevant_evidence"
                 elif not passages:
                     reason = "context_budget_exhausted"
@@ -156,6 +168,7 @@ class EvidenceSelector:
                         tokenizer_fingerprint=self._tokenizer.fingerprint,
                         candidate_count=len(chunks),
                         relevant_count=len(relevant),
+                        conflict_count=len(conflicts),
                         selected_count=len(passages),
                         context_tokens=tokens,
                         budget_skipped=skipped,

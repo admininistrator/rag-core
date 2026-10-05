@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T21 VERIFIED local.** T19 durable ingestion/publication nối services/models thật; T20 scoped domain preparation/history port và T21 bounded dense/hybrid retrieval đã kiểm. API chỉ mount health, evidence/HTTP/LLM/SSE/admin thuộc T22–T36. [Evidence T21](docs/handoffs.md#h-t21-a01).
+> **T01–T22 VERIFIED local.** T19 durable ingestion/publication, T20 domain preparation/history port, T21 dense/hybrid retrieval và T22 scoped passage/rerank/evidence gates đã kiểm. API chỉ mount health, public query/LLM/SSE/admin thuộc T23–T36. [Evidence T22](docs/handoffs.md#h-t22-a02).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -32,7 +32,7 @@
 | Index ingestion orchestration/publication | VERIFIED real MinIO/PG/Redis/Qdrant/CPU model/OCR; evidence ở dưới | T19 |
 | Domain preparation/history rewrite port | VERIFIED scoped PG/Qdrant/tokenizer; explicit provider test, real LLM adapters pending | T20 |
 | Dense/hybrid retrieval | VERIFIED CPU BGE-M3/PG/Qdrant; bounded metadata candidates/neighbors/redacted trace | T21 |
-| Evidence selection | IMPLEMENTED partial T22-A01; conflicting-evidence policy decision pending, not accepted COMPLETE | T22 |
+| Evidence selection | VERIFIED real CPU reranker/PG/Qdrant; bounded passages, conservative numeric conflicts and scoped context gate | T22 |
 | Query/LLM/SSE | DESIGNED | T23–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
@@ -516,7 +516,7 @@ Compatibility: đây là design v1 đầu tiên, không có client business/runt
 <a id="r06"></a>
 ## R06. Query, history và languages
 
-**T03 contracts, T20 domain preparation/history budgets và T21 dense/hybrid retrieval VERIFIED; evidence/generation/public query HTTP còn DESIGNED — T22–T26.**
+**T03 contracts, T20 domain preparation/history budgets, T21 retrieval và T22 evidence selection VERIFIED; generation/public query HTTP còn DESIGNED — T23–T26.**
 
 - Bắt buộc session_id và câu hỏi; `domain` mặc định `default` nếu vắng mặt. Examples gửi rõ domain để người tích hợp dễ đối chiếu.
 - Default: tất cả ready documents của session; không nhận document subset.
@@ -593,7 +593,7 @@ includes these explicit real-service gates; running all `tests/security` also ne
 [H-T20-A01](docs/handoffs.md#h-t20-a01) records56PASS with actual PG17.11/Qdrant1.19.1/tokenizer,
 synthetic1024D vectors only for authorization, and separate12PASS rewrite/language provider-test
 cases. This does not verify real LLM behavior, retrieval quality or factual answer generation;
-T21 verifies retrieval below; real LLM/generation/held-out gates remain T22–T26/T31. No provider keys are required for T20.
+T21–T22 verify retrieval/evidence below; real LLM/generation/held-out gates remain T23–T26/T31. No provider keys are required for T20.
 
 <a id="r06-t21"></a>
 ### T21 bounded dense/hybrid retrieval
@@ -650,7 +650,7 @@ Seeds sorted by score descending, tie by chunk UUID; unique chunk IDs. Optional
 neighbors follow ranked seeds in anchor/ordinal order, remain unscored (`None`),
 dedup and share the total budget. No unrestricted second query/document fetch.
 Result `candidates` contains scoped VectorHit metadata/locator anchors; PG text/source
-map hydration, rerank and full citation rendering remain T22–T24. T19 chunks remain
+map hydration/rerank are implemented in T22; full citation rendering remains T24. T19 chunks remain
 source truth, QA/answers/justifications never enter retrieval. No gold IDs or QA path in
 pipeline API; integration fixture indexes all six synthetic sources plus unrelated
 appendix pages and retained foreign/same-owner-other-session documents.
@@ -696,13 +696,13 @@ cache read-only, no data/source/volume deletion. CPU test resource readings are 
 observations; T17 GPU and T31/T33 full benchmark/load gates are unchanged requirements.
 
 <a id="r06-t22"></a>
-### T22 passage hydration/rerank — partial implementation checkpoint
+### T22 passage hydration/rerank và evidence states
 
-**IMPLEMENTED, chưa nghiệm thu COMPLETE.** T22-A01 còn quyết định product về cách
-nhận diện mâu thuẫn trước LLM; selector hiện chưa phát `conflicting_evidence`.
+**VERIFIED local** với real CPU reranker/PG/Qdrant. T22-A02 tiếp quản checkpoint
+T22-A01 và quyết định user giao agent chọn baseline conflict bảo thủ.
 Không gọi rerank relevance là factual correctness hay confidence probability.
 Threshold baseline **pending calibration T31**; P11 tuning/held-out gate giữ nguyên.
-[Bằng chứng và phần còn thiếu](docs/handoffs.md#h-t22-a01).
+[Bằng chứng nghiệm thu](docs/handoffs.md#h-t22-a02).
 
 DI hiện có:
 
@@ -724,6 +724,26 @@ raw_score_floor0.0(finite raw score), timeout_seconds60.0(finite0<timeout<=120).
 Request public không override các giá trị này. Trusted domain có thể chọn profile
 riêng; chưa có domain calibration hoặc chất lượng corpus đã đo.
 
+`conflict_policy=numeric-claim-v1` là versioned baseline trong policy fingerprint.
+Chỉ mapped source text, không synthetic metadata/history, tham gia so sánh: văn bản
+phải có cùng skeleton statement chuẩn hóa case/whitespace, giữ nguyên nhãn, thời
+điểm và qualifiers/heading, cùng đơn vị tường minh, khác decimal value. Bảng giữ
+headers/đơn vị cột + các giá trị dimension của row (Company/Year...), cần dimension
+chữ xác định subject; không suy entity từ tên heading chung. Hỗ trợ units tường minh
+USD/VND/EUR/GBP (million/billion/triệu/tỷ), kg/km/percent/%. Decimal dấu chấm/phẩy
+đơn giản dùng Decimal exact; bỏ cách ghi mơ hồ như1,234/1.234 và số có grouping,
+không tự đổi locale, scale/unit/currency hoặc tính formula caches. Multi-level table
+headers mơ hồ/cached formula và unit-free values không được dùng để suy conflict.
+
+Kiểm toàn bộ scoped relevant candidates (<=20) **trước** passage/token budget.
+Conflict thắng các lý do budget/coverage và trả `insufficient_evidence` với
+`conflicting_evidence`; count trong trace chỉ metadata. Ưu tiên opposing pair đầu
+theo ranking vào context nếu budget đủ, giữ toàn chunk/provenance; budget quá nhỏ
+không biến conflict thành supported. Không fetch thêm document hoặc gọi LLM/model
+khác để resolve. Semantic contradiction/paraphrase/cross-language equivalent claims,
+text-versus-table equivalence và tài liệu chưa retrieval không được detector này
+bao phủ; đây là giới hạn baseline đã chọn, không claim general contradiction accuracy.
+
 Tối đa20chunk IDs, không đọc cả document. Bound vector fetch tái xác minh exact
 ready pairs/metadata/language trước hydration. SQL dùng authenticated app/owner,
 document/version/generation/chunk và active ready pointer; PG snapshot validate
@@ -743,7 +763,8 @@ scope/answerability/reason/passages; chỉ trace schema1 metadata/counts/config/
 tokenizer hashes/elapsed được serialize làm log, không passage/query/IDs/identity.
 
 Hiện reason `relevant_evidence`, `no_relevant_evidence`, `context_budget_exhausted`,
-`insufficient_coverage`; supported chỉ baseline relevance + configured passage count,
+`insufficient_coverage`, `conflicting_evidence`; supported chỉ baseline relevance,
+configured passage count/budget và không có conflict nhận diện bởi baseline,
 không chứng minh đáp ứng đủ mọi mệnh đề/multi-hop. Context gate refetch/hydrate/
 compare exact passages và remeasure budget/revalidate scope, loại giả history/text/
 foreign IDs. T24 phải truyền evidence như untrusted data tách system policy, kiểm
@@ -761,6 +782,7 @@ $env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
 uv run --no-sync pytest tests/integration/test_evidence_selection.py
 uv run --no-sync pytest tests/security/test_evidence_scope.py
 uv run --no-sync pytest tests/unit/test_evidence_policy.py
+uv run --no-sync pytest tests/unit/test_evidence_conflicts.py
 docker compose -p rag-core-t22-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop
 ```
 

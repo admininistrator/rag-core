@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T01–T21 VERIFIED local.** T19 nối durable ingestion và atomic publication; T20 thêm registry/domain preparation, scoped read capability, history budget bằng tokenizer thật và rewrite port đã kiểm với provider test. T21 thêm bounded dense/hybrid retrieval, optional scoped neighbors và redacted trace, kiểm với BGE-M3/PG/Qdrant thật. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. API chỉ mount health; evidence selection, provider thật, generation/SSE/admin còn thuộc T22–T36. [Evidence T21](docs/handoffs.md#h-t21-a01).
+> **T01–T22 VERIFIED local.** T19 nối durable ingestion và atomic publication; T20 thêm domain preparation/history port, T21 bounded dense/hybrid retrieval, T22 scoped passage hydration/rerank/budgets và evidence states đã kiểm với BGE/PG/Qdrant thật. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. API chỉ mount health; provider thật, public query/generation/SSE/admin còn thuộc T23–T36. [Evidence T22](docs/handoffs.md#h-t22-a02).
 
 ## Phạm vi đã chốt
 
@@ -18,19 +18,20 @@ RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp tr
 
 ## Kiến trúc hiện tại và dự kiến
 
-T02 có Python3.12/FastAPI health skeleton, PostgreSQL17/Qdrant/Redis và MinIO tùy chọn. T12 thêm dispatcher; T13–T16 có native/Office/OCR parsers và chunking. T17 thêm dedicated inference process dùng BGE-M3 + multilingual reranker qua CPU hoặc GPU override. T19 thêm Celery worker và PG chunk persistence/publication. T20–T21 thêm domain preparation và retrieval pipeline; evidence/generation và Admin UI thuộc các task sau.
+T02 có Python3.12/FastAPI health skeleton, PostgreSQL17/Qdrant/Redis và MinIO tùy chọn. T12 thêm dispatcher; T13–T16 có native/Office/OCR parsers và chunking. T17 thêm dedicated inference process dùng BGE-M3 + multilingual reranker qua CPU hoặc GPU override. T19 thêm Celery worker và PG chunk persistence/publication. T20–T22 thêm domain preparation, retrieval và evidence pipeline; generation và Admin UI thuộc các task sau.
 
 Máy mục tiêu: RAM16GB, RTX4060Laptop8GB, nguồn<=1GB và15–20users. T17 đã đo inference trên synthetic fixtures, xem RUNBOOK/evidence; chưa có benchmark chất lượng/tải/full-stack budget.
 
 ## Prerequisites, quality và local Docker
 
-T22-A01 có phần IMPLEMENTED: session-authorized PG passage/source-map hydration,
+T22 có session-authorized PG passage/source-map hydration,
 reranker thật, versioned raw-score baseline, tối đa20candidates/8passages/8000tokens,
-whole-passage budget và context gate trước generation. Các kiểm tra riêng đã chạy
-với CPU BGE/PG/Qdrant thật; **T22 chưa COMPLETE**, còn quyết định chính sách phát
-hiện conflicting evidence trước LLM. Threshold0.0 là raw reranker logit, không là
-confidence/xác suất đúng; calibration pending T31. Không dùng code này như đã đạt
-toàn bộ evidence DoD. [Checkpoint T22](docs/handoffs.md#h-t22-a01),
+whole-passage budget và context gate trước generation. Kiểm mâu thuẫn số bảo thủ
+`numeric-claim-v1` trên các claim có cùng nhãn/ngữ cảnh/thời điểm/đơn vị trước khi
+áp passage budget; conflict trả insufficient với reason `conflicting_evidence`.
+Không phải detector mọi mâu thuẫn ngữ nghĩa. Threshold0.0 là raw reranker logit,
+không là confidence/xác suất đúng; calibration pending T31.
+[Nghiệm thu thật T22](docs/handoffs.md#h-t22-a02),
 [hợp đồng và cách kiểm tra](RUNBOOK.md#r06-t22).
 
 T01/T02 đã kiểm chứng trên Windows/PowerShell với uv 0.11.16, CPython 3.12.4 cho host checks, Docker Desktop Linux containers và Docker server 29.5.2. Project chấp nhận Python `3.12.*`; API image dùng Python 3.12.13 đã pin digest. Cài [uv](https://docs.astral.sh/uv/) và Docker Desktop, rồi từ root repository chạy quality:
@@ -355,8 +356,8 @@ và trước return; detach/delete/reindex làm abort. Không có query cache ho
 `result.trace.model_dump_json()` chỉ chứa policy/hash/model fingerprint/language,
 counts/timing/score kind; không query/history/text/identity/chunk IDs. `candidates`
 là metadata riêng tư có scope, không phải log. RRF/cosine chưa xác định đủ bằng chứng;
-unrelated dense query vẫn có thể trả candidates. Rerank/hydration/evidence T22 và
-public query T26 còn DESIGNED; full corpus quality T31 chưa đo.
+unrelated dense query vẫn có thể trả candidates. Rerank/hydration/evidence T22
+VERIFIED local; public query T26 còn DESIGNED; full corpus quality T31 chưa đo.
 
 Setup model image/cache theo [RUNBOOK T17](RUNBOOK.md#r09-t17), test secrets theo R03:
 
@@ -439,7 +440,7 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T18 VERIFIED:** exact-pair scoped Qdrant search/fetch/neighbors, versioned collections, idempotent upserts và PG-guarded generation cleanup.
 - **T19 VERIFIED:** ingestion orchestration, fenced leases/recovery, durable chunks/source maps và atomic ready publication; gates/evidence ở trên.
 - **T20–T21 VERIFIED:** domain registry/scoped preparation/history rewrite port và bounded dense/hybrid retrieval với redacted trace.
-- **T22–T26:** evidence selection, query JSON/SSE, citations, provider configuration và live smoke.
+- **T23–T26:** query JSON/SSE, citations, provider configuration và live smoke.
 - **T27–T29:** admin URL/login, UI workflows.
 - **T30–T34:** benchmark reports, performance, reliability, backup/restore.
 - **T35–T36:** quickstart tích hợp đã kiểm chứng và trạng thái nghiệm thu cuối.

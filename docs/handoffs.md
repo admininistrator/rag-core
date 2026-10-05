@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-06 / T22-A02 acceptance closure:** direct Codex agent, exact model/effort unavailable, no subagents. User delegates optimal conflict-policy choice; numeric-claim-v1 mapped-source baseline implemented over A01 checkpoint `74bb13019410bc2baf1fe911a2183ff5933716ea` (origin/main verified equal), preserving all partial work/scratch. DoD-1 **14actualCPUreranker/PG/Qdrant PASS103.34s**, separate DoD-2 **14PASS65.89s**,45focused unitPASS0.32s; final regression/quality/review/commit/push at closure below. Evidence [H-T22-A02](#h-t22-a02), interfaces [S-T22-A02](implementation-summary.md#s-t22-a02). Conflict cannot disappear under passage budget, scope/history/foreign guards retained. Threshold calibration T31 pending; semantic contradiction/translation/unit-conversion/full-corpus accuracy not claimed. Completion subject `feat(T22): select ranked evidence with answerability state`; COMPLETE effective only with successful inspected commit. Actual hash/authorized origin/main equality returned post-execution. T23 dependencies T22/T20 ready after closure, remains TODO. **STOP T22**, no drain/merge/deploy/Scarlet/source/cache deletion.
+
 - **Current 2026-10-06 / T22-A01 PARTIAL, NOT COMPLETE:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T21 `2c84157ba5bcac83560191573d8a26fa944bb1cf` verified equal origin/main; T07 scratch retained. Scoped PG source-map hydration, real rerank, whole-passage budgets and generation-context guards implemented; current conflict detection is absent, pending user decision (same-label/unit numeric baseline or semantic contradiction coverage before LLM). DoD-1 cannot close without this decision/test; no threshold calibration claim (T31 pending). Evidence [H-T22-A01](#h-t22-a01), interfaces [S-T22-A01](implementation-summary.md#s-t22-a01). Checkpoint review/commit/push hash reported after actual execution; this is not a completion commit. Preserve partial work and logs, resume only T22. T23 is not dependency-ready. **STOP T22**, no task drain/merge/deploy; Scarlet/source/cache unchanged.
 
 - **Current 2026-10-03 / T21-A01 acceptance ready, COMPLETE effective with successful inspected completion commit:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T20 `938bee71ac537e386e8472efc6f9eed7951026d1` equals origin/main, inherited T07 scratch retained. Bounded dense/hybrid pipeline/trusted profiles/optional same-scope neighbors/redacted trace implemented. Real CPU BGE-M3/PG/Qdrant DoD-1 **16PASS42.73s**, separate DoD-2 **29PASS5.25s**; **459regressionPASS135.41s**, **35dependencyPASS13.79s**, Ruff/mypy73/locked169/OpenAPI PASS. Evidence [H-T21-A01](#h-t21-a01), interfaces [S-T21-A01](implementation-summary.md#s-t21-a01). Final docs/scope/secrets/staging/commit/push review is closure boundary. Subject `feat(T21): add scoped hybrid multilingual retrieval`; actual hash/authorized origin/main equality returned post-execution. Candidate metadata is private, trace redacted, text hydration/rerank/evidence remain T22; real providers/public query/full corpus/load remain future gates. Own test services stopped at closure without source/cache/volume deletion; Scarlet untouched. T22 dependencies T21/T17 ready after closure; stays TODO. **STOP AFTER T21**, no merge/deploy/drain.
@@ -8113,3 +8115,281 @@ rag-core-t22-test-qdrant-1 exited
 No down/delete-volume/source/model-cache/scratch cleanup; existing application
 services not operated on. Final docs checker exit0:14files/360links/37tasks/81edges,
 `DOCUMENTATION CHECK: PASS`; final whitespace check exit0.
+
+
+<a id="h-t22-a02"></a>
+## H-T22-A02 - Phase 4 / ranked evidence and conservative numeric conflicts
+
+Runtime direct Codex agent, exact model/effort unavailable; no subagents. Date
+2026-10-06 Asia/Bangkok. Every command cwd
+`C:\Users\Admin\Documents\GitHub\rag-core`. User delegated choice of best
+conflict policy; selected conservative `numeric-claim-v1` to complete T22 without
+adding semantic/NLI/LLM dependencies ahead of T23. This resolves A01 decision
+blocker; historical A01 incomplete results remain untouched above. Original
+DoD1/2 and D1-D6 kept; numeric baseline scope/limits documented, no lowered gate.
+
+### Baseline/decision/source scope
+
+Actual baseline command `git status --short; git branch --show-current; git rev-parse HEAD; git remote -v`
+exit0:
+
+```text
+?? .ptmp-t07-a02/
+?? .tmp-t07-a02/
+main
+74bb13019410bc2baf1fe911a2183ff5933716ea
+origin https://github.com/admininistrator/rag-core.git (fetch)
+origin https://github.com/admininistrator/rag-core.git (push)
+```
+
+Known global-ignore/inaccessible scratch warnings retained, no cleanup.
+Read AGENTS/session prompt, T22 checkpoint/source and complete T21/T17 dependency
+notes/interfaces/evidence, plan P01/P08/P09/P11/P13, README/RUNBOOK and ledgers.
+Kept existing hydration/rerank/context implementation from inspected A01 checkpoint.
+Mark IN_PROGRESS T22-A02 before code. User commit/push authorization persists.
+One task only, no subagents, old worker/kanban, force/merge/deploy/Scarlet mutation.
+
+Actual elevated resume command exit0:
+
+```powershell
+docker compose -p rag-core-t22-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; git ls-remote origin refs/heads/main
+```
+
+Output `Container rag-core-t22-test-postgres-1 Healthy`,
+`Container rag-core-t22-test-qdrant-1 Healthy`,
+`Container rag-core-t22-test-inference-1 Healthy`, and
+`74bb13019410bc2baf1fe911a2183ff5933716ea refs/heads/main`.
+Same pinned PG17.11/Qdrant1.19.1 tmpfs/loopback55432/56333 and read-only model cache,
+T17 CPU image (unchanged); new code runs host source through real model HTTP58080.
+Actual CPU fingerprint
+`f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b`, PID7/two models,
+load58.325s, FlagEmbedding1.3.5/Torch2.9.1+cpu/Transformers4.57.6/tokenizers0.22.2/
+sentence-transformers5.1.2/peft0.17.1. BGE-M3 pin5617a9f61b028005a4858fdac845db406aefb181
+and reranker pin953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e inherited verified T17
+cache. No new weights/dependencies/model/provider change, GPU/LLM/corpus/load claim.
+
+Common actual host environment, secret only read from file and never printed:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+```
+
+### Decision and behavior reviewed
+
+Exact normalized statement/heading skeleton retains label/entity/period/qualifiers,
+explicit units; mapped table headers + numeric-column unit + other row dimensions
+retain entity/year. Decimal compares unambiguous values exactly. No unit/currency
+scale conversion, translation, semantic entailment, grouped/ambiguous-number guess,
+formula recalculation/cache certainty, unmapped metadata/history input. Numeric
+helper runs off event loop, bounded <=20 authorized relevant candidates.
+Conflict scan precedes passage/token budget, so reason conflicting_evidence wins
+even when one passage or zero tokens fit; answerability insufficient_evidence.
+First opposing pair prioritized if budget permits, preserving whole chunks/maps.
+Same amount/different entity/metric/year/unit/qualifier tests avoid conflation;
+foreign same-owner retained contradiction cannot influence current state.
+
+Policy fingerprint includes literal conflict_policy numeric-claim-v1 and pending-T31
+calibration, raw floor0.0 is not factual confidence. Trace schema1 adds count only,
+no claim text/identity/IDs. Internal additive fields, public schema/API/DB/index/
+dependency/model unchanged. Code/test total15task paths across A01+A02; A02 delta13
+paths (five living docs +eight Python source/test paths). No raw corpus/gold changes.
+Baseline is intentionally bounded: general semantic/paraphrase/cross-language,
+text-table equivalent and un-retrieved-document contradictions are not measured
+or advertised; supported is not proof of complete multi-hop/claim coverage.
+
+### DoD-1 PASS - real reranker, vectors and durable source maps
+
+Exact command exit0; expected/actual all cases PASS:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_evidence_selection.py -q -s --tb=short --basetemp=.local/22a2d1 -o cache_dir=.local/22a2c1 *> .local/t22-a02-dod1.log
+```
+
+Actual excerpt, full ignored log `.local/t22-a02-dod1.log`:
+
+```text
+T22 REAL cross-language vi supported raw=2.8313
+T22 REAL cross-language en supported raw=4.9300
+T22 REAL irrelevant nearest neighbor -> insufficient / zero context
+T22 REAL conflicting12.5/14.5 million USD ->insufficient/conflicting passage_limit=8 tokens=8000
+T22 REAL conflicting12.5/14.5 million USD ->insufficient/conflicting passage_limit=1 tokens=8000
+T22 REAL conflicting12.5/14.5 million USD ->insufficient/conflicting passage_limit=8 tokens=1
+T22 REAL conflicting XLSX14.5/12.5 ->insufficient/conflicting; both headers/maps retained
+T22 REAL multi-evidence=3 numeric/unit/header/source-map PASS
+T22 REAL HTTP rerank cancelled; subsequent real rerank supported
+T22 REAL20 rerank candidates ->8 passages; stable config/raw ranking, calibration pending
+14 passed in 103.34s (0:01:43)
+```
+
+### DoD-2 PASS - real scope/history/context gate and threshold docs
+
+Exact command exit0; expected/actual all cases PASS:
+
+```powershell
+uv run --no-sync pytest tests/security/test_evidence_scope.py -q -s --tb=short --basetemp=.local/22a2d2 -o cache_dir=.local/22a2c2 *> .local/t22-a02-dod2.log
+```
+
+Actual excerpt, full ignored log `.local/t22-a02-dod2.log`:
+
+```text
+T22 REAL history/foreign/text/allowlist generation-context guards PASS; no LLM invoked
+14 passed in 65.89s (0:01:05)
+```
+
+### Focused policy and numeric ambiguity/source-role risk tests PASS
+
+Exact command exit0; expected/actual all cases PASS:
+
+```powershell
+uv run --no-sync pytest tests/unit/test_evidence_policy.py tests/unit/test_evidence_conflicts.py -q --tb=short --basetemp=.local/22a2u2 -o cache_dir=.local/22a2uc2 *> .local/t22-a02-unit.log
+```
+
+Actual excerpt, full ignored log `.local/t22-a02-unit.log`:
+
+```text
+45 passed in 0.32s
+```
+
+DoD1 includes all original real cases plus text conflicting12.5/14.5 million USD,
+conflict under passage_limit1/context_tokens1, different-period supported and XLSX
+opposing numeric values with headers/maps retained. Actual CPU model required,
+no synthetic/fake score fallback. DoD2 includes foreign app/user/retained same-owner
+session, subset/language/forged metadata/generation/history/text/maps, detach/delete
+at hydrate/rerank/context stages, durable empty-map tamper and outside-session
+contradiction excluded. No LLM call claim; context_for_generation boundary is T22
+output for T24's later provider/system-policy framing. RUNBOOK pending-T31/non-
+probability/limitations updated with implementation.
+
+### D2 quality and retained diagnostics
+
+Actual commands each exit0:
+
+```powershell
+uv run --no-sync ruff check src/rag_core/domain/evidence.py src/rag_core/domain/evidence_conflicts.py src/rag_core/application/evidence.py tests/unit/test_evidence_policy.py tests/unit/test_evidence_conflicts.py tests/fixtures/evidence_support.py tests/integration/test_evidence_selection.py tests/security/test_evidence_scope.py
+uv run --no-sync mypy src
+uv lock --check --offline
+uv run --no-sync python scripts/export_openapi.py --check
+```
+
+Actual outputs `All checks passed!`, `Success: no issues found in 78 source files`,
+`Resolved 169 packages in 39ms`,
+`PASS designed_operations=13 served_health_routes=2 synthetic_examples=37`,
+`PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic`,
+`CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)`.
+Whole `uv run --no-sync ruff check . *> .local/t22-a02-ruff.log` also exit0,
+`All checks passed!`, known old scratch traversal permission warnings retained.
+Initial scoped Ruff import formatting fixed automatically and focused43test initial
+run PASS0.35s; final45test run adds unknown detector rejection/table cache/dimension
+guards, no skipped/removed test or changed gold. Failed text patch on formatted
+unit-test anchor made no edits (atomic), corrected; not a test failure or gate change.
+
+
+### D1-D6 closure evidence
+
+Actual regression command exit0:
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/r22a2 -o cache_dir=.local/c22a2 *> .local/t22-a02-regression.log
+```
+
+Expected/actual all unit/contract/security PASS, no skip/mock substitute for real
+model gates. Actual excerpt; full ignored log `.local/t22-a02-regression.log`:
+
+```text
+........................................................................ [ 97%]
+..............                                                           [100%]
+518 passed in 202.67s (0:03:22)
+```
+
+Final quality commands each exit0:
+
+```powershell
+uv run --no-sync ruff check . *> .local/t22-a02-ruff-final.log
+uv run --no-sync ruff format --check src/rag_core/domain/evidence.py src/rag_core/domain/evidence_conflicts.py src/rag_core/application/evidence.py tests/fixtures/evidence_support.py tests/integration/test_evidence_selection.py tests/security/test_evidence_scope.py tests/unit/test_evidence_policy.py tests/unit/test_evidence_conflicts.py
+uv run --no-sync python scripts/check_docs.py
+git diff --check
+```
+
+Actual `All checks passed!` (known old scratch traversal permission warnings),
+`8 files already formatted`, docs:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 365
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Whitespace check exit0, only existing CRLF normalization warnings. D1 PASS scope/
+dependency notes/checkpoint/tombstone source ownership/scratch preservation;
+D2 PASS45focused unit0.32s,518regression202.67s, final Ruff/mypy78/locked169 and
+unchanged structural OpenAPI. D3 PASS separate original real DoD1/2 above.
+D4 PASS five living docs status/contracts/DI/profiles/errors/budgets/conflict
+semantics/thresholds/tests/migration-N/A/limits and ledger/checkpoint updated.
+No API/index/DB/dependency/model migration because changes are internal evidence
+policy/helper and additive private trace field; public query/generation remains future.
+
+Actual elevated own test project stop/state command exit0:
+
+```powershell
+docker compose -p rag-core-t22-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; docker compose -p rag-core-t22-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml ps --all --format '{{.Name}} {{.State}}'
+```
+
+Actual output:
+
+```text
+Container rag-core-t22-test-qdrant-1 Stopped
+Container rag-core-t22-test-postgres-1 Stopped
+Container rag-core-t22-test-inference-1 Stopped
+rag-core-t22-test-inference-1 exited
+rag-core-t22-test-postgres-1 exited
+rag-core-t22-test-qdrant-1 exited
+```
+
+No down/delete volumes/source/cache/scratch. Existing applications/Scarlet untouched.
+D5 source/test review includes mapped-only numeric comparison, exact time/unit/
+qualifiers, table entity dimensions, formula-cache ambiguity, full relevant scan
+before budget, ordered opposing pair, no foreign effects, safe trace and post-stage
+scope revalidation. Unit text-patch diagnostics retained above; no gate lowered.
+Review/stage exact13paths and filtered hashes/secrets below. D6 subject
+`feat(T22): select ranked evidence with answerability state` (completion), actual
+commit/parent/files/hash/push/remote equality returned after execution, not embedded
+in its own commit. A01 checkpoint74bb130 remains immutable history. No amend/
+force/merge/deploy. T23 dependencies T22/T20 ready after inspected completion,
+stays TODO; STOP T22.
+
+Final A02 scoped stage command (elevated) exit0:
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md src/rag_core/domain/evidence.py src/rag_core/domain/evidence_conflicts.py src/rag_core/application/evidence.py tests/fixtures/evidence_support.py tests/integration/test_evidence_selection.py tests/security/test_evidence_scope.py tests/unit/test_evidence_policy.py tests/unit/test_evidence_conflicts.py
+uv run --no-sync python .local/t22_a02_review.py *> .local/t22-a02-review.log
+uv run --no-sync python scripts/check_docs.py
+git diff --cached --stat
+git status --short
+git ls-remote origin refs/heads/main
+```
+
+Each read/review command exit0, actual output excerpt before evidence-only restage:
+
+```text
+PASS A02 exact13paths; checkpoint parent; staged/worktree filtered hashes; added-line key scan; whitespace
+PASS no corpus/prompt/AGENTS/lock/migration/API/raw data/secrets/cache/scratch staged
+PASS completion subject feat(T22): select ranked evidence with answerability state
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 365
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+13 files changed, 677 insertions(+), 28 deletions(-)
+74bb13019410bc2baf1fe911a2183ff5933716ea refs/heads/main
+```
+
+Only13T22 paths staged, inherited two scratch directories untracked unchanged.
+D5 PASS exact source/test/docs paths, code/behavior/secret/artifact review; local
+checker/logs ignored. Restage only this evidence append and repeat same exact13
+filtered hashes/docs/whitespace before completion commit. D1-D5 PASS, D6 actual
+commit inspection/push/hash equality returned after execution. No unresolved blocker,
+raw threshold pending T31 and conservative semantic limits documented. STOP T22.

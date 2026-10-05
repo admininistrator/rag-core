@@ -8,7 +8,7 @@ from sqlalchemy import text
 from rag_core.domain.evidence import EvidenceError
 from rag_core.domain.metadata import ScopeError
 from rag_core.domain.vectors import VectorHit
-from tests.fixtures.evidence_support import evidence_corpus
+from tests.fixtures.evidence_support import evidence_corpus, seed
 from tests.integration import conftest as pg_fixtures
 from tests.integration.test_qdrant_scope import fixture
 from tests.integration.test_retrieval import real_models
@@ -16,6 +16,24 @@ from tests.integration.test_retrieval import real_models
 pg_url = pg_fixtures.pg_url
 __all__ = ["evidence_corpus", "fixture", "real_models"]
 pytestmark = [pytest.mark.security, pytest.mark.asyncio]
+
+
+async def test_outside_session_conflict_cannot_change_supported_state(evidence_corpus):
+    e = evidence_corpus
+    old = await e.f.sessions.create_session(e.f.owner, "outside-conflict")
+    await seed(
+        e.f,
+        e.models,
+        e.tokenizer,
+        "foreign-conflict",
+        "en",
+        "Acme revenue in 2025: 14.5 million USD.",
+        session=old,
+    )
+    ctx, retrieval, selector = await e.query("Acme revenue in 2025?", labels=("revenue",))
+    selected = await selector.select(ctx, retrieval)
+    assert selected.answerability == "supported" and selected.trace.conflict_count == 0
+    assert {p.chunk.id for p in selected.passages} == {e.chunks["revenue"].id}
 
 
 @pytest.mark.parametrize("foreign_index", [0, 1, 2])

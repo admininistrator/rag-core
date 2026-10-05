@@ -28,6 +28,7 @@ class EvidenceError(Exception):
 class EvidencePolicy(FrozenModel):
     revision: Literal["raw-m3-baseline-v1"] = "raw-m3-baseline-v1"
     calibration: Literal["pending-T31"] = "pending-T31"
+    conflict_policy: Literal["numeric-claim-v1"] = "numeric-claim-v1"
     candidate_limit: Annotated[int, Field(strict=True, ge=1, le=20)] = 20
     passage_limit: Annotated[int, Field(strict=True, ge=1, le=8)] = 8
     context_tokens: Annotated[int, Field(strict=True, ge=1, le=8000)] = 8000
@@ -67,6 +68,7 @@ class EvidenceTrace(FrozenModel):
     tokenizer_fingerprint: str
     candidate_count: int
     relevant_count: int
+    conflict_count: int = Field(default=0, ge=0)
     selected_count: int
     context_tokens: int
     budget_skipped: int
