@@ -6,6 +6,10 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-07 / T25-A01 acceptance closure:** direct agent/exactmodel-effortunavailable/no subagents, baseline main/e100345 verified equal origin/main; T07 scratch preserved. User approved early scoped allowlist/final exact subset.19paths (8source/5test/6docs): optional authenticated POST SSE, shared T24 prompt/source/final validation, bounded admission/queue/sentence/wire/heartbeat/deadlines, per-event send-boundary scope and shielded upstream close before terminal. Final separate DoD123PASS162.70s/DoD28PASS59.32s realHTTP/JWT/PG/Qdrant/BGE CPU; nativeLLMHTTPsynthetic.30unchangedT24PASS140.69s +709fullregressionPASS288.07s +101focusedunit/contractPASS2.58s; Ruff/scoped13format/mypy94/lock177/unchangedOpenAPI/docs PASS. Initial17PASS/4FAIL retained; fixes verified, no unresolved blocker. D1–D5 reviewed; COMPLETE/D6 effective only after inspected19path `feat(T25): stream scoped answers with cancellation` commit, actual hash/authorized normal origin/main equality reported post-execution. [H-T25-A01](#h-t25-a01), [S-T25-A01](implementation-summary.md#s-t25-a01). Production full DI/public mounting/live two-provider smoke T26; bytes irrevocable/revision-send race/incomplete disconnect/one-process budget documented, load T33. Own project stopped without source/cache/volume deletion. T26 dependencies ready after successful closure, remains TODO/keys+live checks in that task; STOP T25, no drain/merge/deploy.
+
+- **Current 2026-10-07 / T25-A01 BLOCKED, NOT COMPLETE:** main/e100345bbe337d6e37a0a2c0eb4416ba37c39827 equals origin/main. Direct agent/no subagents/exact model-effort unavailable; T23/T24 COMPLETE dependencies read. Three partial Python paths (bounded decoding/admission/unit tests) and five checkpoint docs;125focused tests PASS2.92s. No HTTP SSE wiring/DoD1/DoD2/final validation/live claim/commit/push. Pending user contract decision: SSE evidence as pre-generation allowlist + final subset versus full buffer retaining existing equality. Preserve files and old T07 scratch; own healthy PG/Qdrant/CPU project stopped, no volumes/cache deleted. [H-T25-A01](#h-t25-a01), [S-T25-A01](implementation-summary.md#s-t25-a01). Resume same attempt only after answer; T26 not ready; STOP T25.
+
 - **Current 2026-10-06 / T24-A01 acceptance closure:** direct Codex agent (GPT-6 family; exact model/effort unavailable), no subagents. main/T23 `5adbc575ca77e53998b7bbeaa07c142a47277b0e` verified equal origin/main; inherited T07 scratch preserved.14task paths implement scoped answer/one repair/source allowlist/PG resolver. Final DoD1 actualPG/Qdrant/CPU/source with syntheticLLM30PASS130.81s; separate DoD2 actual6formats+RUNBOOK7PASS14.30s;29unitPASS0.23s, Ruff/scopedformat/mypy90/lock177/OpenAPI/docs PASS. Final full regression690PASS+1legacycorpusWindowsrenamefailure251.67s, unchanged pytest--last-failed1PASS1.19s; all691cases tested, full exit1 remains recorded. Earlier687fullPASS before final markup correction. [H-T24-A01](#h-t24-a01), [S-T24-A01](implementation-summary.md#s-t24-a01). D1–D5 task gates reviewed; COMPLETE/D6 effective only with successful inspected `feat(T24): return grounded answers and verified citations` commit; actual hash/authorized origin/main equality returned post-execution. No live-provider/public HTTP/SSE claim (T25/T26 remain). Transient setup/Windows fixtures and41unchanged baseline format debt documented. T25 remains TODO/dependencies ready after closure; STOP T24, no drain/merge/deploy.
 
 - **Current 2026-10-06 / T23-A01 acceptance closure:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T22 `3e6821b814282ef0a6859a9414ecf8f8d29fdf72` equals origin/main (read-only escalation verified). No partial T23 candidate; inherited T07 scratch preserved. DeepSeek HTTPX and Anthropic SDK1.11.0 generate/stream/rewrite implemented with distinct schemas, independent configuration, prompt/output bounds, nullable usage, shared total deadline/bounded retries/no retry after emitted delta/cancel cleanup. DoD-1 synthetic127PASS4.63s and separate DoD-2 config18PASS2.22s; 645regressionPASS200.23s, Ruff/format/mypy85/lock177/OpenAPI/docs/review PASS; final staged commit/push boundary below. Evidence [H-T23-A01](#h-t23-a01), interfaces [S-T23-A01](implementation-summary.md#s-t23-a01). No live provider/model behavior claim; T26 retains real-provider gates. Completion subject `feat(T23): support DeepSeek and Anthropic generation`, COMPLETE effective only after inspected commit succeeds; actual hash/authorized origin/main equality reported post-execution. T24 remains TODO, dependencies ready after closure; STOP T23, no drain/merge/deploy/Scarlet/source/cache/scratch deletion.
@@ -9287,3 +9291,495 @@ checks, then `git commit -m "feat(T24): return grounded answers and verified cit
 After inspected commit, user-authorized normal `git push origin HEAD:refs/heads/main`
 and remote hash equality check. No additional task work; completion outcome and
 actual hash reported after execution (not embedded in its own commit).
+
+<a id="h-t25-a01"></a>
+## H-T25-A01 — Phase 5 / bounded helpers checkpoint / 2026-10-07
+
+**NOT COMPLETE; awaits product/contract decision.** Direct Codex agent, exact
+model/effort unavailable; no subagents. Every command below has cwd
+`C:\Users\Admin\Documents\GitHub\rag-core`; dates use Asia/Bangkok client context.
+Read AGENTS/task-session-prompt, T25/T23/T24 dependency notes, P01/P06/P09/P12/P13,
+handoffs/interfaces/README/RUNBOOK before source edits. No inherited T25 source.
+
+Baseline `git status --short`, `git branch --show-current`, `git rev-parse HEAD`
+each exit0, actual output (legacy inaccessible-scratch/global-ignore warnings
+retained; those paths untouched):
+
+```text
+?? .ptmp-t07-a02/
+?? .tmp-t07-a02/
+main
+e100345bbe337d6e37a0a2c0eb4416ba37c39827
+```
+
+`git remote -v` exit0: origin fetch/push
+`https://github.com/admininistrator/rag-core.git`.
+Initial `git ls-remote origin refs/heads/main` exit128:
+
+```text
+fatal: unable to access 'https://github.com/admininistrator/rag-core.git/': Failed to connect to github.com port 443 after 52 ms: Could not connect to server
+```
+
+Same read-only command with authorized network escalation exit0:
+
+```text
+e100345bbe337d6e37a0a2c0eb4416ba37c39827 refs/heads/main
+```
+
+No approval rejection. `docker version --format '{{.Server.Version}}'` exit0
+`29.5.2`. Test-only project setup, actual commands:
+
+```powershell
+docker compose -p rag-core-t25-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
+docker compose -p rag-core-t25-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml ps
+docker compose -p rag-core-t25-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop
+```
+
+All exit0. Actual output excerpt:
+
+```text
+Container rag-core-t25-test-qdrant-1 Healthy
+Container rag-core-t25-test-postgres-1 Healthy
+Container rag-core-t25-test-inference-1 Healthy
+rag-core-t25-test-inference-1 rag-core-inference:t17-cpu Up 3 minutes (healthy) 127.0.0.1:58080->8080/tcp
+rag-core-t25-test-postgres-1 postgres:17.11-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0 Up 3 minutes (healthy) 127.0.0.1:55432->5432/tcp
+rag-core-t25-test-qdrant-1 qdrant/qdrant:v1.19.1-unprivileged@sha256:801777072776dc81b2a9dd2007b2ed487571f21ecd30efffd15ddb1671f2193d Up 3 minutes (healthy) 127.0.0.1:56333->6333/tcp
+Container rag-core-t25-test-qdrant-1 Stopped
+Container rag-core-t25-test-postgres-1 Stopped
+Container rag-core-t25-test-inference-1 Stopped
+```
+
+Only startup health observed; no HTTP SSE/PG scope/retrieval gates executed.
+No shared model cache/source/app-volume changes or deletion. Credentials never
+printed. No LLM configured/called; required T26 live verification unchanged.
+
+### Partial independent implementation and checks
+
+Three Python paths: `domain/streaming.py`, `application/admission.py`,
+`tests/unit/test_streaming.py`. Five living docs updated with NOT COMPLETE
+checkpoint. Existing JSON/SSE schemas/validator/provider/T24 source untouched.
+Interfaces/defaults/limits recorded in [S-T25-A01](implementation-summary.md#s-t25-a01).
+
+First command, exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/unit/test_streaming.py -q --tb=short --basetemp=.local/u25a
+```
+
+```text
+............. [100%]
+13 passed in 0.41s
+```
+
+Initial scoped Ruff check exit0, mypy exit0; format check exit1 identified two
+quote-style changes in new tests. Corrected using formatter, no gate lowered.
+Cancellation acquisition uses `asyncio.timeout` with semaphore's own cancellation
+cleanup; queue capacity rejects extra waiters rather than allocating unbounded tasks.
+Final commands:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+uv run --no-sync ruff format src/rag_core/domain/streaming.py src/rag_core/application/admission.py tests/unit/test_streaming.py
+uv run --no-sync pytest tests/unit/test_streaming.py tests/unit/test_answers.py tests/contract/test_api_schema.py -q --tb=short --basetemp=.local/u25b *> .local/t25-a01-independent.log
+uv run --no-sync ruff check src/rag_core/domain/streaming.py src/rag_core/application/admission.py tests/unit/test_streaming.py
+uv run --no-sync ruff format --check src/rag_core/domain/streaming.py src/rag_core/application/admission.py tests/unit/test_streaming.py
+uv run --no-sync mypy src/rag_core/domain/streaming.py src/rag_core/application/admission.py
+git diff --check
+```
+
+Each final command exit0; actual output:
+
+```text
+1 file reformatted, 2 files left unchanged
+........................................................................ [ 57%]
+..................................................... [100%]
+125 passed in 2.92s
+All checks passed!
+3 files already formatted
+Success: no issues found in 2 source files
+```
+
+Focused125 =13new unit +29T24answer unit +83existingAPI-contract cases;
+log `.local/t25-a01-independent.log` ignored, no private content. No full
+regression or real HTTP claim. `git diff --check` has no errors; CRLF-to-LF Git
+advisories only. Official transport references inspected in planning:
+[Starlette responses](https://www.starlette.dev/responses/),
+[HTTPX async API](https://www.python-httpx.org/api/); pinned local Starlette
+StreamingResponse source inspected for disconnect handling. No dependency changes.
+
+### Blocker, individual DoD and resume instructions
+
+- **DoD-1 BLOCKED/not run:** no `tests/e2e/test_streaming.py` or HTTP transport yet.
+- **DoD-2 BLOCKED/not run:** no live detach/delete stream or JSON/SSE final equivalence/parser gate yet.
+- **D1:** dependency/baseline reads and partial scoped diff PASS; scratch untouched.
+- **D2:** focused125 + scoped lint/format/mypy PASS only; remaining pipeline/HTTP checks pending.
+- **D3 BLOCKED:** original two DoDs unfinished; no live requirement removed/substituted.
+- **D4:** checkpoint/status/partial-interface docs added to README/RUNBOOK/tasks/handoffs/summary.
+- **D5:** partial source/diff reviewed, no secret/raw corpus/cache/weights changes; final review pending.
+- **D6 NOT RUN:** no stage/commit/push; HEAD and remote remain inspected T24 baseline. Task not COMPLETE, T26 not ready.
+
+Conflict: SSESequence currently requires absolute equality for evidence vs done
+citations/contexts. T24 JSON final only returns model-referenced sources; these
+are unknown at early evidence emission. True provisional generation cannot
+know that exact final subset beforehand. No contract change made silently.
+User asked to choose (1) early scoped evidence allowlist plus final validated
+subset (recommended; revise validator/docs while keeping T24 JSON semantics),
+or (2) retain equality, buffer entire generation before evidence/delta.
+Dependent implementation must await explicit answer; elapsed time is not approval.
+Resume **same T25-A01**, retain all3partial Python paths and5docs, restart only own
+test project as above. Wire shared prompt/source/final validation, HTTP/heartbeat/
+backpressure/cancel/per-event scope, then run both original DoDs and D1–D6 and
+completion commit/push. Do not drain T26 or touch inherited T07 scratch.
+
+Final checkpoint validation `uv run --no-sync python scripts/check_docs.py` exit0:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 391
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Final `git diff --check` exit0; `git status --short` exit0 confirms precisely
+5modified checkpoint docs +3new Python paths and the2unchanged inherited scratch
+directories. No stage/commit/push, pending required user contract decision.
+
+### T25-A01 resumed after explicit user decision — 2026-10-07
+
+User approved recommended pre-generation scoped evidence allowlist + validated
+final subset; original decision blocker resolved. Same attempt, no subagents.
+Continued3partial Python+5doc files; final intended scope19paths (8source/5test/
+6docs incl approved P09 rule). Production health-only factory/snapshots unchanged;
+optional POST router is mounted only in acceptance app. No dependency/DB/index/
+corpus/storage/Scarlet/deploy changes. Authenticated Principal remains authority.
+
+Own services restarted with same `docker compose ... up -d --wait` command above,
+exit0/allhealthy. PG17.11/Qdrant1.19.1/T17CPU read-only pinned cache. Host CPython
+3.12.4/pytest9.1.1. Real test model health excerpt:
+
+```text
+T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=53.854s
+```
+
+T25 NativeWireFixture serves synthetic DeepSeek/Anthropic schema on a **real
+loopback HTTP server**, single-byte UTF-8 fragments. Actual T23 native adapters
+use routing-only HTTPS MockTransport to this server, never fake DB/model/inference.
+Query API uses real loopback Uvicorn HTTP and T09 JWT/JWKS, fresh random RSA/key,
+owner/session identity; fixture credentials stay ignored temp, never printed.
+No live model/key/billing/quality verification; mandatory live smoke unchanged T26.
+
+Actual acceptance config: selected DeepSeek/Anthropic `synthetic-model-revision`,
+synthetic noncredential key, max_attempts1/provider timeout10s; fixture token
+usage11input/4output or missing/null as each case requests. Stream heartbeat0.05s
+on real monotonic time; other default policy bounds unchanged except disconnect/
+busy tests concurrency1/queue0 and total-timeout test2s. Repair gate assembly
+timeout10s; default60s in other cases. No fabricated upstream billing/TTFT.
+
+Read-only pre-commit `git ls-remote origin refs/heads/main` exit0 same e100345 full
+hash above; `git var GIT_AUTHOR_IDENT | Out-Null` exit0 `Git author configured`.
+No identity modified. Source interfaces/bounds in [S-T25-A01](implementation-summary.md#s-t25-a01).
+
+### Initial verification failures and corrections (retained evidence)
+
+All test commands below use this exact common PowerShell environment prefix:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'; $env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'; $env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'; $env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+```
+
+Initial default-sandbox probe:
+
+```powershell
+uv run --no-sync pytest tests/e2e/test_streaming.py -k 'event_order' -v -s --tb=short --basetemp=.local/e25a *> .local/t25-a01-http-initial.log
+```
+
+No fixture progress beyond `collected 21 items / 19 deselected / 2 selected`;
+interrupted with control-C, exit1; no PASS or service-failure claim. Authorized
+loopback-network escalation, separate fresh basetemp `.local/e25b`, same command
+and log `.local/t25-a01-http-probe.log`: exit0 `2 passed, 19 deselected, 1 warning
+in 25.69s`. Warning: inaccessible baseline `.pytest_cache`; later commands use
+own ignored cache dirs. Real fixtures/native HTTP/UTF-8 PASS for both providers.
+
+Initial full DoD-1 (network escalation):
+
+```powershell
+uv run --no-sync pytest tests/e2e/test_streaming.py -v -s --tb=short --basetemp=.local/e25c -o cache_dir=.local/ce25c *> .local/t25-a01-dod1-initial.log
+```
+
+Exit1, real output excerpt:
+
+```text
+FAILED tests/e2e/test_streaming.py::test_scope_change_detach_delete_between_events_no_done[detach-answer_delta]
+FAILED tests/e2e/test_streaming.py::test_scope_change_detach_delete_between_events_no_done[delete-answer_delta]
+FAILED tests/e2e/test_streaming.py::test_bad_output_after_delta_no_repair_or_success[invalid-id]
+FAILED tests/e2e/test_streaming.py::test_total_timeout_during_idle_stream_cancels_upstream
+4 failed, 17 passed, 1 warning in 180.67s (0:03:00)
+```
+
+Real failures: scope terminal returned but upstream cleanup not finished within
+3s; raw `TimeoutError` was caught as OSError, causing incomplete chunked read;
+invalid-ID fixture originally packed safe+unsafe sentences into one native delta
+(batch decoder rejected it all, so expected prior public delta did not exist).
+No assertion/gate weakened: fixture now deliberately splits safe first sentence
+before invalid subsequent sentence to exercise post-delta error/no repair;
+transport distinguishes slow send from total timeout, closes native producer
+before writable terminal and shields one-shot cleanup from racing disconnect.
+Added explicit unit race and queued-stale/backpressure/cancellation checks.
+History test no longer uses invalid model_copy(dicts), eliminating serializer
+warning without changing history input/assertions. Initial separate scoped unit
+run1FAIL127PASS2.67s exposed TimeoutError/OSError hierarchy; fixed, then16unit
+PASS0.94s and final17unit+84API-contract101PASS2.58s. Initial Ruff import/style and
+AsyncIterator-aclose/nonlocal inference mypy errors corrected;13changedPython
+format and mypy94 PASS. No skip/lowered budgets/timeout-gate/model/gold changes.
+
+Focused real diagnostic after lifecycle fix:
+
+```powershell
+uv run --no-sync pytest tests/e2e/test_streaming.py -k 'scope_change or bad_output or total_timeout or runbook' -v -s --tb=short --basetemp=.local/e25d -o cache_dir=.local/ce25d *> .local/t25-a01-fix-diagnostic.log
+```
+
+Exit0, actual excerpt:
+
+```text
+T25 REAL HTTP/PG detach after answer_delta: scope_changed/no done; upstream/slot closed; retained chunk PASS
+T25 REAL HTTP/PG delete after answer_delta: scope_changed/no done; upstream/slot closed; retained chunk PASS
+T25 RUNBOOK exact HTTPX parser executed on real HTTP; failure=False PASS
+T25 RUNBOOK exact HTTPX parser executed on real HTTP; failure=True PASS
+10 passed, 13 deselected in 71.10s (0:01:11)
+```
+
+All23cases still run in final original DoD1; focused diagnostic not a substitute.
+Logs above ignored `.local/`, contain only synthetic test text/safe service/model
+metadata. Output excerpts retain exact errors/counts; no secrets printed/committed.
+
+### Final original DoD-1 — PASS
+
+Common environment prefix above; network escalation, cwd repository root:
+
+```powershell
+uv run --no-sync pytest tests/e2e/test_streaming.py -v -s --tb=short --basetemp=.local/e25final -o cache_dir=.local/ce25final *> .local/t25-a01-dod1-final.log
+```
+
+Exit **0**, all23cases, no skips/deselection/warnings. Expected/actual: native
+HTTP UTF-8 split/event order/one done/error/heartbeat/partial technical failure,
+disconnect at retrieval/provider/delta and next admitted query, busy429,
+detach/delete/evidence/delta/idle scope_changed with retained chunk and no done,
+JSON/SSE final/subset/usage/history/input/auth/error/repair/parser. Actual excerpt:
+
+```text
+T25 REAL HTTP/JWT/PG/Qdrant/CPU deepseek synthetic native wire: meta/evidence/delta/done UTF-8 PASS
+T25 REAL HTTP/JWT/PG/Qdrant/CPU anthropic synthetic native wire: meta/evidence/delta/done UTF-8 PASS
+T25 REAL HTTP deepseek: provisional answer + heartbeat + one technical error/no replay PASS
+T25 REAL HTTP anthropic: provisional answer + heartbeat + one technical error/no replay PASS
+T25 REAL HTTP disconnect at retrieval; native upstream/slot closed; next request admitted PASS
+T25 REAL HTTP disconnect at provider; native upstream/slot closed; next request admitted PASS
+T25 REAL HTTP disconnect at delta; native upstream/slot closed; next request admitted PASS
+T25 REAL HTTP/PG detach after answer_delta: scope_changed/no done; upstream/slot closed; retained chunk PASS
+T25 REAL HTTP/PG delete after evidence: scope_changed/no done; upstream/slot closed; retained chunk PASS
+T25 deepseek REAL stack: early allowlist >=2/final referenced subset1; JSON/SSE final schema+fields equal PASS
+T25 anthropic REAL stack: early allowlist >=2/final referenced subset1; JSON/SSE final schema+fields equal PASS
+T25 RUNBOOK exact HTTPX parser executed on real HTTP; failure=False PASS
+T25 RUNBOOK exact HTTPX parser executed on real HTTP; failure=True PASS
+23 passed in 162.70s (0:02:42)
+```
+
+Schema/final valid from actual source-mapped result. Sent bytes irrevocable;
+delta provisional/no semantic-entailment/live-model/load/deployment claim.
+
+### Final original DoD-2 — PASS
+
+Same common env/real services, separate command and exit **0**:
+
+```powershell
+uv run --no-sync pytest tests/e2e/test_streaming.py -k 'scope_change or equivalence or runbook' -v -s --tb=short --basetemp=.local/d25two -o cache_dir=.local/cd25two *> .local/t25-a01-dod2-final.log
+```
+
+Actual excerpt:
+
+```text
+collected 23 items / 15 deselected / 8 selected
+T25 REAL HTTP/PG detach after evidence: scope_changed/no done; upstream/slot closed; retained chunk PASS
+T25 REAL HTTP/PG detach after answer_delta: scope_changed/no done; upstream/slot closed; retained chunk PASS
+T25 REAL HTTP/PG delete after answer_delta: scope_changed/no done; upstream/slot closed; retained chunk PASS
+T25 REAL HTTP/PG delete after evidence: scope_changed/no done; upstream/slot closed; retained chunk PASS
+T25 deepseek REAL stack: early allowlist >=2/final referenced subset1; JSON/SSE final schema+fields equal PASS
+T25 anthropic REAL stack: early allowlist >=2/final referenced subset1; JSON/SSE final schema+fields equal PASS
+T25 RUNBOOK exact HTTPX parser executed on real HTTP; failure=False PASS
+T25 RUNBOOK exact HTTPX parser executed on real HTTP; failure=True PASS
+8 passed, 15 deselected in 59.32s
+```
+
+15deselected intentional separate DoD2 selection, all23ran DoD1. Direct source
+metadata/chunks retained; no old-scope done success. Fields equal for JSON/SSE
+final except independently measured timings; same request ID passed for comparison,
+QueryResponse schema/usage/answerability/citations/contexts/warnings preserved.
+RUNBOOK pseudocode/provisional rule/config/errors plus exact executed HTTPX
+function documented; production HTTP lifecycle/full mounting/live gates T26.
+
+### D2 shared JSON/citation dependency regression — PASS
+
+Same common environment prefix/services, network escalation; command:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_answer_pipeline.py tests/security/test_citations.py -q --tb=short --basetemp=.local/a25dep -o cache_dir=.local/ca25dep *> .local/t25-a01-t24-regression.log
+```
+
+Exit0, actual output:
+
+```text
+.............................. [100%]
+30 passed in 140.69s (0:02:20)
+```
+
+Unchanged T24 cases run against real PG/Qdrant/CPU/parser/source round trips and
+both native synthetic provider adapters: exact quote/ID, full composition,
+supported/insufficient/conflict, one bounded repair, provider/config/timeout/
+cancel and owner/subset/version/session/source tamper gates. Includes source
+locator/PDF/DOCX/XLSX/PPTX/markup and RUNBOOK JSON schema examples. Confirms the
+shared `_prepare/_revalidate/_response` extraction preserved JSON behavior.
+
+### D2 static/lock/contract checks — PASS
+
+Each command below exit0, cwd repository root, UV_CACHE_DIR as above:
+
+```powershell
+uv run --no-sync ruff check src tests scripts *> .local/t25-a01-ruff.log
+uv run --no-sync ruff format --check src/rag_core/api/streaming.py src/rag_core/application/admission.py src/rag_core/application/answers.py src/rag_core/application/streaming.py src/rag_core/contracts/sse.py src/rag_core/domain/streaming.py src/rag_core/ports/llm.py src/rag_core/adapters/llm/common.py tests/unit/test_streaming.py tests/e2e tests/fixtures/streaming_support.py tests/contract/test_api_schema.py *> .local/t25-a01-format.log
+uv run --no-sync mypy src *> .local/t25-a01-mypy.log
+uv lock --check
+uv --version
+.venv/Scripts/python.exe --version
+uv run --no-sync python scripts/export_openapi.py --check *> .local/t25-a01-contract.log
+```
+
+Actual output:
+
+```text
+All checks passed!
+13 files already formatted
+Success: no issues found in 94 source files
+Resolved 177 packages in 37ms
+uv 0.11.16 (135a36367 2026-05-21 x86_64-pc-windows-msvc)
+Python 3.12.4
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+```
+
+Export checks default production factory/snapshots; optional T25 router runtime
+verified separately, not advertised as full production API.13changedPython
+formatted only; unchanged baseline global format debt remains out of scope.
+
+### D2 full regression — PASS
+
+Same real-services/environment prefix, network escalation; command:
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/r25f -o cache_dir=.local/cr25f *> .local/t25-a01-regression-final.log
+```
+
+Exit **0**, actual output excerpt:
+
+```text
+........................................................................ [ 10%]
+........................................................................ [ 81%]
+........................................................................ [ 91%]
+............................................................. [100%]
+709 passed in 288.07s (0:04:48)
+```
+
+All709cases, no skip/deselection/warnings/failure; no corpus/gold/source/assertion
+changes to avoid baseline Windows fixture problems.17newstream-unit +1subset
+contract added over T24's691cases. Task e2e/dependency gates separately above.
+
+### Service closure and D1/D4/D5/D6 boundary
+
+After all tests, only own project stopped (same overlays, no down/delete):
+
+```powershell
+docker compose -p rag-core-t25-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop
+docker compose -p rag-core-t25-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml ps --all
+```
+
+Exit0 both, actual excerpt:
+
+```text
+Container rag-core-t25-test-qdrant-1 Stopped
+Container rag-core-t25-test-postgres-1 Stopped
+Container rag-core-t25-test-inference-1 Stopped
+rag-core-t25-test-inference-1 rag-core-inference:t17-cpu Exited (143) Less than a second ago
+rag-core-t25-test-postgres-1 postgres:17.11-bookworm@sha256:051f7b7b3abdd564d5d1bd1e8c4b9c1b6e77087d1dd22020ede611c096a272e0 Exited (0) 1 second ago
+rag-core-t25-test-qdrant-1 qdrant/qdrant:v1.19.1-unprivileged@sha256:801777072776dc81b2a9dd2007b2ed487571f21ecd30efffd15ddb1671f2193d Exited (143) 1 second ago
+```
+
+143is expected SIGTERM for intentionally stopped inference/Qdrant, not a test
+failure. No app project/source/cache/volume deletion or network deployment.
+Original T07 scratch untouched. D1 dependency/whitespace/19path scope, D3 two
+separate DoDs, D4 README/RUNBOOK/ledgers/P09 decision+parser, D5 source/subset/
+quotes/policy/bounds/cancel/secrets/artifact review complete. Commit subject:
+`feat(T25): stream scoped answers with cancellation`. D6/COMPLETE only effective
+after inspected successful19path completion commit; actual hash and authorized
+normal origin/main push/equality returned afterward, not embedded in its own
+commit. T26 remains TODO/dependencies ready afterward; keys/live gates checked
+within T26. STOP T25; no force/amend/rebase/merge/deploy/drain.
+
+Final D4 command `uv run --no-sync python scripts/check_docs.py` exit0, actual:
+
+```text
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 398
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+D1/D5 `git diff --check` exit0, no whitespace errors; legacy CRLF/global ignore/
+inaccessible scratch advisories preserved. Exact19path/added-line credential/
+artifact/status review script retained locally at `.local/t25-a01-review.py`
+(ignored, safe source-only assertions), command:
+
+```powershell
+uv run --no-sync python .local/t25-a01-review.py *> .local/t25-a01-review.log
+```
+
+Expected/observed review excerpt (same assertions already run via PowerShell
+heredoc + `.venv/Scripts/python.exe -`, exit0):
+
+```text
+PASS exact 19 T25 paths (8 source/5 test/6 docs); baseline scratch excluded
+PASS added-line credential/artifact scan; no schema/dependency/corpus change
+PASS only T25 status closure; T26 remains TODO; no drain
+```
+
+Next boundary: explicit19file `git add` only, then staged review command with
+`--staged`, `git diff --cached --check` and `git diff --cached --stat`. One final
+re-stage of this evidence, inspect/review, then completion commit. No artifacts/
+scratch in index; successful commit + origin/main equality reported directly.
+
+Actual D6 stage/review command (network/filesystem escalation authorized):
+
+```powershell
+git add -- README.md RUNBOOK.md docs/handoffs.md docs/implementation-summary.md docs/plan.md docs/tasks.md src/rag_core/adapters/llm/common.py src/rag_core/application/answers.py src/rag_core/contracts/sse.py src/rag_core/ports/llm.py tests/contract/test_api_schema.py src/rag_core/api/streaming.py src/rag_core/application/admission.py src/rag_core/application/streaming.py src/rag_core/domain/streaming.py tests/e2e/conftest.py tests/e2e/test_streaming.py tests/fixtures/streaming_support.py tests/unit/test_streaming.py
+.venv/Scripts/python.exe .local/t25-a01-review.py --staged
+git diff --cached --check
+git diff --cached --stat
+```
+
+All exit0; actual excerpt:
+
+```text
+PASS exact 19 T25 paths (8 source/5 test/6 docs); baseline scratch excluded
+PASS added-line credential/artifact scan; no schema/dependency/corpus change
+PASS only T25 status closure; T26 remains TODO; no drain
+PASS staged 19 paths and filtered worktree/index hashes match
+19 files changed, 2339 insertions(+), 71 deletions(-)
+```
+
+Statistics above precede this final evidence paragraph; only handoff re-staged,
+same19paths/docs+whitespace/hash checks repeated, then
+`git commit -m "feat(T25): stream scoped answers with cancellation"`.
+After inspected successful commit: `git push origin HEAD:refs/heads/main`, then
+`git rev-parse HEAD` versus `git ls-remote origin refs/heads/main`. Actual outcome
+and hash reported post-execution, no extra task/amend/force/merge/deploy.

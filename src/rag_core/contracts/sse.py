@@ -126,12 +126,25 @@ class SSESequence(RootModel[list[SSEEvent]]):
                     response.domain,
                 ) != (meta.request_id, meta.session_id, meta.scope_revision, meta.domain):
                     raise ValueError("Done must retain the request/session/scope/domain from meta")
-                if (response.answerability, response.citations, response.contexts) != (
-                    evidence.answerability,
-                    evidence.citations,
-                    evidence.contexts,
-                ):
-                    raise ValueError("Done must retain the validated evidence allowlist")
+                if response.answerability != evidence.answerability:
+                    raise ValueError("Done must retain the evidence answerability")
+                allowed = {citation.id: citation for citation in evidence.citations}
+                if any(allowed.get(c.id) != c for c in response.citations):
+                    raise ValueError(
+                        "Done citations must be exact members of the evidence allowlist"
+                    )
+                contexts = {context.chunk_id: context for context in evidence.contexts}
+                for context in response.contexts:
+                    original = contexts.get(context.chunk_id)
+                    if (
+                        original is None
+                        or (context.document_id, context.text)
+                        != (original.document_id, original.text)
+                        or not set(context.citation_ids) <= set(original.citation_ids)
+                    ):
+                        raise ValueError(
+                            "Done contexts must retain their allowlisted source text/IDs"
+                        )
                 histories = [warning.history for warning in response.warnings]
                 if meta.history.truncated and meta.history not in histories:
                     raise ValueError("Done must report the history truncation announced in meta")

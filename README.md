@@ -2,9 +2,14 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration; T24 VERIFIED application/citation fixtures.** T24 nối answer assembly, scoped source allowlist/one repair và citation resolver vào preparation/retrieval/evidence. PG/Qdrant/BGE/parsers/source thật, LLM protocol synthetic; live verification vẫn ở T26. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. API chỉ mount health; public HTTP/SSE/admin còn thuộc T25–T36. [Evidence T24](docs/handoffs.md#h-t24-a01).
+> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration; T24 VERIFIED application/citation fixtures; T25 VERIFIED opt-in SSE HTTP.** PG/Qdrant/BGE/parsers và HTTP/JWT thật, LLM protocol synthetic; live verification vẫn ở T26. T25 thêm scoped allowlist/final subset, backpressure và cancellation. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. Production API chỉ mount health; full business DI/public mounting/admin còn T26–T36. [Evidence T25](docs/handoffs.md#h-t25-a01).
 
 ## Phạm vi đã chốt
+
+T25-A01 đã được chốt hợp đồng: `evidence` là scoped allowlist trước generation,
+`done` là subset đã validate như JSON T24. POST SSE router và bounded admission/
+buffers/heartbeat/cancellation đã VERIFIED trên loopback HTTP (23DoD1 +8DoD2 tests).
+[Evidence](docs/handoffs.md#h-t25-a01); production business routes vẫn do T26 mount.
 
 - Default RAG: toàn bộ tài liệu đã upload/đăng ký cho **session hiện tại**.
 - Document RAG: tập tài liệu được chọn trong session hiện tại.
@@ -145,6 +150,27 @@ call repair được cộng, thiếu bất kỳ count nào giữ `null`. Context
 protocol fixtures synthetic. Live model behavior còn T26; public HTTP/SSE còn T25/T26.
 Citation validation kiểm provenance/quote, không chứng minh semantic entailment của
 mọi model claim; calibration/corpus quality còn T31.
+
+## SSE transport T25
+
+`StreamingAnswerPipeline` emits meta/scoped evidence allowlist/provisional sentence
+batches/final JSON; `build_stream_router` mounts POST `/v1/query/stream` in a caller's
+authenticated app. Production `create_app` stays health-only until T26 composition.
+Per-event send-boundary scope checks and heartbeat revision checks stop detach/delete
+with `session_scope_changed`; upstream closes before a writable terminal is sent.
+Only validated `done.data` is authoritative; error/disconnect/EOF is incomplete.
+
+Server defaults:4active queries/8waiters/5squeue,2queued events,10sheartbeat,
+5ssend/120stotal,4096character sentence,64KiB provider JSON. T24 prompt/output/
+generation deadline and exact citation audit still apply. Unknown citation IDs
+never leave a batch; one repair only before any answer batch, no retry/replay after
+delta. Backpressure/disconnect/timeout cancel native upstream and release admission.
+One process shares one budget; full15–20user resource/load acceptance remains T33.
+
+[RUNBOOK R07](RUNBOOK.md#r07) gives trusted DI/config, parser pseudocode, actual
+HTTPX example and individual test commands. Real HTTP/JWT/PG/Qdrant/BGE CPU tests
+use synthetic DeepSeek/Anthropic native HTTP fixtures; T26 still requires both
+live-provider smoke gates. No Scarlet integration/deployment claim.
 
 ## Authentication T09
 
@@ -489,7 +515,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T19 VERIFIED:** ingestion orchestration, fenced leases/recovery, durable chunks/source maps và atomic ready publication; gates/evidence ở trên.
 - **T20–T21 VERIFIED:** domain registry/scoped preparation/history rewrite port và bounded dense/hybrid retrieval với redacted trace.
 - **T23 VERIFIED protocol/config:** DeepSeek HTTPX và Anthropic SDK generate/stream/rewrite; synthetic fixtures, independent secrets/models/budgets. Live smoke remains T26.
-- **T24–T26:** query JSON/SSE, citations, provider wiring và live smoke.
+- **T24 VERIFIED answer/citation fixtures; T25 VERIFIED opt-in SSE HTTP:** scoped allowlist/final subset, bounded admission/buffers/heartbeat/cancellation; LLM protocol vẫn synthetic.
+- **T26:** production business route wiring, lifecycle/end-to-end và hai live provider smokes còn TODO.
 - **T27–T29:** admin URL/login, UI workflows.
 - **T30–T34:** benchmark reports, performance, reliability, backup/restore.
 - **T35–T36:** quickstart tích hợp đã kiểm chứng và trạng thái nghiệm thu cuối.

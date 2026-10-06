@@ -187,7 +187,7 @@ class BaseProvider(ABC):
                 await self._backoff(attempt, deadline)
         raise AssertionError("unreachable")
 
-    async def stream(self, request: GenerationRequest) -> AsyncIterator[LlmEvent]:
+    async def stream(self, request: GenerationRequest) -> AsyncGenerator[LlmEvent, None]:
         request = self._request(request)
         deadline = monotonic() + self.settings.timeout_seconds
         emitted = False

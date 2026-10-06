@@ -3,6 +3,9 @@
 import asyncio
 import json
 import time
+from collections.abc import AsyncGenerator
+from contextlib import aclosing
+from dataclasses import dataclass
 from uuid import UUID
 
 from pydantic import ValidationError
@@ -13,6 +16,7 @@ from rag_core.application.retrieval import RetrievalPipeline
 from rag_core.auth import Principal
 from rag_core.contracts.v1 import (
     Citation,
+    Evidence,
     EvidenceContext,
     QueryRequest,
     QueryResponse,
@@ -28,7 +32,15 @@ from rag_core.domain.answers import (
     validate_answer,
 )
 from rag_core.domain.evidence import EvidenceSelection
-from rag_core.domain.llm import GenerationRequest, GenerationResult, LlmError, LlmUsage
+from rag_core.domain.llm import (
+    GenerationRequest,
+    GenerationResult,
+    LlmCompleted,
+    LlmDelta,
+    LlmError,
+    LlmUsage,
+)
+from rag_core.domain.streaming import ProvisionalAnswer
 from rag_core.ports.citations import CitationRepository
 from rag_core.ports.llm import LlmProvider
 from rag_core.ports.tokenizer import EmbeddingTokenizer
@@ -73,6 +85,31 @@ def _model_answer(text: str) -> ModelAnswer:
         return answer
     except (ValidationError, ValueError, TypeError, RecursionError):
         raise AnswerError("invalid_citation") from None
+
+
+@dataclass(frozen=True)
+class PreparedAnswer:
+    sources: tuple[CitationSource, ...]
+    canonical: tuple[Citation, ...]
+    allowed: tuple[Citation, ...]
+    system: str
+    data: dict[str, object]
+    supported: bool
+
+
+def answer_contexts(
+    sources: tuple[CitationSource, ...], citations: tuple[Citation, ...]
+) -> list[EvidenceContext]:
+    return [
+        EvidenceContext(
+            chunk_id=str(s.chunk.id),
+            document_id=s.chunk.source.document_id,
+            text=s.chunk.text,
+            citation_ids=[c.id for c in citations if c.chunk_id == str(s.chunk.id)],
+        )
+        for s in sources
+        if any(c.chunk_id == str(s.chunk.id) for c in citations)
+    ]
 
 
 class AnswerAssembler:
@@ -154,6 +191,53 @@ class AnswerAssembler:
         start: float,
         generation_start: float,
     ) -> QueryResponse:
+        prepared = await self._prepare(context, selection)
+        data = prepared.data.copy()
+        usages: list[LlmUsage] = []
+        for attempt in range(2):
+            request = await self._request(prepared.system, data)
+            await self._revalidate(context, selection, prepared)
+            try:
+                result = await self._provider.generate(request)
+            except (LlmError, asyncio.CancelledError):
+                raise
+            except Exception:
+                raise LlmError("provider_error") from None
+            try:
+                checked = GenerationResult.model_validate(result.model_dump())
+            except (ValidationError, AttributeError, TypeError):
+                raise LlmError("provider_invalid_response") from None
+            usages.append(checked.usage)
+            await self._revalidate(context, selection, prepared)
+            try:
+                answer = _model_answer(checked.text)
+                citations = validate_answer(answer, prepared.allowed, supported=prepared.supported)
+            except AnswerError:
+                if attempt:
+                    raise AnswerError("invalid_citation") from None
+                data["repair"] = (
+                    "Previous output failed citation/JSON validation. Follow the schema and exact allowlist."
+                )
+                continue
+            break
+        else:
+            raise AnswerError("invalid_citation")
+        return await self._response(
+            context,
+            selection,
+            prepared,
+            request_id,
+            answer,
+            citations,
+            usages,
+            retrieval_ms,
+            start,
+            generation_start,
+        )
+
+    async def _prepare(
+        self, context: ScopedRetrievalContext, selection: EvidenceSelection
+    ) -> PreparedAnswer:
         template = _TEMPLATES.get(context.domain.config.prompt_template)
         if template is None or context.domain.config.citation_renderer != "source-locator-v1":
             raise AnswerError("unknown_answer_profile")
@@ -190,43 +274,32 @@ class AnswerAssembler:
             ],
             "citation_allowlist": [c.model_dump(mode="json") for c in allowed],
         }
-        usages: list[LlmUsage] = []
-        for attempt in range(2):
-            request = await self._request(system, data)
-            # No DB locks are held during network generation. Each call revalidates.
-            current_sources, current = await self._sources(context, selection)
-            if current != canonical or current_sources != sources:
-                raise AnswerError("citation_mapping_invalid")
-            try:
-                result = await self._provider.generate(request)
-            except (LlmError, asyncio.CancelledError):
-                raise
-            except Exception:
-                raise LlmError("provider_error") from None
-            try:
-                checked = GenerationResult.model_validate(result.model_dump())
-            except (ValidationError, AttributeError, TypeError):
-                raise LlmError("provider_invalid_response") from None
-            usages.append(checked.usage)
-            # Scope invalidation takes precedence over malformed/repairable output.
-            current_sources, current = await self._sources(context, selection)
-            if current != canonical or current_sources != sources:
-                raise AnswerError("citation_mapping_invalid")
-            try:
-                answer = _model_answer(checked.text)
-                citations = validate_answer(answer, allowed, supported=supported)
-            except AnswerError:
-                if attempt:
-                    raise AnswerError("invalid_citation") from None
-                # A fresh prompt, same sources/authority. Never echo the untrusted invalid
-                # response into policy or increase budgets; at most one repair call.
-                data["repair"] = (
-                    "Previous output failed citation/JSON validation. Follow the schema and exact allowlist."
-                )
-                continue
-            break
-        else:
-            raise AnswerError("invalid_citation")
+        return PreparedAnswer(sources, canonical, allowed, system, data, supported)
+
+    async def _revalidate(
+        self,
+        context: ScopedRetrievalContext,
+        selection: EvidenceSelection,
+        prepared: PreparedAnswer,
+    ) -> None:
+        current_sources, current = await self._sources(context, selection)
+        if current != prepared.canonical or current_sources != prepared.sources:
+            raise AnswerError("citation_mapping_invalid")
+
+    async def _response(
+        self,
+        context: ScopedRetrievalContext,
+        selection: EvidenceSelection,
+        prepared: PreparedAnswer,
+        request_id: UUID,
+        answer: ModelAnswer,
+        citations: tuple[Citation, ...],
+        usages: list[LlmUsage],
+        retrieval_ms: float | None,
+        start: float,
+        generation_start: float,
+    ) -> QueryResponse:
+        supported = prepared.supported
         if any((u.provider, u.model) != (usages[0].provider, usages[0].model) for u in usages):
             raise LlmError("provider_invalid_response")
         input_tokens = (
@@ -239,16 +312,7 @@ class AnswerAssembler:
             if any(u.output_tokens is None for u in usages)
             else sum(u.output_tokens for u in usages if u.output_tokens is not None)
         )
-        contexts = [
-            EvidenceContext(
-                chunk_id=str(s.chunk.id),
-                document_id=s.chunk.source.document_id,
-                text=s.chunk.text,
-                citation_ids=[c.id for c in citations if c.chunk_id == str(s.chunk.id)],
-            )
-            for s in sources
-            if any(c.chunk_id == str(s.chunk.id) for c in citations)
-        ]
+        contexts = answer_contexts(prepared.sources, citations)
         await context.vectors.validate_scope()
         response = QueryResponse(
             request_id=request_id,
@@ -280,6 +344,132 @@ class AnswerAssembler:
             warnings=list(context.warnings),
         )
         return response
+
+    async def stream(
+        self,
+        context: ScopedRetrievalContext,
+        selection: EvidenceSelection,
+        request_id: UUID,
+        *,
+        sentence_chars: int = 4096,
+        retrieval_ms: float | None = None,
+        started: float | None = None,
+    ) -> AsyncGenerator[Evidence | str | QueryResponse, None]:
+        """Allowlist, provisional batches, then the same authoritative JSON final.
+
+        Consumers close this iterator. Timeout contexts never span a caller yield.
+        A citation repair is allowed only before any answer batch has left this layer.
+        """
+        start = time.monotonic() if started is None else started
+        generation_start = time.monotonic()
+        deadline = asyncio.get_running_loop().time() + self._policy.timeout_seconds
+        try:
+            async with asyncio.timeout_at(deadline):
+                prepared = await self._prepare(context, selection)
+                await self._revalidate(context, selection, prepared)
+            yield Evidence(
+                answerability=selection.answerability,
+                citations=list(prepared.allowed),
+                contexts=answer_contexts(prepared.sources, prepared.allowed),
+            )
+            data = prepared.data.copy()
+            usages: list[LlmUsage] = []
+            emitted = False
+            unknown_prior_usage = False
+            for attempt in range(2):
+                decoder = ProvisionalAnswer({c.id for c in prepared.allowed}, sentence_chars)
+                completed: LlmUsage | None = None
+                try:
+                    async with asyncio.timeout_at(deadline):
+                        request = await self._request(
+                            prepared.system
+                            + "\nFor streaming, put answer first in the JSON object.",
+                            data,
+                        )
+                        await self._revalidate(context, selection, prepared)
+                    async with aclosing(self._provider.stream(request)) as upstream:
+                        while True:
+                            try:
+                                async with asyncio.timeout_at(deadline):
+                                    event = await anext(upstream)
+                            except StopAsyncIteration:
+                                break
+                            if completed is not None:
+                                raise LlmError("provider_invalid_response")
+                            if isinstance(event, LlmCompleted):
+                                completed = LlmUsage.model_validate(event.usage.model_dump())
+                            elif isinstance(event, LlmDelta):
+                                for batch in decoder.feed(event.text):
+                                    async with asyncio.timeout_at(deadline):
+                                        await context.vectors.validate_scope()
+                                    emitted = True
+                                    yield batch
+                            else:
+                                raise LlmError("provider_invalid_response")
+                    async with asyncio.timeout_at(deadline):
+                        await self._revalidate(context, selection, prepared)
+                        if completed is None:
+                            raise LlmError("llm_stream_incomplete")
+                        usages.append(
+                            completed.model_copy(
+                                update={"input_tokens": None, "output_tokens": None}
+                            )
+                            if unknown_prior_usage
+                            else completed
+                        )
+                        answer = _model_answer(decoder.raw)
+                        citations = validate_answer(
+                            answer, prepared.allowed, supported=prepared.supported
+                        )
+                    if decoder.deferred or not decoder.closed:
+                        # Alternate JSON order yields only after the full final audit.
+                        if emitted:
+                            raise AnswerError("invalid_citation")
+                        audited = ProvisionalAnswer(
+                            {c.id for c in prepared.allowed}, sentence_chars
+                        )
+                        batches = audited.feed(
+                            json.dumps({"answer": answer.answer}, ensure_ascii=False)
+                        )
+                        batches.extend(audited.finish())
+                    else:
+                        if decoder.text != answer.answer:
+                            raise AnswerError("invalid_citation")
+                        batches = decoder.finish()
+                    for batch in batches:
+                        async with asyncio.timeout_at(deadline):
+                            await context.vectors.validate_scope()
+                        emitted = True
+                        yield batch
+                    async with asyncio.timeout_at(deadline):
+                        response = await self._response(
+                            context,
+                            selection,
+                            prepared,
+                            request_id,
+                            answer,
+                            citations,
+                            usages,
+                            retrieval_ms,
+                            start,
+                            generation_start,
+                        )
+                    yield response
+                    return
+                except AnswerError as exc:
+                    async with asyncio.timeout_at(deadline):
+                        await self._revalidate(context, selection, prepared)
+                    if exc.code != "invalid_citation" or emitted or attempt:
+                        raise
+                    unknown_prior_usage = unknown_prior_usage or completed is None
+                    data["repair"] = (
+                        "Previous output failed citation/JSON validation. Follow the schema and exact allowlist."
+                    )
+                except (LlmError, asyncio.CancelledError, TimeoutError):
+                    raise
+            raise AnswerError("invalid_citation")
+        except TimeoutError:
+            raise LlmError("provider_timeout", retryable=True) from None
 
 
 class AnswerPipeline:

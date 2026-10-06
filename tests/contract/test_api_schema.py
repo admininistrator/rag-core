@@ -374,6 +374,19 @@ def test_sse_rejects_bad_order_replay_partial_trace_and_changed_scope() -> None:
             TypeAdapter(SSEEvent).validate_python(event)
 
 
+def test_sse_allowlist_final_subset_preserves_exact_citation_and_source_text() -> None:
+    trace = example("sse_done_trace_design")
+    extra = {**deepcopy(trace[1]["data"]["citations"][0]), "id": "c2"}
+    trace[1]["data"]["citations"].append(extra)
+    trace[1]["data"]["contexts"][0]["citation_ids"].append("c2")
+    assert SSESequence.model_validate(trace).root[-1].event == "done"
+    for field, value in (("text", "tampered context"), ("citation_ids", ["c2"])):
+        changed = deepcopy(trace)
+        changed[-1]["data"]["contexts"][0][field] = value
+        with pytest.raises(ValidationError):
+            SSESequence.model_validate(changed)
+
+
 def test_all_synthetic_json_examples_validate_and_round_trip() -> None:
     artifact = json.loads((ROOT / "docs/api/examples-v1.json").read_text(encoding="utf-8"))
     assert artifact == build_examples()

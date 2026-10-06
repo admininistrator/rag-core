@@ -290,7 +290,7 @@ Chưa bật response/retrieval cache dùng chung ở bản đầu. Nếu task hi
 
 `POST /v1/query/stream`, `text/event-stream`, HTTPX/fetch client (EventSource native không hỗ trợ POST + Authorization đầy đủ).
 
-Events theo thứ tự: `meta` (request/scope), `evidence` (citations + contexts + answerability), `answer_delta` (text), rồi đúng một trong `done` (final JSON đã validate) hoặc `error`. Có heartbeat comment; event IDs tăng dần trong request, không hứa replay bằng Last-Event-ID.
+Events theo thứ tự: `meta` (request/scope), `evidence` (citations + contexts + answerability), `answer_delta` (text), rồi đúng một trong `done` (final JSON đã validate) hoặc `error`. Có heartbeat comment; event IDs tăng dần trong request, không hứa replay bằng Last-Event-ID. **Quyết định người dùng T25, 2026-10-07:** evidence là allowlist đã kiểm scope trước generation; done chỉ giữ subset citations/contexts model thực sự dùng và đã validate như JSON T24. Mỗi final citation phải khớp nguyên entry allowlist; context giữ đúng document/chunk/text và subset IDs, answerability không được đổi. Không yêu cầu equality toàn allowlist với final subset.
 
 Delta là bản tạm; client chỉ lưu câu trả lời hoàn chỉnh khi nhận `done`. Core buffer theo câu/đoạn để kiểm citation ID trước phát; nội dung streaming vẫn phải được audit/validate ở final. Stream lỗi giữa chừng phải đánh dấu incomplete ở client, không ráp thành answer thành công.
 

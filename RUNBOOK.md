@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration; T24 VERIFIED application/citation fixtures.** T24 nối grounded JSON assembly/source allowlist/one repair và scoped PG citation resolver. PG/Qdrant/BGE/parsers/source thật, LLM protocol synthetic; live verification vẫn ở T26. API chỉ mount health, public HTTP/SSE/admin thuộc T25–T36. [Evidence T24](docs/handoffs.md#h-t24-a01).
+> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration; T24 VERIFIED application/citation fixtures; T25 VERIFIED opt-in SSE HTTP.** PG/Qdrant/BGE/parsers/source và HTTP/JWT thật, LLM protocol synthetic; live verification vẫn ở T26. T25 thêm scoped allowlist/final subset, backpressure và cancellation. Production API chỉ mount health; full public business mounting/DI/admin còn T26–T36. [Evidence T25](docs/handoffs.md#h-t25-a01).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -35,7 +35,7 @@
 | Evidence selection | VERIFIED real CPU reranker/PG/Qdrant; bounded passages, conservative numeric conflicts and scoped context gate | T22 |
 | Provider adapters/config | VERIFIED synthetic protocols; DeepSeek HTTPX/Anthropic SDK; live pending T26 | T23 |
 | Answer assembly/citation resolver | VERIFIED actual PG/Qdrant/CPU/source; LLM wire synthetic, live pending T26 | T24 |
-| Public query HTTP/SSE | DESIGNED | T25–T26 |
+| Query HTTP/SSE | T25 opt-in SSE router VERIFIED real HTTP; production full DI/mounting + JSON DESIGNED | T25–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
@@ -467,7 +467,7 @@ uv run python -m rag_core.adapters.broker.dispatcher
 <a id="r05"></a>
 ## R05. Endpoint inventory và lỗi
 
-**T03 schemas/snapshots/examples VERIFIED; health runtime VERIFIED tại T02; mọi business/admin route còn DESIGNED và chưa mount.** [P06](docs/plan.md#p06) là nguồn thiết kế, modules `rag_core.contracts.v1`/`sse` là nguồn machine-readable hiện tại. T26 sẽ mount business routes sau runtime gates tương ứng.
+**T03 schemas/snapshots/examples VERIFIED; health runtime VERIFIED tại T02; production business/admin routes chưa mount. T25 opt-in SSE router VERIFIED trên acceptance HTTP app.** [P06](docs/plan.md#p06) là nguồn thiết kế, modules `rag_core.contracts.v1`/`sse` là nguồn machine-readable hiện tại. T26 sẽ nối production DI/mount business routes và live gates.
 
 | Method / route | Contract request → response | Trạng thái runtime / owner |
 | --- | --- | --- |
@@ -479,7 +479,7 @@ uv run python -m rag_core.adapters.broker.dispatcher
 | GET `/v1/jobs/{job_id}` | path UUID → JobResponse | DESIGNED, chưa mount / T12/T19 |
 | POST `/v1/jobs/{job_id}/retry` | path UUID → JobResponse | DESIGNED, chưa mount / T12/T19 |
 | POST `/v1/query` | QueryRequest → QueryResponse | DESIGNED, chưa mount / T24/T26 |
-| POST `/v1/query/stream` | QueryRequest → SSE frames (parsed SSEEvent contract) | DESIGNED, chưa mount / T25/T26 |
+| POST `/v1/query/stream` | QueryRequest → SSE frames (parsed SSEEvent contract) | T25 opt-in router VERIFIED real HTTP; production chưa mount / T26 |
 | GET `/v1/sessions/{session_id}/citations/{chunk_id}` | path UUID/chunk ID → CitationResolveResponse | DESIGNED, chưa mount / T24 |
 | GET `/health/live`, `/health/ready` | LiveResponse / ReadyResponse, ready lỗi 503 | VERIFIED served / T02 |
 | `/admin/*`, `/v1/admin/*`, protected `/metrics` | Deferred metadata/UI/metrics inventory; chưa chốt action schemas | DESIGNED / T27–T29/T32 |
@@ -1052,21 +1052,114 @@ Scarlet có thể dùng contexts/citations cùng answer của core làm input LL
 <a id="r07"></a>
 ## R07. Streaming client và cancellation
 
-**T03 payload/logical trace contracts VERIFIED; streaming transport/provider/cancel runtime DESIGNED — T25/T35.**
+**T25 streaming VERIFIED:23DoD1 +8separateDoD2 cases PASS.** User approved early scoped
+allowlist/final subset on2026-10-07. `StreamingAnswerPipeline(preparation,retrieval,
+selector,assembler,policy=None)` uses the same T24 prompt/source/final validator;
+`build_stream_router(pipeline,admission,policy=None)` returns an opt-in POST router.
+Production `create_app` still mounts health only; T26 owns full public DI/mounting
+and mandatory live LLM smoke. T25 tests mount this router behind real T09 auth on
+loopback HTTP, with real PG/Qdrant/BGE CPU and synthetic native-provider HTTP.
+[Evidence/checkpoint](docs/handoffs.md#h-t25-a01).
 
 - Dùng HTTPX async stream hoặc fetch streaming cho POST có headers auth; không dựa native EventSource GET.
 - Parse UTF-8 incremental và SSE event frames theo dòng trống; chunk TCP không đồng nghĩa một event hoặc một ký tự hoàn chỉnh.
 - Event order: `meta -> evidence -> answer_delta* -> done|error`; heartbeat comments không là answer text.
-- Retrieval/scope failure sau meta có thể kết thúc `meta -> error` trước evidence. Logical completed trace có đúng một terminal, ID integer dương tăng trong request; final request/session/revision/domain/evidence và history truncation metadata phải khớp meta/evidence. EOF không terminal là incomplete. Whitespace delta hợp lệ.
+- Preparation/scope failure trước meta giữ HTTP error status/envelope. Retrieval failure sau meta kết thúc `meta -> error` trước evidence. Logical completed trace có đúng một terminal, ID integer dương tăng trong request; final request/session/revision/domain/answerability/history giữ như meta/evidence. EOF không terminal là incomplete. Whitespace delta hợp lệ.
+- `evidence` là **allowlist**, chưa phải nguồn model đã dùng; final `done` là authoritative subset giống JSON T24. Final citation phải khớp nguyên id/document/version/chunk/filename/locator/quote allowlist. Final context giữ document/chunk/text và subset IDs. Không thêm/làm lại evidence từ history/stream cũ; không dùng mọi entry allowlist để tự mở rộng answer.
 - Wire là UTF-8 SSE `id: ...`, `event: ...`, `data: <JSON>` và dòng trống; snapshot `SSEEvent` là representation của event đã parse, không là JSON response body trực tiếp. `SSESequence` là validator của complete event trace; heartbeat `: keep-alive` không có event/id/data và không nằm trong trace.
 - Hiển thị delta là tạm; chỉ lưu transcript final khi nhận `done` hợp lệ. Nhận `error`/EOF không done thì đánh dấu incomplete.
 - `done` chứa final response đã validate; citations/contexts không tự lấy từ một stream trước để bù phần thiếu.
 - UI cancel/disconnect phải đóng upstream HTTP connection; server giải phóng semaphore. Không retry stream đang phát rồi nối thêm answer mới.
 - Detach/delete giữa stream: core kiểm scope revision, phát `session_scope_changed` và dừng. Bytes đã gửi không thể thu hồi; client phải ngừng dùng answer chưa hoàn tất.
-- Runtime phải revalidate trước evidence, mỗi batch delta và done; JSON revalidate trước serialize. T03 chưa thực hiện những checks runtime này và chưa claim query/SSE live verification.
-- Event IDs chỉ trong request; chưa hỗ trợ resume/replay. Heartbeat/idle/total timeout defaults sẽ ghi sau đo thực.
+- Runtime revalidate trước evidence, mỗi batch delta và done, và **lại tại send boundary** cho queued events. Heartbeat cũng kiểm revision để detect detach/delete khi provider idle. JSON HTTP serialize gate thuộc T26. Không giữ DB lock qua network; bytes đã gửi không thể thu hồi và có race giữa kiểm revision và OS send.
+- Answer-first JSON được decode incrementally, gồm escaped Unicode; sentence/newline batches kiểm citation-shaped IDs trước emit. Unfinished brackets không tách ID. Alternative valid JSON key order defer delta đến final audit; oversized sentence/wire fail explicit, không flush nội dung chưa kiểm. Final exact quotes/JSON/source scope vẫn phải audit. Không tuyên bố semantic entailment/prompt-injection compliance từ fixture tests.
+- Chỉ một citation repair và chỉ khi chưa emit answer batch; sau delta invalid final => error/incomplete, không replay hay sửa answer bằng call mới. T23 bounded transient retries dừng sau raw provider delta, kể cả JSON framing/whitespace. Missing usage giữ null; repair cộng successful usage, nếu đã abort call trước usage terminal thì counts final unknown.
+- Event IDs chỉ trong request; không resume/replay. `Last-Event-ID` không cấp quyền hoặc trigger replay. Heartbeat là comment, không là TTFT/answer token.
 
-T35 sẽ thêm client FastAPI/HTTPX độc lập chạy thật, xử lý chunk boundaries, lỗi, history và cancellation. Không gọi pseudocode hiện tại là integration đã kiểm chứng.
+`StreamPolicy` là config server trusted (không nằm QueryRequest); revalidate khi DI.
+Default:4active query slots/8waiters/queue5s,2queued events, heartbeat10s,
+send5s,total120s; sentence4096characters (max8192), accumulated provider JSON64KiB.
+T24 assembly deadline60s/output1024/full prompt8000BGE tokens vẫn áp dụng. Streaming
+system adds one trusted answer-first instruction charged within the same prompt
+budget. Config bounds: concurrency<=20/waiters<=20/events<=8; queue/send/heartbeat
+<=30s, total<=300s. One API worker/process shares one QueryAdmission; T26 JSON
+handler should use the same instance. No per-user model copy/Celery query jobs.
+Queue full/wait timeout returns429busy +Retry-After:1 before SSE200; total/provider
+deadline during writable SSE returns error timeout. Slow blocked send/disconnect
+may end EOF incomplete with no writable terminal; both cancel producer/native
+upstream and release slot/waiter.2queued +1producer-held +1sender-held events is
+the bounded transport maximum; full-process/load/RAM acceptance remains T33.
+
+Parser pseudocode:
+
+```text
+POST with JWT + service credential; non-200 => parse HTTP error envelope
+incrementally decode UTF-8 and lines, assemble event at blank line
+ignore comments; concatenate repeated data: lines with newline
+validate event payload and increasing IDs/order against current trace
+answer_delta => display provisional text only
+error or EOF without done => incomplete; discard provisional persistence
+done => validate complete sequence and final subset; persist done.data only
+```
+
+HTTPX example below is exercised against the T25 loopback HTTP acceptance app.
+Do not point it at production health-only `create_app` before T26 mounting.
+
+<!-- T25-client: python -->
+```python
+import json
+from pydantic import TypeAdapter
+from rag_core.contracts.sse import SSEEvent, SSESequence
+
+async def read_answer(client, request):
+    # client has Authorization and X-RAG-Service-Key headers; cancel closes both streams.
+    trace, fields, data = [], {}, []
+    wire_bytes = 0
+    async with client.stream("POST", "/v1/query/stream", json=request) as response:
+        response.raise_for_status()
+        async for line in response.aiter_lines():  # incremental UTF-8 + universal newlines
+            wire_bytes += len(line.encode()) + 1
+            if wire_bytes > 2 * 1024 * 1024:
+                raise RuntimeError("stream_too_large")
+            if line.startswith(":"):
+                continue
+            if line:
+                key, _, value = line.partition(":")
+                value = value.removeprefix(" ")
+                if key == "data":
+                    data.append(value)
+                elif key in {"event", "id"}:
+                    fields[key] = value
+                continue
+            if not fields:
+                continue
+            event = TypeAdapter(SSEEvent).validate_python({
+                "event": fields["event"], "id": int(fields["id"]),
+                "data": json.loads("\n".join(data)),
+            })
+            if trace and event.id <= trace[-1].id:
+                raise RuntimeError("invalid_event_order")
+            trace.append(event)
+            fields, data = {}, []
+            if event.event == "error":
+                SSESequence.model_validate(trace)
+                raise RuntimeError(event.data.error.code)
+            if event.event == "done":
+                SSESequence.model_validate(trace)
+                return event.data  # authoritative final; do not persist concatenated deltas
+            # answer_delta may be displayed provisionally; this example does not store it.
+    raise RuntimeError("incomplete_stream")
+```
+
+Acceptance (real isolated services/env from R06-T24):
+
+```powershell
+uv run --no-sync pytest tests/e2e/test_streaming.py
+uv run --no-sync pytest tests/e2e/test_streaming.py -k 'scope_change or equivalence or runbook'
+uv run --no-sync pytest tests/unit/test_streaming.py tests/contract/test_api_schema.py
+```
+
+T35 sẽ thêm standalone app FastAPI/HTTPX với full lifecycle/history và integration acceptance. T25 chỉ verify parser code ở trên cùng stream fixtures; chưa claim standalone app/Scarlet integration.
 
 <a id="r08"></a>
 ## R08. Citations, xóa chat và retained index
