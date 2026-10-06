@@ -69,13 +69,13 @@ def build_artifacts() -> dict[str, dict[str, Any]]:
     # No settings/secrets/probes are loaded; health dependencies are not executed.
     served = create_app(checks=HealthChecks(checks={})).openapi()
     served["info"]["description"] = (
-        "Actual application OpenAPI: only health routes are mounted. "
+        "Actual application OpenAPI: health and authenticated public v1 routes are mounted. "
         "This export inspects the factory; it does not run a readiness probe."
     )
     designed = build_designed_openapi()
     expected = {endpoint.path for endpoint in ENDPOINTS if endpoint.served}
     if set(served["paths"]) != expected:
-        raise ValueError("Served routes have drifted from the T03 health-only inventory")
+        raise ValueError("Served routes have drifted from the v1 inventory")
     examples = build_examples()
     for document in (served, designed):
         validate_schema_snapshot(document)
@@ -109,12 +109,10 @@ def main() -> int:
     count = validate_examples(artifacts["examples-v1.json"], artifacts["openapi-v1.designed.json"])
     schemas = validate_schema_snapshot(artifacts["openapi-v1.designed.json"])
     print(
-        f"PASS designed_operations={operations} served_health_routes=2 synthetic_examples={count}"
+        f"PASS designed_operations={operations} served_operations=13 served_health_routes=2 synthetic_examples={count}"
     )
     print(f"PASS OpenAPI model + Draft2020-12 schemas={schemas}; examples JSON Schema + Pydantic")
-    print(
-        "CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)"
-    )
+    print("CONTRACT EXPORT: PASS (public routes mounted; export does not verify runtime/provider)")
     return 0
 
 

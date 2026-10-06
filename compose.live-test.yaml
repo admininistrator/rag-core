@@ -1,0 +1,10 @@
+# Only smoke_llm.py writes this ignored env file; never render expanded Compose config.
+services:
+  live-smoke:
+    extends:
+      file: compose.public-test.yaml
+      service: public-tests
+    env_file:
+      - path: ./.local/t26-live.env
+        format: raw
+    command: [uv, run, --no-sync, pytest, tests/live/test_public_provider.py, -v, -s, --tb=short, --basetemp=/tmp/live-test, -o, cache_dir=/tmp/pytest-cache]

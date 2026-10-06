@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration; T24 VERIFIED application/citation fixtures; T25 VERIFIED opt-in SSE HTTP.** PG/Qdrant/BGE/parsers/source và HTTP/JWT thật, LLM protocol synthetic; live verification vẫn ở T26. T25 thêm scoped allowlist/final subset, backpressure và cancellation. Production API chỉ mount health; full public business mounting/DI/admin còn T26–T36. [Evidence T25](docs/handoffs.md#h-t25-a01).
+> **T26 public API IMPLEMENTED; real Docker/HTTP acceptance PASS; live provider gates BLOCKED pending keys/models.** T01–T25 verification remains valid; all 13 public/health operations are mounted and business services require trusted config. Native LLM wire fixtures do not satisfy live gates. Admin/evaluation/load/restore remain T27–T36. [T26 checkpoint](docs/handoffs.md#h-t26-a01).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -17,12 +17,12 @@
 | --- | --- | --- |
 | Python setup/settings/quality | VERIFIED | T01 |
 | Compose/services + health skeleton | VERIFIED local | T02 |
-| API v1 schemas/design snapshots/examples | VERIFIED structural contracts; business routes chưa mount | T03 |
+| API v1 schemas/design snapshots/examples | T03 structural contracts; T26 all13operations mounted | T03/T26 |
 | Corpus | Ba domain và all-domain clean reproduction VERIFIED local | T04–T08 |
 | Service identity/JWT/JWKS/local issuer | VERIFIED local HTTP; protected endpoint chỉ trong tests | T09 |
-| Session/schema/scope repository | VERIFIED real PostgreSQL; HTTP routes chưa mount | T10 |
-| S3/MinIO read adapter | VERIFIED real local MinIO; đã nối worker T19; HTTP chưa mount | T11 |
-| Upload registration, job repository/outbox | VERIFIED real PG/MinIO/Redis; HTTP chưa mount; worker T19 đã VERIFIED | T12 |
+| Session/schema/scope repository | VERIFIED real PostgreSQL; HTTP mounted T26 | T10 |
+| S3/MinIO read adapter | VERIFIED real local MinIO; worker T19/public registration T26 | T11 |
+| Upload registration, job repository/outbox | VERIFIED real PG/MinIO/Redis; worker T19 verified, public routes mounted T26 | T12 |
 | PDF text/DOCX/TXT/MD/HTML parsers | VERIFIED real native parsers trên fixtures EN/VI; đã nối worker T19 | T13 |
 | XLSX/CSV/PPTX tables | VERIFIED real parsers, locators/header/unit/formula cache và archive safety; đã nối worker T19 | T14 |
 | OCR scan/mixed PDF, PNG/JPEG | VERIFIED worker image, engine thật EN/VI + locator/status/limits/cancel | T15 |
@@ -35,7 +35,7 @@
 | Evidence selection | VERIFIED real CPU reranker/PG/Qdrant; bounded passages, conservative numeric conflicts and scoped context gate | T22 |
 | Provider adapters/config | VERIFIED synthetic protocols; DeepSeek HTTPX/Anthropic SDK; live pending T26 | T23 |
 | Answer assembly/citation resolver | VERIFIED actual PG/Qdrant/CPU/source; LLM wire synthetic, live pending T26 | T24 |
-| Query HTTP/SSE | T25 opt-in SSE router VERIFIED real HTTP; production full DI/mounting + JSON DESIGNED | T25–T26 |
+| Query HTTP/SSE | T25 transport verified; T26 full DI/public HTTP locally passes with synthetic LLM wire, live gates BLOCKED | T25–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
@@ -93,7 +93,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | --- | --- | --- |
 | base | IMPLEMENTED/VERIFIED | Pydantic v2 + pydantic-settings cho typed config |
 | dev | IMPLEMENTED/VERIFIED | Ruff, mypy, pytest, pytest-asyncio; jsonschema 4.26.0 từ T03 để validate exported schemas/examples, không vào API image |
-| api | VERIFIED T02/T23 | FastAPI, HTTPX, Uvicorn, psycopg, Redis client; Anthropic1.11.0 SDK (HTTPX2); health-only API process, không có business routes |
+| api | T02/T23 verified; T26 public composition implemented | FastAPI, HTTPX, Uvicorn, PG/Redis, Anthropic SDK/HTTPX2, boto3/Qdrant/tokenizers; no Torch/model copies |
 | ingestion | T11–T15 VERIFIED adapters/OCR worker runtime; orchestration T19 VERIFIED | Metadata, boto3, Celery, Qdrant/Redis; Docling Parse7.22.1/slim2.132.0 convert-core, pandas3.0.6, PDFium5.13.0, Office/native parsers; CPU OCR image có Tesseract5.3.0 + eng/vie/osd, không Torch/layout/VLM weights |
 | metadata | IMPLEMENTED/VERIFIED T10 | SQLAlchemy2.0.53 async + greenlet3.5.6, Psycopg, Alembic1.20.0; được include bởi api/ingestion |
 | inference / inference-gpu | VERIFIED T17 | Separate mutually exclusive CPU/CUDA runtime; FlagEmbedding1.3.5/transformers4.57.6/torch2.9.1, not in API/ingestion groups |
@@ -162,7 +162,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps
 
 Không dùng `docker compose down -v` trong flow mặc định. Không commit `.local/`, `.env`, key hoặc database files. MinIO/MC dùng release community lịch sử đã pin từ official Quay cho local simulation; server/cloud deployment ngoài scope.
 
-Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` rồi `docker compose logs --no-color <service>`; không render `docker compose config` đầy đủ vào ticket vì có thể lộ config khi operator tự thêm biến. Migration/internal ingestion/model có commands tại R09 T19; business HTTP/query/admin quickstart vẫn DESIGNED cho các task sau. Host auth/local issuer đã VERIFIED ở R03; Compose mặc định chưa mount app registry hay issuer.
+Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` rồi `docker compose logs --no-color <service>`; không render `docker compose config` đầy đủ vào ticket vì có thể lộ config khi operator tự thêm biến. Migration/internal ingestion/model có commands tại R09 T19; business HTTP/query config và acceptance ở R05-T26; admin vẫn DESIGNED. Host auth/local issuer đã VERIFIED ở R03; Compose mount operator registry khi cấu hình, không dựng issuer.
 
 <a id="r03"></a>
 ## R03. Auth, app registration và trust boundary
@@ -176,7 +176,7 @@ Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` r
 - `Principal(app_id, user_id)` là immutable domain type; API middleware xác thực toàn `/v1` trước body/handler, `require_principal` inject cho handlers. Không dùng body/query/history làm identity. Principal chưa thay thế session/document scope resolver T10.
 - Không đưa token/service key vào query string, metrics label, logs hoặc browser JS. Không dùng chung admin credential với API app.
 
-401 `invalid_credentials`: credentials invalid/missing/duplicate hoặc unknown signing kid; có `WWW-Authenticate: Bearer`. 503 `dependency_unavailable`: chưa cấu hình registry hoặc JWKS không dùng được khi cần refresh. Error theo T03 envelope, request UUID mới, không chứa token/key/URL/exception, `Cache-Control: no-store`. 403 role và 404 resource ngoài scope là contract cho task sau. Route chưa mount chỉ trả framework 404 sau auth thành công; trước đó guard có thể trả 401/503. Không tắt auth để tránh lỗi tích hợp.
+401 `invalid_credentials`: credentials invalid/missing/duplicate hoặc unknown signing kid; có `WWW-Authenticate: Bearer`. 503 `dependency_unavailable`: chưa cấu hình registry hoặc JWKS không dùng được khi cần refresh. Error theo T03 envelope, request UUID mới, không chứa token/key/URL/exception, `Cache-Control: no-store`. 404 resource ngoài scope được enforce qua repository; admin role403 thuộc T27. Unknown authenticated routes trả safe404; guard có thể trả401/503 trước routing. Không tắt auth để tránh lỗi tích hợp.
 
 ### App registry và JWT contract
 
@@ -264,8 +264,7 @@ Dùng tên basetemp mới mỗi lần. `/v1/auth-test` chỉ tồn tại trong t
 Real HTTP trả200 principal `local-dev/http-user`, missing auth401, forged body422,
 unmounted route404 sau auth, empty JWKS sau TTL503, private file404. Không mock JWT,
 crypto/JWKS/HTTP; không gọi DB/LLM và không claim session authorization. Evidence
-[H-T09-A01](docs/handoffs.md#h-t09-a01). Business API vẫn chưa mount; T10 thêm
-repository/scope gate bên dưới, không thay auth hoặc mount query/registration.
+[H-T09-A01](docs/handoffs.md#h-t09-a01). T09 acceptance là lịch sử; public routes đã mount ở T26 với T10 owner/scope gates.
 
 <a id="r04"></a>
 ## R04. Session mapping và upload registration
@@ -460,29 +459,34 @@ uv run python -m rag_core.adapters.broker.dispatcher --once
 uv run python -m rag_core.adapters.broker.dispatcher
 ```
 
-`--once` phát tối đa một event và exit0 khi không có event; lỗi broker/PG exit1, event vẫn chờ. `--interval` 0.1–60 giây, mặc định1. Compose chuẩn bật `rag-core-dispatcher:t19` và worker/inference; migration/config/model cache phải được chuẩn bị trước start. Chỉ có HTTP business routes vẫn chưa mount. Stop/start giữ PG/Redis volumes; không dùng down-v. Isolated acceptance: `docker compose -f compose.metadata-test.yaml -f compose.registration-test.yaml up -d --wait postgres redis`, MinIO T11 test fixture theo R04, đặt `RAG_TEST_DATABASE_URL`/`DATABASE_PASSWORD_FILE` như T10 và chạy `uv run pytest tests/integration/test_registration_jobs.py -v -s`; Redis test ở loopback16379/DB15 và đo queue delta, không flush dữ liệu. [H-T12-A01](docs/handoffs.md#h-t12-a01) ghi output thực.
+`--once` phát tối đa một event và exit0 khi không có event; lỗi broker/PG exit1, event vẫn chờ. `--interval` 0.1–60 giây, mặc định1. Compose chuẩn bật `rag-core-dispatcher:t19` và worker/inference; migration/config/model cache phải được chuẩn bị trước start. HTTP business routes đã mount ở T26, cần trusted config R05. Stop/start giữ PG/Redis volumes; không dùng down-v. Isolated acceptance: `docker compose -f compose.metadata-test.yaml -f compose.registration-test.yaml up -d --wait postgres redis`, MinIO T11 test fixture theo R04, đặt `RAG_TEST_DATABASE_URL`/`DATABASE_PASSWORD_FILE` như T10 và chạy `uv run pytest tests/integration/test_registration_jobs.py -v -s`; Redis test ở loopback16379/DB15 và đo queue delta, không flush dữ liệu. [H-T12-A01](docs/handoffs.md#h-t12-a01) ghi output thực.
 
 **Ví dụ HTTP mục tiêu, chưa serve trước T26:** `POST /v1/sessions/{session_id}/documents` với `Idempotency-Key: <opaque-key>` và payload trên → `202` cùng `session_id`, `scope_revision`, `document` và `job` (`state: queued`, `retryable: false`). `GET /v1/jobs/{job_id}` poll trạng thái; `POST /v1/jobs/{job_id}/retry` chỉ khi `failed` và `attempts < max_attempts`, chuyển lại `queued`, thêm outbox event; retry cùng lúc khi đã `queued` trả cùng job. Cùng key khác body → `409 idempotency_conflict`; ngoài owner → `404 not_found`; session deleted → `410 session_deleted`; source đổi → `409 source_changed`; broker lỗi không làm register thất bại, job vẫn `queued`. Đừng coi ví dụ là response runtime HTTP đã verify.
 
 <a id="r05"></a>
 ## R05. Endpoint inventory và lỗi
 
-**T03 schemas/snapshots/examples VERIFIED; health runtime VERIFIED tại T02; production business/admin routes chưa mount. T25 opt-in SSE router VERIFIED trên acceptance HTTP app.** [P06](docs/plan.md#p06) là nguồn thiết kế, modules `rag_core.contracts.v1`/`sse` là nguồn machine-readable hiện tại. T26 sẽ nối production DI/mount business routes và live gates.
+**T26 all public routes IMPLEMENTED, real Docker/HTTP acceptance PASS;
+live DeepSeek/Anthropic gates BLOCKED pending independent keys/models.**
+All v1 operations use T09 authenticated app/subject and current-session repositories.
+No business config means dependency_unavailable503; no auth registry means all v1
+requests503; invalid supplied registry/config prevents startup. Health probes check
+PG/Redis/Qdrant and do not prove provider/model/ingestion readiness.
 
-| Method / route | Contract request → response | Trạng thái runtime / owner |
+| Method / route | Contract request → response | Runtime |
 | --- | --- | --- |
-| POST `/v1/sessions` | SessionCreateRequest → SessionResponse | T10 repository VERIFIED; HTTP chưa mount / T26 |
-| GET/DELETE `/v1/sessions/{session_id}` | path UUID → SessionResponse | T10 repository VERIFIED; HTTP chưa mount / T26 |
-| POST `/v1/sessions/{session_id}/documents` | DocumentRegisterRequest → 202 DocumentRegisterResponse | DESIGNED, chưa mount / T12 |
-| GET `/v1/sessions/{session_id}/documents` | cursor, limit 1–50 → DocumentListResponse | DESIGNED, chưa mount / T12 |
-| DELETE `/v1/sessions/{session_id}/documents/{document_id}` | path UUIDs → DetachResponse | DESIGNED, chưa mount / T12 |
-| GET `/v1/jobs/{job_id}` | path UUID → JobResponse | DESIGNED, chưa mount / T12/T19 |
-| POST `/v1/jobs/{job_id}/retry` | path UUID → JobResponse | DESIGNED, chưa mount / T12/T19 |
-| POST `/v1/query` | QueryRequest → QueryResponse | DESIGNED, chưa mount / T24/T26 |
-| POST `/v1/query/stream` | QueryRequest → SSE frames (parsed SSEEvent contract) | T25 opt-in router VERIFIED real HTTP; production chưa mount / T26 |
-| GET `/v1/sessions/{session_id}/citations/{chunk_id}` | path UUID/chunk ID → CitationResolveResponse | DESIGNED, chưa mount / T24 |
-| GET `/health/live`, `/health/ready` | LiveResponse / ReadyResponse, ready lỗi 503 | VERIFIED served / T02 |
-| `/admin/*`, `/v1/admin/*`, protected `/metrics` | Deferred metadata/UI/metrics inventory; chưa chốt action schemas | DESIGNED / T27–T29/T32 |
+| POST `/v1/sessions` | SessionCreateRequest → SessionResponse | Mounted T26 |
+| GET/DELETE `/v1/sessions/{session_id}` | UUID → SessionResponse | Mounted T26 |
+| POST `/v1/sessions/{session_id}/documents` | DocumentRegisterRequest → 202 DocumentRegisterResponse | Mounted T26; Idempotency-Key required |
+| GET `/v1/sessions/{session_id}/documents` | UUID cursor, limit1–50 → DocumentListResponse | Mounted T26 |
+| DELETE `/v1/sessions/{session_id}/documents/{document_id}` | UUIDs → DetachResponse | Mounted T26 |
+| GET `/v1/jobs/{job_id}` | UUID → JobResponse | Mounted T26; progress0–1 |
+| POST `/v1/jobs/{job_id}/retry` | UUID → JobResponse | Mounted T26; queued-state idempotence |
+| POST `/v1/query` | QueryRequest → QueryResponse | Mounted T26; shared admission/final scope gate |
+| POST `/v1/query/stream` | QueryRequest → SSE | Mounted T26; T25 lifecycle/validator |
+| GET `/v1/sessions/{session_id}/citations/{chunk_id}` | UUIDs → CitationResolveResponse | Mounted T26; current scope only |
+| GET `/health/live`, `/health/ready` | health-specific responses | Mounted T02 |
+| `/admin/*`, `/v1/admin/*`, protected `/metrics` | deferred | DESIGNED T27–T29/T32 |
 
 Không có route xóa object nguồn, arbitrary search hoặc user-wide query bỏ session.
 
@@ -499,7 +503,111 @@ Không có route xóa object nguồn, arbitrary search hoặc user-wide query b�
 | Rate limit/queue full | 429 + Retry-After | Backoff có giới hạn, ghi admission failures |
 | Provider/dependency/timeout | 502/503/504 | Hiển thị lỗi kỹ thuật; không coi là insufficient |
 
-Error JSON: `error.code`, `error.message`, `error.retryable`, `request_id`; `error.details` là list chỉ gồm allowlisted field/reason, không có raw input/stack. Adapter tương lai phải chọn message public đã redacted, không dump trực tiếp ValidationError/exception. 429 có `Retry-After`. Health 503 giữ body riêng `status/components` của T02. Route chưa mount hiện trả framework 404 `{"detail":"Not Found"}`, chưa là business error envelope đã implement.
+Error JSON: `error.code`, `error.message`, `error.retryable`, `request_id`; `error.details` là list chỉ gồm allowlisted field/reason, không có raw input/stack. Adapter tương lai phải chọn message public đã redacted, không dump trực tiếp ValidationError/exception. 429 có `Retry-After`. Health 503 giữ body riêng `status/components` của T02. Authenticated unknown routes return a safe not_found envelope; validation never echoes body/keys/stack. Domain/storage/provider failures are mapped by safe codes, not raw exceptions.
+
+
+<a id="r05-t26"></a>
+### T26 trusted composition, standalone demo and mandatory live gates
+
+Status: public HTTP/real Docker acceptance verified with synthetic native LLM wire;
+both actual provider gates BLOCKED because key/model absent at baseline.
+[Evidence/checkpoint](docs/handoffs.md#h-t26-a01). No COMPLETE/live claim.
+
+ApiConfig JSON is server-owned, <=16KiB, extra fields forbidden. Required fields:
+`provider` deepseek|anthropic and `model_fingerprint` (actual T17 readiness fingerprint).
+Optional `inference_url`, `tokenizer_path`, `temp_root`, `stream` (validated StreamPolicy).
+Example for the currently pinned CPU model:
+
+```json
+{"provider":"deepseek","model_fingerprint":"f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b","inference_url":"http://inference:8080","tokenizer_path":"/models/embedding/tokenizer.json","temp_root":"/tmp/rag-api"}
+```
+
+`API_CONFIG_FILE` selects this JSON; provider keys/models use independent env/.env
+settings from R06-T23. Never select provider/model via QueryRequest. Lifespan creates
+bounded PG pool, Qdrant and native HTTP pools, read-only storage registry/tokenizer,
+existing preparation/retrieval/evidence/answer/citation/stream pipelines; closes them
+on shutdown. No Torch/model copies, index creation or migrations at API startup.
+Migration `uv run alembic upgrade head` remains an explicit operator step.
+
+Compose standard API image is `rag-core-api:t26`. Put **only public/service config**
+in ignored `.local/api/`, mounted read-only `/run/config`; never put private signing
+keys or JWTs there. Set `RAG_AUTH_CONFIG_FILE=/run/config/apps.json`,
+`RAG_STORAGE_CONFIG_FILE=/run/config/storage.json`,
+`RAG_API_CONFIG_FILE=/run/config/api.json` in ignored `.env`. Existing separate
+reader secrets `/run/secrets/minio_reader_user` and `minio_reader_password`, and
+read-only `/models` cache are mounted. Configure selected provider key/model in
+`.env`; Compose forwards those to API only, not workers/inference. For provider
+endpoint/timeouts/budgets overrides, add explicit API environment entries matching
+R06-T23; never print expanded Compose config with credentials.
+
+Docker registry must use an app-owned HTTPS JWKS endpoint. T09 literal-loopback
+HTTP exception applies to same-process/container test issuer only; host loopback
+does not point to host from a container. No auth bypass or deployment is provided.
+Baseline empty config still serves dependency health probes and fails closed for
+business calls. A fully configured standard Compose external issuer/provider setup
+has not been live-verified; acceptance uses the exact factory/lifespan on real
+loopback HTTP inside the isolated public-test container.
+
+JSON/SSE share one QueryAdmission and total bound120s by default; JSON disconnect
+cancels query and waits for upstream cleanup before releasing the slot. Final JSON
+checks the original exact ready version/generation snapshot immediately before
+serialization. There is still a revision-check-to-network-send race; no DB lock
+held across network. Scope revocation prevents future responses, cannot recall bytes.
+Route-level code-only error handling prevents adapter traceback logging. Progress
+is converted from durable integer0–100 to v1 float0–1. Job error details are generic;
+unknown internal ingestion codes map to extraction_failed. Retry is idempotent only
+while already queued; no retry request-key storage. T03's planned required retry
+Idempotency-Key header was removed to reflect the existing T12 job-state contract;
+registration still requires and persists the scoped header. No DB/index migration,
+payload field changes or existing runtime client migration.
+
+Isolated T26 acceptance prerequisites: existing bootstrap local/test storage reader
+and uploader secrets, T17 pinned `rag-core_model_cache` volume and inference image.
+The project uses tmpfs services/random private DBs and app-owned MinIO fixtures:
+
+```powershell
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml up -d --wait postgres redis qdrant minio storage-fixture inference
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml build public-tests
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm public-tests
+uv run python scripts/smoke_llm.py --provider deepseek
+uv run python scripts/smoke_llm.py --provider anthropic
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml stop
+```
+
+Provider smoke commands require independent funded keys and model IDs in ignored
+`.env`/environment. Missing key/model exits2/BLOCKED. Each invokes authenticated
+real-provider JSON EN, SSE VI follow-up/history and insufficient JSON/SSE over actual
+ingested synthetic fixture text, checks source/index retention and inert instruction.
+Insufficient case uses the actual language filter (ingestion fixture is und, filter
+en excludes it); this measures no-passage behavior, not reranker calibration or
+quality on an unanswerable corpus. Counts unknown from provider stay null. Output
+records actual model/usage/timings and redacted output hash/length; never keys/text.
+No skip/mock/provider fallback or bulk QA generation. Live cancellation/error/load
+coverage is not claimed from synthetic acceptance.
+
+`smoke_llm.py` exclusively creates ignored `.local/t26-live.env` with selected provider
+configuration and removes that exact file in finally. Docker env_file format raw
+avoids interpolation of credentials. If prior crash leaves it, inspect prior process
+before operator removal; no automatic overwrite. Windows parent ACL must be secured.
+Do not commit that file, `.env`, keys, JWTs, source uploads or runtime logs.
+
+Independent backend CLI:
+
+```powershell
+uv run python scripts/demo_app.py --config .local/demo.json
+```
+
+Config JSON uses `api_url`, `s3_endpoint`, `bucket`, `prefix`, `storage_alias`,
+`fixture` (operator-selected public TXT), `jwt_file`, `service_key_file`,
+`uploader_key_file`, `uploader_secret_file` (file references, not secret values).
+It uploads using app IAM, registers a fresh session, polls ready, queries JSON,
+sends its own user/assistant history in follow-up SSE, validates the full sequence,
+tombstones the session in finally and verifies unchanged app source hash. Keeps
+source; no source delete API. Successful summary has output redacted. Client
+failures return1 with a safe diagnostic; explicit selected fixture is the only
+text sent. The reusable lifecycle/parser functions are exercised by real HTTP
+acceptance; operator CLI against external issuer/full standard Compose remains
+unverified until configured; CLI process itself is also tested against the isolated real HTTP stack. T35 reference web application remains future work.
 
 ### Export và validation T03
 
@@ -509,7 +617,7 @@ uv run python scripts/export_openapi.py --check
 uv run pytest tests/contract/test_api_schema.py
 ```
 
-Prerequisites: `uv sync --locked --group dev --group api`, Python 3.12; không cần DSN/secrets/services/provider. [Designed snapshot](docs/api/openapi-v1.designed.json) có 13 operations với `x-served`/`x-implementation-status`; [served snapshot](docs/api/openapi.served.json) được inspect từ factory, chỉ 2 health paths. `/openapi.json` của app là served schema, không quảng cáo business routes. [JSON examples](docs/api/examples-v1.json) gồm 37 trường hợp synthetic với `schema` và `value`: default/document/multilingual queries, registration/lifecycle, supported/insufficient response, notified history truncation, đủ locators và SSE done/error traces. Không dùng những examples này làm live result.
+Prerequisites: `uv sync --locked --group dev --group api`, Python 3.12; không cần DSN/secrets/services/provider. [Designed snapshot](docs/api/openapi-v1.designed.json) có 13 operations với `x-served`/`x-implementation-status`; [served snapshot](docs/api/openapi.served.json) được inspect từ factory, 13 mounted health/public operations. `/openapi.json` advertises actual mounted routes with JWT + service-key security and safe error schemas; mounted does not mean configured or live-verified. [JSON examples](docs/api/examples-v1.json) gồm 37 trường hợp synthetic với `schema` và `value`: default/document/multilingual queries, registration/lifecycle, supported/insufficient response, notified history truncation, đủ locators và SSE done/error traces. Không dùng những examples này làm live result.
 
 Exporter validate OpenAPI qua FastAPI OpenAPI model, refs local và từng schema bằng `jsonschema` Draft 2020-12, mỗi example theo exported component schema có UUID format checker, rồi theo Pydantic và serialization round-trip. `--check` kiểm snapshot drift, không ghi file. Schema biểu diễn domain/subset conditional constraints, enum, lengths/bounds, unique document/language lists, source fingerprint và discriminated locator/event. Quan hệ citation/context, answer IDs/reason, locator range ordering, history count consistency và SSE event sequence là additional Pydantic checks; JSON Schema không thay thế các checks này. Auth, ownership, trusted upload link/allowlist, ready version/generation, measured file parsing, tokenizer budgets, factual quote/support và scope revalidation là runtime gates ở task sau. Actual evidence [H-T03-A02](docs/handoffs.md#h-t03-a02); [H-T03-A01](docs/handoffs.md#h-t03-a01) chỉ ghi recovery/runtime reports, không thay command outputs A02.
 
@@ -527,7 +635,7 @@ Compatibility: đây là design v1 đầu tiên, không có client business/runt
 - Empty array là lỗi, không “all”. Tài liệu selected chưa ready không âm thầm bị loại khỏi câu trả lời.
 - Default không nhận `document_ids`, kể cả explicit null; serialization Pydantic tự bỏ `document_ids=None` để request hợp lệ round-trip. Với Multilingual, bỏ/null subset nghĩa toàn bộ tài liệu hợp lệ trong session; `[]` vẫn invalid. `bilingual` là nhãn corpus, không là API domain.
 - App gửi history `user/assistant` trong request; T20 không lưu transcript. `budget_history` dùng pinned BGE-M3 tokenizer, charge từng message bằng `count(role + "\n" + content)` gồm special tokens. Giữ suffix mới nhất tối đa20messages/8000tokens, bỏ nguyên message cũ thay vì cắt nội dung; newest message vượt budget thì suffix rỗng. Tokenization chạy trong thread, không block async caller. Đây là budget core tái tạo được, không phải billable tokens của provider.
-- Schema chấp nhận history vượt processing budget. T20 trả immutable received/retained counts thật + `truncated`, và `context.warnings` có `history_truncated` khi cần. T24/T25/T26 sẽ nối warnings vào JSON/SSE `meta.history`; HTTP chưa serve. History không có structured citations/context fields; old assistant claims/citation strings chỉ có thể tồn tại trong untrusted rewrite data, không là evidence hoặc quyền của query mới.
+- Schema chấp nhận history vượt processing budget. T20 trả immutable received/retained counts thật + `truncated`, và `context.warnings` có `history_truncated` khi cần. T24/T25/T26 đã nối warnings vào JSON/SSE `meta.history` trong public HTTP. History không có structured citations/context fields; old assistant claims/citation strings chỉ có thể tồn tại trong untrusted rewrite data, không là evidence hoặc quyền của query mới.
 - History giúp rewrite câu hỏi nối tiếp; không cung cấp factual evidence từ session/tài liệu khác. Core chỉ trích dẫn passages vừa được xác minh current scope.
 - Default answer language theo câu hỏi; có override cho evaluation/app. Cross-lingual evaluation dùng language của gold answer, không nhầm với default sản phẩm.
 
@@ -1056,8 +1164,7 @@ Scarlet có thể dùng contexts/citations cùng answer của core làm input LL
 allowlist/final subset on2026-10-07. `StreamingAnswerPipeline(preparation,retrieval,
 selector,assembler,policy=None)` uses the same T24 prompt/source/final validator;
 `build_stream_router(pipeline,admission,policy=None)` returns an opt-in POST router.
-Production `create_app` still mounts health only; T26 owns full public DI/mounting
-and mandatory live LLM smoke. T25 tests mount this router behind real T09 auth on
+Production `create_app` now mounts T26 public DI/routes; mandatory live LLM smoke remains pending. T25 tests mount this router behind real T09 auth on
 loopback HTTP, with real PG/Qdrant/BGE CPU and synthetic native-provider HTTP.
 [Evidence/checkpoint](docs/handoffs.md#h-t25-a01).
 
@@ -1103,7 +1210,7 @@ done => validate complete sequence and final subset; persist done.data only
 ```
 
 HTTPX example below is exercised against the T25 loopback HTTP acceptance app.
-Do not point it at production health-only `create_app` before T26 mounting.
+Use only an authenticated configured T26 app; missing runtime configuration fails closed.
 
 <!-- T25-client: python -->
 ```python
@@ -1159,12 +1266,12 @@ uv run --no-sync pytest tests/e2e/test_streaming.py -k 'scope_change or equivale
 uv run --no-sync pytest tests/unit/test_streaming.py tests/contract/test_api_schema.py
 ```
 
-T35 sẽ thêm standalone app FastAPI/HTTPX với full lifecycle/history và integration acceptance. T25 chỉ verify parser code ở trên cùng stream fixtures; chưa claim standalone app/Scarlet integration.
+T26 đã thêm independent backend CLI demo; T35 vẫn chịu trách nhiệm standalone reference web app/integration acceptance. T25 chỉ verify parser code ở trên cùng stream fixtures; chưa claim standalone app/Scarlet integration.
 
 <a id="r08"></a>
 ## R08. Citations, xóa chat và retained index
 
-**T03 locator schemas, T10 PG session scope/lifecycle, T13–T16 provenance và T24 scoped PG citation resolver VERIFIED local; public resolver HTTP T26/stream revalidation T25 còn DESIGNED.**
+**T03 locator schemas, T10 PG session scope/lifecycle, T13–T16 provenance và T24 scoped PG citation resolver VERIFIED local; public resolver HTTP T26 và stream revalidation T25 đã IMPLEMENTED/locally verified; live gates pending.**
 
 | Format | Vị trí nguồn |
 | --- | --- |
@@ -1781,7 +1888,7 @@ fingerprint T17 và collection/generation riêng, không silently đổi CPU col
    hoặc one-off migration container có checkout `alembic.ini`/`migrations`, rồi mới start
    worker/dispatcher. Không publish PG/broker/model mặc định để chạy migration từ host.
 5. `docker compose --profile local-storage up -d --build --wait` sau khi đủ config/cache/
-   migration. API vẫn health-only; không claim business HTTP hay Scarlet đã tích hợp.
+   migration. API business services cần thêm config T26/R05; không claim Scarlet đã tích hợp.
 
 Full stack commands sau khi chuẩn bị hai JSON configs, IAM reader và model cache:
 

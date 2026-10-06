@@ -2138,7 +2138,7 @@
     }
   },
   "info": {
-    "description": "T03 contract snapshot. Only health routes are served; business paths are DESIGNED, not executable stubs.",
+    "description": "API v1 contract inventory. Public routes mounted in T26; business services require trusted configuration and authentication.",
     "title": "RAG Core API v1 — designed contract",
     "version": "1.0.0"
   },
@@ -2156,7 +2156,7 @@
                 }
               }
             },
-            "description": "Served health response"
+            "description": "Served response"
           }
         },
         "summary": "health live",
@@ -2180,7 +2180,7 @@
                 }
               }
             },
-            "description": "Served health response"
+            "description": "Served response"
           },
           "503": {
             "content": {
@@ -2204,7 +2204,7 @@
     },
     "/v1/jobs/{job_id}": {
       "get": {
-        "description": "DESIGNED, not mounted. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
+        "description": "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
         "operationId": "get_job",
         "parameters": [
           {
@@ -2226,7 +2226,7 @@
                 }
               }
             },
-            "description": "Designed response"
+            "description": "Served response"
           },
           "401": {
             "content": {
@@ -2346,16 +2346,16 @@
         ],
         "summary": "get job",
         "tags": [
-          "designed"
+          "public"
         ],
-        "x-implementation-status": "DESIGNED",
+        "x-implementation-status": "IMPLEMENTED",
         "x-implementation-task": "T12/T19",
-        "x-served": false
+        "x-served": true
       }
     },
     "/v1/jobs/{job_id}/retry": {
       "post": {
-        "description": "DESIGNED, not mounted. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
+        "description": "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
         "operationId": "retry_job",
         "parameters": [
           {
@@ -2364,16 +2364,6 @@
             "required": true,
             "schema": {
               "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Scoped app+owner+session+request hash; mismatch 409",
-            "in": "header",
-            "name": "Idempotency-Key",
-            "required": true,
-            "schema": {
-              "minLength": 1,
               "type": "string"
             }
           }
@@ -2387,7 +2377,7 @@
                 }
               }
             },
-            "description": "Designed response"
+            "description": "Served response"
           },
           "401": {
             "content": {
@@ -2507,16 +2497,16 @@
         ],
         "summary": "retry job",
         "tags": [
-          "designed"
+          "public"
         ],
-        "x-implementation-status": "DESIGNED",
+        "x-implementation-status": "IMPLEMENTED",
         "x-implementation-task": "T12/T19",
-        "x-served": false
+        "x-served": true
       }
     },
     "/v1/query": {
       "post": {
-        "description": "DESIGNED, not mounted. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
+        "description": "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
         "operationId": "query",
         "requestBody": {
           "content": {
@@ -2537,7 +2527,7 @@
                 }
               }
             },
-            "description": "Designed response"
+            "description": "Served response"
           },
           "401": {
             "content": {
@@ -2657,16 +2647,16 @@
         ],
         "summary": "query",
         "tags": [
-          "designed"
+          "public"
         ],
-        "x-implementation-status": "DESIGNED",
+        "x-implementation-status": "IMPLEMENTED",
         "x-implementation-task": "T24/T26",
-        "x-served": false
+        "x-served": true
       }
     },
     "/v1/query/stream": {
       "post": {
-        "description": "DESIGNED, not mounted. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
+        "description": "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
         "operationId": "query_stream",
         "requestBody": {
           "content": {
@@ -2687,7 +2677,7 @@
                 }
               }
             },
-            "description": "Designed response"
+            "description": "Served response"
           },
           "401": {
             "content": {
@@ -2807,11 +2797,11 @@
         ],
         "summary": "query stream",
         "tags": [
-          "designed"
+          "public"
         ],
-        "x-implementation-status": "DESIGNED",
+        "x-implementation-status": "IMPLEMENTED",
         "x-implementation-task": "T25/T26",
-        "x-served": false,
+        "x-served": true,
         "x-sse-contract": {
           "deltas": "provisional",
           "done": "validated final QueryResponse",
@@ -2820,14 +2810,14 @@
           "heartbeat": "SSE comment; no event ID",
           "order": "meta -> evidence -> answer_delta* -> done|error",
           "replay": false,
-          "runtime": "DESIGNED; scope checks before evidence/delta/done; cancel upstream",
+          "runtime": "IMPLEMENTED; scope checks before evidence/delta/done; cancel upstream",
           "wire": "SSE UTF-8 frames: id/event/data lines, blank-line delimiter; data line contains JSON. SSEEvent schema describes a parsed event, not a JSON HTTP response body."
         }
       }
     },
     "/v1/sessions": {
       "post": {
-        "description": "DESIGNED, not mounted. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
+        "description": "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
         "operationId": "create_session",
         "requestBody": {
           "content": {
@@ -2848,7 +2838,7 @@
                 }
               }
             },
-            "description": "Designed response"
+            "description": "Served response"
           },
           "401": {
             "content": {
@@ -2968,16 +2958,16 @@
         ],
         "summary": "create session",
         "tags": [
-          "designed"
+          "public"
         ],
-        "x-implementation-status": "DESIGNED",
+        "x-implementation-status": "IMPLEMENTED",
         "x-implementation-task": "T10",
-        "x-served": false
+        "x-served": true
       }
     },
     "/v1/sessions/{session_id}": {
       "delete": {
-        "description": "DESIGNED, not mounted. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
+        "description": "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
         "operationId": "delete_session",
         "parameters": [
           {
@@ -2999,7 +2989,7 @@
                 }
               }
             },
-            "description": "Designed response"
+            "description": "Served response"
           },
           "401": {
             "content": {
@@ -3119,14 +3109,14 @@
         ],
         "summary": "delete session",
         "tags": [
-          "designed"
+          "public"
         ],
-        "x-implementation-status": "DESIGNED",
+        "x-implementation-status": "IMPLEMENTED",
         "x-implementation-task": "T10",
-        "x-served": false
+        "x-served": true
       },
       "get": {
-        "description": "DESIGNED, not mounted. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
+        "description": "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
         "operationId": "get_session",
         "parameters": [
           {
@@ -3148,7 +3138,7 @@
                 }
               }
             },
-            "description": "Designed response"
+            "description": "Served response"
           },
           "401": {
             "content": {
@@ -3268,16 +3258,16 @@
         ],
         "summary": "get session",
         "tags": [
-          "designed"
+          "public"
         ],
-        "x-implementation-status": "DESIGNED",
+        "x-implementation-status": "IMPLEMENTED",
         "x-implementation-task": "T10",
-        "x-served": false
+        "x-served": true
       }
     },
     "/v1/sessions/{session_id}/citations/{chunk_id}": {
       "get": {
-        "description": "DESIGNED, not mounted. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
+        "description": "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
         "operationId": "resolve_citation",
         "parameters": [
           {
@@ -3307,7 +3297,7 @@
                 }
               }
             },
-            "description": "Designed response"
+            "description": "Served response"
           },
           "401": {
             "content": {
@@ -3427,16 +3417,16 @@
         ],
         "summary": "resolve citation",
         "tags": [
-          "designed"
+          "public"
         ],
-        "x-implementation-status": "DESIGNED",
+        "x-implementation-status": "IMPLEMENTED",
         "x-implementation-task": "T24",
-        "x-served": false
+        "x-served": true
       }
     },
     "/v1/sessions/{session_id}/documents": {
       "get": {
-        "description": "DESIGNED, not mounted. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
+        "description": "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
         "operationId": "list_documents",
         "parameters": [
           {
@@ -3475,7 +3465,7 @@
                 }
               }
             },
-            "description": "Designed response"
+            "description": "Served response"
           },
           "401": {
             "content": {
@@ -3595,14 +3585,14 @@
         ],
         "summary": "list documents",
         "tags": [
-          "designed"
+          "public"
         ],
-        "x-implementation-status": "DESIGNED",
+        "x-implementation-status": "IMPLEMENTED",
         "x-implementation-task": "T12",
-        "x-served": false
+        "x-served": true
       },
       "post": {
-        "description": "DESIGNED, not mounted. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
+        "description": "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
         "operationId": "register_document",
         "parameters": [
           {
@@ -3644,7 +3634,7 @@
                 }
               }
             },
-            "description": "Designed response"
+            "description": "Served response"
           },
           "401": {
             "content": {
@@ -3764,16 +3754,16 @@
         ],
         "summary": "register document",
         "tags": [
-          "designed"
+          "public"
         ],
-        "x-implementation-status": "DESIGNED",
+        "x-implementation-status": "IMPLEMENTED",
         "x-implementation-task": "T12",
-        "x-served": false
+        "x-served": true
       }
     },
     "/v1/sessions/{session_id}/documents/{document_id}": {
       "delete": {
-        "description": "DESIGNED, not mounted. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
+        "description": "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/ready versions constrain access. Schemas do not grant ownership or readiness.",
         "operationId": "detach_document",
         "parameters": [
           {
@@ -3804,7 +3794,7 @@
                 }
               }
             },
-            "description": "Designed response"
+            "description": "Served response"
           },
           "401": {
             "content": {
@@ -3924,11 +3914,11 @@
         ],
         "summary": "detach document",
         "tags": [
-          "designed"
+          "public"
         ],
-        "x-implementation-status": "DESIGNED",
+        "x-implementation-status": "IMPLEMENTED",
         "x-implementation-task": "T12",
-        "x-served": false
+        "x-served": true
       }
     }
   },

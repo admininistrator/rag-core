@@ -113,7 +113,7 @@ services:
     networks: [backend]
 
   api:
-    image: rag-core-api:t02
+    image: rag-core-api:t26
     build:
       context: .
       dockerfile: docker/api.Dockerfile
@@ -127,8 +127,21 @@ services:
       HEALTH_TIMEOUT_SECONDS: "2"
       REDIS_URL: redis://redis:6379/0
       QDRANT_URL: http://qdrant:6333
+      # Empty config retains health probes and denies business service calls.
+      AUTH_CONFIG_FILE: ${RAG_AUTH_CONFIG_FILE:-}
+      STORAGE_CONFIG_FILE: ${RAG_STORAGE_CONFIG_FILE:-}
+      API_CONFIG_FILE: ${RAG_API_CONFIG_FILE:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
     secrets:
       - postgres_password
+      - minio_reader_user
+      - minio_reader_password
+    volumes:
+      - ./.local/api:/run/config:ro
+      - model_cache:/models:ro
     depends_on:
       postgres:
         condition: service_healthy

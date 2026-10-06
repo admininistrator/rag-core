@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-07 / T26-A01 BLOCKED, NOT COMPLETE:**30scopedpaths implement all public routes/trusted lifespan DI/shared JSON-SSE admission/final JSON scope+disconnect/safe errors/standalone CLI/live harness. Final DoD1 actual Docker/HTTP/JWT/S3/PG/Redis/Celery/Qdrant/CPU6PASS108.24s (LLM wire synthetic), including actual CLI subprocess. Both exact provider commands exit2 missing api_key/model; no live call.662unit/contract/authPASS207.87s; real regression69PASS1FAIL472.32s and unchanged focused2PASS36.42s, original full exit1 retained. Ruff/format19/mypy97/lock177/OpenAPI/docs/image97hashes/Torch-absent/review PASS. [H-T26-A01](#h-t26-a01), [S-T26-A01](implementation-summary.md#s-t26-a01). Initial parallel-suite collision/failures retained; final services serial/per-case DB+broker. Checkpoint subject `test(T26): checkpoint public API pending live credentials`, not completion; actual inspected hash/authorized origin/main push equality reported after execution. Configure funded keys/models in ignored .env, resume SAME attempt and both live gates before completion. T27 NOT READY. Original T07 scratch preserved; no Scarlet/source/cache/volume deletion/merge/deploy/drain; STOP T26.
+
 - **Current 2026-10-07 / T25-A01 acceptance closure:** direct agent/exactmodel-effortunavailable/no subagents, baseline main/e100345 verified equal origin/main; T07 scratch preserved. User approved early scoped allowlist/final exact subset.19paths (8source/5test/6docs): optional authenticated POST SSE, shared T24 prompt/source/final validation, bounded admission/queue/sentence/wire/heartbeat/deadlines, per-event send-boundary scope and shielded upstream close before terminal. Final separate DoD123PASS162.70s/DoD28PASS59.32s realHTTP/JWT/PG/Qdrant/BGE CPU; nativeLLMHTTPsynthetic.30unchangedT24PASS140.69s +709fullregressionPASS288.07s +101focusedunit/contractPASS2.58s; Ruff/scoped13format/mypy94/lock177/unchangedOpenAPI/docs PASS. Initial17PASS/4FAIL retained; fixes verified, no unresolved blocker. D1–D5 reviewed; COMPLETE/D6 effective only after inspected19path `feat(T25): stream scoped answers with cancellation` commit, actual hash/authorized normal origin/main equality reported post-execution. [H-T25-A01](#h-t25-a01), [S-T25-A01](implementation-summary.md#s-t25-a01). Production full DI/public mounting/live two-provider smoke T26; bytes irrevocable/revision-send race/incomplete disconnect/one-process budget documented, load T33. Own project stopped without source/cache/volume deletion. T26 dependencies ready after successful closure, remains TODO/keys+live checks in that task; STOP T25, no drain/merge/deploy.
 
 - **Current 2026-10-07 / T25-A01 BLOCKED, NOT COMPLETE:** main/e100345bbe337d6e37a0a2c0eb4416ba37c39827 equals origin/main. Direct agent/no subagents/exact model-effort unavailable; T23/T24 COMPLETE dependencies read. Three partial Python paths (bounded decoding/admission/unit tests) and five checkpoint docs;125focused tests PASS2.92s. No HTTP SSE wiring/DoD1/DoD2/final validation/live claim/commit/push. Pending user contract decision: SSE evidence as pre-generation allowlist + final subset versus full buffer retaining existing equality. Preserve files and old T07 scratch; own healthy PG/Qdrant/CPU project stopped, no volumes/cache deleted. [H-T25-A01](#h-t25-a01), [S-T25-A01](implementation-summary.md#s-t25-a01). Resume same attempt only after answer; T26 not ready; STOP T25.
@@ -9783,3 +9785,363 @@ same19paths/docs+whitespace/hash checks repeated, then
 After inspected successful commit: `git push origin HEAD:refs/heads/main`, then
 `git rev-parse HEAD` versus `git ls-remote origin refs/heads/main`. Actual outcome
 and hash reported post-execution, no extra task/amend/force/merge/deploy.
+
+
+<a id="h-t26-a01"></a>
+## H-T26-A01 — Phase 5 / public API / live credentials pending / 2026-10-07
+
+Runtime: direct Codex agent, exact model/effort unavailable, no subagents.
+Cwd for all host commands: `C:/Users/Admin/Documents/GitHub/rag-core`.
+User authorized this one task, scoped commit and normal origin/current-branch push;
+no merge/deploy/drain. Baseline main/HEAD `a3dedbd51e9bc5dbd1450057c1fc11f09130076e`
+equals `git ls-remote origin refs/heads/main` (exit0). Only inherited untracked
+`.ptmp-t07-a02/` and `.tmp-t07-a02/`, preserved. Initial sandbox Docker pipe denied;
+read-only escalation `docker compose ps; git ls-remote origin refs/heads/main` exit0
+found no standard rag-core containers; Docker permissions resolved, no product gate
+bypassed. T25/T19/T09 COMPLETE notes, interfaces/evidence and P01/P06/P09/P13 read.
+
+### Scope/config/environment
+
+Public routes/lifespan DI/config, safe errors, independent CLI/live smoke and tests,
+API dependencies/images/Compose/export snapshots and five living docs only.
+No ports/core source semantics, PG/index migration, corpus/gold/Scarlet/source deletion.
+API group adds existing locked boto3/Qdrant/tokenizers;177resolved versions unchanged.
+API/public-test images contain97exactsource files,13mounted operations and no Torch.
+
+Actual service revisions come from existing pinned compose.ingestion-test.yaml:
+PG17.11, Redis8.10.1, Qdrant1.19.1, MinIO RELEASE.2025-07-23T15-54-02Z,
+one T17 BGE-M3+multilingual-reranker CPU inference process PID7/two fixed models,
+model fingerprint `f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b`.
+Actual health runtime: FlagEmbedding1.3.5/Torch2.9.1+cpu/Transformers4.57.6/
+tokenizers0.22.2/sentence-transformers5.1.2/peft0.17.1. Worker Tesseract/parser
+image inherited T19; this task's public fixtures TXT, no new OCR/GPU/resource claim.
+Random private PostgreSQL databases migrate from empty, disposable isolated MinIO
+IAM reader/uploader; model cache read-only. Standard app/Scarlet volumes not used.
+Native LLM fixtures use real HTTP/SDK decoding with HTTPS routing-only MockTransport
+to loopback HTTP: synthetic-model/synthetic-model-revision, counts11input/4output;
+these are NOT live provider/billing/quality evidence. Only synthetic public text.
+
+### Original DoD-1 — initial acceptance and retained failure
+
+Setup/build (exit0; logs `.local/t26-build.log`, `.local/t26-build-final.log`,
+`.local/t26-build-closure.log`):
+
+```powershell
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml up -d --wait postgres redis qdrant minio storage-fixture inference
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml build public-tests
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm public-tests
+```
+
+Initial command exit0 `.local/t26-dod1-initial.log`:
+
+```text
+T26 actual public HTTP lifecycle deepseek synthetic wire: app upload/history/JSON/SSE/delete + source/chunks/vectors retained PASS
+T26 actual public HTTP lifecycle anthropic synthetic wire: app upload/history/JSON/SSE/delete + source/chunks/vectors retained PASS
+T26 actual HTTP owner/app/session/idempotency/citation/detach/no-resurrection PASS
+T26 public validation redaction + genuine pipeline insufficient (LLM wire synthetic) PASS
+4 passed in 78.08s (0:01:18)
+```
+
+Expanded test with pagination/owner-exact retention/shared JSON/SSE admission/
+disconnect/final JSON scope gate (exit0 `.local/t26-dod1-second-run.log`):
+
+```powershell
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm -v "${PWD}/tests/e2e/test_public_api.py:/app/tests/e2e/test_public_api.py:ro" public-tests
+```
+
+```text
+T26 actual HTTP JSON: shared JSON/SSE 429, disconnected work cancelled, serialization scope gate PASS
+5 passed in 85.19s (0:01:25)
+```
+
+Prior `.local/t26-dod1-second.log` exit1: `docker : unknown flag: --no-build`.
+Removed unsupported run flag from smoke and reproduction; no test/gate change.
+
+Final6case run (new actual CLI subprocess) was mistakenly run concurrently with
+host T25/security fixtures on the same model-fingerprint Qdrant collection. Those
+fixtures delete that collection at teardown (`tests/fixtures/evidence_support.py:179`,
+`tests/integration/test_retrieval.py:143`); their own contract says serial execution.
+Interference also left failed outbox events in a shared per-module test DB, consumed
+by the next case's app-specific reader registry. Product storage enforcement refused
+wrong app correctly. Read-only safe DB observations (exit0):
+
+```text
+ state  | attempts |          error_code           | progress
+ queued |        0 |                               |        0
+ ready  |        1 |                               |      100
+ queued |        1 | vector_dependency_unavailable |        0
+```
+
+Later observation included `failed | 2 | storage_forbidden`; queue LLEN=0.
+Stopped exact own container with `docker kill --signal=SIGINT
+rag-core-t26-test-public-tests-run-bc2e12c3f630` exit0; retained run exit2:
+`.local/t26-dod1-final.log`, no complete PASS claimed:
+
+```text
+E TimeoutError
+E Failed: Real service observation deadline exceeded
+3 failed, 1 passed in 386.20s (0:06:26)
+```
+
+Resolution: run service suites sequentially, per-case fresh real PG database and
+isolated broker DB0..14 in the dedicated T26 project. Preserve all120s/90s/dependency
+timeouts and assertions; no mock services, test removal or gate lowering. Final
+reproduction/outcomes appended below. Unknown process list command `ps` was not
+installed in test image; read-only probe exited127, no change made.
+
+### Original DoD-2 — both actual commands BLOCKED, not skipped
+
+Baseline `.env` absent and process DEEPSEEK_API_KEY/ANTHROPIC_API_KEY both unset.
+User asked via async question to configure independent funded key/model pairs in
+ignored `.env` or provide permitted secret-config path, without putting keys in chat.
+Commands run independently, each exit **2**, safe actual output:
+
+```powershell
+uv run --no-sync python scripts/smoke_llm.py --provider deepseek
+```
+
+```text
+BLOCKED llm_invalid_config:deepseek:api_key,model; configure selected provider API_KEY/MODEL in ignored .env
+```
+
+```powershell
+uv run --no-sync python scripts/smoke_llm.py --provider anthropic
+```
+
+```text
+BLOCKED llm_invalid_config:anthropic:api_key,model; configure selected provider API_KEY/MODEL in ignored .env
+```
+
+Expected required live JSON EN/SSE VI-history/insufficient JSON+SSE/model/usage/
+redacted output; actual no outbound provider call, config missing. No live PASS,
+no skip-to-COMPLETE, no provider fallback/model guessing. After credentials arrive,
+resume SAME T26-A01 and rerun exact required `uv run python ...` commands. Smoke
+only uploads synthetic public fixture text and records actual counts/IDs or null.
+
+### D2 — actual quality/regression/contract/image evidence
+
+Common host cache prefix `$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'`.
+`uv lock --offline` exit0 `Resolved 177 packages in 650ms`; final
+`uv lock --check --offline` exit0 `Resolved 177 packages in 43ms`.
+Ruff/mypy commands (exit0 final after correction):
+
+```powershell
+uv run --no-sync ruff check src tests scripts
+uv run --no-sync mypy src
+uv run --no-sync python scripts/export_openapi.py
+uv run --no-sync python scripts/export_openapi.py --check
+```
+
+```text
+All checks passed!
+Success: no issues found in 97 source files
+PASS designed_operations=13 served_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (public routes mounted; export does not verify runtime/provider)
+```
+
+Initial mypy4errors (provider settings subtype/union + Job ErrorCode annotation),
+then1unusedignore corrected; scoped Ruff formatting after implementation corrected
+and rechecked. No dependency versions changed. Focused
+`uv run --no-sync pytest tests/contract/test_api_schema.py tests/unit/test_health.py
+tests/security/test_local_auth_http.py -q --tb=short --basetemp=.local/p26c1
+-o cache_dir=.local/p26cc1` exit0: `88 passed in 27.39s`.
+
+Full non-service regression (exit0 `.local/t26-regression.log`):
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security/test_auth.py tests/security/test_local_auth_http.py tests/security/test_ingestion_storage_config.py -q --tb=short --basetemp=.local/t26r1 -o cache_dir=.local/t26rc1
+```
+
+```text
+662 passed in 207.87s (0:03:27)
+```
+
+Service regression setup uses only ignored own `.local/t26-host.yaml` adding literal
+loopback ports55432/56333/58080 to isolated PG/Qdrant/inference; same one inference
+process, no duplicate model service. `docker compose -p rag-core-t26-test -f
+compose.ingestion-test.yaml -f compose.public-test.yaml -f .local/t26-host.yaml
+up -d --wait postgres qdrant inference` exit0/allhealthy. This recreated disposable
+own test services only, no original/app volumes. Host env:
+
+```powershell
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+uv run --no-sync pytest tests/e2e/test_streaming.py tests/security/test_history_scope.py tests/security/test_evidence_scope.py tests/security/test_citations.py -q --tb=short --basetemp=.local/t26dep1 -o cache_dir=.local/t26depc1
+```
+
+Concurrent diagnostic run exit1 `.local/t26-real-regression.log`:
+
+```text
+ERROR tests/e2e/test_streaming.py::test_client_disconnect_releases_upstream_and_slot[retrieval]
+ERROR tests/e2e/test_streaming.py::test_client_disconnect_releases_upstream_and_slot[provider]
+68 passed, 2 errors in 551.57s (0:09:11)
+```
+
+Setup errors Qdrant ResponseHandlingException during simultaneous T26 collection
+publication/cleanup; no error body/config copied. Sequential full unchanged70case
+rerun and final DoD1 outcomes appended below. No error reported as PASS.
+
+API image build `docker compose build api` exit0
+`.local/t26-api-image-build.log`: `Image rag-core-api:t26 Built`.
+`docker compose config --quiet` exit0 (no expanded keys printed).
+Offline package inspection with exact local source hashes:
+
+```powershell
+uv run --no-sync python .local/t26_record_hashes.py
+docker run --rm --network none -v "${PWD}/.local/t26_verify_images.py:/verification/check.py:ro" -v "${PWD}/.local/t26-images-hashes.json:/verification/hashes.json:ro" rag-core-api:t26 python /verification/check.py
+docker run --rm --network none -v "${PWD}/.local/t26_verify_images.py:/verification/check.py:ro" -v "${PWD}/.local/t26-images-hashes.json:/verification/hashes.json:ro" rag-core-public-test:t26 python /verification/check.py
+```
+
+Both exit0 actual output:
+
+```text
+PASS exact packaged source hashes=97 mounted_operations=13 Torch absent; no probes/models/providers run
+```
+
+Initial inline Python hash command lost quotes under Windows external argument
+parsing (SyntaxError), subsequent mounted absent file became a directory and caused
+IsADirectoryError in both read-only image probes. Switched to a UTF-8 helper file and
+new exact ignored hashes filename; old ignored scratch retained, no secret/output
+fabrication. Runtime health actual startup53.772s/load50.901s/warmup2.872s CPU,
+not full-stack load/performance evidence. Existing other-app containers observed
+read-only by Docker stats, never changed.
+
+### D1/D3/D4/D5/D6 checkpoint boundary
+
+D1 scoped source/tests/config/docs and original scratch reviewed; diff--check output
+only CRLF normalization warnings, no whitespace errors. D3 live gate BLOCKED;
+task not COMPLETE. D4 README/RUNBOOK config/security/errors/CLI/live distinctions and
+task/summary/current checkpoint updated. Interim docs checker found the not-yet-
+appended H-T26-A01 anchor; appended actual evidence, final check pending below.
+D5 no raw/private corpus/source, keys/JWT/env, weights/cache/scratch/logs staged.
+Contracts compatible field shapes, no migration; planned unmounted retry header
+relaxed to match existing T12 queued-state semantics and documented in RUNBOOK.
+D6 completion commit forbidden while live gate missing; reviewed checkpoint commit
+and authorized normal push may preserve partial work, explicitly NOT COMPLETE.
+Actual final checks/commit/remote hash are reported after execution, never self-hash.
+Next T27 dependencies T26/T10: T10 COMPLETE, T26 BLOCKED until live+completion;
+do not start T27 or drain. Stop at this assigned task.
+
+
+### Sequential regression and exact live command follow-up
+
+Same host service env as above; sequential, no public ingestion test concurrently:
+
+```powershell
+uv run --no-sync pytest tests/e2e/test_streaming.py tests/security/test_history_scope.py tests/security/test_evidence_scope.py tests/security/test_citations.py -q --tb=short --basetemp=.local/t26dep2 -o cache_dir=.local/t26depc2
+```
+
+Exit1 `.local/t26-real-regression-final.log`; actual:
+
+```text
+FAILED tests/e2e/test_streaming.py::test_allowlist_subset_and_json_sse_final_equivalence[anthropic]
+1 failed, 69 passed in 472.32s (0:07:52)
+E AssertionError: assert 'error' == 'done'
+```
+
+Added **safe error-code-only diagnostic** to `checked` assertion in existing
+test_streaming.py; no criterion, code, model, timeout or fixture data changed.
+Original terminal error code was not captured; exact external cause is unknown.
+Both provider equivalence cases reproduced independently on the same stack:
+
+```powershell
+uv run --no-sync pytest tests/e2e/test_streaming.py -k 'equivalence' -v -s --tb=short --basetemp=.local/t26equ1 -o cache_dir=.local/t26equc1
+```
+
+Exit0 `.local/t26-equivalence-diagnostic.log`:
+
+```text
+T25 deepseek REAL stack: early allowlist >=2/final referenced subset1; JSON/SSE final schema+fields equal PASS
+T25 anthropic REAL stack: early allowlist >=2/final referenced subset1; JSON/SSE final schema+fields equal PASS
+2 passed, 21 deselected in 36.42s
+```
+
+All70service cases were tested:69PASS in full run, failed equivalence case PASS
+unchanged on focused repeat (plus DeepSeek repeat). Full run exit1 remains evidence;
+do not summarize it as an all-green70case run.69+focused2 is the actual coverage.
+662non-service baseline cases separately PASS as above. Product SSE source unchanged;
+T26 only switches fixture mounting to production router and adds safe diagnostics.
+No new full-suite rerun needed after a diagnostic-only assertion message change.
+
+Exact original DoD2 commands also run (without --no-sync):
+
+```powershell
+uv run python scripts/smoke_llm.py --provider deepseek
+uv run python scripts/smoke_llm.py --provider anthropic
+```
+
+First sandbox calls each exit1 trying editable project rebuild; retained logs
+`.local/t26-live-deepseek.log`/`.local/t26-live-anthropic.log`:
+
+```text
+Failed to fetch: https://pypi.org/simple/hatchling/
+An attempt was made to access a socket in a way forbidden by its access permissions. (os error 10013)
+```
+
+Network escalation resolved build access, same commands each exit2, logs
+`.local/t26-live-deepseek-exact.log`/`.local/t26-live-anthropic-exact.log`:
+
+```text
+Built rag-core @ file:///C:/Users/Admin/Documents/GitHub/rag-core
+BLOCKED llm_invalid_config:deepseek:api_key,model; configure selected provider API_KEY/MODEL in ignored .env
+BLOCKED llm_invalid_config:anthropic:api_key,model; configure selected provider API_KEY/MODEL in ignored .env
+```
+
+No provider call made; credential blocker unchanged. No auto-review rejection occurred.
+Git author already configured (`git var GIT_AUTHOR_IDENT | Out-Null` exit0); no
+identity/global config change. Review initially flagged an unchanged credential-shaped
+**historical** pattern in handoffs; comparing counts with HEAD confirmed no new such
+patterns. Entire staged files still checked against actual local secret values,
+new credential-pattern counts and exact allowed paths. No values printed. Initial
+review29pathsPASS; added one existing SSE diagnostic test makes final scope30paths.
+Final scoped format18files+mypy97/Ruff/docs402links/37tasks81edges PASS, diff--check0;
+final stage/review/commit boundary appended after actual DoD1 result.
+
+
+### Final original DoD-1 — PASS, six real independent cases
+
+Sequential after all host regression processes stopped; no collection cleanup race.
+Per-case fresh real PG database and broker DB in this own isolated project; same
+original assertions/timeouts, native wire synthetic. Commands (both exit0):
+
+```powershell
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml -f .local/t26-host.yaml build public-tests
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml -f .local/t26-host.yaml run --rm public-tests
+```
+
+Container command `uv run --no-sync pytest tests/e2e/test_public_api.py -v -s
+--tb=short --basetemp=/tmp/public-tests -o cache_dir=/tmp/pytest-cache`.
+Expected: app-owned S3 upload/register/queued retry/readiness/poll/history/query/
+citations/SSE/delete source+index retention; ownership/idempotency/pagination/detach;
+safe invalid input/insufficient; shared admission/JSON disconnect/final scope;
+standalone actual CLI process. Logs `.local/t26-build-verified.log` and
+`.local/t26-dod1-verified.log`; actual excerpts:
+
+```text
+T26 actual public HTTP lifecycle deepseek synthetic wire: app upload/history/JSON/SSE/delete + source/chunks/vectors retained PASS
+T26 actual public HTTP lifecycle anthropic synthetic wire: app upload/history/JSON/SSE/delete + source/chunks/vectors retained PASS
+T26 actual HTTP owner/app/session/idempotency/citation/detach/no-resurrection PASS
+T26 public validation redaction + genuine pipeline insufficient (LLM wire synthetic) PASS
+T26 actual HTTP JSON: shared JSON/SSE 429, disconnected work cancelled, serialization scope gate PASS
+T26 independent CLI subprocess: actual app S3 upload/dispatcher/worker/HTTP/own history/SSE/tombstone/source hash PASS
+6 passed in 108.24s (0:01:48)
+```
+
+All6cases, no skips/deselection. Actual CLI `python scripts/demo_app.py --config
+<own ignored fixture demo.json>` executed in subprocess; its S3 uploader, dispatcher,
+Celery prefork/parser/BGE, public Uvicorn/JWT/JWKS/pools/PG/Qdrant/JSON/SSE/history/
+tombstone/source SHA checks all real. LLM output synthetic protocols in DoD1, not
+live success. Largest test-container observed peak1550.488MiB includes CLI+workers;
+not full-stack20users/resource/SLA acceptance. Model process PID7 reused.
+
+D1 original scratch preserved; final30paths reviewed. D2 Ruff/source97/mypy/format19/
+177lock/OpenAPI/docs PASS; non-service662PASS, service69PASS+failed-case focusedPASS
+as recorded above. D3 live BLOCKED. D4 five living docs+snapshots/config/examples
+consistent. D5 exact source/image/source-map scope/secret/contract review, no migration.
+D6 checkpoint only, not COMPLETE; commit subject recorded before execution, hash
+never embedded into itself. Actual final stage/commit/hash/push returned to user.
+Required next action is supplying independent funded keys/models and resuming
+T26-A01 for both live commands, followed by all-gates completion commit. No T27 work.

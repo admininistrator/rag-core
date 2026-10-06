@@ -1,0 +1,9 @@
+# T26 adds public HTTP acceptance to the isolated real ingestion stack.
+services:
+  public-tests:
+    extends:
+      file: compose.ingestion-test.yaml
+      service: ingestion-tests
+    image: rag-core-public-test:t26
+    build: {context: ., dockerfile: docker/worker.Dockerfile, target: public-test}
+    mem_limit: 2g

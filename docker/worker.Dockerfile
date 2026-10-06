@@ -38,3 +38,11 @@ COPY --chown=ragcore:ragcore alembic.ini ./
 COPY --chown=ragcore:ragcore migrations ./migrations
 USER 10001:10001
 CMD ["uv", "run", "--no-sync", "pytest", "tests/integration/test_ingestion_pipeline.py", "-v", "-s", "--tb=short", "--basetemp=/tmp/ingestion-tests", "-o", "cache_dir=/tmp/pytest-cache"]
+
+FROM ingestion-test AS public-test
+USER root
+RUN --mount=type=cache,target=/root/.cache/uv UV_CACHE_DIR=/root/.cache/uv uv sync --locked --no-dev --group ingestion --group ingestion-test --group api --no-editable
+COPY --chown=ragcore:ragcore tests ./tests
+COPY --chown=ragcore:ragcore scripts/demo_app.py ./scripts/demo_app.py
+USER 10001:10001
+CMD ["uv", "run", "--no-sync", "pytest", "tests/e2e/test_public_api.py", "-v", "-s", "--tb=short", "--basetemp=/tmp/public-tests", "-o", "cache_dir=/tmp/pytest-cache"]

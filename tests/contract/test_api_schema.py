@@ -408,14 +408,14 @@ def test_openapi_snapshot_auth_status_refs_and_inventory() -> None:
     OpenAPI.model_validate(designed)
     served = json.loads((ROOT / "docs/api/openapi.served.json").read_text(encoding="utf-8"))
     OpenAPI.model_validate(served)
-    assert set(served["paths"]) == {"/health/live", "/health/ready"}
+    assert set(served["paths"]) == {endpoint.path for endpoint in ENDPOINTS}
     for endpoint in ENDPOINTS:
         operation = designed["paths"][endpoint.path][endpoint.method]
         assert operation["x-served"] == endpoint.served
         assert operation["x-implementation-status"] == (
-            "VERIFIED" if endpoint.served else "DESIGNED"
+            "VERIFIED" if endpoint.path.startswith("/health/") else "IMPLEMENTED"
         )
-        if not endpoint.served:
+        if not endpoint.path.startswith("/health/"):
             assert operation["security"] == [{"UserJWT": [], "AppServiceKey": []}]
     schemas = designed["components"]["schemas"]
     for schema in schemas.values():
@@ -466,19 +466,19 @@ def test_export_check_detects_snapshot_drift_without_loading_secrets_or_running_
 
 
 @pytest.mark.asyncio
-async def test_designed_business_endpoints_are_unmounted_and_never_stub_success() -> None:
+async def test_public_business_endpoints_are_mounted_and_fail_closed_without_config() -> None:
     app = create_app(checks=HealthChecks(checks={}))
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
         for endpoint in ENDPOINTS:
-            if not endpoint.served:
+            if not endpoint.path.startswith("/health/"):
                 path = endpoint.path.replace("{session_id}", SESSION).replace(
                     "{document_id}", DOCUMENT
                 )
                 path = path.replace("{job_id}", DOCUMENT).replace("{chunk_id}", "synthetic-chunk-1")
                 result = await client.request(endpoint.method, path)
                 # T09 guards the v1 namespace even before business routes exist.
-                assert path not in app.openapi()["paths"]
+                assert endpoint.path in app.openapi()["paths"]
                 assert result.status_code == 503
                 assert result.json()["error"]["code"] == "dependency_unavailable"

@@ -44,7 +44,7 @@ class Endpoint:
     response: str
     status: int = 200
     request: str | None = None
-    served: bool = False
+    served: bool = True
     idempotency: bool = False
 
 
@@ -84,9 +84,7 @@ ENDPOINTS = (
         "DetachResponse",
     ),
     Endpoint("get", "/v1/jobs/{job_id}", "get_job", "T12/T19", "JobResponse"),
-    Endpoint(
-        "post", "/v1/jobs/{job_id}/retry", "retry_job", "T12/T19", "JobResponse", idempotency=True
-    ),
+    Endpoint("post", "/v1/jobs/{job_id}/retry", "retry_job", "T12/T19", "JobResponse"),
     Endpoint("post", "/v1/query", "query", "T24/T26", "QueryResponse", request="QueryRequest"),
     Endpoint(
         "post", "/v1/query/stream", "query_stream", "T25/T26", "SSEEvent", request="QueryRequest"
@@ -139,28 +137,27 @@ def build_designed_openapi() -> dict[str, Any]:
     paths: dict[str, Any] = {}
     for endpoint in ENDPOINTS:
         stream = endpoint.operation_id == "query_stream"
+        health = endpoint.path.startswith("/health/")
         operation: dict[str, Any] = {
             "operationId": endpoint.operation_id,
-            "tags": ["health" if endpoint.served else "designed"],
+            "tags": ["health" if health else "public"],
             "summary": endpoint.operation_id.replace("_", " "),
-            "x-implementation-status": "VERIFIED" if endpoint.served else "DESIGNED",
+            "x-implementation-status": "VERIFIED" if health else "IMPLEMENTED",
             "x-served": endpoint.served,
             "x-implementation-task": endpoint.task,
             "responses": {
                 str(endpoint.status): {
-                    "description": "Served health response"
-                    if endpoint.served
-                    else "Designed response",
+                    "description": "Served response",
                     "content": _content(
                         endpoint.response, "text/event-stream" if stream else "application/json"
                     ),
                 }
             },
         }
-        if not endpoint.served:
+        if not health:
             operation["security"] = [{"UserJWT": [], "AppServiceKey": []}]
             operation["description"] = (
-                "DESIGNED, not mounted. Authenticated app+subject and active session links/"
+                "Mounted in T26; trusted runtime configuration is required. Authenticated app+subject and active session links/"
                 "ready versions constrain access. Schemas do not grant ownership or readiness."
             )
             for status, description in ERROR_STATUSES.items():
@@ -232,7 +229,7 @@ def build_designed_openapi() -> dict[str, Any]:
                 "replay": False,
                 "deltas": "provisional",
                 "done": "validated final QueryResponse",
-                "runtime": "DESIGNED; scope checks before evidence/delta/done; cancel upstream",
+                "runtime": "IMPLEMENTED; scope checks before evidence/delta/done; cancel upstream",
             }
         paths.setdefault(endpoint.path, {})[endpoint.method] = operation
     return {
@@ -240,8 +237,8 @@ def build_designed_openapi() -> dict[str, Any]:
         "info": {
             "title": "RAG Core API v1 — designed contract",
             "version": "1.0.0",
-            "description": "T03 contract snapshot. Only health routes are served; business "
-            "paths are DESIGNED, not executable stubs.",
+            "description": "API v1 contract inventory. Public routes mounted in T26; "
+            "business services require trusted configuration and authentication.",
         },
         "paths": paths,
         "components": {

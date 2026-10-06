@@ -24,9 +24,10 @@ from rag_core.adapters.llm.deepseek import DeepSeekProvider
 from rag_core.adapters.persistence.citations import PostgresCitationRepository
 from rag_core.api.app import create_app
 from rag_core.api.health import HealthChecks
-from rag_core.api.streaming import build_stream_router
+from rag_core.api.runtime import PublicServices
 from rag_core.application.admission import QueryAdmission
 from rag_core.application.answers import AnswerAssembler, AnswerPipeline
+from rag_core.application.citations import CitationResolver
 from rag_core.application.query import QueryPreparation
 from rag_core.application.retrieval import RetrievalPipeline
 from rag_core.application.streaming import StreamingAnswerPipeline
@@ -249,8 +250,18 @@ async def streaming_environment(
                 qdrant_url="http://host:6333",
                 auth_config_file=auth_path,
             )
-            app = create_app(settings=settings, checks=HealthChecks(checks={}))
-            app.include_router(build_stream_router(pipeline, admission, policy))
+            services = PublicServices(
+                e.f.sessions,
+                None,
+                json_pipeline,
+                CitationResolver(
+                    PostgresCitationRepository(e.f.engine, e.f.sessions), e.f.sessions
+                ),
+                pipeline,
+                admission,
+                policy,
+            )
+            app = create_app(settings=settings, checks=HealthChecks(checks={}), services=services)
 
             @app.get("/.well-known/jwks.json")
             async def jwks():

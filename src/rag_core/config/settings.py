@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     qdrant_url: AnyHttpUrl = Field(repr=False)
     auth_config_file: Path | None = Field(default=None, repr=False)
     storage_config_file: Path | None = Field(default=None, repr=False)
+    api_config_file: Path | None = Field(default=None, repr=False)
 
 
 def _safe_validation_message(exc: ValidationError) -> str:

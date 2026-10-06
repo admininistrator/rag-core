@@ -2,14 +2,14 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration; T24 VERIFIED application/citation fixtures; T25 VERIFIED opt-in SSE HTTP.** PG/Qdrant/BGE/parsers và HTTP/JWT thật, LLM protocol synthetic; live verification vẫn ở T26. T25 thêm scoped allowlist/final subset, backpressure và cancellation. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. Production API chỉ mount health; full business DI/public mounting/admin còn T26–T36. [Evidence T25](docs/handoffs.md#h-t25-a01).
+> **T26 public API IMPLEMENTED; real Docker/HTTP acceptance PASS, live provider gates BLOCKED pending keys/models.** T01–T25 verification remains valid. All 13 public/health operations are mounted; authenticated business services require trusted config. Native provider wire fixtures are synthetic and do not satisfy live gates. Admin/evaluation/load/restore remain T27–T36. [T26 checkpoint](docs/handoffs.md#h-t26-a01).
 
 ## Phạm vi đã chốt
 
 T25-A01 đã được chốt hợp đồng: `evidence` là scoped allowlist trước generation,
 `done` là subset đã validate như JSON T24. POST SSE router và bounded admission/
 buffers/heartbeat/cancellation đã VERIFIED trên loopback HTTP (23DoD1 +8DoD2 tests).
-[Evidence](docs/handoffs.md#h-t25-a01); production business routes vẫn do T26 mount.
+[Evidence](docs/handoffs.md#h-t25-a01); T26 đã mount production business routes, live gates còn BLOCKED.
 
 - Default RAG: toàn bộ tài liệu đã upload/đăng ký cho **session hiện tại**.
 - Document RAG: tập tài liệu được chọn trong session hiện tại.
@@ -23,7 +23,7 @@ buffers/heartbeat/cancellation đã VERIFIED trên loopback HTTP (23DoD1 +8DoD2 
 
 ## Kiến trúc hiện tại và dự kiến
 
-T02 có Python3.12/FastAPI health skeleton, PostgreSQL17/Qdrant/Redis và MinIO tùy chọn. T12 thêm dispatcher; T13–T16 có native/Office/OCR parsers và chunking. T17 thêm dedicated inference process dùng BGE-M3 + multilingual reranker qua CPU hoặc GPU override. T19 thêm Celery worker và PG chunk persistence/publication. T20–T24 nối domain preparation, retrieval, evidence, provider adapters và grounded JSON assembly; public HTTP/SSE và Admin UI thuộc các task sau.
+T02 có Python3.12/FastAPI health skeleton, PostgreSQL17/Qdrant/Redis và MinIO tùy chọn. T12 thêm dispatcher; T13–T16 có native/Office/OCR parsers và chunking. T17 thêm dedicated inference process dùng BGE-M3 + multilingual reranker qua CPU hoặc GPU override. T19 thêm Celery worker và PG chunk persistence/publication. T20–T24 nối domain preparation, retrieval, evidence, provider adapters và grounded JSON assembly; T26 mount public HTTP/SSE; Admin UI thuộc các task sau.
 
 Máy mục tiêu: RAM16GB, RTX4060Laptop8GB, nguồn<=1GB và15–20users. T17 đã đo inference trên synthetic fixtures, xem RUNBOOK/evidence; chưa có benchmark chất lượng/tải/full-stack budget.
 
@@ -78,7 +78,7 @@ docker compose --profile local-storage up -d postgres qdrant redis api minio min
 docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
 ```
 
-Không dùng `docker compose down -v` trong flow mặc định. T19 đã thêm ingestion; T26 sẽ mount HTTP query; T28–T29 thêm admin UI; T35 kiểm lại hướng dẫn tích hợp.
+Không dùng `docker compose down -v` trong flow mặc định. T19 đã thêm ingestion; T26 đã mount HTTP query, cần config bên dưới; T28–T29 thêm admin UI; T35 kiểm lại hướng dẫn tích hợp.
 
 ## Hợp đồng API v1 T03
 
@@ -89,7 +89,7 @@ uv run python scripts/export_openapi.py
 uv run python scripts/export_openapi.py --check
 ```
 
-[OpenAPI v1 thiết kế](docs/api/openapi-v1.designed.json) có 13 operations với `x-served`/`x-implementation-status`; [OpenAPI đang serve](docs/api/openapi.served.json) chỉ có 2 health routes. [37 examples](docs/api/examples-v1.json) là dữ liệu synthetic minh họa, không phải response runtime. Export kiểm OpenAPI model, JSON Schema Draft 2020-12 và examples bằng cả JSON Schema/Pydantic; không đọc secret hoặc chạy dependency/provider probes. Hợp đồng và các gate runtime còn thiếu nằm ở [RUNBOOK R05–R08](RUNBOOK.md#r05), actual evidence [H-T03-A02](docs/handoffs.md#h-t03-a02); [H-T03-A01](docs/handoffs.md#h-t03-a01) ghi recovery do runtime quota trước commit.
+[OpenAPI v1 thiết kế](docs/api/openapi-v1.designed.json) có 13 operations với `x-served`/`x-implementation-status`; [OpenAPI đang serve](docs/api/openapi.served.json) có đủ 13 health/public operations; runtime config/auth thiếu vẫn fail closed. [37 examples](docs/api/examples-v1.json) là dữ liệu synthetic minh họa, không phải response runtime. Export kiểm OpenAPI model, JSON Schema Draft 2020-12 và examples bằng cả JSON Schema/Pydantic; không đọc secret hoặc chạy dependency/provider probes. Hợp đồng và các gate runtime còn thiếu nằm ở [RUNBOOK R05–R08](RUNBOOK.md#r05), actual evidence [H-T03-A02](docs/handoffs.md#h-t03-a02); [H-T03-A01](docs/handoffs.md#h-t03-a01) ghi recovery do runtime quota trước commit.
 
 ## Domain preparation và hội thoại T20
 
@@ -155,7 +155,7 @@ mọi model claim; calibration/corpus quality còn T31.
 
 `StreamingAnswerPipeline` emits meta/scoped evidence allowlist/provisional sentence
 batches/final JSON; `build_stream_router` mounts POST `/v1/query/stream` in a caller's
-authenticated app. Production `create_app` stays health-only until T26 composition.
+authenticated app. Production `create_app` mounts all public routes; T26 composes trusted services through lifespan.
 Per-event send-boundary scope checks and heartbeat revision checks stop detach/delete
 with `session_scope_changed`; upstream closes before a writable terminal is sent.
 Only validated `done.data` is authoritative; error/disconnect/EOF is incomplete.
@@ -171,6 +171,47 @@ One process shares one budget; full15–20user resource/load acceptance remains 
 HTTPX example and individual test commands. Real HTTP/JWT/PG/Qdrant/BGE CPU tests
 use synthetic DeepSeek/Anthropic native HTTP fixtures; T26 still requires both
 live-provider smoke gates. No Scarlet integration/deployment claim.
+
+
+## Public API T26 — live verification pending
+
+`create_app` mounts sessions/documents/jobs/query/stream/citation routes using the
+existing v1 contracts. `API_CONFIG_FILE` selects a trusted provider, model/index
+fingerprint, inference URL, tokenizer path and StreamPolicy; `AUTH_CONFIG_FILE`
+and `STORAGE_CONFIG_FILE` remain operator-owned registries. Models stay in one
+inference process. JSON/SSE share admission and safe errors; JSON checks the exact
+scope snapshot immediately before serialization and cancels disconnected work.
+No automatic migration, transcript storage, old-session attach or source deletion.
+
+Real isolated Docker acceptance (no provider credentials, native LLM wire synthetic):
+
+```powershell
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml up -d --wait postgres redis qdrant minio storage-fixture inference
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml build public-tests
+docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm public-tests
+```
+
+Supply independent funded `DEEPSEEK_API_KEY/DEEPSEEK_MODEL` and
+`ANTHROPIC_API_KEY/ANTHROPIC_MODEL` in ignored `.env` or environment, then run each
+mandatory gate separately from repository root:
+
+```powershell
+uv run python scripts/smoke_llm.py --provider deepseek
+uv run python scripts/smoke_llm.py --provider anthropic
+```
+
+Missing config exits2/BLOCKED; no skip or mock success. Each live gate uses only
+synthetic public fixture text through authenticated JSON EN/SSE VI with follow-up
+history, insufficient JSON/SSE and inert document instructions. Records actual
+model IDs/usage/timings plus redacted output length/hash. It is a small smoke,
+not corpus quality/load verification. The isolated stack and public-test image
+must already be prepared; no application volumes are used.
+
+`uv run python scripts/demo_app.py --config .local/demo.json` is an independent
+backend CLI with app-owned S3 upload/history and tombstone cleanup. Exact config,
+Compose paths, errors, evidence and current limits: [RUNBOOK T26](RUNBOOK.md#r05-t26).
+Only verified `done` is persisted; source remains app-owned. T26 is NOT COMPLETE
+until both live smoke gates and the inspected completion commit succeed.
 
 ## Authentication T09
 
@@ -196,9 +237,7 @@ uv run pytest tests/security/test_auth.py
 uv run pytest tests/security/test_local_auth_http.py -s
 ```
 
-Endpoint `/v1/auth-test` chỉ được mount trong test. Application hiện vẫn chỉ có
-hai health routes; request đã authenticate tới business route chưa implement trả
-404. T09 chưa dựng issuer trong Compose hay tích hợp Scarlet. Evidence:
+Endpoint `/v1/auth-test` chỉ được mount trong test. Application có đủ public routes; request thiếu auth hoặc business config fail closed. Unknown authenticated routes trả404. T09 chưa dựng issuer trong Compose hay tích hợp Scarlet. Evidence:
 [H-T09-A01](docs/handoffs.md#h-t09-a01).
 
 ## Metadata và session scope T10
@@ -226,8 +265,7 @@ uv run pytest tests/integration/test_metadata_migrations.py -v -s --tb=short
 ```
 
 Tests cần `RAG_TEST_DATABASE_URL` tới service riêng, không tự thay PG bằng mock.
-Evidence: [H-T10-A01](docs/handoffs.md#h-t10-a01). Business routes vẫn chưa mount theo
-R05/T26; storage reader đã VERIFIED ở T11, registration/outbox dispatch đã VERIFIED ở T12;
+Evidence: [H-T10-A01](docs/handoffs.md#h-t10-a01). Business routes đã mount tại T26; xem R05 cho trusted runtime configuration; storage reader đã VERIFIED ở T11, registration/outbox dispatch đã VERIFIED ở T12;
 worker/chunk persistence T19 đã VERIFIED; vector repository T18 đã VERIFIED bên dưới. Snapshot phải được consumer revalidate trước khi phát evidence/answer.
 
 ## Upload registration và outbox T12

@@ -33,7 +33,9 @@ def query(e, labels=("capital-en",)):
 
 
 def checked(trace, terminal):
-    assert SSESequence.model_validate(trace).root[-1].event == terminal
+    assert SSESequence.model_validate(trace).root[-1].event == terminal, [
+        item["data"]["error"]["code"] for item in trace if item["event"] == "error"
+    ]
     assert sum(item["event"] in {"done", "error"} for item in trace) == 1
     assert [item["id"] for item in trace] == list(range(1, len(trace) + 1))
 
