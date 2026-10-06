@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration.** T19 durable ingestion/publication, T20 domain preparation/history port, T21 dense/hybrid retrieval và T22 scoped passage/rerank/evidence gates đã kiểm. T23 thêm DeepSeek/Anthropic adapters; live verification vẫn ở T26. API chỉ mount health, public query/generation/SSE/admin thuộc T24–T36. [Evidence T23](docs/handoffs.md#h-t23-a01).
+> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration; T24 VERIFIED application/citation fixtures.** T24 nối grounded JSON assembly/source allowlist/one repair và scoped PG citation resolver. PG/Qdrant/BGE/parsers/source thật, LLM protocol synthetic; live verification vẫn ở T26. API chỉ mount health, public HTTP/SSE/admin thuộc T25–T36. [Evidence T24](docs/handoffs.md#h-t24-a01).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -34,7 +34,8 @@
 | Dense/hybrid retrieval | VERIFIED CPU BGE-M3/PG/Qdrant; bounded metadata candidates/neighbors/redacted trace | T21 |
 | Evidence selection | VERIFIED real CPU reranker/PG/Qdrant; bounded passages, conservative numeric conflicts and scoped context gate | T22 |
 | Provider adapters/config | VERIFIED synthetic protocols; DeepSeek HTTPX/Anthropic SDK; live pending T26 | T23 |
-| Query/generation assembly/public SSE | DESIGNED | T24–T26 |
+| Answer assembly/citation resolver | VERIFIED actual PG/Qdrant/CPU/source; LLM wire synthetic, live pending T26 | T24 |
+| Public query HTTP/SSE | DESIGNED | T25–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
@@ -925,6 +926,125 @@ Official references checked 2026-10-06:
 [Anthropic streaming](https://platform.claude.com/docs/en/build-with-claude/streaming),
 [Anthropic Python SDK](https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/python).
 
+<a id="r06-t24"></a>
+### T24 answer assembly, source allowlist và current-session resolver
+
+**VERIFIED local acceptance T24-A01; LLM wire synthetic.** Application composition, chưa
+mount public routes. DI: `AnswerAssembler(selector, PostgresCitationRepository(engine,
+sessions), provider, tokenizer, policy=None)`; `AnswerPipeline(preparation, retrieval,
+selector, assembler).answer(principal, QueryRequest, request_id) -> QueryResponse`.
+`CitationResolver(repository, sessions).resolve(principal, session_id, chunk_id,
+request_id, document_ids=None) -> CitationResolveResponse`. Authenticated Principal
+là nguồn quyền; subset được resolve trong session. Không có unscoped reader/storage URL.
+
+- Trusted built-in templates: `grounded-v1`, `document-structure-v1`,
+  `grounded-en-vi-v1`; renderer `source-locator-v1`. Unknown profile là technical
+  configuration failure, không âm thầm fallback. Không nhận prompt/profile từ client.
+- `mapped-quotes-v1` cấp IDs `c1..cN` cho verbatim mapped segments, bao gồm context/
+  overlap gốc, bỏ synthetic separators/format-policy notes. Mỗi paragraph/cell/OCR
+  word giữ locator riêng; PDF physical page one-based, Office không có page giả.
+  Model trả JSON `answer` và declarations chỉ `id/quote`; không được đặt source,
+  version, filename, offsets hoặc locator. Quote phải echo nguyên segment đã cấp.
+  Markdown/HTML quotes là text normalized; offsets giữ coarse raw span gốc, không
+  suy ra exact raw substring sau khi bỏ markup.
+- Supported cần citation; markers và declarations khớp chính xác allowlist. Unknown/
+  malformed IDs, wrong quotes, duplicate JSON fields, extra metadata hay missing
+  citations được repair tối đa **một lần**, cùng scope/nguồn/budget. Prompt repair
+  không echo invalid response. Sau lần hai vẫn sai: `invalid_citation`, không success.
+- Insufficient vẫn gọi provider; trusted policy yêu cầu giải thích thiếu/conflicting
+  evidence theo EN/VI và không bù factual knowledge. Citations/contexts trả rỗng,
+  cả khi private conflict passages giúp giải thích thiếu. Internal budget/coverage
+  reasons map sang v1 `no_relevant_evidence`, conflicting giữ `conflicting_evidence`;
+  internal reason vẫn có trong private policy/data. Không promote evidence state.
+- `AnswerPolicy` mặc định full prompt8000BGE processing tokens,32768UTF-8bytes+256
+  framing, citation256, output1024, deadline60s (config1..300s). Enforce full serialized
+  system+user prompt, không truncate quote/number/unit/header để fit. Provider T23
+  tiếp tục enforce independent byte/context limits; đây không là billing tokenizer.
+- Validate durable source maps/checksum/exact owner-version-generation pairs và snapshot
+  trước prompt, trước mỗi call, sau call và scope ngay trước trả final. Detach/delete/
+  generation publication abort; không giữ DB lock trong network call. HTTP T26 phải
+  revalidate snapshot trước serialize; đã trả bytes không thể thu hồi (SSE T25).
+- Response contexts chỉ chunks thực sự referenced; warning history_truncated được
+  giữ. `retrieval` đo retrieval+selection, `generation` đo assembly/prompt/provider/
+  repair/final validation, `total` đo toàn preparation-to-final. Unknown timing/count
+  giữ null; usage cộng các successful calls của repair, count thiếu ở một call => null.
+  Retry usage upstream không được báo vẫn unknown, không ước đoán. No provider swap.
+- Resolver chunk-only stateless reauthorizes current scope và trả **segment đầu** của
+  current chunk với local `c1`; query IDs không là persistent/global handles. Muốn
+  render nhiều cell/paragraph citations, dùng original query response đã validate.
+  Retained old generation/detached chunk không được resolve; source/chunks giữ nguyên.
+- Errors: exhausted citation repair `invalid_citation` (v1 HTTP502 mapping khi T26 mount);
+  `provider_error`/invalid response vẫn technical502, `provider_timeout` technical504;
+  scope change409, forbidden chunk404, deleted owner session410. Prompt budgets/profile/
+  corrupt source-map errors là technical configuration/data failures, không insufficient.
+  Native internal code-to-envelope wiring còn T26; không claim routes hoạt động.
+
+Các ví dụ dưới là **schema examples**, không là live output hay mounted endpoint.
+DoD-2 đọc chính JSON blocks này và validate QueryResponse/ErrorEnvelope.
+
+<!-- T24-example: QueryResponse -->
+```json
+{
+  "request_id": "00000000-0000-4000-8000-000000000001",
+  "session_id": "00000000-0000-4000-8000-000000000002",
+  "scope_revision": 3,
+  "domain": "document",
+  "answer": "Hà Nội là thủ đô của Việt Nam. [c1]",
+  "answerability": "supported",
+  "reason_code": null,
+  "citations": [{"id":"c1","document_id":"00000000-0000-4000-8000-000000000003","version_id":"00000000-0000-4000-8000-000000000004","chunk_id":"00000000-0000-4000-8000-000000000005","filename":"report.pdf","locator":{"kind":"pdf","page":2},"quote":"Hanoi is the capital of Vietnam."}],
+  "contexts": [{"chunk_id":"00000000-0000-4000-8000-000000000005","document_id":"00000000-0000-4000-8000-000000000003","text":"Hanoi is the capital of Vietnam.","citation_ids":["c1"]}],
+  "usage": {"provider":"deepseek","model":"configured-model-id","input_tokens":null,"output_tokens":null},
+  "timings_ms": {"retrieval":null,"generation":null,"total":null},
+  "warnings": []
+}
+```
+
+<!-- T24-example: QueryResponse -->
+```json
+{
+  "request_id":"00000000-0000-4000-8000-000000000001",
+  "session_id":"00000000-0000-4000-8000-000000000002",
+  "scope_revision":3,
+  "domain":"default",
+  "answer":"Tài liệu hiện tại chưa đủ bằng chứng. Bạn có thể cung cấp thêm thông tin?",
+  "answerability":"insufficient_evidence",
+  "reason_code":"no_relevant_evidence",
+  "citations":[],"contexts":[],
+  "usage":{"provider":"anthropic","model":"configured-model-id","input_tokens":null,"output_tokens":null},
+  "timings_ms":{"retrieval":null,"generation":null,"total":null},
+  "warnings":[]
+}
+```
+
+<!-- T24-example: ErrorEnvelope -->
+```json
+{"request_id":"00000000-0000-4000-8000-000000000001","error":{"code":"invalid_citation","message":"The generated answer did not reference valid evidence.","retryable":false,"details":[]}}
+```
+
+<!-- T24-example: ErrorEnvelope -->
+```json
+{"request_id":"00000000-0000-4000-8000-000000000001","error":{"code":"provider_error","message":"The configured generation provider failed.","retryable":true,"details":[]}}
+```
+
+Acceptance commands (same isolated services/settings as T22/T23, no live key):
+
+```powershell
+docker compose -p rag-core-t24-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
+$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+uv run --no-sync pytest tests/integration/test_answer_pipeline.py tests/security/test_citations.py -v -s --tb=short --basetemp=.local/d24 -o cache_dir=.local/cd24
+uv run --no-sync pytest tests/security/test_citations.py -k 'round_trip or runbook' -v -s --tb=short --basetemp=.local/s24 -o cache_dir=.local/cs24
+```
+
+Actual PG/Qdrant/CPU/parser-tokenizer/source gates được ghi tại
+[H-T24-A01](docs/handoffs.md#h-t24-a01). LLM wire fixtures synthetic đi qua actual
+T23 DeepSeek/Anthropic adapters; không gọi là live behavior/quality verification.
+Prompt policy+exact quote validation không là semantic entailment checker. Live
+provider behavior/prompt-injection adherence còn T26, corpus accuracy/calibration T31.
+
 ### App gọi LLM viết lại
 
 Scarlet có thể dùng contexts/citations cùng answer của core làm input LLM riêng. App phải giữ source IDs/locator và trạng thái insufficient; không tự tạo citations mới rồi gắn nhãn đã được core verify. Nếu app đổi factual content, phần trả lời đó cần quy trình validation của app.
@@ -951,7 +1071,7 @@ T35 sẽ thêm client FastAPI/HTTPX độc lập chạy thật, xử lý chunk b
 <a id="r08"></a>
 ## R08. Citations, xóa chat và retained index
 
-**T03 locator schemas, T10 PG session scope/lifecycle và T13–T16 text/table/OCR/chunk provenance VERIFIED; citation resolver/stream revalidation DESIGNED — T24/T25.**
+**T03 locator schemas, T10 PG session scope/lifecycle, T13–T16 provenance và T24 scoped PG citation resolver VERIFIED local; public resolver HTTP T26/stream revalidation T25 còn DESIGNED.**
 
 | Format | Vị trí nguồn |
 | --- | --- |

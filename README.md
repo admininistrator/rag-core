@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration.** T19 nối durable ingestion và atomic publication; T20 thêm domain preparation/history port, T21 bounded dense/hybrid retrieval, T22 scoped passage hydration/rerank/budgets và evidence states đã kiểm với BGE/PG/Qdrant thật. T23 thêm DeepSeek/Anthropic generate/stream/rewrite adapters; live verification vẫn ở T26. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. API chỉ mount health; public query/generation/SSE/admin còn thuộc T24–T36. [Evidence T23](docs/handoffs.md#h-t23-a01).
+> **T01–T22 VERIFIED local; T23 VERIFIED protocol/configuration; T24 VERIFIED application/citation fixtures.** T24 nối answer assembly, scoped source allowlist/one repair và citation resolver vào preparation/retrieval/evidence. PG/Qdrant/BGE/parsers/source thật, LLM protocol synthetic; live verification vẫn ở T26. Compose chuẩn bật worker/dispatcher/inference; MinIO vẫn là profile local-storage. API chỉ mount health; public HTTP/SSE/admin còn thuộc T25–T36. [Evidence T24](docs/handoffs.md#h-t24-a01).
 
 ## Phạm vi đã chốt
 
@@ -18,7 +18,7 @@ RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp tr
 
 ## Kiến trúc hiện tại và dự kiến
 
-T02 có Python3.12/FastAPI health skeleton, PostgreSQL17/Qdrant/Redis và MinIO tùy chọn. T12 thêm dispatcher; T13–T16 có native/Office/OCR parsers và chunking. T17 thêm dedicated inference process dùng BGE-M3 + multilingual reranker qua CPU hoặc GPU override. T19 thêm Celery worker và PG chunk persistence/publication. T20–T22 thêm domain preparation, retrieval và evidence pipeline; generation và Admin UI thuộc các task sau.
+T02 có Python3.12/FastAPI health skeleton, PostgreSQL17/Qdrant/Redis và MinIO tùy chọn. T12 thêm dispatcher; T13–T16 có native/Office/OCR parsers và chunking. T17 thêm dedicated inference process dùng BGE-M3 + multilingual reranker qua CPU hoặc GPU override. T19 thêm Celery worker và PG chunk persistence/publication. T20–T24 nối domain preparation, retrieval, evidence, provider adapters và grounded JSON assembly; public HTTP/SSE và Admin UI thuộc các task sau.
 
 Máy mục tiêu: RAM16GB, RTX4060Laptop8GB, nguồn<=1GB và15–20users. T17 đã đo inference trên synthetic fixtures, xem RUNBOOK/evidence; chưa có benchmark chất lượng/tải/full-stack budget.
 
@@ -124,6 +124,27 @@ including whitespace. Cancel/early close releases upstream. Consumers use
 [RUNBOOK T23](RUNBOOK.md#r06-t23) documents DI, conservative prompt charge,
 nullable usage, error codes, limits and planned live gates;
 [evidence](docs/handoffs.md#h-t23-a01) records separate DoDs and quality checks.
+
+## Answer assembly và citations T24
+
+**VERIFIED local acceptance T24-A01; LLM protocol synthetic.** `AnswerPipeline` nối preparation,
+bounded retrieval/rerank và `AnswerAssembler`; `CitationResolver` đọc chunk trong
+current session qua PostgreSQL. Prompt tách system policy khỏi question/evidence;
+history chỉ đi qua rewrite. Core cấp ID theo từng mapped source segment, kiểm exact
+quote/ID/locator/version và scope trước mỗi LLM call, sau call và trước final response.
+Một lần repair tối đa; vẫn sai trả `invalid_citation`. Insufficient vẫn gọi LLM,
+trả citations/contexts rỗng; provider failure giữ lỗi kỹ thuật.
+
+Full prompt dùng tokenizer BGE-M3 thật, ceiling8000 processing tokens và32768UTF-8
+bytes gồm framing; output<=1024, deadline chung60s cho assembly/repair. Usage của hai
+call repair được cộng, thiếu bất kỳ count nào giữ `null`. Contexts chỉ gồm chunks
+được cite. IDs `cN` chỉ có ý nghĩa trong response; resolver stateless trả segment
+đầu của current chunk, không lưu transcript/citation cache hay phát storage URL.
+[RUNBOOK T24](RUNBOOK.md#r06-t24) có DI, errors và JSON examples;
+[evidence](docs/handoffs.md#h-t24-a01) phân biệt PG/Qdrant/BGE/source thật với LLM
+protocol fixtures synthetic. Live model behavior còn T26; public HTTP/SSE còn T25/T26.
+Citation validation kiểm provenance/quote, không chứng minh semantic entailment của
+mọi model claim; calibration/corpus quality còn T31.
 
 ## Authentication T09
 

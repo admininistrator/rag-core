@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-06 / T24-A01 acceptance closure:** direct Codex agent (GPT-6 family; exact model/effort unavailable), no subagents. main/T23 `5adbc575ca77e53998b7bbeaa07c142a47277b0e` verified equal origin/main; inherited T07 scratch preserved.14task paths implement scoped answer/one repair/source allowlist/PG resolver. Final DoD1 actualPG/Qdrant/CPU/source with syntheticLLM30PASS130.81s; separate DoD2 actual6formats+RUNBOOK7PASS14.30s;29unitPASS0.23s, Ruff/scopedformat/mypy90/lock177/OpenAPI/docs PASS. Final full regression690PASS+1legacycorpusWindowsrenamefailure251.67s, unchanged pytest--last-failed1PASS1.19s; all691cases tested, full exit1 remains recorded. Earlier687fullPASS before final markup correction. [H-T24-A01](#h-t24-a01), [S-T24-A01](implementation-summary.md#s-t24-a01). D1–D5 task gates reviewed; COMPLETE/D6 effective only with successful inspected `feat(T24): return grounded answers and verified citations` commit; actual hash/authorized origin/main equality returned post-execution. No live-provider/public HTTP/SSE claim (T25/T26 remain). Transient setup/Windows fixtures and41unchanged baseline format debt documented. T25 remains TODO/dependencies ready after closure; STOP T24, no drain/merge/deploy.
+
 - **Current 2026-10-06 / T23-A01 acceptance closure:** direct Codex agent, exact model/effort unavailable, no subagents. Baseline main/T22 `3e6821b814282ef0a6859a9414ecf8f8d29fdf72` equals origin/main (read-only escalation verified). No partial T23 candidate; inherited T07 scratch preserved. DeepSeek HTTPX and Anthropic SDK1.11.0 generate/stream/rewrite implemented with distinct schemas, independent configuration, prompt/output bounds, nullable usage, shared total deadline/bounded retries/no retry after emitted delta/cancel cleanup. DoD-1 synthetic127PASS4.63s and separate DoD-2 config18PASS2.22s; 645regressionPASS200.23s, Ruff/format/mypy85/lock177/OpenAPI/docs/review PASS; final staged commit/push boundary below. Evidence [H-T23-A01](#h-t23-a01), interfaces [S-T23-A01](implementation-summary.md#s-t23-a01). No live provider/model behavior claim; T26 retains real-provider gates. Completion subject `feat(T23): support DeepSeek and Anthropic generation`, COMPLETE effective only after inspected commit succeeds; actual hash/authorized origin/main equality reported post-execution. T24 remains TODO, dependencies ready after closure; STOP T23, no drain/merge/deploy/Scarlet/source/cache/scratch deletion.
 
 - **Current 2026-10-06 / T22-A02 acceptance closure:** direct Codex agent, exact model/effort unavailable, no subagents. User delegates optimal conflict-policy choice; numeric-claim-v1 mapped-source baseline implemented over A01 checkpoint `74bb13019410bc2baf1fe911a2183ff5933716ea` (origin/main verified equal), preserving all partial work/scratch. DoD-1 **14actualCPUreranker/PG/Qdrant PASS103.34s**, separate DoD-2 **14PASS65.89s**,45focused unitPASS0.32s; final regression/quality/review/commit/push at closure below. Evidence [H-T22-A02](#h-t22-a02), interfaces [S-T22-A02](implementation-summary.md#s-t22-a02). Conflict cannot disappear under passage budget, scope/history/foreign guards retained. Threshold calibration T31 pending; semantic contradiction/translation/unit-conversion/full-corpus accuracy not claimed. Completion subject `feat(T22): select ranked evidence with answerability state`; COMPLETE effective only with successful inspected commit. Actual hash/authorized origin/main equality returned post-execution. T23 dependencies T22/T20 ready after closure, remains TODO. **STOP T22**, no drain/merge/deploy/Scarlet/source/cache deletion.
@@ -8785,3 +8787,503 @@ Then inspect commit/parent/exact16files, `git push origin main` without force an
 `git ls-remote origin refs/heads/main`; actual outputs/hash/equality reported directly
 to user after execution. No commit hash written into its own commit. COMPLETE only
 with successful inspected completion commit, STOP T23, T24 remains TODO.
+
+<a id="h-t24-a01"></a>
+## H-T24-A01 — Phase 5 / scoped answer assembly and citation validation / 2026-10-06
+
+### Baseline, authorization, dependency and environment
+
+Direct Codex agent (GPT-6 family; exact model/effort unavailable), no subagents.
+Assigned only T24, user authorizes scope commit and origin/current-branch push,
+no force/merge/deploy/drain. Cwd for **every command below**:
+`C:\Users\Admin\Documents\GitHub\rag-core`. Dates use Asia/Bangkok client context.
+Read AGENTS/session prompt, T24 + COMPLETE T23/T22/T16 notes, P01/P06/P08/P09/P13,
+dependency interfaces/evidence, checkpoint/summary and README/RUNBOOK before code.
+No prior tracked T24 candidate. Initial read-only baseline exit0:
+
+```powershell
+git status --short
+git branch --show-current
+git rev-parse HEAD
+git remote -v
+```
+
+```text
+?? .ptmp-t07-a02/
+?? .tmp-t07-a02/
+main
+5adbc575ca77e53998b7bbeaa07c142a47277b0e
+origin https://github.com/admininistrator/rag-core.git (fetch)
+origin https://github.com/admininistrator/rag-core.git (push)
+```
+
+Inherited access warnings on T07 scratch/global ignore are retained; never modified
+or staged. Read-only network/Docker initially sandbox-denied (Git failed connect,
+Docker npipe denied); authorized escalation succeeds, **not an approval rejection**.
+Actual `git ls-remote origin refs/heads/main` exit0:
+
+```text
+5adbc575ca77e53998b7bbeaa07c142a47277b0e refs/heads/main
+```
+
+Actual `docker version --format '{{.Server.Version}}'` exit0: `29.5.2`.
+Original running Scarlet/sub2api containers observed, left untouched. Own isolated
+T24 test project, same pinned T17 CPU image/cache and T22/T23 overlays:
+
+```powershell
+docker compose -p rag-core-t24-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
+docker compose -p rag-core-t24-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml ps
+```
+
+Actual ps exit0 (all3Healthy): inference `rag-core-inference:t17-cpu` loopback58080,
+PG17.11 pinned digest051f7b7b... loopback55432, Qdrant1.19.1 pinned digest80177707...
+loopback56333. PG/Qdrant isolated tmpfs, own random databases/collections cleaned by
+test fixtures; shared model cache read-only, no app volumes/raw sources altered.
+Actual test model health:
+
+```text
+T21 REAL MODEL device=cpu pid=7 fingerprint=f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b runtime={'FlagEmbedding': '1.3.5', 'torch': '2.9.1+cpu', 'transformers': '4.57.6', 'tokenizers': '0.22.2', 'sentence-transformers': '5.1.2', 'peft': '0.17.1'} load=33.414s
+```
+
+Host CPython3.12.4/pytest9.1.1/uv0.11.16, locked177 packages, existing real offline
+BGE-M3 tokenizer artifact/revision per T16. Real native parsers + original PDF/DOCX/
+XLSX/PPTX bytes reopened independently. **LLM fixture wire is synthetic**, actual
+DeepSeek HTTPX and Anthropic SDK T23 adapters with fixed synthetic model revision
+and noncredential test key; no live/provider-availability/quality claim. Required
+live smoke remains T26, unchanged; no mock substitutes for a T24 real service gate.
+
+### Implemented scope and retained initial diagnostics
+
+14allowedpaths:5private source modules (answers domain/application, citation port/
+PG reader/resolver),4test/helper paths and5livingdocs. No dependency/lock/public
+schema/migration/corpus/Scarlet/production Compose change. Contracts/limits in
+[S-T24-A01](implementation-summary.md#s-t24-a01) and [RUNBOOK](../RUNBOOK.md#r06-t24).
+
+Initial focused Ruff/mypy diagnostics (actual tool output): B008 default policy
+constructor; missing typed list/_sources return; fixed immutable constructor and
+types. Test draft had decorator `]):` SyntaxError, RUF043 regex/lambda lint; fixed
+without changing assertions. Initial unit run25PASS+2setupERROR because65537-char
+param became a Windows filesystem test-directory name; explicit short IDs fix the
+path problem, same overlimit case still executed. Original direct terminal output
+includes `SyntaxError: invalid syntax` and `25 passed, 2 errors in 0.48s`.
+Separate final actual unit output, exit0, `.local/t24-a01-unit-final.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/unit/test_answers.py -q --tb=short --basetemp=.local/u24d -o cache_dir=.local/cu24d *> .local/t24-a01-unit-final.log
+```
+
+```text
+........................... [100%]
+27 passed in 0.37s
+```
+
+Initial full DoD1 gate actual exit0, `.local/t24-a01-dod1-initial.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'; $env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'; $env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'; $env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'; uv run --no-sync pytest tests/integration/test_answer_pipeline.py tests/security/test_citations.py -v -s --tb=short --basetemp=.local/d24a -o cache_dir=.local/cd24a *> .local/t24-a01-dod1-initial.log
+```
+
+```text
+T24 REAL PG/Qdrant/CPU supported; deepseek synthetic wire, current source/citation/usage/history PASS
+T24 REAL PG/Qdrant/CPU supported; anthropic synthetic wire, current source/citation/usage/history PASS
+T24 insufficient/no_relevant_evidence invokes LLM synthetic wire once; no invented citations/contexts
+T24 insufficient/conflicting_evidence invokes LLM synthetic wire once; no invented citations/contexts
+T24 actual PG repair invalidation -> no final/repair success
+T24 original pdf -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original docx -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original xlsx -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original pptx -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+26 passed in 173.71s (0:02:53)
+```
+
+Supplemental tests then added missing usage/cited-only contexts/citation ceiling and
+RUNBOOK schema examples; final hardening rejects Unicode surrogates and measures
+timings after final scope gate. Final original separate DoDs and D1–D6 follow.
+
+Whole-root `uv run --no-sync ruff check .` exit0, allchecksPASS with inherited access
+warnings (`.local/t24-a01-ruff.log`). Root `ruff format --check .` crashed on restricted
+scratch traversal (`Expected a ruff source file`); use all tracked Python + four new
+task Python tests/5source paths explicitly for format instead of altering unrelated
+permissions/ignore rules. Mypy90/lock177/OpenAPI structural contracts PASS; initial
+docs checker correctly failed missing h-t24-a01 while this evidence was not appended
+yet. Final documentation check rerun required; no gate relaxation or deleted failures.
+
+### DoD-2 — PASS, independent original-source and RUNBOOK schema gate
+
+Expected PDF physical pages1/2/3 vs Roman printed labels, real DOCX paragraph/
+heading, individual XLSX cell, PPTX slides; source bytes independently reopened,
+locator/quote matches originals, stale active-generation change and detach denied,
+chunks/source retained. Validate actual RUNBOOK JSON/error examples against v1.
+Actual command exit0, `.local/t24-a01-dod2.log` (escalated real services):
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'; $env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'; $env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'; $env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'; uv run --no-sync pytest tests/security/test_citations.py -k 'round_trip or runbook' -v -s --tb=short --basetemp=.local/s24f -o cache_dir=.local/cs24f *> .local/t24-a01-dod2.log
+```
+
+```text
+collecting ... collected 15 items / 10 deselected / 5 selected
+T24 original pdf -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original docx -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original xlsx -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original pptx -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 RUNBOOK: 2 QueryResponse +2 ErrorEnvelope JSON examples validated
+5 passed, 10 deselected in 12.40s
+```
+
+Those10security tests are intentionally outside this separate DoD2 selector, run in
+full DoD1 and regression; no skip/no-test substitute. Sources are generated synthetic
+fixtures using actual Office/PDF files/parsers, not mocked source mappings.
+
+### Retained final DoD1 dependency diagnostic and reproduction
+
+Final gate `.local/t24-a01-dod1-final.log`, command identical initial except
+basetemp/cache `.local/d24f`/`.local/cd24f` and log path, actual exit1:
+
+```text
+ERROR at setup of test_complete_composition_scoped_supported_history_languages_usage[anthropic]
+tests\integration\test_qdrant_scope.py:213: in fixture
+    await repo.ensure_collection()
+src\rag_core\adapters\vectors\qdrant.py:95: in ensure_collection
+    raise VectorError("vector_dependency_unavailable") from None
+E   rag_core.domain.vectors.VectorError: vector_dependency_unavailable
+27 passed, 1 error in 177.33s (0:02:57)
+```
+
+Failure was fixture collection creation **before any T24/Anthropic call**, not a
+passing gate. Actual `docker compose ... ps` still3Healthy. `docker logs
+rag-core-t24-test-qdrant-1 2>&1 | Select-String -Pattern 'ERROR|WARN| HTTP/1.1" 5| HTTP/1.1" 4' | Select-Object -Last 12`
+exit0 showed only initial expected tmpfs data-loss-on-restart warning, no server
+HTTP4xx/5xx/error. Precise transient client/setup cause remains unknown; no production
+timeout/retry/test/gate changed to hide it. Exact isolated reproduction, exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'; $env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'; $env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'; $env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'; uv run --no-sync pytest tests/integration/test_answer_pipeline.py -k anthropic -v -s --tb=short --basetemp=.local/a24r -o cache_dir=.local/ca24r *> .local/t24-a01-dependency-diagnostic.log
+```
+
+```text
+T24 REAL PG/Qdrant/CPU supported; anthropic synthetic wire, current source/citation/usage/history PASS
+1 passed, 12 deselected in 12.23s
+```
+
+Full unchanged final DoD1 rerun is mandatory below; targeted reproduction does not
+replace it. Same T24-A01, meaningful progress; no three-attempt unchanged blocker.
+
+### D2/D4 quality diagnostics and scoped checks
+
+Broad tracked Python format check also finds41**unchanged baseline** files needing
+formatting (`.local/t24-a01-format.log`, exit1: `41 files would be reformatted,
+110 files already formatted`). All tracked Python files are byte-identical to HEAD
+(only9new task Python files); no unrelated baseline formatting edits. D2 specifically
+requires checks for changed files. Exact9new Python paths format check exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $taskChangedPython=@('src/rag_core/domain/answers.py','src/rag_core/ports/citations.py','src/rag_core/application/answers.py','src/rag_core/application/citations.py','src/rag_core/adapters/persistence/citations.py','tests/fixtures/answer_support.py','tests/integration/test_answer_pipeline.py','tests/security/test_citations.py','tests/unit/test_answers.py'); uv run --no-sync ruff format --check @taskChangedPython *> .local/t24-a01-format-scoped.log
+```
+
+```text
+9 files already formatted
+```
+
+Additional separate commands/logs, all actual exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync mypy src *> .local/t24-a01-mypy.log
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv lock --check --offline *> .local/t24-a01-lock.log
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python scripts/export_openapi.py --check *> .local/t24-a01-openapi.log
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python scripts/check_docs.py *> .local/t24-a01-docs.log
+```
+
+```text
+Success: no issues found in 90 source files
+Resolved 177 packages in 36ms
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (business endpoints unmounted; no runtime query/stream verification)
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 381
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+PowerShell stderr redirection wraps successful uv lock's `Resolved177packages`
+message as NativeCommandError text, but actual process exit0; no lock/dependency
+change. Logs are ignored local runtime state, contain only synthetic fixtures and
+safe code/counts, not secrets. Full regression and final scope/staged review follow.
+
+### DoD-1 — PASS, final full unchanged gate after setup diagnostic
+
+Expected supported answer with permitted mapped evidence; insufficient still invokes
+LLM; invalid IDs/quotes/JSON get one bounded repair, persistent failure invalid_citation;
+provider/config/timeout failures never become insufficient. Exact current source/
+subset/language/owner/version/generation, history-only rewrite, finite prompt/citation
+budgets, usage/timing and cancel gates. Actual command exit0, same source/tests and
+timeouts as previous diagnostic, `.local/t24-a01-dod1-rerun.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'; $env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'; $env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'; $env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'; uv run --no-sync pytest tests/integration/test_answer_pipeline.py tests/security/test_citations.py -v -s --tb=short --basetemp=.local/d24r -o cache_dir=.local/cd24r *> .local/t24-a01-dod1-rerun.log
+```
+
+```text
+collecting ... collected 28 items
+T24 REAL PG/Qdrant/CPU supported; deepseek synthetic wire, current source/citation/usage/history PASS
+T24 REAL PG/Qdrant/CPU supported; anthropic synthetic wire, current source/citation/usage/history PASS
+T24 insufficient/no_relevant_evidence invokes LLM synthetic wire once; no invented citations/contexts
+T24 insufficient/conflicting_evidence invokes LLM synthetic wire once; no invented citations/contexts
+test_exactly_one_repair_and_aggregate_usage[unknown-id] PASSED
+test_exactly_one_repair_and_aggregate_usage[wrong-quote] PASSED
+test_exactly_one_repair_and_aggregate_usage[malformed-json] PASSED
+test_repair_exhausted_is_invalid_citation_not_insufficient PASSED
+test_provider_failure_is_technical_for_empty_evidence[provider_error] PASSED
+test_provider_failure_is_technical_for_empty_evidence[provider_timeout] PASSED
+test_provider_failure_is_technical_for_empty_evidence[llm_invalid_config] PASSED
+test_prompt_budget_timeout_cancel_unknown_profile PASSED
+test_missing_usage_and_only_cited_contexts_and_citation_budget PASSED
+T24 actual PG before-prompt invalidation -> no final/repair success
+T24 actual PG generation invalidation -> no final/repair success
+T24 actual PG repair invalidation -> no final/repair success
+T24 actual PG delete invalidation -> no final/repair success
+T24 actual PG generation-change invalidation -> no final/repair success
+T24 RUNBOOK: 2 QueryResponse +2 ErrorEnvelope JSON examples validated
+28 passed in 149.44s (0:02:29)
+```
+
+Excerpt test names omit repeated runner path prefixes only; results taken from actual
+log. All28unskipped, real PG/Qdrant/CPU models/original source files/tokenizer.
+Generation remains synthetic protocol, same model/system/schema adapters as T23;
+does not claim live semantic/citation adherence or provider availability. Private
+canonical source maps/quote equality/scope enforce provenance, not every claim's
+semantic entailment. No hidden knowledge/history/library fallback or source deletion.
+
+### Retained regression filesystem diagnostic
+
+Initial full regression actual exit1, `.local/t24-a01-regression.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'; $env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'; $env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'; $env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'; uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/r24f -o cache_dir=.local/cr24f *> .local/t24-a01-regression.log
+```
+
+```text
+test_validator_refuses_corruption[extra]
+tests\unit\test_corpus_bilingual.py:326: in test_validator_refuses_corruption
+    bilingual.prepare_bilingual(corpus_root)
+corpus-documents\scripts\prepare_bilingual.py:397: in _publish
+    os.replace(proposed, current)
+E PermissionError: [WinError 5] Access is denied
+FAILED tests/unit/test_corpus_bilingual.py::test_validator_refuses_corruption[extra]
+1 failed, 686 passed in 286.92s (0:04:46)
+```
+
+Actual rename was exclusively `.local/r24f/b6/.downloads/bilingual-stage-a3663d04c155454cbb1a38cf90d7e10b/bilingual`
+to `.local/r24f/b6/bilingual`, inside own generated fixture; repository published
+corpus untouched. Failure occurs before the corruption assertion/T24 code. No
+file/permission/gold/source/test changes or retries added to corpus implementation.
+Reproduction on fresh own basetemp actual exit0, `.local/t24-a01-corpus-diagnostic.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/unit/test_corpus_bilingual.py -k 'validator_refuses_corruption and extra' -v --tb=short --basetemp=.local/f24c -o cache_dir=.local/cf24c *> .local/t24-a01-corpus-diagnostic.log
+```
+
+```text
+test_validator_refuses_corruption[extra] PASSED [100%]
+1 passed, 21 deselected in 1.24s
+```
+
+Observed transient Windows fixture rename/access failure, exact external lock/ACL
+cause not established. All T24 checks and686other regression tests passed, but this
+full run is not counted PASS. Full unchanged687test rerun with fresh ignored basetemp
+`.local/r24r` follows; original scratch/failed fixture retained, no blanket cleanup.
+
+### Regression recovery and final markup review correction
+
+Full unchanged regression rerun command same as above except `.local/r24r`,
+`.local/cr24r`, `.local/t24-a01-regression-rerun.log`, actual exit0:
+
+```text
+687 passed in 256.70s (0:04:16)
+```
+
+Late D5 source-map review caught MD normalization/raw-offset mismatch risk: like
+HTML, Markdown source locators are coarse raw spans; normalized text must not shift
+those into an invented exact raw substring. Domain answers now preserves both MD/
+HTML raw locators; exact normalized quote/owner/version remains mandatory. Two
+adversarial unit cases and two actual file/parser/tokenizer/PG/resolver round trips
+added, extending29unit/30DoD1/7DoD2/691regression cases. Source formats were already
+supported by T13/T16; no new parser or schema/dependency/feature added.
+
+Actual focused unit command exit0, `.local/t24-a01-unit-markup.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/unit/test_answers.py -q --tb=short --basetemp=.local/u24e -o cache_dir=.local/cu24e *> .local/t24-a01-unit-markup.log
+```
+
+```text
+29 passed in 0.23s
+```
+
+Initial extended DoD2 `.local/t24-a01-dod2-markup.log`, exit1, original command
+DoD2 with `.local/s24m`/`.local/cs24m`: `1 failed, 6 passed, 10 deselected in 17.45s`.
+Actual assertion `assert53<=52` on MD offset17..53: fixture mistakenly used
+`Path.read_text`, which universally converts Windows CRLF before counting raw
+characters. Production parser offsets correctly refer to original decoded raw
+bytes. Fix independent original-source reader to `path.read_bytes().decode('utf-8')`,
+preserving raw CRLF; no gold/source/parser/locator/assertion weakening. In-flight
+combined closure run using `.local/d24z` was deliberately cancelled with Ctrl-C
+after this known fixture error; exit1, `.local/t24-a01-dod1-closure.log` incomplete,
+no PASS/regression claim for that interrupted run. Source/failed logs retained.
+
+Separate final extended DoD2 actual exit0, `.local/t24-a01-dod2-closure.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'; $env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'; $env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'; $env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'; uv run --no-sync pytest tests/security/test_citations.py -k 'round_trip or runbook' -v -s --tb=short --basetemp=.local/s24n -o cache_dir=.local/cs24n *> .local/t24-a01-dod2-closure.log
+```
+
+```text
+T24 original pdf -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original docx -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original xlsx -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original pptx -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original md -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original html -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 RUNBOOK: 2 QueryResponse +2 ErrorEnvelope JSON examples validated
+7 passed, 10 deselected in 14.30s
+```
+
+Final source/dependent DoD1 and691test regression are rerun unchanged after this
+last correction; initial687PASS is historical verification, not final-source proof.
+No further changes to implementation intended beyond this reviewed correction.
+
+### Final DoD1 / D2 commands and exact aggregate outcome
+
+Final code after markup/CRLF correction, sequential commands (same env/services/
+CPU/provider configuration above):
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'; $env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'; $env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'; $env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'; uv run --no-sync pytest tests/integration/test_answer_pipeline.py tests/security/test_citations.py -v -s --tb=short --basetemp=.local/d24n -o cache_dir=.local/cd24n *> .local/t24-a01-dod1-completion.log
+uv run --no-sync pytest tests/unit tests/contract tests/security -q --tb=short --basetemp=.local/r24n -o cache_dir=.local/cr24n *> .local/t24-a01-regression-completion.log
+```
+
+First command actual exit0, second exit1; wrapper prints log tails, only starts
+regression when DoD1 succeeds. Separate original DoD2 final7PASS14.30s above. Actual:
+
+```text
+T24 original md -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 original html -> parser/tokenizer/PG -> citation -> original PASS; stale/detached denied; chunks/source retained
+T24 RUNBOOK: 2 QueryResponse +2 ErrorEnvelope JSON examples validated
+30 passed in 130.81s (0:02:10)
+
+FAILED tests/unit/test_corpus_bilingual.py::test_validator_refuses_corruption[extra]
+E PermissionError: [WinError 5] Access is denied
+1 failed, 690 passed in 251.67s (0:04:11)
+```
+
+Again corpus `_publish/os.replace` on own `.local/r24n/b6/` generated fixture before
+corruption assertion; failed full command is **not relabelled PASS**. T24 source/
+critical tests and all other690cases PASS on final code. No blind repeated full-suite
+loop, skipped test or corpus fix: standard pytest last-failed cache re-executes the
+only failed case with same source/assertions/settings and fresh own basetemp. Actual
+retry command/log `.local/t24-a01-regression-lastfailed.log`, exit0:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync pytest tests/unit tests/contract tests/security --lf -q --tb=short --basetemp=.local/q24 -o cache_dir=.local/cr24n *> .local/t24-a01-regression-lastfailed.log
+```
+
+```text
+. [100%]
+1 passed in 1.19s
+```
+
+**D2 task-quality PASS:** all691cases executed,690PASS in full+1PASS last-failed;
+29newunits and17security cases pass on final code; standalone actual DoD1 includes
+13pipeline cases+17security. Distinguish this aggregate outcome from a single691PASS
+full invocation, which was not achieved on final code. Exact Windows external rename
+cause remains an environment limitation (baseline corpus code untouched), not a
+missing T24 feature/credential/real gate. Historical687single full PASS was before
+markup refinement. DoD1/2 commands both successful independently; no mock live claim.
+
+### D1/D4/D5/D6 review and closure boundary
+
+All14scoped paths reviewed: policy/data separation, exact source ID/quote/locator,
+coarse normalized markup spans, ready owner/pairs/languages/subset/snapshot gates,
+strict model response/usage/nulls/prompt bounds/one repair/deadline/cancel, resolver
+stateless semantics and public schema compatibility. No migration/dependency/index/
+provider model/corpus/Scarlet change. README/RUNBOOK examples validated, current
+statuses/DI/operational limits/test commands updated; task and summary carry each
+DoD+actual outcome. D1/D3/D4/D5 PASS; D2 caveat explicit above, D6 needs actual commit.
+
+Final source checks actual exit0, logs `.local/t24-a01-ruff-closure.log`,
+`.local/t24-a01-format-closure.log`, `.local/t24-a01-docs-closure.log`:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync ruff check . *> .local/t24-a01-ruff-closure.log
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; $taskChangedPython=@('src/rag_core/domain/answers.py','src/rag_core/ports/citations.py','src/rag_core/application/answers.py','src/rag_core/application/citations.py','src/rag_core/adapters/persistence/citations.py','tests/fixtures/answer_support.py','tests/integration/test_answer_pipeline.py','tests/security/test_citations.py','tests/unit/test_answers.py'); uv run --no-sync ruff format --check @taskChangedPython *> .local/t24-a01-format-closure.log
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python scripts/check_docs.py *> .local/t24-a01-docs-closure.log
+```
+
+```text
+All checks passed!
+9 files already formatted
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 381
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Mypy90/locked177/OpenAPI PASS already recorded on final source; docs-only closure
+edits do not change source/schema. `git var GIT_AUTHOR_IDENT *> $null` exit0 (identity
+not printed/changed). Initial staged exact14path review/hash/added-line secret scan
+PASS; final re-stage/review and whitespace check required after late source/docs.
+`git check-ignore .local/t24-review.py .local/t24-a01-dod1-rerun.log .local/tokenizers/bge-m3/tokenizer.json`
+exit0 returns all3ignored paths; no runtime helper/log/tokenizer/cache staged.
+
+Intended commit `feat(T24): return grounded answers and verified citations`.
+COMPLETE effective only with inspected successful completion commit; actual hash
+and origin/main equality reported post-execution, never self-hash/amend. T25/T23
+dependencies ready after closure, next task remains TODO, **STOP T24**. No force,
+merge, deployment, original-source/app-volume/model-cache/scratch deletion.
+
+Final operational/docs checks actual exit0:
+
+```powershell
+docker compose -p rag-core-t24-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop
+docker ps --filter 'name=rag-core-t24-test' --format '{{.Names}} {{.Status}}'
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python scripts/check_docs.py *> .local/t24-a01-docs-final.log
+```
+
+```text
+Container rag-core-t24-test-qdrant-1 Stopped
+Container rag-core-t24-test-postgres-1 Stopped
+Container rag-core-t24-test-inference-1 Stopped
+[own-project docker ps: no running containers]
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 383
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+```
+
+Stopped only own test containers; no down-v/delete or app services touched. Final
+scoped stage/review/commit/push commands executed next, actual hash returned outside
+its own commit. Task status COMPLETE is conditional on successful inspected commit.
+
+Final reviewed candidate: actual staged whitespace/scope checks exit0; only
+existing CRLF/global-ignore/scratch access warnings, baseline scratch retained:
+
+```powershell
+git add -- README.md RUNBOOK.md docs/tasks.md docs/handoffs.md docs/implementation-summary.md src/rag_core/domain/answers.py src/rag_core/ports/citations.py src/rag_core/application/answers.py src/rag_core/application/citations.py src/rag_core/adapters/persistence/citations.py tests/fixtures/answer_support.py tests/integration/test_answer_pipeline.py tests/security/test_citations.py tests/unit/test_answers.py
+git diff --cached --check
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python .local/t24-review.py *> .local/t24-a01-review-final.log
+```
+
+```text
+PASS exact14T24staged paths and filtered worktree/index hashes
+PASS added-line secret scan; no raw corpus/cache/credentials/artifacts staged
+PASS unchanged other task statuses; T25 TODO; no public schema/dependency/migration change
+```
+
+One final re-stage of this evidence paragraph, same14path review/whitespace/docs
+checks, then `git commit -m "feat(T24): return grounded answers and verified citations"`.
+After inspected commit, user-authorized normal `git push origin HEAD:refs/heads/main`
+and remote hash equality check. No additional task work; completion outcome and
+actual hash reported after execution (not embedded in its own commit).
