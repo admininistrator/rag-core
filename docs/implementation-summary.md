@@ -440,3 +440,43 @@ Không thêm entry “đã triển khai” cho task TODO; không copy plan thàn
 - **Streaming/usage/rewrite:** incremental byte-line UTF-8 SSE handles split multibyte characters, CR/LF/CRLF, multiline data/comments. Distinct checked provider terminal/order schemas; DeepSeek final-finish usage plus legacy usage-only chunk, reasoning excluded from answer. Anthropic cumulative output and uncached+cache-read+cache-creation input totals; missing counts null. Future named Anthropic events ignored per official versioning, malformed known events fail. Retry only transient HTTP408/429/5xx/transport/timeouts and Anthropic in-band overloaded/rate-limit BEFORE any emitted delta, whitespace included. Cancel/early aclose releases upstream, timeout context never spans caller yield. Rewrite uses fixed trusted policy + JSON untrusted question/history, strict question-only EN/VI schema; old history/citations cannot become evidence. Provider failures remain safe technical LlmError, not insufficient_evidence.
 - **Verification/limits:** separate127protocolPASS4.63s and18configPASS2.22s (109deselected intentional separate config gate); actual Anthropic SDK/HTTPX parsing, synthetic wire responses, no live key/service required. 645fullregressionPASS200.23s with real PG/Qdrant/CPU service, Ruff/format/mypy85/locked177/unchangedOpenAPI/docs PASS; evidence in [H-T23-A01](handoffs.md#h-t23-a01). Does not verify model availability/quality, public HTTP/SSE, factual generation/citations, prompt injection compliance by a real model, or provider billing/latency. Real-provider smoke remains T26. SDK handles HTTP error bodies; wire bounds apply to successful JSON/SSE bodies. Context checks remain T20/T22/T24 caller authority.
 - **Docs/closure:** README/RUNBOOK status, DI/native schemas, config/env/bounds/errors/stream lifecycle, usage semantics, protocol tests and explicitly planned T26 live commands updated with source references. Task/checkpoint/evidence updated; no prompt corpus/Scarlet/production Compose changes. Completion subject `feat(T23): support DeepSeek and Anthropic generation`; actual hash/authorized push equality reported after inspected execution, not embedded in its own commit. T24 dependencies T23/T22/T16 ready only after closure, remains TODO; STOP T23.
+
+<a id="s-t26-a01-resumed"></a>
+## Phase 5 — T26-A01 resumed completion (2026-10-08)
+
+Direct Codex agent; exact runtime model/effort unavailable, no subagents. Resumed
+checkpoint `1f5b7efb23c1056bfc82ae6561cdba71a78835b3` on main after user configured
+ignored .env; no credentials or user documents committed. Prior public API/CLI/
+runtime implementation remains in [S-T26-A01](#s-t26-a01).
+
+- Actual live DeepSeek omitted answer markers/shortened quotes initially. Trusted
+  generation/repair policy now explicitly requires literal [cN] and entire exact
+  quote. Exact validation and one-repair limit remain unchanged.
+- Actual Haiku rewrite returned fenced JSON despite raw JSON policy. Added private
+  static GenerationRequest.json_schema and native SDK output_config JSON schemas
+  for Anthropic rewrite/JSON/SSE. No fence stripping or parsing relaxation. SDK
+  wire transformations do not change original core bounds. Schemas are capped16KiB,
+  charged to both provider and answer prompt budgets, contain no private data or
+  dynamic scope IDs, and cannot enter through public QueryRequest. Unsupported
+  native-schema models return technical failure without switching model/provider.
+- No DB/index/public API payload migration, dependency/lock/model/fingerprint
+  change. Existing SDK1.11.0 supports the native feature. Eight provider contract
+  cases, one public schema-injection refusal and two observer privacy/cleanup unit
+  cases added. Transparent test-only observer reports redacted diagnostics, never
+  supplies or changes provider results.
+- Final DoD1 six real public cases PASS180.29s; native synthetic-wire fixtures
+  include standalone actual CLI process and retained S3/index after tombstone.
+  DoD2 real DeepSeek PASS110.91s and Anthropic PASS74.99s: authenticated JSON EN,
+  SSE VI/history, insufficient JSON/SSE, citations/usage/inert instruction/retention.
+  673 unit/contract/auth regression PASS176.83s; real-service regression and final
+  quality/image/docs review recorded in [H-T26-A01 resumed](handoffs.md#h-t26-a01-resumed).
+- Initial live failures and Windows TEMP/container mount failures are retained in
+  evidence; no lowered gate, corpus/gold edits or mock substitution. README/RUNBOOK
+  now distinguish verified API/live smoke from future corpus/load/admin/restore.
+
+Completion subject `test(T26): verify public RAG API with live providers`; actual
+hash and authorized normal origin/main equality reported after commit. COMPLETE
+requires successful inspected commit. T27 dependencies T26/T10 then ready; T27
+remains TODO and this session stops. No deployment/Scarlet/full-corpus/GPU/SLA claim.
+
+Final affected regression:83cases PASS across bounded real-service subprocesses (60nonstream +23stream), with original exit247/-9/OOM evidence retained. No raised2GiB budget; every stream node collected/executed, no skip. Final image97source/live-test-observer hashes match. Quality/docs/scope/secret/commit boundary details in H-T26-A01 resumed.

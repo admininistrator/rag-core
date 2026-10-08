@@ -2,14 +2,14 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T26 public API IMPLEMENTED; real Docker/HTTP acceptance PASS, live provider gates BLOCKED pending keys/models.** T01–T25 verification remains valid. All 13 public/health operations are mounted; authenticated business services require trusted config. Native provider wire fixtures are synthetic and do not satisfy live gates. Admin/evaluation/load/restore remain T27–T36. [T26 checkpoint](docs/handoffs.md#h-t26-a01).
+> **T26 VERIFIED local public API and both real provider smoke gates.** All 13 public/health operations are mounted behind trusted configuration. DeepSeek `deepseek-flash` and Anthropic `claude-haiku-4-5-20251001` passed independently; synthetic wire fixtures remain separate protocol evidence. Admin/evaluation/load/restore remain T27–T36. [T26 completion evidence](docs/handoffs.md#h-t26-a01-resumed).
 
 ## Phạm vi đã chốt
 
 T25-A01 đã được chốt hợp đồng: `evidence` là scoped allowlist trước generation,
 `done` là subset đã validate như JSON T24. POST SSE router và bounded admission/
 buffers/heartbeat/cancellation đã VERIFIED trên loopback HTTP (23DoD1 +8DoD2 tests).
-[Evidence](docs/handoffs.md#h-t25-a01); T26 đã mount production business routes, live gates còn BLOCKED.
+[Evidence](docs/handoffs.md#h-t25-a01); T26 đã mount production business routes và verify hai live provider gates.
 
 - Default RAG: toàn bộ tài liệu đã upload/đăng ký cho **session hiện tại**.
 - Document RAG: tập tài liệu được chọn trong session hiện tại.
@@ -105,7 +105,7 @@ History chỉ là dữ liệu cho rewrite, không vào retrieval/evidence contex
 
 ## Provider adapters T23
 
-**VERIFIED protocol/configuration tests; live verification remains T26.**
+**VERIFIED protocol/configuration tests; T26 separately verified both real providers.**
 `DeepSeekProvider` uses HTTPX Chat Completions; `AnthropicProvider` uses the pinned
 Anthropic1.11.0 SDK and native Messages schema. Both implement private
 `LlmProvider.generate/stream` and T20 `QueryRewriter.rewrite`. System policy stays
@@ -147,7 +147,7 @@ call repair được cộng, thiếu bất kỳ count nào giữ `null`. Context
 đầu của current chunk, không lưu transcript/citation cache hay phát storage URL.
 [RUNBOOK T24](RUNBOOK.md#r06-t24) có DI, errors và JSON examples;
 [evidence](docs/handoffs.md#h-t24-a01) phân biệt PG/Qdrant/BGE/source thật với LLM
-protocol fixtures synthetic. Live model behavior còn T26; public HTTP/SSE còn T25/T26.
+protocol fixtures synthetic. T26 đã verify hai live provider smoke và public HTTP/SSE; full corpus quality còn T31.
 Citation validation kiểm provenance/quote, không chứng minh semantic entailment của
 mọi model claim; calibration/corpus quality còn T31.
 
@@ -169,11 +169,11 @@ One process shares one budget; full15–20user resource/load acceptance remains 
 
 [RUNBOOK R07](RUNBOOK.md#r07) gives trusted DI/config, parser pseudocode, actual
 HTTPX example and individual test commands. Real HTTP/JWT/PG/Qdrant/BGE CPU tests
-use synthetic DeepSeek/Anthropic native HTTP fixtures; T26 still requires both
+use synthetic DeepSeek/Anthropic native HTTP fixtures; T26 separately verified both
 live-provider smoke gates. No Scarlet integration/deployment claim.
 
 
-## Public API T26 — live verification pending
+## Public API T26 — VERIFIED local and live
 
 `create_app` mounts sessions/documents/jobs/query/stream/citation routes using the
 existing v1 contracts. `API_CONFIG_FILE` selects a trusted provider, model/index
@@ -210,8 +210,13 @@ must already be prepared; no application volumes are used.
 `uv run python scripts/demo_app.py --config .local/demo.json` is an independent
 backend CLI with app-owned S3 upload/history and tombstone cleanup. Exact config,
 Compose paths, errors, evidence and current limits: [RUNBOOK T26](RUNBOOK.md#r05-t26).
-Only verified `done` is persisted; source remains app-owned. T26 is NOT COMPLETE
-until both live smoke gates and the inspected completion commit succeed.
+Only verified `done` is persisted; source remains app-owned. Six public acceptance
+cases and both independent real provider gates passed on the final source.
+Anthropic rewrite/answers use trusted static native JSON schemas; original strict
+core validation, exact quotes and citation scope gates remain mandatory. No schema
+can be supplied through public query/history/document input. Unsupported models
+return technical errors without fallback. See the RUNBOOK for schema budgets and
+model compatibility. [Actual evidence](docs/handoffs.md#h-t26-a01-resumed).
 
 ## Authentication T09
 
@@ -469,7 +474,7 @@ và trước return; detach/delete/reindex làm abort. Không có query cache ho
 counts/timing/score kind; không query/history/text/identity/chunk IDs. `candidates`
 là metadata riêng tư có scope, không phải log. RRF/cosine chưa xác định đủ bằng chứng;
 unrelated dense query vẫn có thể trả candidates. Rerank/hydration/evidence T22
-VERIFIED local; public query T26 còn DESIGNED; full corpus quality T31 chưa đo.
+VERIFIED local; public query T26 VERIFIED local/live; full corpus quality T31 chưa đo.
 
 Setup model image/cache theo [RUNBOOK T17](RUNBOOK.md#r09-t17), test secrets theo R03:
 
@@ -544,7 +549,7 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T09 VERIFIED authentication:** service identity + RS256 JWT, local issuer, bounded JWKS rotation/cache và HTTP acceptance.
 - **T10 VERIFIED metadata:** PG migrations, owner-bound session/link repository, revision và exact version/generation snapshots.
 - **T11 VERIFIED storage reader:** HEAD/GET theo app/alias/bucket/prefix cấu hình; checksum hoặc version ID, giới hạn stream/temp, MinIO IAM reader chỉ đọc kiểm chứng thật. [RUNBOOK R04](RUNBOOK.md#r04) có cấu hình/test/trust contract.
-- **T12 VERIFIED registration/outbox:** real MinIO/PG/Redis integration, owner/session idempotency, detach, retry, crash redelivery và dispatcher image/CLI. Business HTTP mount vẫn DESIGNED ở T26; worker T19 đã VERIFIED.
+- **T12 VERIFIED registration/outbox:** real MinIO/PG/Redis integration, owner/session idempotency, detach, retry, crash redelivery và dispatcher image/CLI. Business HTTP mount VERIFIED ở T26; worker T19 đã VERIFIED.
 - **T13 VERIFIED text parsers:** PDF native text, DOCX, TXT/MD/HTML EN/VI; provenance và process/MIME/size/archive/time/cleanup gates.
 - **T14 VERIFIED Office tables:** XLSX sheet/cells/formula cache, CSV records và PPTX slide/shape; common headers/units và archive bounds.
 - **T15 VERIFIED OCR:** Docker CPU Tesseract vie/eng + Docling stage, page/image provenance, quality/error/cancel/process bounds; 20 full + 13 separate status checks thật.
@@ -552,9 +557,9 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T18 VERIFIED:** exact-pair scoped Qdrant search/fetch/neighbors, versioned collections, idempotent upserts và PG-guarded generation cleanup.
 - **T19 VERIFIED:** ingestion orchestration, fenced leases/recovery, durable chunks/source maps và atomic ready publication; gates/evidence ở trên.
 - **T20–T21 VERIFIED:** domain registry/scoped preparation/history rewrite port và bounded dense/hybrid retrieval với redacted trace.
-- **T23 VERIFIED protocol/config:** DeepSeek HTTPX và Anthropic SDK generate/stream/rewrite; synthetic fixtures, independent secrets/models/budgets. Live smoke remains T26.
+- **T23 VERIFIED protocol/config:** DeepSeek HTTPX và Anthropic SDK generate/stream/rewrite; synthetic fixtures, independent secrets/models/budgets. T26 separately verified both live smoke gates.
 - **T24 VERIFIED answer/citation fixtures; T25 VERIFIED opt-in SSE HTTP:** scoped allowlist/final subset, bounded admission/buffers/heartbeat/cancellation; LLM protocol vẫn synthetic.
-- **T26:** production business route wiring, lifecycle/end-to-end và hai live provider smokes còn TODO.
+- **T26 VERIFIED:** production business routes, independent app CLI/lifecycle and two real provider gates; evidence [H-T26-A01 resumed](docs/handoffs.md#h-t26-a01-resumed).
 - **T27–T29:** admin URL/login, UI workflows.
 - **T30–T34:** benchmark reports, performance, reliability, backup/restore.
 - **T35–T36:** quickstart tích hợp đã kiểm chứng và trạng thái nghiệm thu cuối.

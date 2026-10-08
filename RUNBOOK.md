@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T26 public API IMPLEMENTED; real Docker/HTTP acceptance PASS; live provider gates BLOCKED pending keys/models.** T01–T25 verification remains valid; all 13 public/health operations are mounted and business services require trusted config. Native LLM wire fixtures do not satisfy live gates. Admin/evaluation/load/restore remain T27–T36. [T26 checkpoint](docs/handoffs.md#h-t26-a01).
+> **T26 VERIFIED local public API and both real provider smoke gates.** All 13 public/health operations are mounted behind trusted configuration. DeepSeek `deepseek-flash` and Anthropic `claude-haiku-4-5-20251001` passed independently; synthetic wire fixtures remain separate protocol evidence. Admin/evaluation/load/restore remain T27–T36. [T26 completion evidence](docs/handoffs.md#h-t26-a01-resumed).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -30,12 +30,12 @@
 | Shared embedding/reranker service | VERIFIED real CPU/GPU weights/HTTP, queue/limits/cancel and resource smoke | T17 |
 | Scoped Qdrant repository | VERIFIED real PG/Qdrant; chưa nối public query; worker T19 đã VERIFIED | T18 |
 | Index ingestion orchestration/publication | VERIFIED real MinIO/PG/Redis/Qdrant/CPU model/OCR; evidence ở dưới | T19 |
-| Domain preparation/history rewrite port | VERIFIED scoped PG/Qdrant/tokenizer; adapters T23 protocol-verified, live pending T26 | T20/T23 |
+| Domain preparation/history rewrite port | VERIFIED scoped PG/Qdrant/tokenizer; adapters T23 protocol-verified, both live providers verified T26 | T20/T23 |
 | Dense/hybrid retrieval | VERIFIED CPU BGE-M3/PG/Qdrant; bounded metadata candidates/neighbors/redacted trace | T21 |
 | Evidence selection | VERIFIED real CPU reranker/PG/Qdrant; bounded passages, conservative numeric conflicts and scoped context gate | T22 |
-| Provider adapters/config | VERIFIED synthetic protocols; DeepSeek HTTPX/Anthropic SDK; live pending T26 | T23 |
-| Answer assembly/citation resolver | VERIFIED actual PG/Qdrant/CPU/source; LLM wire synthetic, live pending T26 | T24 |
-| Query HTTP/SSE | T25 transport verified; T26 full DI/public HTTP locally passes with synthetic LLM wire, live gates BLOCKED | T25–T26 |
+| Provider adapters/config | VERIFIED synthetic protocols and T26 real live; DeepSeek HTTPX/Anthropic SDK | T23 |
+| Answer assembly/citation resolver | VERIFIED actual PG/Qdrant/CPU/source; synthetic wire and independent live T26 gates | T24 |
+| Query HTTP/SSE | T25 transport verified; T26 full DI/public HTTP local acceptance and both real provider gates PASS | T25–T26 |
 | Admin UI | DESIGNED | T27–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
@@ -269,7 +269,7 @@ crypto/JWKS/HTTP; không gọi DB/LLM và không claim session authorization. Ev
 <a id="r04"></a>
 ## R04. Session mapping và upload registration
 
-**T10 schema/session repository/scope VERIFIED trên PG thật; T11 storage reader VERIFIED trên MinIO thật; T12 registration/outbox VERIFIED trên PG/MinIO/Redis thật; business HTTP vẫn DESIGNED — T26; worker T19 đã VERIFIED.**
+**T10 schema/session repository/scope VERIFIED trên PG thật; T11 storage reader VERIFIED trên MinIO thật; T12 registration/outbox VERIFIED trên PG/MinIO/Redis thật; business HTTP VERIFIED ở T26; worker T19 đã VERIFIED.**
 
 ### Schema ownership và migration T10
 
@@ -466,8 +466,8 @@ uv run python -m rag_core.adapters.broker.dispatcher
 <a id="r05"></a>
 ## R05. Endpoint inventory và lỗi
 
-**T26 all public routes IMPLEMENTED, real Docker/HTTP acceptance PASS;
-live DeepSeek/Anthropic gates BLOCKED pending independent keys/models.**
+**T26 all public routes VERIFIED locally; real Docker/HTTP acceptance and
+independent DeepSeek/Anthropic live gates PASS.**
 All v1 operations use T09 authenticated app/subject and current-session repositories.
 No business config means dependency_unavailable503; no auth registry means all v1
 requests503; invalid supplied registry/config prevents startup. Health probes check
@@ -626,7 +626,7 @@ Compatibility: đây là design v1 đầu tiên, không có client business/runt
 <a id="r06"></a>
 ## R06. Query, history và languages
 
-**T03 contracts, T20 domain preparation/history budgets, T21 retrieval và T22 evidence selection VERIFIED; generation/public query HTTP còn DESIGNED — T23–T26.**
+**T03 contracts, T20 domain preparation/history budgets, T21 retrieval và T22 evidence selection VERIFIED; generation/public query HTTP VERIFIED ở T23–T26 (local fixtures và hai live smoke riêng).**
 
 - Bắt buộc session_id và câu hỏi; `domain` mặc định `default` nếu vắng mặt. Examples gửi rõ domain để người tích hợp dễ đối chiếu.
 - Default: tất cả ready documents của session; không nhận document subset.
@@ -987,8 +987,23 @@ cache-creation tokens; streaming output updates are cumulative, never summed. No
 prompt/output/history text in repr. `rewrite` wraps the T20 untrusted `RewriteInput`
 as JSON under fixed policy, requests JSON, strictly validates only standalone question
 and original EN/VI question language, and never answers or promotes old citations.
-Anthropic JSON mode uses system instruction plus strict local validation, without
-model-specific structured-output/tool features. Invalid rewrite has no hidden repair.
+T26 uses native Anthropic `output_config.format` JSON schemas for rewrite and
+answers, including streaming, through the locked SDK1.11.0. Private
+`GenerationRequest.json_schema` is set only from static `RewriteResult`/`ModelAnswer`
+shapes; public QueryRequest forbids it. The SDK transforms unsupported wire
+constraints into descriptions; original Pydantic length/extra-field constraints,
+raw JSON parsing, exact allowlisted quotes/IDs and scope validation still run in
+core. Invalid rewrite has no hidden repair and answers retain one repair maximum.
+DeepSeek retains native JSON-object mode plus the same strict core validation.
+No tools, prefill, fence stripping, model switching or provider fallback is used.
+Schema bytes are bounded to16KiB and charged to provider byte/context guards;
+answer assembly also charges schema to its pinned tokenizer and prompt-byte budget.
+Static schemas contain no document text, quotes or dynamic allowed IDs. Provider
+grammar caching therefore receives only static shapes. Anthropic JSON use requires
+a model supporting native structured outputs; Haiku4.5 was verified here.
+Unsupported models fail technically; this smoke does not verify all model IDs.
+Official [structured-output documentation](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)
+was checked for this fix. T23 prompt-only behavior is historical evidence.
 
 Retry transient transport/timeout, HTTP408/429/5xx and Anthropic in-band
 rate-limit/overloaded errors within total deadline. Permanent HTTP/auth errors,
@@ -1020,12 +1035,15 @@ HTTPX transports and Anthropic SDK; they verify request/stream/error handling, n
 model behavior or availability. [H-T23-A01](docs/handoffs.md#h-t23-a01) holds actual
 DoD outputs, revisions, retained diagnostics and quality/regression evidence.
 
-**Planned T26 live verification (not executed here):** supply independent funded keys
-and currently available model IDs; verify each provider through mounted authenticated
-`POST /v1/query` and `/v1/query/stream` for EN/VI, answer/citation/usage, insufficient
-evidence and disconnect/error handling as T26 requires. Commands/tests for that gate
-are still planned until T26 creates them: `uv run python scripts/smoke_llm.py --provider deepseek`
-and `uv run python scripts/smoke_llm.py --provider anthropic`. Never label these fixtures as live PASS.
+**T26 real live verification executed separately:** `uv run python scripts/smoke_llm.py --provider deepseek`
+and `uv run python scripts/smoke_llm.py --provider anthropic` both passed through
+mounted authenticated JSON/SSE for EN/VI/history, usage/citations, insufficient
+JSON/SSE and inert instruction/source retention. Actual models were `deepseek-flash`
+and `claude-haiku-4-5-20251001`. Independent keys remain ignored/operator-owned;
+missing config exits2, without skips or fallback. [Completion evidence](docs/handoffs.md#h-t26-a01-resumed).
+Synthetic T23 fixtures continue to prove protocol/error/cancellation handling;
+they are never labeled live. Live smoke is small and does not establish full-corpus
+quality, broad injection compliance, load SLA or production issuer/deployment.
 
 Official references checked 2026-10-06:
 [DeepSeek Chat Completions](https://api-docs.deepseek.com/api/create-chat-completion/),
@@ -1164,7 +1182,7 @@ Scarlet có thể dùng contexts/citations cùng answer của core làm input LL
 allowlist/final subset on2026-10-07. `StreamingAnswerPipeline(preparation,retrieval,
 selector,assembler,policy=None)` uses the same T24 prompt/source/final validator;
 `build_stream_router(pipeline,admission,policy=None)` returns an opt-in POST router.
-Production `create_app` now mounts T26 public DI/routes; mandatory live LLM smoke remains pending. T25 tests mount this router behind real T09 auth on
+Production `create_app` now mounts T26 public DI/routes; both mandatory live LLM smoke gates passed separately. T25 tests mount this router behind real T09 auth on
 loopback HTTP, with real PG/Qdrant/BGE CPU and synthetic native-provider HTTP.
 [Evidence/checkpoint](docs/handoffs.md#h-t25-a01).
 
@@ -1271,7 +1289,7 @@ T26 đã thêm independent backend CLI demo; T35 vẫn chịu trách nhiệm sta
 <a id="r08"></a>
 ## R08. Citations, xóa chat và retained index
 
-**T03 locator schemas, T10 PG session scope/lifecycle, T13–T16 provenance và T24 scoped PG citation resolver VERIFIED local; public resolver HTTP T26 và stream revalidation T25 đã IMPLEMENTED/locally verified; live gates pending.**
+**T03 locator schemas, T10 PG session scope/lifecycle, T13–T16 provenance và T24 scoped PG citation resolver VERIFIED local; public resolver HTTP T26 và stream revalidation T25 đã IMPLEMENTED/locally verified; both live smoke gates PASS.**
 
 | Format | Vị trí nguồn |
 | --- | --- |

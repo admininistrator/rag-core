@@ -6,7 +6,11 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
-- **Current 2026-10-07 / T26-A01 BLOCKED, NOT COMPLETE:**30scopedpaths implement all public routes/trusted lifespan DI/shared JSON-SSE admission/final JSON scope+disconnect/safe errors/standalone CLI/live harness. Final DoD1 actual Docker/HTTP/JWT/S3/PG/Redis/Celery/Qdrant/CPU6PASS108.24s (LLM wire synthetic), including actual CLI subprocess. Both exact provider commands exit2 missing api_key/model; no live call.662unit/contract/authPASS207.87s; real regression69PASS1FAIL472.32s and unchanged focused2PASS36.42s, original full exit1 retained. Ruff/format19/mypy97/lock177/OpenAPI/docs/image97hashes/Torch-absent/review PASS. [H-T26-A01](#h-t26-a01), [S-T26-A01](implementation-summary.md#s-t26-a01). Initial parallel-suite collision/failures retained; final services serial/per-case DB+broker. Checkpoint subject `test(T26): checkpoint public API pending live credentials`, not completion; actual inspected hash/authorized origin/main push equality reported after execution. Configure funded keys/models in ignored .env, resume SAME attempt and both live gates before completion. T27 NOT READY. Original T07 scratch preserved; no Scarlet/source/cache/volume deletion/merge/deploy/drain; STOP T26.
+- **Current 2026-10-08 / T26-A01 acceptance closure:** direct Codex/exact model-effort unavailable/no subagents. Resumed checkpoint1f5b7efb23c1056bfc82ae6561cdba71a78835b3 after ignored .env configured. Final DoD1 six real public cases PASS180.29s; DoD2 actual DeepSeek deepseek-flash PASS110.91s and Anthropic claude-haiku-4-5-20251001 PASS74.99s, JSON/SSE/EN-VI/history/insufficient/citations/usage/retention. Static native Anthropic JSON schema/private port with unchanged strict parsing/bounds/exact quotes/scope; no fallback or model switch.673unit-contract-auth PASS176.83s;83affected service cases PASS across bounded subprocesses, original Windows/mount/OOM/live failures retained.97source/image hashes equal; API13ops/Torch absent; quality/lock177/OpenAPI/docs/scope/secret review PASS. [H-T26-A01 resumed](#h-t26-a01-resumed), [S-T26-A01 resumed](implementation-summary.md#s-t26-a01-resumed). COMPLETE/D6 effective only with inspected successful `test(T26): verify public RAG API with live providers` commit; actual hash/authorized origin/main equality returned post-execution. Stop own isolated project only, retain volumes/cache/source/.env/four legacy scratch paths; no deploy/Scarlet/load/full-corpus claim. T27 dependencies T26/T10 ready after closure, remains TODO; STOP T26, no drain.
+
+- **Historical 2026-10-07 / T26-A01 RESUMED, IN_PROGRESS:** user configured ignored `.env`; same attempt after checkpoint1f5b7efb23c1056bfc82ae6561cdba71a78835b3 verified equal origin/main. Both provider key/model fields set, secret values not printed. Legacy scratch retained. Revalidate trusted provider config and run mandatory live DeepSeek/Anthropic gates serially on isolated real stack; preserve prior evidence. Completion only after live gates/all applicable DoD and inspected commit/push; STOP T26. Exact model-effort unavailable, direct agent, no subagents.
+
+- **Historical 2026-10-07 / T26-A01 BLOCKED, NOT COMPLETE:**30scopedpaths implement all public routes/trusted lifespan DI/shared JSON-SSE admission/final JSON scope+disconnect/safe errors/standalone CLI/live harness. Final DoD1 actual Docker/HTTP/JWT/S3/PG/Redis/Celery/Qdrant/CPU6PASS108.24s (LLM wire synthetic), including actual CLI subprocess. Both exact provider commands exit2 missing api_key/model; no live call.662unit/contract/authPASS207.87s; real regression69PASS1FAIL472.32s and unchanged focused2PASS36.42s, original full exit1 retained. Ruff/format19/mypy97/lock177/OpenAPI/docs/image97hashes/Torch-absent/review PASS. [H-T26-A01](#h-t26-a01), [S-T26-A01](implementation-summary.md#s-t26-a01). Initial parallel-suite collision/failures retained; final services serial/per-case DB+broker. Checkpoint subject `test(T26): checkpoint public API pending live credentials`, not completion; actual inspected hash/authorized origin/main push equality reported after execution. Configure funded keys/models in ignored .env, resume SAME attempt and both live gates before completion. T27 NOT READY. Original T07 scratch preserved; no Scarlet/source/cache/volume deletion/merge/deploy/drain; STOP T26.
 
 - **Current 2026-10-07 / T25-A01 acceptance closure:** direct agent/exactmodel-effortunavailable/no subagents, baseline main/e100345 verified equal origin/main; T07 scratch preserved. User approved early scoped allowlist/final exact subset.19paths (8source/5test/6docs): optional authenticated POST SSE, shared T24 prompt/source/final validation, bounded admission/queue/sentence/wire/heartbeat/deadlines, per-event send-boundary scope and shielded upstream close before terminal. Final separate DoD123PASS162.70s/DoD28PASS59.32s realHTTP/JWT/PG/Qdrant/BGE CPU; nativeLLMHTTPsynthetic.30unchangedT24PASS140.69s +709fullregressionPASS288.07s +101focusedunit/contractPASS2.58s; Ruff/scoped13format/mypy94/lock177/unchangedOpenAPI/docs PASS. Initial17PASS/4FAIL retained; fixes verified, no unresolved blocker. D1–D5 reviewed; COMPLETE/D6 effective only after inspected19path `feat(T25): stream scoped answers with cancellation` commit, actual hash/authorized normal origin/main equality reported post-execution. [H-T25-A01](#h-t25-a01), [S-T25-A01](implementation-summary.md#s-t25-a01). Production full DI/public mounting/live two-provider smoke T26; bytes irrevocable/revision-send race/incomplete disconnect/one-process budget documented, load T33. Own project stopped without source/cache/volume deletion. T26 dependencies ready after successful closure, remains TODO/keys+live checks in that task; STOP T25, no drain/merge/deploy.
 
@@ -10145,3 +10149,283 @@ D6 checkpoint only, not COMPLETE; commit subject recorded before execution, hash
 never embedded into itself. Actual final stage/commit/hash/push returned to user.
 Required next action is supplying independent funded keys/models and resuming
 T26-A01 for both live commands, followed by all-gates completion commit. No T27 work.
+
+<a id="h-t26-a01-resumed"></a>
+## T26-A01 resumed — final source/live evidence (2026-10-07–08 Asia/Bangkok)
+
+Direct Codex, exact model/effort unavailable, no subagents. Cwd for every command
+below: `C:\Users\Admin\Documents\GitHub\rag-core`. Resumed main checkpoint
+`1f5b7efb23c1056bfc82ae6561cdba71a78835b3`, verified equal origin/main; four legacy
+T07 scratch paths retained. User configured ignored .env and authorized completion
+commit/normal push. Original checkpoint/failure evidence above remains historical.
+
+### Native provider failures and fixes
+
+Actual DeepSeek initially returned missing answer marker/shortened quote: first
+resumed command exit1 (29.19s), diagnostic repeat exit1 (45.72s). Logs
+`.local/t26-live-deepseek-resumed.log` and `.local/t26-live-deepseek-diagnostic.log`.
+Trusted prompt/repair now spells out literal [cN] and entire exact allowlisted
+quote; core validation/one-repair limit unchanged. Intermediate policy smoke
+PASS54.74s is retained but final source is verified again below.
+
+Actual Anthropic first fixture startup timeout exit1 (68.12s); cause not proven.
+Offline diagnostic import2.347s/pool0.122s/SDK0.001s/tokenizer0.695s did not
+reproduce. Subsequent real rewrite failed502/llm_invalid_rewrite (41.69s then79.33s),
+even with raw JSON policy. Safe native probe observed103chars/Markdown fence true/
+raw JSON invalid, output withheld. Logs `.local/t26-live-anthropic-resumed.log`,
+`t26-live-anthropic-final.log`, `t26-live-anthropic-rawjson.log`,
+`t26-anthropic-rewrite-probe.log`, `t26-anthropic-rewrite-shape.log`,
+`t26-anthropic-rewrite-shape-rawjson.log` and `t26-anthropic-startup-diagnostic-fixed.log`
+under ignored .local. Initial offline helper str/Path error and two recovered
+automatic approval-review timeouts retained, not claimed as successful checks.
+
+Private trusted static JSON schemas now use native Anthropic output_config with
+locked SDK transform. Original strict raw JSON, Pydantic bounds, exact quote/ID,
+scope and output limits remain authoritative. No fence stripping, tools, prefill,
+fallback/model switch or extra repairs. Schema16KiB bound/context/prompt charges,
+public injection refusal and original-shape nonmutation covered by new contracts.
+Static shapes contain no document text/quotes/scope IDs. Native compatibility
+confirmed for configured Haiku4.5; unsupported model technical failure remains.
+Official structured-output docs checked; no dependency/DB/index/public schema change.
+
+### DoD-1 — public API with local Docker dependencies
+
+Command: `docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm public-tests`
+(runner executes `uv run pytest tests/e2e/test_public_api.py -v -s --tb=short`).
+Exit0, expected six cases/all lifecycle gates; actual **6 passed in180.29s**.
+Log `.local/t26-resumed-dod1-final.log`, actual excerpt:
+
+```text
+T26 actual public HTTP lifecycle deepseek synthetic wire: app upload/history/JSON/SSE/delete + source/chunks/vectors retained PASS
+T26 actual public HTTP lifecycle anthropic synthetic wire: app upload/history/JSON/SSE/delete + source/chunks/vectors retained PASS
+T26 actual HTTP owner/app/session/idempotency/citation/detach/no-resurrection PASS
+T26 public validation redaction + genuine pipeline insufficient (LLM wire synthetic) PASS
+T26 actual HTTP JSON: shared JSON/SSE 429, disconnected work cancelled, serialization scope gate PASS
+T26 independent CLI subprocess: actual app S3 upload/dispatcher/worker/HTTP/own history/SSE/tombstone/source hash PASS
+======================== 6 passed in 180.29s (0:03:00) =========================
+```
+
+Real HTTP/JWT/PG17/Redis/Celery/MinIO versioned app-owned S3/Qdrant/CPU BGE-M3 and
+reranker, pinned fingerprint f25d7370e6e501a36aaba4da5c487ea790909d1a400d410e01f32348c34f534b.
+Model owner is separate; no per-API Torch/model copy. These six cases use synthetic
+native LLM wire for deterministic error/race/admission testing, separate from live.
+Includes actual independent CLI subprocess, upload/register/poll/history/JSON/SSE/
+citations/detach/delete, unchanged source hash/index, no new-session inheritance,
+ownership/idempotency/pagination/bounded errors/final JSON snapshot/disconnect gates.
+
+### DoD-2 — each actual live provider, final same source
+
+Expected: authenticated JSON EN, SSE VI with history/rewrite, insufficient JSON/SSE,
+exact citations, actual model/usage, inert fixture instructions and source retention;
+no skips, no mocks or fallback. Actual both gates PASS. Official endpoints selected
+from valid independent .env settings; values withheld. Each script creates ignored
+exclusive temporary raw env file and removes it in finally; no env remains committed.
+
+Command: `uv run python scripts/smoke_llm.py --provider anthropic`; exit0. Log `.local/t26-live-anthropic-schema.log`. Actual redacted output:
+
+```text
+{"live": true, "mode": "json_en", "status": "PASS", "answerability": "supported", "usage": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "input_tokens": 1145, "output_tokens": 88}, "output": "[REDACTED]", "output_chars": 37, "output_sha256": "4a97ffe75db107ae73d462254321539b56e0ecb3d3246ce735838099ffbcd876", "citations": 1, "timings_ms": {"retrieval": 9470.984026000224, "generation": 6043.633340999804, "total": 18397.278028000073}}
+{"live": true, "mode": "sse_vi_history", "status": "PASS", "answerability": "supported", "usage": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "input_tokens": 1168, "output_tokens": 97}, "output": "[REDACTED]", "output_chars": 35, "output_sha256": "7a505953d4522ce82b89a1a6e3c59ebc3ab5139aa0e8a7feba35a92f46507429", "citations": 1, "timings_ms": {"retrieval": 3047.950796000805, "generation": 3112.9395429998112, "total": 7996.1797000014485}}
+{"live": true, "mode": "insufficient_json", "status": "PASS", "answerability": "insufficient_evidence", "usage": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "input_tokens": 895, "output_tokens": 47}, "output": "[REDACTED]", "output_chars": 194, "output_sha256": "413e8d67942f02284f17c2d2c9c93c748370bd1fe888250bbb45a4e89691c632", "citations": 0, "timings_ms": {"retrieval": 283.2760439996491, "generation": 2209.7191699995165, "total": 5085.32584599925}}
+{"live": true, "mode": "insufficient_sse", "status": "PASS", "answerability": "insufficient_evidence", "usage": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "input_tokens": 907, "output_tokens": 57}, "output": "[REDACTED]", "output_chars": 233, "output_sha256": "854da5397c1bafe43a670a787966b4ded1555f50c2e5a536e4c417ab54c81c4d", "citations": 0, "timings_ms": {"retrieval": 195.79326399980346, "generation": 2307.0439670009364, "total": 3997.4025660012558}}
+T26 LIVE anthropic: JSON EN/SSE VI+history/insufficient JSON+SSE/inert instruction/retention PASS
+========================= 1 passed in 74.99s (0:01:14) =========================
+```
+
+Command: `uv run python scripts/smoke_llm.py --provider deepseek`; exit0. Log `.local/t26-live-deepseek-schema-final.log`. Actual redacted output:
+
+```text
+{"live": true, "mode": "json_en", "status": "PASS", "answerability": "supported", "usage": {"provider": "deepseek", "model": "deepseek-flash", "input_tokens": 687, "output_tokens": 78}, "output": "[REDACTED]", "output_chars": 37, "output_sha256": "f72bbe5166ee5023dd4a842035d1a0b1bc57917c685429444a2b22578bc0848e", "citations": 1, "timings_ms": {"retrieval": 26739.510523999343, "generation": 1147.7861950006627, "total": 28886.79481500003}}
+{"live": true, "mode": "sse_vi_history", "status": "PASS", "answerability": "supported", "usage": {"provider": "deepseek", "model": "deepseek-flash", "input_tokens": 707, "output_tokens": 84}, "output": "[REDACTED]", "output_chars": 35, "output_sha256": "7a505953d4522ce82b89a1a6e3c59ebc3ab5139aa0e8a7feba35a92f46507429", "citations": 1, "timings_ms": {"retrieval": 1413.2311980010854, "generation": 959.3170589996589, "total": 3067.920931998742}}
+{"live": true, "mode": "insufficient_json", "status": "PASS", "answerability": "insufficient_evidence", "usage": {"provider": "deepseek", "model": "deepseek-flash", "input_tokens": 460, "output_tokens": 47}, "output": "[REDACTED]", "output_chars": 184, "output_sha256": "70b6e92b5d149c2388449f085e9017e424b22849737d9ff3670dc09234316d7c", "citations": 0, "timings_ms": {"retrieval": 311.97506799981056, "generation": 908.5362400001031, "total": 2000.0836339986563}}
+{"live": true, "mode": "insufficient_sse", "status": "PASS", "answerability": "insufficient_evidence", "usage": {"provider": "deepseek", "model": "deepseek-flash", "input_tokens": 471, "output_tokens": 45}, "output": "[REDACTED]", "output_chars": 175, "output_sha256": "7b5f6f6f0caa2a438b0fc7f54514c4de9381c59375fff82edeae144a62dd11fd", "citations": 0, "timings_ms": {"retrieval": 358.23177400015993, "generation": 929.0850039997167, "total": 1897.0361329993466}}
+T26 LIVE deepseek: JSON EN/SSE VI+history/insufficient JSON+SSE/inert instruction/retention PASS
+======================== 1 passed in 110.91s (0:01:50) =========================
+```
+
+Both are actual native network/provider calls on synthetic public fixture text;
+no private corpus or gold ingestion. Insufficient cases genuinely exclude the
+fixture und language via requested en filter. Output text withheld, real counts/
+hashes/model IDs/usage/timings above. Shared CPU modelPID6 for both live runs.
+This smoke does not establish full-corpus accuracy, broad injection adherence,
+20-user SLA, production issuer integration, GPU, deployment or Scarlet integration.
+
+### Regression environment failures preserved; final reruns
+
+Initial run selected the same unit/contract/auth suites below, with longer
+`--basetemp=.local/t26resume-reg1` (full original shell invocation not retained here).
+Initial long Windows paths: exit1,10failed663passed286.86s; unchanged corpus fixture
+atomic .part paths exceeded Windows MAX_PATH. Log `.local/t26-resume-regression.log`.
+Repeat with new short basetemp, no assertion/corpus/gold changes:
+`uv run --no-sync pytest tests/unit tests/contract tests/security/test_auth.py tests/security/test_local_auth_http.py tests/security/test_ingestion_storage_config.py -q --tb=short --basetemp=.local/r26b -o cache_dir=.local/c26b`.
+Exit0; actual `673 passed in 176.83s (0:02:56)`.
+Log `.local/t26-resume-regression-short.log`. Focused native-schema/privacy
+267PASS14.03s in `.local/t26-schema-final-unit2.log` before public schema-injection
+parameter added; complete673suite includes it.
+
+Initial affected-service runner lacked tokenizer/RUNBOOK mounts: exit1,
+20failed3passed60errors45.50s, log `.local/t26-resumed-service-regression.log`.
+No test/service semantics changed. Repeat mounts actual host tokenizer and RUNBOOK
+read-only. Ignored transparent byte-relay helper routes legacy loopback test ports
+to actual Qdrant/inference; never synthesizes retrieval/provider/model results.
+Exact helper content saved `.local/t26_service_regression.py`; relays are bounded
+64KiB with drain/close. The runner executes suites serially because legacy fixture
+teardown deletes shared model collection; no concurrent suite-induced false failure.
+Command: `docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml up -d --wait postgres redis qdrant minio storage-fixture inference` then
+`docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm -v "${PWD}/.local/t26_service_regression.py:/service-regression.py:ro" -v "${PWD}/.local/tokenizers:/app/.local/tokenizers:ro" -v "${PWD}/RUNBOOK.md:/app/RUNBOOK.md:ro" public-tests python /service-regression.py`.
+Child command: `python -m pytest tests/integration/test_answer_pipeline.py tests/e2e/test_streaming.py tests/security/test_history_scope.py tests/security/test_evidence_scope.py tests/security/test_citations.py -v -s --tb=short --basetemp=/tmp/t26-real-regression -o cache_dir=/tmp/t26-real-cache`.
+Final output/log and quality/image/D1–D6 review appended after completion below.
+
+### Final affected service regression: all83 cases covered in bounded processes
+
+Mounted combined runner exit247 without completion: `.local/t26-service-regression-mounted.log`.
+Per-suite runner then exit1, because stream pytest was killed-9 and one busy case
+reported FAIL before kill; full traceback was not produced. Other four suites
+exited0. Log `.local/t26-service-regression-serial.log`. Actual cgroup diagnostics
+from running container, commands `docker exec rag-core-t26-test-public-tests-run-4d6474435ab7 cat /sys/fs/cgroup/memory.events`
+and same `memory.peak`, exits0, `.local/t26-service-memory-events.log`:
+
+```text
+low 0
+high 0
+max 5559
+oom 1
+oom_kill 1
+oom_group_kill 0
+2147483648
+```
+
+OOM is confirmed for this per-suite attempt; combined run cause was not captured.
+No claim all-green monolithic83suite. No production/resource budget increased.
+Final stream invocation uses the SAME real Docker stack2GiB/PG/Qdrant/model/native
+provider fixtures and all23 collected cases, in six subprocess groups of4/4/4/4/4/3.
+No skip/selection to omit failures/assertion/timeout changes. Collection asserts23
+and every node executes once; includes busy/admission/disconnect/invalid output/
+scope races/JSON-SSE equivalence. This is regression testing, not a load SLA claim.
+Command: `docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm -v "${PWD}/.local/t26_service_regression.py:/service-regression.py:ro" -v "${PWD}/.local/t26_stream_chunks.py:/stream-chunks.py:ro" -v "${PWD}/.local/tokenizers:/app/.local/tokenizers:ro" -v "${PWD}/RUNBOOK.md:/app/RUNBOOK.md:ro" public-tests python /stream-chunks.py`.
+Each child: `python -m pytest <all collected nodes in current group> -v -s --tb=short --basetemp=/tmp/t26-stream-chunk -o cache_dir=/tmp/t26-stream-cache`.
+Exact node groups/output saved `.local/t26-stream-chunks.log`; helper preserved in
+ignored .local. Final parent exit0, all83 cases PASS across successful subprocesses.
+Actual output excerpts:
+
+```text
+======================== 13 passed in 93.08s (0:01:33) =========================
+REAL SUITE EXIT tests/integration/test_answer_pipeline.py 0
+============================= 16 passed in 16.61s ==============================
+REAL SUITE EXIT tests/security/test_history_scope.py 0
+======================== 14 passed in 65.49s (0:01:05) =========================
+REAL SUITE EXIT tests/security/test_evidence_scope.py 0
+============================= 17 passed in 56.05s ==============================
+REAL SUITE EXIT tests/security/test_citations.py 0
+ALL COLLECTED STREAM CASES 23
+============================== 4 passed in 50.34s ==============================
+REAL STREAM GROUP EXIT 0 0
+============================== 4 passed in 37.21s ==============================
+REAL STREAM GROUP EXIT 4 0
+============================== 4 passed in 27.77s ==============================
+REAL STREAM GROUP EXIT 8 0
+============================== 4 passed in 32.32s ==============================
+REAL STREAM GROUP EXIT 12 0
+============================== 4 passed in 25.88s ==============================
+REAL STREAM GROUP EXIT 16 0
+============================== 3 passed in 22.52s ==============================
+REAL STREAM GROUP EXIT 20 0
+ALL STREAM CASES EXECUTED 23 group_exits [0, 0, 0, 0, 0, 0]
+oom 0
+oom_kill 0
+TEST CGROUP PEAK_BYTES 1444687872
+```
+
+### D1–D6, final review/package/commit boundary
+
+D1 PASS: COMPLETE dependency notes/prompt/plan read, only14 resumed task files plus
+prior30-file checkpoint, legacy scratch/user .env untouched; `git diff --check` exit0.
+D2 PASS: `uv run --no-sync ruff check src tests scripts` → All checks passed;
+scoped `uv run --no-sync ruff format --check <nine changed Python files>` →
+9 files already formatted; `uv run --no-sync mypy src` → Success/no issues97files;
+`uv lock --check` → Resolved177packages. Commands/each exit0 and exact scoped paths
+in `.local/t26-final-checks.log`. Initial format check exit1 fixed whitespace in
+provider test only, retained `.local/t26-final-checks-first.log`; contract repeat
+`uv run --no-sync pytest tests/contract/test_llm_providers.py -q --tb=short --basetemp=.local/r26c -o cache_dir=.local/c26c`
+exit0,135passed6.31s (`.local/t26-schema-format-regression.log`). Initial mistaken
+export_api_schema.py invocation exit2 missing file retained in tool output; actual
+existing script used below, no fabricated success.
+D3 PASS: DoD1 separate6cases actual infrastructure + DoD2 separate real providers,
+models/usage/redacted output/failures shown above; no mock substitute or skip.
+D4 PASS: five living docs updated, `uv run --no-sync python scripts/check_docs.py`
+exit0; exact final UTF8/link/task graph output in final checks log. README/RUNBOOK
+current API/live/native-schema compatibility/budgets/limits distinct from historical
+T23/T25 fixtures and future admin/corpus/load/deployment work. Summary interfaces
+and task DoD rows updated. OpenAPI `uv run --no-sync python scripts/export_openapi.py --check`
+exit0: 13designed/13served/2health,48schemas,37synthetic examples; public snapshots
+unchanged/private json_schema not exposed.
+
+API image command: `docker compose build api`, exit0; log `.local/t26-resumed-api-build.log`:
+`Image rag-core-api:t26 Built`.
+Offline check command: `docker run --rm --network none -v "${PWD}/.local/t26-images-hashes.json:/verification/hashes.json:ro" -v "${PWD}/.local/t26_verify_images.py:/verification/check.py:ro" rag-core-api:t26 python /verification/check.py`, exit0:
+
+```text
+PASS exact packaged source hashes=97 mounted_operations=13 Torch absent; no probes/models/providers run
+```
+
+Log `.local/t26-resumed-api-hashes.log`. Public-test image offline check with the
+same hashes plus read-only tests mounts and `.local/t26_public_image_check.py`, exit0:
+
+```text
+PASS public-test package97 source hashes and actual live test/observer hashes equal final reviewed source; no models/network calls
+```
+
+Log `.local/t26-resumed-public-hashes.log`. Actual final source was used for both
+live gates/DoD1; later only provider-test whitespace and docs changed.
+D5 PASS: reviewed source/tests/docs/nativeSDK/static-schema/privacy/cancellation/
+strict validation diff; no dependency/DB/index/public payload migration. Explicit
+14-path stage, credential scan against actual ignored .env and local secrets,
+new-pattern diff scan, transient env removed, no corpus/gold/private raw data/
+weights/cache/logs/scratch/keys committed; actual review output logged after stage.
+D6 completion subject `test(T26): verify public RAG API with live providers`;
+COMPLETE effective only after inspected successful commit. Actual commit hash and
+authorized normal origin/main push/hash equality are reported post-commit outside
+the commit (no self-hash/amend). Stop only rag-core-t26-test project with compose
+stop; retain volumes/model cache/app-owned source, other apps untouched. Exact
+stop/commit/push/remote outputs in ignored closure log and final report.
+T27 depends on T26/T10, both COMPLETE after closure: READY, remains TODO.
+STOP T26; no drain/subagents/force push/merge/deploy/Scarlet changes.
+
+Final checks execution: `$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv run --no-sync python .local/t26_final_checks.py` exit0, cwd as above. Helper invokes the following exact commands, individually recording exits; actual output:
+
+```text
+COMMAND ["git", "diff", "--check"]
+EXIT 0
+COMMAND ["uv", "run", "--no-sync", "ruff", "check", "src", "tests", "scripts"]
+All checks passed!
+EXIT 0
+COMMAND ["uv", "run", "--no-sync", "ruff", "format", "--check", "src/rag_core/adapters/llm/anthropic.py", "src/rag_core/adapters/llm/common.py", "src/rag_core/application/answers.py", "src/rag_core/domain/llm.py", "tests/contract/test_api_schema.py", "tests/contract/test_llm_providers.py", "tests/live/test_public_provider.py", "tests/fixtures/live_diagnostics.py", "tests/unit/test_live_diagnostics.py"]
+9 files already formatted
+EXIT 0
+COMMAND ["uv", "run", "--no-sync", "mypy", "src"]
+Success: no issues found in 97 source files
+EXIT 0
+COMMAND ["uv", "lock", "--check"]
+Resolved 177 packages in 38ms
+EXIT 0
+COMMAND ["uv", "run", "--no-sync", "python", "scripts/export_openapi.py", "--check"]
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_operations=13 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (public routes mounted; export does not verify runtime/provider)
+EXIT 0
+COMMAND ["uv", "run", "--no-sync", "python", "scripts/check_docs.py"]
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 413
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+EXIT 0
+```
+
+D5 command: `uv run --no-sync python .local/t26_resumed_review.py`, exit0 after explicit14-path staging. Actual output (secrets withheld by construction):
+
+```text
+PASS staged scope14; actual env/local credential and new pattern scan clear; ignored .env/logs/fixtures/cache/scratch absent; temp live env removed
+```

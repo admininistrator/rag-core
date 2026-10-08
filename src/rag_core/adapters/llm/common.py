@@ -1,6 +1,7 @@
 """Bounded retry/deadline and wire decoding shared by two distinct provider schemas."""
 
 import asyncio
+import json
 import random
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator, AsyncIterator
@@ -137,12 +138,28 @@ class BaseProvider(ABC):
     def _request(self, request: GenerationRequest) -> GenerationRequest:
         try:
             checked = GenerationRequest.model_validate(request.model_dump())
+            schema_text = ""
+            if checked.json_schema is not None:
+                if not checked.json_output:
+                    raise LlmError("llm_invalid_request")
+                schema_text = json.dumps(checked.json_schema, ensure_ascii=False, allow_nan=False)
+                if len(schema_text.encode()) > 16384:
+                    raise LlmError("llm_input_limit")
             if checked.json_output:
                 checked = GenerationRequest.model_validate(
-                    {**checked.model_dump(), "system": checked.system + "\nReturn one JSON object."}
+                    {
+                        **checked.model_dump(),
+                        "system": checked.system
+                        + "\nReturn exactly one raw JSON object. The first non-whitespace character "
+                        "must be { and the last must be }. Do not wrap it in Markdown, code fences, "
+                        "backticks, explanations, or any prefix or suffix text.",
+                    }
                 )
             charge = (
-                len(checked.system.encode("utf-8")) + len(checked.user_data.encode("utf-8")) + 256
+                len(checked.system.encode("utf-8"))
+                + len(checked.user_data.encode("utf-8"))
+                + len(schema_text.encode("utf-8"))
+                + 256
             )
             if (
                 charge > self.settings.max_input_tokens
@@ -150,7 +167,7 @@ class BaseProvider(ABC):
             ):
                 raise LlmError("llm_input_limit")
             return checked
-        except (ValidationError, UnicodeError):
+        except (ValidationError, UnicodeError, ValueError, TypeError, RecursionError):
             raise LlmError("llm_invalid_request") from None
 
     def _error(self, exc: Exception) -> LlmError:
@@ -230,6 +247,7 @@ class BaseProvider(ABC):
                     system=REWRITE_POLICY,
                     user_data=checked.model_dump_json(),
                     json_output=True,
+                    json_schema=RewriteResult.model_json_schema(),
                 )
             )
             return RewriteResult.model_validate_json(result.text)

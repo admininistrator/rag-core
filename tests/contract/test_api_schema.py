@@ -106,6 +106,7 @@ def test_default_request_round_trips_without_becoming_explicit_subset() -> None:
         "permissions",
         "output_tokens",
         "context_tokens",
+        "json_schema",
     ],
 )
 def test_client_cannot_override_identity_policy_or_server_budget(field: str) -> None:

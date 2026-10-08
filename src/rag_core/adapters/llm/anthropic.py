@@ -6,6 +6,7 @@ from typing import Any
 
 import anthropic
 import httpx2
+from anthropic.types.output_config_param import OutputConfigParam
 
 from rag_core.adapters.llm.common import (
     BaseProvider,
@@ -55,6 +56,18 @@ class AnthropicProvider(BaseProvider):
             return LlmError("llm_unavailable", retryable=True)
         return super()._error(exc)
 
+    def _output_config(self, request: GenerationRequest) -> OutputConfigParam | anthropic.Omit:
+        if request.json_schema is None:
+            return anthropic.omit
+        # Only static trusted shapes; SDK removes unsupported wire constraints.
+        # Original Pydantic bounds and scope/quote validation still run in core.
+        return {
+            "format": {
+                "type": "json_schema",
+                "schema": anthropic.transform_schema(request.json_schema),
+            }
+        }
+
     def _usage_payload(self, payload: dict[str, Any], model: str) -> LlmUsage:
         raw = payload.get("usage")
         if raw is None:
@@ -77,6 +90,7 @@ class AnthropicProvider(BaseProvider):
             system=request.system,
             messages=[{"role": "user", "content": request.user_data}],
             stream=False,
+            output_config=self._output_config(request),
         ) as response:
             payload = object_value(json.loads(await bounded_body(response.iter_bytes())))
             if payload.get("type") != "message" or payload.get("role") != "assistant":
@@ -103,6 +117,7 @@ class AnthropicProvider(BaseProvider):
             system=request.system,
             messages=[{"role": "user", "content": request.user_data}],
             stream=True,
+            output_config=self._output_config(request),
         ) as response:
             if response.headers.get("content-type", "").split(";")[0] != "text/event-stream":
                 raise LlmError("llm_invalid_response")

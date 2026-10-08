@@ -199,6 +199,54 @@ async def collect(provider):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("streaming", [False, True])
+async def test_anthropic_static_json_schema_on_native_json_and_stream(streaming):
+    from rag_core.domain.answers import ModelAnswer
+
+    shape = ModelAnswer.model_json_schema()
+    request = REQUEST.model_copy(update={"json_output": True, "json_schema": shape})
+    payload = stream_wire("anthropic") if streaming else json_response("anthropic")
+    async with environment("anthropic", lambda n, r: (200, payload, streaming)) as (
+        adapter,
+        calls,
+        _,
+    ):
+        if streaming:
+            assert [event async for event in adapter.stream(request)]
+        else:
+            assert (await adapter.generate(request)).text
+        sent = json.loads(calls[0].content)
+        output = sent["output_config"]["format"]
+        assert output["type"] == "json_schema"
+        assert output["schema"]["additionalProperties"] is False
+        assert output["schema"]["required"] == ["answer", "citations"]
+        assert "maxLength" not in output["schema"]["properties"]["answer"]
+        assert (
+            "maxLength"
+            not in output["schema"]["$defs"]["CitationDeclaration"]["properties"]["quote"]
+        )
+        assert sent["messages"][0]["content"] == request.user_data
+        assert "tools" not in sent and "PRIVATE" not in json.dumps(output)
+        # Native transport transform cannot mutate the original strict core constraints.
+        assert request.json_schema == shape and "maxLength" in json.dumps(shape)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("provider", PROVIDERS)
+@pytest.mark.parametrize("fault", ["non-json", "oversized", "budget"])
+async def test_output_schema_rejected_before_network_when_invalid_or_over_budget(provider, fault):
+    shape = {"type": "object", "description": "x" * (20000 if fault == "oversized" else 1000)}
+    request = REQUEST.model_copy(update={"json_output": fault != "non-json", "json_schema": shape})
+    kwargs = {"max_input_tokens": 512} if fault == "budget" else {}
+    async with environment(
+        provider, lambda n, r: (200, json_response(provider), False), **kwargs
+    ) as (adapter, calls, _):
+        with pytest.raises(LlmError, match=r"llm_invalid_request|llm_input_limit"):
+            await adapter.generate(request)
+        assert not calls
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("provider", PROVIDERS)
 @pytest.mark.parametrize("usage", [True, False])
 async def test_generate_native_schema_nullable_usage_and_cleanup(provider, usage):

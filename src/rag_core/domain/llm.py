@@ -25,6 +25,8 @@ class GenerationRequest(FrozenModel):
     user_data: Annotated[str, Field(strict=True, min_length=1, max_length=128000, repr=False)]
     max_output_tokens: Annotated[int, Field(strict=True, ge=1, le=1024)] = 1024
     json_output: Annotated[bool, Field(strict=True)] = False
+    # Trusted static output shape only; public query/document/history cannot supply it.
+    json_schema: dict[str, object] | None = Field(default=None, repr=False)
 
 
 class LlmUsage(FrozenModel):
