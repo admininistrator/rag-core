@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-18 / T28-A01 closure:** direct Codex agent, exact model/effort unavailable; no subagents. Baseline main/4e4d96e43ce0bb012bba1ea98e1987269ad84348 equals origin/main; T07 scratch preserved. Local Jinja2/CSS/ES-module `/admin` UI uses the existing protected metadata API, session/CSRF in memory, filtered cursor pages/polling, confirmation actions and responsive/keyboard states. DoD1 final9PASS10.80s; combined24admin/auth/retentionPASS30.31s;673regressionPASS138.61s. Actual Vivaldi desktop1920 and mobile390 observations/screenshots, Reset defect/fix and real browser Retry/PG outbox/audit verification at [H-T28-A01](#h-t28-a01). Final packaging/static/docs/staging/commit boundary appended there. Evaluation registry absent (future T30–T31), explicit empty state only; no fake reports/provider/load/restore/deploy claim. Completion subject `feat(T28): build the local administration interface`, COMPLETE/D6 effective only after successful inspected scoped commit; actual hash/authorized normal origin/main equality reported after execution. Own isolated stack/server stopped, application data/cache/secrets/T07 scratch retained. T29 depends on T28/T27 and is ready after closure; remains TODO. STOP T28, no drain/merge/deploy.
+
 - **Current 2026-10-18 / T27-A01 acceptance closure:** direct Codex agent, exact runtime model/effort unavailable, no subagents. main baseline022e4e0 equals origin/main; legacy T07 scratch/user config preserved. Independent local admin scrypt/PG sessions/CSRF, allowlisted metadata/counts/health, atomic audited retry/cancel/reindex/detach/tombstone implemented. DoD1 actual PG/HTTP/MinIO/Qdrant15PASS30.88s; separate DoD2 privacy/authority4PASS9.72s;673regressionPASS133.08s;19realPGscope/migrationPASS6.55s. API image build and final quality/source/hash review recorded [H-T27-A01](#h-t27-a01), interfaces [S-T27-A01](implementation-summary.md#s-t27-a01). Completion subject `feat(T27): add audited administration APIs`; COMPLETE/D6 only effective with inspected successful commit, actual hash/normal authorized origin/main equality returned after execution. Stop only own isolated tmpfs stack, retain .env/secrets/model cache/source/app volumes/T07 scratch; no merge/deploy/Scarlet/drain. T28 dependencies ready after T27 closure, remains TODO; STOP T27.
 
 - **Current 2026-10-08 / T26-A01 acceptance closure:** direct Codex/exact model-effort unavailable/no subagents. Resumed checkpoint1f5b7efb23c1056bfc82ae6561cdba71a78835b3 after ignored .env configured. Final DoD1 six real public cases PASS180.29s; DoD2 actual DeepSeek deepseek-flash PASS110.91s and Anthropic claude-haiku-4-5-20251001 PASS74.99s, JSON/SSE/EN-VI/history/insufficient/citations/usage/retention. Static native Anthropic JSON schema/private port with unchanged strict parsing/bounds/exact quotes/scope; no fallback or model switch.673unit-contract-auth PASS176.83s;83affected service cases PASS across bounded subprocesses, original Windows/mount/OOM/live failures retained.97source/image hashes equal; API13ops/Torch absent; quality/lock177/OpenAPI/docs/scope/secret review PASS. [H-T26-A01 resumed](#h-t26-a01-resumed), [S-T26-A01 resumed](implementation-summary.md#s-t26-a01-resumed). COMPLETE/D6 effective only with inspected successful `test(T26): verify public RAG API with live providers` commit; actual hash/authorized origin/main equality returned post-execution. Stop own isolated project only, retain volumes/cache/source/.env/four legacy scratch paths; no deploy/Scarlet/load/full-corpus claim. T27 dependencies T26/T10 ready after closure, remains TODO; STOP T26, no drain.
@@ -10712,3 +10714,385 @@ includes all code/tests/docs and uses configured Git identity; actual successful
 commit and authorized normal push/hash verification reported after execution.
 Resolver: `git log -1 --format=%H --grep="^feat(T27):"`; no self-hash/amend.
 T28 remains TODO and ready only after this completion commit. STOP T27.
+
+<a id="h-t28-a01"></a>
+## Phase 6 / T28 / Attempt T28-A01 — Local admin UI (2026-10-18)
+
+Runtime: direct Codex agent, exact model/effort unavailable; no subagents.
+Cwd for all shell commands below: `C:\Users\Admin\Documents\GitHub\rag-core`.
+Read AGENTS/session prompt, COMPLETE T27 task notes/implementation/evidence,
+P01/P02/P05/P10/P13, README/RUNBOOK and current checkpoint before code.
+Baseline `git status --short`, branch/log: main at
+`4e4d96e43ce0bb012bba1ea98e1987269ad84348`; inherited untracked
+`.ptmp-t07-a02/`, `.tmp-t07-a02/` and inaccessible legacy T07 scratch retained.
+No partial T28 code existed. Initial sandbox Docker/named-pipe and GitHub network
+checks failed permission/connectivity; same read-only checks with escalation
+succeeded: Docker29.5.2 and `git ls-remote origin refs/heads/main`, exit0:
+`4e4d96e43ce0bb012bba1ea98e1987269ad84348 refs/heads/main`.
+Origin `https://github.com/admininistrator/rag-core.git`, current branch main.
+
+Scope:14paths: local admin views/template/CSS/JS, app composition, api Jinja2
+dependency/lock, Compose image tag, one integration suite and five living docs.
+No prompt/corpus/gold/public contract/schema/migration/retrieval/storage/Scarlet
+change, no subagents/merge/force push/deployment. Commit planned
+`feat(T28): build the local administration interface`.
+
+### Setup and configuration
+
+`$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'; uv lock; uv sync --locked --group dev --group api --group ingestion --group inference`
+exit0. Actual `Resolved 177 packages`, `Built rag-core`, `Installed 1 package`.
+Explicit `jinja2==3.1.6` was already locked transitively; lock delta only adds
+api group membership/requirement, no version changes. Pin verified against
+[official Jinja changes](https://jinja.palletsprojects.com/en/stable/changes/#version-3-1-6).
+Host tests Python3.12.4/pytest9.1.1, API image Python3.12.13. No LLM/provider/model
+or inference process required for T28; optional host inference packages retained
+for existing whole-source mypy. No credentials/models/providers remeasured.
+
+Isolated services command, exit0:
+
+```powershell
+docker compose -p rag-core-t28-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml up -d --wait postgres redis qdrant minio storage-fixture
+```
+
+Actual own network/containers created; postgres/redis/qdrant/minio Healthy,
+storage-fixture completed. Existing pinned PostgreSQL17.11, Redis8.10.1,
+Qdrant1.19.1, MinIO2025-07-23; dedicated loopback55437/16387/56337/19007 and
+tmpfs only, no application volume/network/source. Host test env:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55437/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+$env:RAG_ADMIN_TEST_STORAGE_URL='http://127.0.0.1:19007'
+$env:RAG_ADMIN_TEST_QDRANT_URL='http://127.0.0.1:56337'
+```
+
+### DoD-1 — real API-backed integration and actions
+
+Initial exact task suite, exit0, `.local/t28-dod1.log`:
+
+```powershell
+uv run pytest tests/integration/test_admin_views.py -v -s --tb=short --basetemp=.local/a28d1 -o cache_dir=.local/c28
+```
+
+Actual `9 passed in 9.27s`. After manual Reset fix/named-control regression,
+separate final task suite, exit0, `.local/t28-dod1-closure.log`:
+
+```powershell
+uv run pytest tests/integration/test_admin_views.py -v -s --tb=short --basetemp=.local/a28closure -o cache_dir=.local/c28closure
+```
+
+Actual excerpts:
+
+```text
+Real PostgreSQL: separate database t10_test_63491a1c65484d88bee6e7dca64383a0, public tables before migration=0
+Real PostgreSQL: migrated separate database t10_test_63491a1c65484d88bee6e7dca64383a0
+T28 shell /overview PASS: local assets/labels/CSP/no embedded data
+T28 fail closed: no configured API ->503; asset/view allowlists PASS
+T28 data PASS: actual PG counts/filtered keyset pages/index/empty/error
+T28 actions PASS: real PG CSRF403/illegal409/retry/reindex/audit/detach/retention/logout401
+============================== 9 passed in 9.50s ==============================
+```
+
+All six shells have labelled unique controls/semantic markup and same-origin
+assets, no embedded private fixture data/authority; APIs require cookie. Real PG
+counts/keyset/MIME/app/owner/state filters/empty/error/index metadata and audited
+mutations checked, not fixture response mocks. CSRF rejection403, illegal409,
+successful retry/reindex/detach/tombstone/logout/expiry401. SQL migrations only in
+private UUID-named DB, fixtures drop it after tests. ASGI HTTP test does not by
+itself prove client execution; native browser observations below provide that
+separate evidence. No hardcoded operational numbers in HTML/JS.
+
+### DoD-2 — actual local browser observations
+
+Used [computer-use skill](C:/Users/Admin/.codex/plugins/cache/openai-bundled/computer-use/26.1007.71326/skills/computer-use/SKILL.md)
+and its documented `@oai/sky` node runtime, Vivaldi's existing Chromium browser.
+Integrated cua browser inventory was empty; Chrome/IAB creation returned
+`Browser is not available`. Native skill inventory/selection succeeded. Auto-review
+rejected screenshot/AX capture of unrelated Facebook content; safer direct
+navigation to local server succeeded before capturing page content, then a new
+one-tab browser window was used for screenshots. No unrelated page screenshot
+or browser data is committed. Browser password-saving prompt was declined.
+
+Private visual harness (ignored `.local/t28_visual_server.py`), command:
+
+```powershell
+$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+$env:PYTHONPATH='.'
+uv run --no-sync python .local/t28_visual_server.py
+```
+
+Actual startup `T28 visual server: 28 PG fixtures; real PG/Redis/Qdrant health; loopback58128; no LLM`.
+First invocation without PYTHONPATH exited1 `ModuleNotFoundError: No module named
+'tests'`; fixed by root PYTHONPATH, no product change. Server uses UUID-named
+private PG DB, existing T27 AdminServices, random password in ignored local file,
+actual HTTP `http://127.0.0.1:58128/admin`, metadata fixtures only, no model/LLM.
+Initial health helper accidentally supplied SQLAlchemy `postgresql+psycopg` URL
+to native psycopg probe: overview correctly showed postgres unavailable, while
+PG metadata/API, Redis and Qdrant worked. This is retained in the overview image;
+it is not reported as healthy. Existing native health checks pass in real tests.
+
+Observed through live browser input/screenshots, no image/mock page substitution:
+
+- Desktop window1920x1032: local login labels/layout; sign-in with random fixture
+  password ->overview showing28documents/28sessions/10generations/10chunks from
+  actual PG. Job totals9failed/9queued/10ready, source840bytes, real PG size;
+  null broker/vector values explicitly Not measured. Later browser Retry changes
+  those job totals, not a hardcoded dashboard. Same-origin CSS/JS render.
+- Documents desktop: readable headings/labelled App/Owner/State/MIME/Rows, true
+  metadata table and malicious filename `<img src=x onerror=alert(1)>.txt` as
+  inert visible text, no image execution. Tab from App to Owner produces a
+  strong green focus outline. Semantic scrollable table region in AX tree.
+- Responsive DevTools390px x903 viewport: navigation scrolls within the page,
+  filters wrap with visible labels, no body-width spill, buttons/heading readable.
+  Table scroll at pointer590,921 with scrollX680 changes visible columns from
+  State/Progress/Attempts to Max attempts/Error recorded/App while layout/nav
+  remain fixed. Saved screenshot proves actual horizontal scrolling, not CSS
+  inspection alone. Native emulator is a width check, not a physical-phone claim.
+- DevTools initially inherited Offline; safe fetch error surfaced. Switched to
+  No throttling, actual API200 resumed. Filter app=no-such-app ->No matching
+  metadata, disabled Previous/Next. Reset initially failed: id=reset shadows
+  HTMLFormElement.reset. Renamed clear-filters; reload, repeat empty filter,
+  Reset clears App and restores real table. Added named-control assertion in
+  integration markup checks. This was a real browser-discovered defect, not
+  hidden by the first nine passing API cases.
+- Jobs uses actual state-aware actions; paused polling before inspection.
+  Retry opens native Confirm operation dialog with target UUID and explanatory
+  text, initial safe cancel choice. Confirm ->UI `Operation accepted. Audit
+  request: 625f60fd-6298-4c3a-a5dd-138e81b500b7`. Read-only PG cross-check below
+  proves the browser sent valid cookie/Origin/CSRF and committed the audit/action.
+- Final feedback moved before long tables so action/error messages remain visible
+  near the heading; final shell render/tests/package verification repeated below.
+
+Screenshots (ignored local artifacts, not browser profiles/raw document content):
+`.local/t28-visual/desktop-overview.png`, `desktop-documents.png`,
+`desktop-keyboard.png`, `desktop-reset-fixed.png`, `desktop-confirmation.png`,
+`mobile-documents-390.png`, `mobile-empty-390.png`, `mobile-table-scroll-390.png`.
+They contain only local operational fixture metadata; no raw chunks/answers/
+source keys/credential values. Initial save-password screenshot was not retained
+as a delivery artifact; desktop-overview was overwritten with the clean capture.
+Final layout capture paths are appended with closure checks below.
+
+Read-only browser mutation verification command, exit0, `.local/t28-visual-audit-final.log`:
+
+```powershell
+uv run --no-sync python .local/t28_verify_visual.py
+```
+
+Actual:
+
+```text
+T28 browser Retry PASS: actual PG state=queued; one outbox; matching UI request625f60fd-6298-4c3a-a5dd-138e81b500b7 audit=job_retry/success
+```
+
+Initial helper exit1 used wrong driver-qualified URI; psycopg error included
+the disposable local test DSN credential. Retained `.local/t28-visual-audit.log`
+is redacted (`[REDACTED]`) and not staged. Corrected URI driver before retry;
+no production credential/config changed, no secrets enter docs/commit. This also
+explains the initial visual-health helper failure; not a product auth bypass.
+
+DoD2 README/RUNBOOK reviewed: exact URL/origin/login setup, six use cases, filters/
+pagination/polling/actions/expiry/logout, keyboard/mobile, metadata-only contract,
+unavailable evaluation registry/unmeasured metrics, troubleshooting and limits.
+T29 keeps full automated real-browser/CSRF/XSS/expiry/retention/fault matrix; the
+T28 manual smoke does not claim it. Evaluation harness/registry absent by dependency
+order T30–T31, explicit unavailable empty state, no fabricated scores/report API
+or paid runner; configured model dimensions remain outside metadata projection.
+
+### D2 — regression, auth/retention, package and contracts
+
+Command, exit0, `.local/t28-regression.log`:
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security/test_auth.py tests/security/test_local_auth_http.py tests/security/test_ingestion_storage_config.py -q --tb=short --basetemp=.local/a28reg -o cache_dir=.local/c28reg
+```
+
+Actual `673 passed in 138.61s (0:02:18)`. Existing corpus/parser/model/client/
+session/public auth/contracts/stream/answer business tests unchanged. No providers
+called or corpus/index/gold changed. Separate real admin regression, exit0,
+`.local/t28-admin-final.log`:
+
+```powershell
+uv run pytest tests/integration/test_admin_views.py tests/security/test_admin_auth.py tests/integration/test_admin_operations.py -v -s --tb=short --basetemp=.local/a28final -o cache_dir=.local/c28final
+```
+
+Actual excerpts:
+
+```text
+T27 actual loopback HTTP: cookie/login/CSRF/logout/replay PASS
+T27 metadata: actual counts/keyset pagination/filters/escaping/privacy PASS
+T27 atomicity: actual PG audit INSERT failure rolls back action, error/log private PASS
+T27 actual MinIO HEAD/GET version/ETag/SHA + Qdrant point/vector + PG chunk retained PASS
+============================= 24 passed in 30.31s =============================
+```
+
+No skipped native dependency gates or mock/live substitution. Existing HTTPS
+cookie/config tests remain in-process; browser used actual loopback HTTP,
+not deployed TLS. MinIO/Qdrant retention canaries are real service operations,
+synthetic2D vectors not retrieval quality. No source delete operation added.
+
+Static checks (individual commands, each exit0 unless noted below):
+
+```text
+uv run --no-sync ruff check src tests scripts
+All checks passed!
+uv run --no-sync mypy src
+Success: no issues found in 103 source files
+uv run --no-sync ruff format --check src/rag_core/admin/views.py src/rag_core/api/app.py tests/integration/test_admin_views.py
+3 files already formatted
+node --check src/rag_core/admin/static/admin.js
+(no syntax errors)
+uv lock --check
+Resolved 177 packages in 3ms
+uv run --no-sync python scripts/export_openapi.py --check
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_operations=22 admin_operations=9 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (public routes mounted; export does not verify runtime/provider)
+docker compose config --quiet
+(no validation errors)
+git diff --check
+(no whitespace errors; existing CRLF normalization warnings only)
+```
+
+Intermediate docs check exit1 `Missing anchor ... docs/handoffs.md#h-t28-a01`
+before this evidence section was appended. Final docs check recorded below;
+not hidden by subsequent successful shell commands.
+
+`docker compose build api` exit0 on initial and corrected-template/JS builds;
+logs `.local/t28-api-build.log`, `.local/t28-api-build-final.log`,
+`.local/t28-api-build-closure.log`. Last of these before feedback reposition:
+`Image rag-core-api:t28 Built`, manifest list
+`sha256:a587e6c235a1dcafe9b27ec30c34d9ecc7e2055741d321c322db687c7d2fa666`.
+Final image rebuilt/hash checked again after last template change below.
+No API/application deployment occurred (network-disabled check container only).
+
+Package verification command, exit0, `.local/t28-image-check.log`:
+
+```powershell
+docker run --rm --network none --entrypoint python --mount "type=bind,source=$PWD/src,target=/reference,readonly" --mount "type=bind,source=$PWD/.local/t28_image_check.py,target=/check.py,readonly" rag-core-api:t28 /check.py
+```
+
+Actual `T28 image PASS: 106 source/asset hashes equal; Jinja2 3.1.6; Python 3.12.13; UID10001; Torch absent; six shells/two assets200; unconfigured API503; OpenAPI22 unchanged`.
+Matches103Python modules plus HTML/CSS/JS, renders installed wheel templates,
+and verifies fail-closed unconfigured API with no network. Final recheck follows.
+
+### D1–D6 — final review and closure boundary
+
+D1 scope/dependencies/diff/retention reviewed; D2 tests/static/package above;
+D3 separate real API and actual visual browser gates; D4 five living docs and
+URL/setup/limitations updated; D5 scope/secrets/backwards contract review; D6
+requires inspected successful14-path completion commit. Final outputs/stage/
+cleanup below. No self-hash/amend; resolver
+`git log -1 --format=%H --grep="^feat(T28):"`. Actual commit/authorized origin/main
+equality returned after execution. T29 T28/T27 dependencies ready after completion,
+remains TODO; STOP T28, no drain/merge/force push/deploy/Scarlet.
+
+Final delivery closure (after feedback reposition and removing backlog task IDs
+from product copy): separate task DoD1 command, exit0,
+`.local/t28-dod1-delivery.log`:
+
+```powershell
+uv run pytest tests/integration/test_admin_views.py -v -s --tb=short --basetemp=.local/a28done -o cache_dir=.local/c28done
+```
+
+Actual `9 passed in 10.80s`. Prior post-feedback run
+`--basetemp=.local/a28last -o cache_dir=.local/c28last`, exit0,
+`.local/t28-dod1-last.log`, `9 passed in 8.31s`; no test removed/skipped.
+Final live browser screenshot `.local/t28-visual/mobile-final-390.png` shows
+readable final feedback at the top of mobile Jobs; final
+`.local/t28-visual/desktop-evaluations-final.png` shows actual signed-in
+`No evaluation reports available`, `Evaluation reporting is not available in
+this build`, no scores/run action. Pure local shell, no paid call or report mock.
+Browser task window closed; prior navigation restored without capturing private
+page content. No browser profile/session artifact staged.
+
+Final `docker compose build api`, exit0, `.local/t28-api-build-delivery.log`:
+`Image rag-core-api:t28 Built`, manifest list
+`sha256:c3e1a956eb3cea9ac6302f542220a22cc841e9d73ed6815c5c6c957377037372`.
+Same exact network-disabled image verification command repeated, exit0,
+`.local/t28-image-check-delivery.log`:
+
+```text
+T28 image PASS: 106 source/asset hashes equal; Jinja2 3.1.6; Python 3.12.13; UID10001; Torch absent; six shells/two assets200; unconfigured API503; OpenAPI22 unchanged
+```
+
+Final static helper command `uv run --no-sync python .local/t28_quality.py`,
+exit0, `.local/t28-quality.log`; it runs and records separate exits for every
+static command listed above. Actual excerpts:
+
+```text
+COMMAND uv run --no-sync ruff check src tests scripts
+All checks passed!
+EXIT 0
+COMMAND uv run --no-sync mypy src
+Success: no issues found in 103 source files
+EXIT 0
+COMMAND uv run --no-sync ruff format --check src/rag_core/admin/views.py src/rag_core/api/app.py tests/integration/test_admin_views.py
+3 files already formatted
+EXIT 0
+COMMAND node --check src/rag_core/admin/static/admin.js
+EXIT 0
+COMMAND uv lock --check
+Resolved 177 packages in 2ms
+EXIT 0
+COMMAND uv run --no-sync python scripts/export_openapi.py --check
+PASS designed_operations=13 served_operations=22 admin_operations=9 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (public routes mounted; export does not verify runtime/provider)
+EXIT 0
+COMMAND uv run --no-sync python scripts/check_docs.py
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 427
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+EXIT 0
+COMMAND docker compose config --quiet
+EXIT 0
+COMMAND git diff --check
+EXIT 0
+```
+
+Cleanup: visual session Ctrl-C returned exit1 without a graceful-finally message;
+independent socket probe exit0 printed `T28 visual loopback listener stopped`.
+No graceful private-DB-drop claim from that shutdown. Separate integration
+fixtures did drop their own private DBs normally; visual data lived only on
+the own tmpfs PG instance. Commands:
+
+```powershell
+docker compose -p rag-core-t28-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml stop
+docker compose -p rag-core-t28-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml ps --all
+```
+
+Each exit0; actual own postgres/redis/minio/storage-fixture Exited(0), Qdrant
+Exited(143) on stop. No down-v/volume/cache/source/app data/legacy scratch deletion.
+Initial helper log redacted including URI across wrapped lines; local secrets
+are not committed. Final staging/secrets/D6 verification follow.
+
+Final D4 check after task completion notes, command
+`uv run --no-sync python scripts/check_docs.py`, exit0:
+`PASS UTF-8/nonempty Markdown: 14 files`, `PASS internal links/anchors: 429`,
+`PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic`,
+`DOCUMENTATION CHECK: PASS`.
+
+Explicit14-file stage followed by `uv run --no-sync python .local/t28_review.py`,
+exit0; actual:
+
+```text
+T28 D5 PASS: exact14 staged paths; actual env/local/visual credentials and added private-key patterns absent; cached whitespace/author PASS; no corpus/cache/logs/browser profile/secrets/scratch staged
+```
+
+D1 PASS: scoped14files/dependency notes/diff/unchanged session/storage invariants.
+D2 PASS: final9task+24admin+673regression/static/lock/unchangedAPI/package gates.
+D3 PASS: separate DoD1 realPG/API and DoD2 actual Vivaldi desktop/mobile observations,
+matched browser Retry audit, no mocked live/skip claim. D4 PASS: all five living
+docs, actual URLs/config/use cases/limitations and final UTF-8/link/task checks.
+D5 PASS: exact allowlist/actual credential and new key-pattern scan, configured
+author, no public-breaking schema/migration or unrelated artifacts. D6 completion
+candidate includes code/tests/config/docs, subject
+`feat(T28): build the local administration interface`; COMPLETE requires inspected
+successful commit. Actual hash/authorized normal push/remote equality returned
+after execution, no self-hash/amend. T29 ready after inspected T28 completion,
+remains TODO. STOP T28; no drain/merge/deploy.

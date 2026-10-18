@@ -113,7 +113,7 @@ services:
     networks: [backend]
 
   api:
-    image: rag-core-api:t27
+    image: rag-core-api:t28
     build:
       context: .
       dockerfile: docker/api.Dockerfile

@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T27 admin APIs VERIFIED local with the completion commit.** T26 public API and both real provider gates remain verified. Admin UI/evaluation/load/restore remain T28–T36. [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T28 local admin UI IMPLEMENTED; verification recorded with its completion commit.** T27 admin APIs and T26 public API/both real provider gates remain verified. Full browser acceptance/evaluation/load/restore remain T29–T36. [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 
 ## Phạm vi đã chốt
 
@@ -23,7 +23,7 @@ buffers/heartbeat/cancellation đã VERIFIED trên loopback HTTP (23DoD1 +8DoD2 
 
 ## Kiến trúc hiện tại và dự kiến
 
-T02 có Python3.12/FastAPI health skeleton, PostgreSQL17/Qdrant/Redis và MinIO tùy chọn. T12 thêm dispatcher; T13–T16 có native/Office/OCR parsers và chunking. T17 thêm dedicated inference process dùng BGE-M3 + multilingual reranker qua CPU hoặc GPU override. T19 thêm Celery worker và PG chunk persistence/publication. T20–T24 nối domain preparation, retrieval, evidence, provider adapters và grounded JSON assembly; T26 mount public HTTP/SSE; Admin UI thuộc các task sau.
+T02 có Python3.12/FastAPI health skeleton, PostgreSQL17/Qdrant/Redis và MinIO tùy chọn. T12 thêm dispatcher; T13–T16 có native/Office/OCR parsers và chunking. T17 thêm dedicated inference process dùng BGE-M3 + multilingual reranker qua CPU hoặc GPU override. T19 thêm Celery worker và PG chunk persistence/publication. T20–T24 nối domain preparation, retrieval, evidence, provider adapters và grounded JSON assembly; T26 mount public HTTP/SSE; T27–T28 thêm admin API/UI local.
 
 Máy mục tiêu: RAM16GB, RTX4060Laptop8GB, nguồn<=1GB và15–20users. T17 đã đo inference trên synthetic fixtures, xem RUNBOOK/evidence; chưa có benchmark chất lượng/tải/full-stack budget.
 
@@ -78,7 +78,7 @@ docker compose --profile local-storage up -d postgres qdrant redis api minio min
 docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
 ```
 
-Không dùng `docker compose down -v` trong flow mặc định. T19 đã thêm ingestion; T26 đã mount HTTP query, cần config bên dưới; T28–T29 thêm admin UI; T35 kiểm lại hướng dẫn tích hợp.
+Không dùng `docker compose down -v` trong flow mặc định. T19 đã thêm ingestion; T26 đã mount HTTP query, cần config bên dưới; T28 đã thêm admin UI local, T29 kiểm browser acceptance đầy đủ; T35 kiểm lại hướng dẫn tích hợp.
 
 ## Hợp đồng API v1 T03
 
@@ -267,9 +267,22 @@ Set host `ADMIN_CONFIG_FILE=.local/api/admin.json`, or Compose
 Unset config denies admin requests503; no default admin password. HTTPS enables
 Secure cookies; HTTP requires explicit loopback configuration and is rejected in
 production. Cookie is HttpOnly/SameSite=Strict, expires after one hour by default.
-Setup, API login/logout, permission/action matrix, exact real-service acceptance
-commands and limits: [RUNBOOK R10](RUNBOOK.md#r10). `/admin` browser UI remains T28;
-no UI/deployment/live-provider remeasurement claim is part of T27.
+Open **http://127.0.0.1:8000/admin** after starting the configured local API;
+use the exact origin selected during setup (localhost and 127.0.0.1 differ).
+The T28 UI serves Jinja2 templates and bundled CSS/JS from the same API image
+(`rag-core-api:t28`), without a CDN or frontend build. Sign in with the configured
+admin username/password. Overview reads current API counts/health; Documents,
+Jobs, Sessions and Index / models support exact filters, UUID keyset pages and
+optional 15-second polling. Job retry/cancel/reindex and session link detach/
+tombstone require confirmation and the existing audited CSRF API. Sign out
+revokes the cookie. Expired sessions return to login and clear displayed metadata.
+
+Evaluation reports show an explicit unavailable empty state: the harness and
+registry are future T30–T31 work; no scores, synthetic reports or paid runs are
+created. Unmeasured queue/vector/model-dimension data are labelled clearly.
+Setup, keyboard/mobile use, permission/action matrix, acceptance commands and
+troubleshooting: [RUNBOOK R10](RUNBOOK.md#r10). T28 visual checks are local;
+full browser workflow automation remains T29. No deployment/provider remeasurement.
 
 ## Metadata và session scope T10
 
@@ -586,7 +599,7 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T23 VERIFIED protocol/config:** DeepSeek HTTPX và Anthropic SDK generate/stream/rewrite; synthetic fixtures, independent secrets/models/budgets. T26 separately verified both live smoke gates.
 - **T24 VERIFIED answer/citation fixtures; T25 VERIFIED opt-in SSE HTTP:** scoped allowlist/final subset, bounded admission/buffers/heartbeat/cancellation; LLM protocol vẫn synthetic.
 - **T26 VERIFIED:** production business routes, independent app CLI/lifecycle and two real provider gates; evidence [H-T26-A01 resumed](docs/handoffs.md#h-t26-a01-resumed).
-- **T27–T29:** admin URL/login, UI workflows.
+- **T27–T28 VERIFIED local:** admin API/UI, real-data integration and desktop/mobile visual smoke; full browser acceptance remains T29.
 - **T30–T34:** benchmark reports, performance, reliability, backup/restore.
 - **T35–T36:** quickstart tích hợp đã kiểm chứng và trạng thái nghiệm thu cuối.
 

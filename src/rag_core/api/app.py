@@ -12,6 +12,7 @@ from rag_core.adapters.persistence.database import build_engine, database_url
 from rag_core.admin.api import build_admin_router
 from rag_core.admin.auth import AdminAuthentication, AdminServices
 from rag_core.admin.config import load_admin_config
+from rag_core.admin.views import build_admin_views
 from rag_core.api.auth import AuthenticationMiddleware
 from rag_core.api.errors import install_error_handlers
 from rag_core.api.health import HealthChecks, build_health_checks
@@ -88,6 +89,7 @@ def create_app(
     install_error_handlers(app)
     app.include_router(build_public_router())
     app.include_router(build_admin_router())
+    app.include_router(build_admin_views())
 
     @app.get("/health/live", tags=["health"])
     async def live() -> dict[str, str]:

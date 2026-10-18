@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · RAG Core</title>
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+  <script type="module" src="/admin/assets/admin.js"></script>
+</head>
+<body data-page="{{ page }}">
+  <a class="skip" href="#main">Skip to content</a>
+  <aside class="sidebar">
+    <a class="brand" href="/admin"><span class="brand-mark" aria-hidden="true">R</span> RAG Core</a>
+    <p class="eyebrow">LOCAL ADMINISTRATION</p>
+    <nav aria-label="Administration">
+      {% for key, labels in pages.items() %}
+      <a href="/admin{% if key != 'overview' %}/{{ key }}{% endif %}"{% if page == key %} aria-current="page"{% endif %}>{{ labels[0] }}</a>
+      {% endfor %}
+    </nav>
+    <div class="sidebar-note"><span class="status-dot"></span> Local workspace<br><small>Operational metadata only</small></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><span>Workspace <span aria-hidden="true">/</span> <strong>{{ title }}</strong></span><button id="logout" hidden>Sign out</button></header>
+    <main id="main" tabindex="-1">
+      <p id="status" role="status" aria-live="polite">Connecting to local administration…</p>
+      <p id="error" class="error" role="alert" hidden></p>
+      <section id="login" class="login-panel" hidden aria-labelledby="login-title">
+        <p class="eyebrow">RAG CORE ADMINISTRATION</p>
+        <h1 id="login-title">Welcome back</h1>
+        <p>Sign in with your local administrator credentials.</p>
+        <form id="login-form">
+          <label for="username">Username</label><input id="username" name="username" autocomplete="username" maxlength="128" required>
+          <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="1024" required>
+          <button class="primary" type="submit">Sign in</button>
+        </form>
+        <p class="muted">Your administrator account is configured locally. App credentials do not grant admin access.</p>
+      </section>
+      <section id="dashboard" hidden aria-labelledby="page-title">
+        <div class="page-heading"><div><p class="eyebrow">OPERATIONS</p><h1 id="page-title">{{ title }}</h1><p>{{ subtitle }}</p></div><div class="refresh-controls"><label><input id="auto-refresh" type="checkbox" checked> Refresh every 15s</label><button id="refresh">Refresh now</button></div></div>
+        <p id="updated" class="muted"></p>
+        {% if page == 'evaluations' %}
+        <section class="panel empty"><span class="empty-mark" aria-hidden="true">◎</span><h2>No evaluation reports available</h2><p>Evaluation reporting is not available in this build.</p><p>There are no measured quality scores to display. Future reports will distinguish synthetic and real provider runs.</p><span class="badge">No runs triggered from this interface</span></section>
+        {% else %}
+        {% if page != 'overview' %}
+        <form id="filters" class="panel filters" aria-label="Metadata filters">
+          <div><label for="filter-app">App</label><input id="filter-app" name="app" placeholder="Exact app ID" maxlength="256"></div>
+          <div><label for="filter-owner">Owner</label><input id="filter-owner" name="owner" placeholder="Exact owner ID" maxlength="256"></div>
+          <div><label for="filter-state">State</label><input id="filter-state" name="state" placeholder="Exact state" maxlength="64"></div>
+          {% if page == 'documents' %}<div><label for="filter-type">Format (MIME)</label><input id="filter-type" name="content_type" placeholder="text/plain" maxlength="128"></div>{% endif %}
+          <div><label for="limit">Rows</label><select id="limit" name="limit"><option>10</option><option selected>25</option><option>50</option><option>100</option></select></div>
+          <button type="submit" class="primary">Apply filters</button><button id="clear-filters" type="button">Reset</button>
+        </form>
+        {% endif %}
+        <div id="content" aria-busy="false"></div>
+        {% if page != 'overview' %}<div class="pagination"><button id="previous" disabled>Previous</button><span id="page-number">Page 1</span><button id="next" disabled>Next</button></div>{% endif %}
+        {% if page == 'index' %}<p class="muted">Fingerprints identify configured index and pipeline revisions. Model dimensions and vector size are not exposed by this metadata API. To reindex a ready version, open its job in <a href="/admin/jobs">Jobs</a>.</p>{% endif %}
+        {% endif %}
+        <section id="links-panel" class="panel" hidden aria-labelledby="links-title"><div class="section-heading"><h2 id="links-title">Session documents</h2><button id="close-links">Close</button></div><div id="links-content"></div><div class="pagination"><button id="links-previous">Previous links</button><button id="links-next">Next links</button></div></section>
+      </section>
+      <noscript><p class="error">Enable JavaScript to sign in and load current operational metadata.</p></noscript>
+    </main>
+    <footer>RAG Core <span aria-hidden="true">·</span> Local administration <span aria-hidden="true">·</span> Source files are retained</footer>
+  </div>
+  <dialog id="confirmation" aria-labelledby="confirm-title" aria-describedby="confirm-description"><h2 id="confirm-title">Confirm operation</h2><p id="confirm-description"></p><div class="dialog-actions"><button id="confirm-cancel" autofocus>Keep current state</button><button id="confirm-accept" class="primary">Confirm</button></div></dialog>
+</body>
+</html>

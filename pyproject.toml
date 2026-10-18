@@ -20,6 +20,7 @@ api = [
   "boto3>=1.39,<2",
   "fastapi>=0.116,<1",
   "httpx>=0.28,<1",
+  "jinja2==3.1.6",
   "psycopg[binary]>=3.2,<4",
   "pyjwt[crypto]==2.15.0",
   "redis>=6.2,<8",

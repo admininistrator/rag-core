@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T27 admin APIs VERIFIED local with the completion commit.** T26 public API and both real provider gates remain verified. Admin UI/evaluation/load/restore remain T28–T36. [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T28 admin UI VERIFIED local with the completion commit.** T27 admin APIs and T26 public API/both provider gates remain verified. Full browser acceptance/evaluation/load/restore remain T29–T36. [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -37,7 +37,7 @@
 | Answer assembly/citation resolver | VERIFIED actual PG/Qdrant/CPU/source; synthetic wire and independent live T26 gates | T24 |
 | Query HTTP/SSE | T25 transport verified; T26 full DI/public HTTP local acceptance and both real provider gates PASS | T25–T26 |
 | Admin auth/metadata/actions/audit API | VERIFIED local with T27 completion commit | T27 |
-| Admin UI | DESIGNED | T28–T29 |
+| Admin UI | VERIFIED local integration + manual desktop/mobile | T28; full browser acceptance T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
 
@@ -163,12 +163,12 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps
 
 Không dùng `docker compose down -v` trong flow mặc định. Không commit `.local/`, `.env`, key hoặc database files. MinIO/MC dùng release community lịch sử đã pin từ official Quay cho local simulation; server/cloud deployment ngoài scope.
 
-Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` rồi `docker compose logs --no-color <service>`; không render `docker compose config` đầy đủ vào ticket vì có thể lộ config khi operator tự thêm biến. Migration/internal ingestion/model có commands tại R09 T19; business HTTP/query config và acceptance ở R05-T26; admin API T27: see R10; browser UI DESIGNED T28. Host auth/local issuer đã VERIFIED ở R03; Compose mount operator registry khi cấu hình, không dựng issuer.
+Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` rồi `docker compose logs --no-color <service>`; không render `docker compose config` đầy đủ vào ticket vì có thể lộ config khi operator tự thêm biến. Migration/internal ingestion/model có commands tại R09 T19; business HTTP/query config và acceptance ở R05-T26; admin API/UI T27–T28: see R10. Host auth/local issuer đã VERIFIED ở R03; Compose mount operator registry khi cấu hình, không dựng issuer.
 
 <a id="r03"></a>
 ## R03. Auth, app registration và trust boundary
 
-**T09 authentication VERIFIED local; T11 storage reader VERIFIED local; T12 registration/outbox VERIFIED local. App vẫn chịu trách nhiệm xác nhận user/session upload ownership; admin API T27: see R10; browser UI DESIGNED T28.**
+**T09 authentication VERIFIED local; T11 storage reader VERIFIED local; T12 registration/outbox VERIFIED local. App vẫn chịu trách nhiệm xác nhận user/session upload ownership; admin API/UI T27–T28: see R10.**
 
 - Core operator đăng ký app bằng cấu hình tin cậy: app ID, service credential, JWT issuer/audience/JWKS và storage alias/prefix.
 - Mỗi API nghiệp vụ gửi `Authorization: Bearer <user-JWT>` và `X-RAG-Service-Key: <app-service-key>`.
@@ -488,7 +488,8 @@ PG/Redis/Qdrant and do not prove provider/model/ingestion readiness.
 | GET `/v1/sessions/{session_id}/citations/{chunk_id}` | UUIDs → CitationResolveResponse | Mounted T26; current scope only |
 | GET `/health/live`, `/health/ready` | health-specific responses | Mounted T02 |
 | `/v1/admin/*` | independent admin cookie/CSRF, metadata/actions | VERIFIED local T27; details R10 |
-| `/admin/*`, protected `/metrics` | deferred | DESIGNED T28–T29/T32 |
+| `/admin`, `/admin/*` | local UI shell/assets; data/actions use protected `/v1/admin` | VERIFIED local T28; full browser acceptance T29 |
+| protected `/metrics` | deferred | DESIGNED T32 |
 
 Không có route xóa object nguồn, arbitrary search hoặc user-wide query bỏ session.
 
@@ -1946,13 +1947,14 @@ Các số đo synthetic không là benchmark corpus/20users/full-stack budget T3
 <a id="r10"></a>
 ## R10. UI quản trị
 
-**T27 API VERIFIED local with the completion commit.
-Browser UI remains DESIGNED T28–T29.** `/admin` is not implemented in T27.
-Evidence: [H-T27-A01](docs/handoffs.md#h-t27-a01).
+**T27 API VERIFIED local; T28 local UI IMPLEMENTED with real-data integration
+and manual browser verification recorded at completion. Full browser acceptance
+remains T29.** Evidence: [H-T27-A01](docs/handoffs.md#h-t27-a01),
+[H-T28-A01](docs/handoffs.md#h-t28-a01).
 
 ### Independent setup, sessions and credential rotation
 
-Install the existing api/dev groups; no new dependency is needed. Against the
+Install the api/dev groups (T28 explicitly includes pinned Jinja2 3.1.6). Against the
 operator-verified target database, apply `uv run alembic upgrade head` before
 starting the API. Additive revision `0004_admin_audit` creates `admin_sessions`,
 `admin_login_limits`, `audit_events`; it leaves document data and public contracts
@@ -2007,7 +2009,7 @@ returns the current session CSRF token for page reload. All other unsafe request
 CSRF headers/cookies and forged/expired tokens fail closed. Login uses Origin
 protection before a CSRF token exists; it does not require that header.
 
-PowerShell API example (the `/admin` login form comes in T28):
+PowerShell API example (the same API is used by the `/admin` login form):
 
 ```powershell
 $adminOrigin='http://127.0.0.1:8000'
@@ -2104,8 +2106,76 @@ by a real temporary PG trigger and must roll back the action. Tests never skip o
 substitute mocked PG/storage/vector success. They retain source canaries until the
 isolated tmpfs stack stops. No production password/config/data is changed.
 
-UI screens, browser visual QA/accessibility, evaluation reports, telemetry/load,
-backup restore and server deployment remain future tasks; T27 does not claim them.
+### Local browser workflow T28
+
+After the independent setup above, open `http://127.0.0.1:8000/admin` (or the
+configured exact HTTPS origin). The local API image `rag-core-api:t28` contains
+Jinja2 templates, CSS and ES-module JS; no CDN, external font or Node build is
+needed. `/admin` and `/admin/{documents,jobs,sessions,index,evaluations}` serve
+only a public shell: no metadata, session credential or CSRF token is embedded.
+The cookie remains scoped to `/v1/admin`; browser JS checks `/auth/session` and
+loads operational data from the guarded API. CSRF stays in JS memory, never
+localStorage, HTML or the URL. No new schema/migration/public payload change.
+
+- **Sign in / out:** use the username/password in the local private config. No
+  app JWT is needed. Sign out revokes the session. On expiry, displayed metadata
+  is cleared and login returns; there is no silent renewal. Decline browser
+  password saving when using disposable test credentials.
+- **Overview:** current PG counts, dependency status, job-state totals and byte
+  counts. Broker depth/vector bytes show `Not measured` while null. Unavailable
+  dependencies remain visible; they are never converted to healthy.
+- **Documents:** exact App, Owner, State and MIME format filters; Rows 10/25/50/100.
+  Apply filters or Enter; Reset restores the default page. Previous/Next follow
+  the UUID cursor, not date order. Filters are not persisted in URLs/storage.
+- **Jobs:** actual progress/error-present/attempt bounds. Retry appears for failed
+  jobs with attempts remaining; Cancel for queued/in-flight; Reindex for ready.
+  Confirm the operation; the server rechecks its legal state and active links.
+  Success shows the audit request UUID; 409 means refresh/reselect the current job.
+- **Sessions:** View links opens paginated attached/detached metadata. Detach and
+  Tombstone confirm scope changes; source files and derivative data are retained.
+- **Index / models:** generation metadata and index/pipeline fingerprints. Dimensions
+  and model manifests are not exposed by the existing API; no fake values. Reindex
+  uses the version's ready job on the Jobs screen, not a vector console.
+- **Evaluations:** explicit unavailable empty state because the harness/registry
+  has not been implemented (T30–T31). No report file reader or costly run button.
+
+Automatic refresh is 15 seconds while visible and signed in. Uncheck it to pause
+data polling; session validity is still checked. Polling does not replace a
+focused table/action target or an open confirmation dialog. Requests time out
+after 12 seconds; errors use a safe code/HTTP/request ID, not raw adapter details.
+Metadata is inserted as text nodes; API-escaped filenames are decoded once into
+inert text, never innerHTML. Local shell/assets have no-store, nosniff, no-referrer
+and restrictive same-origin CSP with no inline script/style or external requests.
+
+Use Tab/Shift+Tab and the Skip to content link. Every filter/login control has a
+label, table headers/captions are semantic, and scrollable tables are focusable
+regions. Small widths use horizontal navigation and table scrolling inside their
+containers, wrapping filters and visible keyboard focus. Confirm dialogs trap
+focus natively; Escape cancels. Error/status updates use alert/live regions.
+
+T28 integration (same isolated service/env setup as above, using a new project
+name `rag-core-t28-test` and fresh basetemp):
+
+```powershell
+uv run pytest tests/integration/test_admin_views.py -v -s --tb=short --basetemp=.local/admin-views-new -o cache_dir=.local/admin-views-cache
+```
+
+Manual desktop/mobile browser observations and screenshots are in T28 handoff.
+They do not replace T29's full real-browser automation, retention/source hash and
+fault matrix. Evaluation reports, telemetry/load, backup restore and deployment
+remain future tasks.
+
+### UI troubleshooting verified in T28
+
+If data cannot load, use Refresh now and check local API/dependencies; no demo
+numbers replace a failure. A 503 at sign-in means the admin config or dependencies
+are unavailable. A 403 security check means verify the browser origin exactly,
+then sign out/in for a fresh CSRF/session. A 401 returns login. A 422 filter error
+means check exact state/MIME/UUID values. No results is a valid empty state; reset
+the filters. If DevTools inherited Offline, select No throttling before testing
+connectivity. Wide UUID/revision tables deliberately scroll horizontally; keyboard
+focus the table region and use arrow keys. No auth bypass or source deletion is
+part of recovery.
 
 <a id="r11"></a>
 ## R11. Corpus và quality evaluation
