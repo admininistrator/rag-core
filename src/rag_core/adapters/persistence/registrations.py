@@ -226,33 +226,39 @@ class PostgresRegistrationRepository:
         return _job(row)
 
     async def retry_job(self, principal: Principal, job_id: UUID) -> Job:
+        async with self.engine.begin() as conn:
+            return await self.retry_job_in_transaction(conn, principal, job_id)
+
+    @staticmethod
+    async def retry_job_in_transaction(
+        conn: AsyncConnection, principal: Principal, job_id: UUID,
+    ) -> Job:
         params = {"app": principal.app_id, "owner": principal.user_id, "job": job_id,
                   "event": uuid4()}
-        async with self.engine.begin() as conn:
-            row = (await conn.execute(text(_REGISTRATION_SELECT + """
-                WHERE r.app_id=:app AND r.owner_id=:owner AND r.job_id=:job
-                FOR UPDATE OF s, j
-            """), params)).mappings().one_or_none()
-            if row is None:
-                raise ScopeError("not_found")
-            if row["session_status"] != "active" or row["link_status"] != "attached":
-                raise RegistrationError("job_not_retryable", 409)
-            if row["state"] == "queued":
-                return _job(row)
-            if row["state"] != "failed" or row["attempts"] >= row["max_attempts"]:
-                raise RegistrationError("job_not_retryable", 409)
-            await conn.execute(text("""
-                UPDATE ingestion_jobs SET state='queued',progress=0,error_code=NULL,
-                    lease_owner=NULL,lease_until=NULL,updated_at=now()
-                WHERE app_id=:app AND owner_id=:owner AND job_id=:job
-            """), params)
-            await conn.execute(text("""
-                INSERT INTO outbox_events
-                    (event_id,app_id,owner_id,job_id,event_type,payload)
-                VALUES (:event,:app,:owner,:job,'ingest_requested','{}'::jsonb)
-            """), params)
-            return Job(job_id, row["document_id"], row["version_id"],
-                       "queued", 0, None, row["attempts"], row["max_attempts"])
+        row = (await conn.execute(text(_REGISTRATION_SELECT + """
+            WHERE r.app_id=:app AND r.owner_id=:owner AND r.job_id=:job
+            FOR UPDATE OF s, j
+        """), params)).mappings().one_or_none()
+        if row is None:
+            raise ScopeError("not_found")
+        if row["session_status"] != "active" or row["link_status"] != "attached":
+            raise RegistrationError("job_not_retryable", 409)
+        if row["state"] == "queued":
+            return _job(row)
+        if row["state"] != "failed" or row["attempts"] >= row["max_attempts"]:
+            raise RegistrationError("job_not_retryable", 409)
+        await conn.execute(text("""
+            UPDATE ingestion_jobs SET state='queued',progress=0,error_code=NULL,
+                lease_owner=NULL,lease_until=NULL,updated_at=now()
+            WHERE app_id=:app AND owner_id=:owner AND job_id=:job
+        """), params)
+        await conn.execute(text("""
+            INSERT INTO outbox_events
+                (event_id,app_id,owner_id,job_id,event_type,payload)
+            VALUES (:event,:app,:owner,:job,'ingest_requested','{}'::jsonb)
+        """), params)
+        return Job(job_id, row["document_id"], row["version_id"],
+                   "queued", 0, None, row["attempts"], row["max_attempts"])
 
     async def claim_job(self, job_id: UUID, worker_id: str) -> bool:
         """T19 consumer gate: duplicate deliveries may claim a queued job once."""

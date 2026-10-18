@@ -74,7 +74,7 @@ def build_artifacts() -> dict[str, dict[str, Any]]:
     )
     designed = build_designed_openapi()
     expected = {endpoint.path for endpoint in ENDPOINTS if endpoint.served}
-    if set(served["paths"]) != expected:
+    if {path for path in served["paths"] if not path.startswith("/v1/admin/")} != expected:
         raise ValueError("Served routes have drifted from the v1 inventory")
     examples = build_examples()
     for document in (served, designed):
@@ -108,8 +108,15 @@ def main() -> int:
     operations = sum(len(item) for item in artifacts["openapi-v1.designed.json"]["paths"].values())
     count = validate_examples(artifacts["examples-v1.json"], artifacts["openapi-v1.designed.json"])
     schemas = validate_schema_snapshot(artifacts["openapi-v1.designed.json"])
+    served_count = sum(len(item) for item in artifacts["openapi.served.json"]["paths"].values())
+    admin_count = sum(
+        len(item)
+        for path, item in artifacts["openapi.served.json"]["paths"].items()
+        if path.startswith("/v1/admin/")
+    )
     print(
-        f"PASS designed_operations={operations} served_operations=13 served_health_routes=2 synthetic_examples={count}"
+        f"PASS designed_operations={operations} served_operations={served_count} "
+        f"admin_operations={admin_count} served_health_routes=2 synthetic_examples={count}"
     )
     print(f"PASS OpenAPI model + Draft2020-12 schemas={schemas}; examples JSON Schema + Pydantic")
     print("CONTRACT EXPORT: PASS (public routes mounted; export does not verify runtime/provider)")

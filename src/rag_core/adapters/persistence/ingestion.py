@@ -304,17 +304,22 @@ class PostgresIngestionRepository:
     async def request_reindex(self, principal: Principal, job_id: UUID) -> None:
         """Trusted internal operation, requires the original active registration."""
         async with self.engine.begin() as conn:
-            row = await self._row(conn, job_id)
-            if (row is None or (row["app_id"], row["owner_id"]) !=
-                (principal.app_id, principal.user_id) or row["state"] != "ready"
-                or row["session_status"] != "active" or row["link_status"] != "attached"):
-                raise IngestionError("reindex_not_authorized")
-            await conn.execute(text("""
-                UPDATE ingestion_jobs SET state='queued',attempts=0,progress=0,updated_at=now()
-                WHERE job_id=:job
-            """), {"job": job_id})
-            await conn.execute(text("""
-                INSERT INTO outbox_events (event_id,app_id,owner_id,job_id,event_type)
-                VALUES (:event,:app,:owner,:job,'ingest_requested')
-            """), {"event": uuid4(), "app": principal.app_id,
-                    "owner": principal.user_id, "job": job_id})
+            await self.reindex_in_transaction(conn, principal, job_id)
+
+    async def reindex_in_transaction(
+        self, conn: AsyncConnection, principal: Principal, job_id: UUID,
+    ) -> None:
+        row = await self._row(conn, job_id)
+        if (row is None or (row["app_id"], row["owner_id"]) !=
+            (principal.app_id, principal.user_id) or row["state"] != "ready"
+            or row["session_status"] != "active" or row["link_status"] != "attached"):
+            raise IngestionError("reindex_not_authorized")
+        await conn.execute(text("""
+            UPDATE ingestion_jobs SET state='queued',attempts=0,progress=0,updated_at=now()
+            WHERE job_id=:job
+        """), {"job": job_id})
+        await conn.execute(text("""
+            INSERT INTO outbox_events (event_id,app_id,owner_id,job_id,event_type)
+            VALUES (:event,:app,:owner,:job,'ingest_requested')
+        """), {"event": uuid4(), "app": principal.app_id,
+                "owner": principal.user_id, "job": job_id})

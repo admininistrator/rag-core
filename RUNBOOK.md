@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T26 VERIFIED local public API and both real provider smoke gates.** All 13 public/health operations are mounted behind trusted configuration. DeepSeek `deepseek-flash` and Anthropic `claude-haiku-4-5-20251001` passed independently; synthetic wire fixtures remain separate protocol evidence. Admin/evaluation/load/restore remain T27–T36. [T26 completion evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T27 admin APIs VERIFIED local with the completion commit.** T26 public API and both real provider gates remain verified. Admin UI/evaluation/load/restore remain T28–T36. [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -36,7 +36,8 @@
 | Provider adapters/config | VERIFIED synthetic protocols and T26 real live; DeepSeek HTTPX/Anthropic SDK | T23 |
 | Answer assembly/citation resolver | VERIFIED actual PG/Qdrant/CPU/source; synthetic wire and independent live T26 gates | T24 |
 | Query HTTP/SSE | T25 transport verified; T26 full DI/public HTTP local acceptance and both real provider gates PASS | T25–T26 |
-| Admin UI | DESIGNED | T27–T29 |
+| Admin auth/metadata/actions/audit API | VERIFIED local with T27 completion commit | T27 |
+| Admin UI | DESIGNED | T28–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
 
@@ -124,7 +125,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 | App identity | cấu hình app_id, service-key hash/reference, JWT issuer/audience/JWKS, algorithms | T09 |
 | Source storage | `STORAGE_CONFIG_FILE` trỏ JSON app/alias/endpoint/region/bucket/prefix và credential file read-only | T11 |
 | Providers | DEEPSEEK_API_KEY/MODEL, ANTHROPIC_API_KEY/MODEL; base URLs phía server | T23 |
-| Admin | password hash/secret, cookie config, expiration/CSRF | T27 |
+| Admin | `ADMIN_CONFIG_FILE`, independent hash/origin/TTL; Compose `RAG_ADMIN_CONFIG_FILE` maps into existing `/run/config` read-only mount | T27 |
 
 Tên biến chính xác và defaults phải đồng bộ settings/`.env.example` khi implement; bảng này là nhóm contract, không phải danh sách env đã tồn tại.
 
@@ -162,12 +163,12 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps
 
 Không dùng `docker compose down -v` trong flow mặc định. Không commit `.local/`, `.env`, key hoặc database files. MinIO/MC dùng release community lịch sử đã pin từ official Quay cho local simulation; server/cloud deployment ngoài scope.
 
-Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` rồi `docker compose logs --no-color <service>`; không render `docker compose config` đầy đủ vào ticket vì có thể lộ config khi operator tự thêm biến. Migration/internal ingestion/model có commands tại R09 T19; business HTTP/query config và acceptance ở R05-T26; admin vẫn DESIGNED. Host auth/local issuer đã VERIFIED ở R03; Compose mount operator registry khi cấu hình, không dựng issuer.
+Nếu readiness lỗi, dùng `docker compose --profile local-storage ps --all` rồi `docker compose logs --no-color <service>`; không render `docker compose config` đầy đủ vào ticket vì có thể lộ config khi operator tự thêm biến. Migration/internal ingestion/model có commands tại R09 T19; business HTTP/query config và acceptance ở R05-T26; admin API T27: see R10; browser UI DESIGNED T28. Host auth/local issuer đã VERIFIED ở R03; Compose mount operator registry khi cấu hình, không dựng issuer.
 
 <a id="r03"></a>
 ## R03. Auth, app registration và trust boundary
 
-**T09 authentication VERIFIED local; T11 storage reader VERIFIED local; T12 registration/outbox VERIFIED local. App vẫn chịu trách nhiệm xác nhận user/session upload ownership; admin T27 vẫn DESIGNED.**
+**T09 authentication VERIFIED local; T11 storage reader VERIFIED local; T12 registration/outbox VERIFIED local. App vẫn chịu trách nhiệm xác nhận user/session upload ownership; admin API T27: see R10; browser UI DESIGNED T28.**
 
 - Core operator đăng ký app bằng cấu hình tin cậy: app ID, service credential, JWT issuer/audience/JWKS và storage alias/prefix.
 - Mỗi API nghiệp vụ gửi `Authorization: Bearer <user-JWT>` và `X-RAG-Service-Key: <app-service-key>`.
@@ -486,7 +487,8 @@ PG/Redis/Qdrant and do not prove provider/model/ingestion readiness.
 | POST `/v1/query/stream` | QueryRequest → SSE | Mounted T26; T25 lifecycle/validator |
 | GET `/v1/sessions/{session_id}/citations/{chunk_id}` | UUIDs → CitationResolveResponse | Mounted T26; current scope only |
 | GET `/health/live`, `/health/ready` | health-specific responses | Mounted T02 |
-| `/admin/*`, `/v1/admin/*`, protected `/metrics` | deferred | DESIGNED T27–T29/T32 |
+| `/v1/admin/*` | independent admin cookie/CSRF, metadata/actions | VERIFIED local T27; details R10 |
+| `/admin/*`, protected `/metrics` | deferred | DESIGNED T28–T29/T32 |
 
 Không có route xóa object nguồn, arbitrary search hoặc user-wide query bỏ session.
 
@@ -529,7 +531,7 @@ existing preparation/retrieval/evidence/answer/citation/stream pipelines; closes
 on shutdown. No Torch/model copies, index creation or migrations at API startup.
 Migration `uv run alembic upgrade head` remains an explicit operator step.
 
-Compose standard API image is `rag-core-api:t26`. Put **only public/service config**
+Compose standard API image is `rag-core-api:t27`. Put **public/service config and private admin hash config**
 in ignored `.local/api/`, mounted read-only `/run/config`; never put private signing
 keys or JWTs there. Set `RAG_AUTH_CONFIG_FILE=/run/config/apps.json`,
 `RAG_STORAGE_CONFIG_FILE=/run/config/storage.json`,
@@ -1944,15 +1946,166 @@ Các số đo synthetic không là benchmark corpus/20users/full-stack budget T3
 <a id="r10"></a>
 ## R10. UI quản trị
 
-**DESIGNED — T27–T29.**
+**T27 API VERIFIED local with the completion commit.
+Browser UI remains DESIGNED T28–T29.** `/admin` is not implemented in T27.
+Evidence: [H-T27-A01](docs/handoffs.md#h-t27-a01).
 
-URL mục tiêu local: `http://127.0.0.1:8000/admin`. Chưa có UI tại T00.
+### Independent setup, sessions and credential rotation
 
-Login riêng; screens Overview/Documents/Jobs/Sessions/Index/Evaluation reports. Admin có thể xem metadata, retry/cancel jobs, detach/tombstone sessions, enqueue reindex trong policy; mọi action audit actor/target/time/request ID và CSRF protection.
+Install the existing api/dev groups; no new dependency is needed. Against the
+operator-verified target database, apply `uv run alembic upgrade head` before
+starting the API. Additive revision `0004_admin_audit` creates `admin_sessions`,
+`admin_login_limits`, `audit_events`; it leaves document data and public contracts
+unchanged. Migrations never run at startup. Backup before changing an existing
+database; recovery rehearsal remains T34. Explicit downgrade to0003 destroys admin
+session/audit data, so it is not the operational rollback path.
 
-Không xem raw chunks/answers/prompts của user, không xem secrets hoặc xóa source. Không có arbitrary query trên toàn kho. Khi cần thử RAG, dùng app/user/session fixture qua public API chuẩn.
+```powershell
+uv sync --locked --group dev --group api
+uv run python scripts/setup_admin.py --output .local/api/admin.json --origin http://127.0.0.1:8000 --allow-loopback-http
+# Host API only:
+$env:ADMIN_CONFIG_FILE='.local/api/admin.json'
+# Or Compose, inside the existing read-only .local/api mount:
+$env:RAG_ADMIN_CONFIG_FILE='/run/config/admin.json'
+docker compose up -d --build api
+```
 
-Điền sau T29: admin secret generation/login/logout, permissions, cookie expiration, browser flows, screenshots redacted, diagnostics và cách xử lý job lỗi.
+The setup script asks for the password twice using hidden terminal input and
+exclusively creates the file; it refuses overwrite. Keep this ignored file private
+and protect its Windows ACL. Never paste hashes or credentials into tickets.
+Fields: username1–128 chars, versioned `password_hash`, exact `origin`,
+`allow_loopback_http` (defaultfalse), `session_seconds`60–28800 (default3600).
+Passwords12–1024 chars are salted16bytes and hashed with scrypt n131072/r8/p1,
+32-byte output, bounded256MiB OpenSSL allowance. Two hashing slots/process, including
+work whose client disconnects; DB rate limit permits10 login attempts/minute for
+the configured account, irrespective of submitted username/IP. Saturation returns429
+with Retry-After60; no password hashing runs on the async event loop.
+[Python scrypt API](https://docs.python.org/3.12/library/hashlib.html#hashlib.scrypt).
+
+HTTPS is the default setup origin. HTTP is accepted only for explicitly enabled
+loopback; production rejects that flag. There is no proxy-header inference of
+cookie security. Configure the actual browser origin exactly, without path/trailing
+slash. Secure cookies are set for HTTPS; HttpOnly/SameSite=Strict, host-only,
+path `/v1/admin`, absolute TTL (no sliding refresh). The server stores SHA256
+hashes of256-bit random session tokens and session-bound CSRF tokens. Expiry and
+revocation use the database clock. Login rotates the submitted old session;
+logout revokes it before acknowledgement, and expired/revoked tokens fail401.
+Changing username/hash/origin invalidates existing sessions via a credential
+fingerprint. To rotate, create a new config file at a new path and restart the API;
+do not overwrite an in-use secret silently. Unset config returns503; invalid
+configured JSON aborts startup with a safe field-name error. No default password,
+automatic admin role from app JWT, public token endpoint or end-user account system.
+
+### API workflow and permission matrix
+
+`POST /v1/admin/auth/login` accepts only JSON `{username,password}`, capped8KiB/5s,
+with `Origin` exactly matching config; cross-site/missing/null origins fail403.
+The200 response sets the cookie and returns `{role:"admin",csrf_token,expires_in}`.
+Keep cookie and CSRF in process/browser memory, not logs. `GET /auth/session`
+returns the current session CSRF token for page reload. All other unsafe requests
+(including logout) require that cookie, exact Origin and `X-CSRF-Token`. Duplicate
+CSRF headers/cookies and forged/expired tokens fail closed. Login uses Origin
+protection before a CSRF token exists; it does not require that header.
+
+PowerShell API example (the `/admin` login form comes in T28):
+
+```powershell
+$adminOrigin='http://127.0.0.1:8000'
+$adminCredential=Get-Credential -UserName admin -Message 'Local RAG admin'
+$adminBody=@{username=$adminCredential.UserName; password=$adminCredential.GetNetworkCredential().Password} | ConvertTo-Json
+$adminLogin=Invoke-RestMethod "$adminOrigin/v1/admin/auth/login" -Method Post -ContentType application/json -Body $adminBody -Headers @{Origin=$adminOrigin} -SessionVariable adminSession
+$adminHeaders=@{Origin=$adminOrigin; 'X-CSRF-Token'=$adminLogin.csrf_token}
+Invoke-RestMethod "$adminOrigin/v1/admin/overview" -WebSession $adminSession
+# After selecting a UUID from the metadata list:
+# Invoke-RestMethod "$adminOrigin/v1/admin/jobs/$jobId/retry" -Method Post -WebSession $adminSession -Headers $adminHeaders
+Invoke-WebRequest "$adminOrigin/v1/admin/auth/logout" -Method Post -WebSession $adminSession -Headers $adminHeaders
+Remove-Variable adminCredential,adminBody,adminLogin,adminHeaders,adminSession
+```
+
+| Caller | Admin metadata/actions | Public factual query |
+| --- | --- | --- |
+| No admin session | 401; unconfigured admin503 | Existing app JWT/service auth required |
+| App JWT/service credential only | 403 admin_required; no admin authority | Current app/user/session scope only |
+| Valid admin cookie, read | Global operational metadata only | Cookie grants no app/user/document authority |
+| Valid admin cookie, mutation | Exact Origin + CSRF + legal state + atomic audit required | Use a separate authorized test principal through standard API |
+
+All routes below have prefix `/v1/admin`; returned strings are HTML-escaped and
+control characters removed, max1024chars. Render them as inert text. No raw
+filename/error HTML should be inserted using innerHTML. Metadata errors are a
+boolean `has_error`; raw adapter error strings are never reflected. Arbitrary
+nonhex pipeline/index fingerprints are withheld. No source bucket/key/version,
+credentials, chunks/text, history, prompts, answers or presigned URLs are projected.
+
+| Method/path | Result / operation |
+| --- | --- |
+| POST `/auth/login`, GET `/auth/session`, POST `/auth/logout` | Independent session flow above; logout204 |
+| GET `/overview` | Real PG counts, job-state totals, pending outbox, database/source byte counts; native PG/Redis/Qdrant health |
+| GET `/documents` | Version/document/app/owner IDs, escaped filename/content type, size/state/active generation/timestamps |
+| GET `/jobs` | IDs/owner/state/progress0–100/attempt limits/has_error/timestamp |
+| GET `/sessions` | IDs/owner/escaped external ID/status/revision/timestamps |
+| GET `/sessions/{id}/documents` | Paginated attached and retained detached link metadata |
+| GET `/index` | Generation/version/owner/state/chunk count/index and pipeline fingerprints/timestamp |
+| GET `/audit` | Local admin actor, allowlisted action, target UUID, related document UUID, request UUID, outcome/time |
+| POST `/jobs/{id}/retry` | Failed job with attempts remaining and original active session/link; queued replay idempotent; one outbox event |
+| POST `/jobs/{id}/cancel` | Queued/in-flight job ->cancelled; repeated cancel idempotent; ready/failed409 |
+| POST `/jobs/{id}/reindex` | Ready job plus original active link/session ->queued+outbox, reset attempts; old published generation remains readable |
+| DELETE `/sessions/{id}/documents/{doc}` | Detach only current session, bump revision once; repeated detach idempotent; deleted session410 |
+| DELETE `/sessions/{id}` | Tombstone/disable links/bump revision once; repeat idempotent |
+
+Lists accept `cursor` UUID and `limit`1–100 (default50), return `{items,next_cursor}`.
+Follow next_cursor untilnull; ordering is UUID, not chronology. Documents/jobs/
+sessions/index accept exact `app`, `owner`, `state`; documents also accept exact
+`content_type`. Audit accepts state=success/denied, no owner/app filter. Session
+links use their link UUID cursor and the same limit bounds. IDs outside existing
+metadata404; illegal action409. Health failures report unavailable, never fake
+healthy. `broker_queue_depth` and `vector_bytes` are currentlynull: pending outbox
+is a durable backlog, not measured Redis queue depth; full metrics/resources T32.
+Index fingerprints identify configured revisions; actual model/dimension manifests
+remain T17/T18 operational configuration, not a vector console.
+
+Mutations take the same session/job/version locks as ingestion. Cancel clears
+lease and fails staging generations, leaving published generations/chunks/vectors/
+sources intact; late heartbeat/advance/publish cannot pass the original lease
+fence. Detach/tombstone never reattach or remove sources, and session scope checks
+still gate all public retrieval. Retry/reindex reuse existing PG/outbox rules in
+the same caller transaction as audit. Audit failure rolls back the action; denied
+transitions and valid-session CSRF failures have denied audit events. Actor is
+the independent single local_admin role (not an app-supplied user). Request IDs
+are server-generated and match response header/ack. Logout revokes atomically with
+audit. Responses use no-store/nosniff/CSP; route errors consume raw exceptions
+before the ASGI server can log a private adapter traceback. There is no SQL console,
+arbitrary file browser, vector search, source delete, eval runner or raw viewer.
+
+### Real local acceptance and limits
+
+Use existing ignored fixture secrets from `scripts/bootstrap_storage_test.ps1`
+and `.local/secrets/t10_postgres_password` (create exclusively as documented R04
+if absent). The project below has dedicated loopback ports and tmpfs; no app
+volume/network, inference model, real provider key, worker or dispatcher is needed:
+
+```powershell
+docker compose -p rag-core-t27-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml up -d --wait postgres redis qdrant minio storage-fixture
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55437/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+$env:RAG_ADMIN_TEST_STORAGE_URL='http://127.0.0.1:19007'
+$env:RAG_ADMIN_TEST_QDRANT_URL='http://127.0.0.1:56337'
+uv run pytest tests/security/test_admin_auth.py tests/integration/test_admin_operations.py -v -s --tb=short --basetemp=.local/admin-new -o cache_dir=.local/admin-cache
+uv run pytest tests/integration/test_session_scope.py tests/integration/test_metadata_migrations.py -v -s --tb=short --basetemp=.local/admin-migrations-new
+docker compose -p rag-core-t27-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml stop
+```
+
+Use a new short basetemp per run on Windows. Tests create/drop only UUID-named
+private PG databases, migrate from empty, and verify no-source-delete using actual
+MinIO version/ETag/GET hash plus retained Qdrant point/vector and PG chunk. Synthetic
+2D vectors are retention canaries, not a retrieval-quality benchmark. HTTP cookie
+acceptance uses an actual loopback Uvicorn server; HTTPS cookie flags/config startup
+are verified in-process, not a deployed TLS endpoint. Audit SQL failure is injected
+by a real temporary PG trigger and must roll back the action. Tests never skip or
+substitute mocked PG/storage/vector success. They retain source canaries until the
+isolated tmpfs stack stops. No production password/config/data is changed.
+
+UI screens, browser visual QA/accessibility, evaluation reports, telemetry/load,
+backup restore and server deployment remain future tasks; T27 does not claim them.
 
 <a id="r11"></a>
 ## R11. Corpus và quality evaluation

@@ -113,7 +113,7 @@ services:
     networks: [backend]
 
   api:
-    image: rag-core-api:t26
+    image: rag-core-api:t27
     build:
       context: .
       dockerfile: docker/api.Dockerfile
@@ -131,6 +131,7 @@ services:
       AUTH_CONFIG_FILE: ${RAG_AUTH_CONFIG_FILE:-}
       STORAGE_CONFIG_FILE: ${RAG_STORAGE_CONFIG_FILE:-}
       API_CONFIG_FILE: ${RAG_API_CONFIG_FILE:-}
+      ADMIN_CONFIG_FILE: ${RAG_ADMIN_CONFIG_FILE:-}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}

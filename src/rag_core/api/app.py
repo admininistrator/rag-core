@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 
 from fastapi import FastAPI, Response, status
 
 from rag_core import __version__
+from rag_core.adapters.persistence.database import build_engine, database_url
+from rag_core.admin.api import build_admin_router
+from rag_core.admin.auth import AdminAuthentication, AdminServices
+from rag_core.admin.config import load_admin_config
 from rag_core.api.auth import AuthenticationMiddleware
 from rag_core.api.errors import install_error_handlers
 from rag_core.api.health import HealthChecks, build_health_checks
@@ -23,6 +27,7 @@ def create_app(
     settings: Settings | None = None,
     checks: HealthChecks | None = None,
     services: PublicServices | None = None,
+    admin_services: AdminServices | None = None,
 ) -> FastAPI:
     """Mount contracts even without config; unconfigured business services fail closed."""
 
@@ -34,20 +39,43 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        if services is not None:
-            app.state.public_services = services
+        async with AsyncExitStack() as stack:
+            if (
+                admin_services is None
+                and resolved_settings is not None
+                and resolved_settings.admin_config_file is not None
+            ):
+                config_admin = load_admin_config(
+                    resolved_settings.admin_config_file,
+                    production=resolved_settings.app_env == "production",
+                )
+                engine = build_engine(
+                    database_url(
+                        str(resolved_settings.database_url),
+                        resolved_settings.database_password_file,
+                    )
+                )
+                stack.push_async_callback(engine.dispose)
+                app.state.admin_authentication = AdminAuthentication(
+                    AdminServices(engine, config_admin)
+                )
+            if services is not None:
+                app.state.public_services = services
+            elif resolved_settings is not None and resolved_settings.api_config_file is not None:
+                config = load_api_config(resolved_settings.api_config_file)
+                app.state.public_services = await stack.enter_async_context(
+                    public_services(resolved_settings, config)
+                )
             yield
-        elif resolved_settings is not None and resolved_settings.api_config_file is not None:
-            config = load_api_config(resolved_settings.api_config_file)
-            async with public_services(resolved_settings, config) as runtime:
-                app.state.public_services = runtime
-                yield
             app.state.public_services = None
-        else:
-            yield
+            app.state.admin_authentication = None
 
     app = FastAPI(title="RAG Core", version=__version__, lifespan=lifespan)
     app.state.public_services = services
+    app.state.admin_health_checks = resolved_checks
+    app.state.admin_authentication = (
+        AdminAuthentication(admin_services) if admin_services is not None else None
+    )
     authenticator = None
     if resolved_settings is not None and resolved_settings.auth_config_file is not None:
         authenticator = Authenticator(
@@ -59,6 +87,7 @@ def create_app(
     app.add_middleware(AuthenticationMiddleware, authenticator=authenticator)
     install_error_handlers(app)
     app.include_router(build_public_router())
+    app.include_router(build_admin_router())
 
     @app.get("/health/live", tags=["health"])
     async def live() -> dict[str, str]:
@@ -82,6 +111,12 @@ def create_app(
             inventory["components"]["schemas"]
         )
         schema["components"]["securitySchemes"] = inventory["components"]["securitySchemes"]
+        schema["components"]["securitySchemes"]["AdminCookie"] = {
+            "type": "apiKey",
+            "in": "cookie",
+            "name": "rag_admin",
+            "description": "Independent admin session; unsafe methods require Origin and X-CSRF-Token.",
+        }
         for path, methods in schema["paths"].items():
             if path not in inventory["paths"]:
                 continue

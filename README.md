@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T26 VERIFIED local public API and both real provider smoke gates.** All 13 public/health operations are mounted behind trusted configuration. DeepSeek `deepseek-flash` and Anthropic `claude-haiku-4-5-20251001` passed independently; synthetic wire fixtures remain separate protocol evidence. Admin/evaluation/load/restore remain T27–T36. [T26 completion evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T27 admin APIs VERIFIED local with the completion commit.** T26 public API and both real provider gates remain verified. Admin UI/evaluation/load/restore remain T28–T36. [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 
 ## Phạm vi đã chốt
 
@@ -220,7 +220,7 @@ model compatibility. [Actual evidence](docs/handoffs.md#h-t26-a01-resumed).
 
 ## Authentication T09
 
-`AUTH_CONFIG_FILE` trỏ tới JSON registry do operator quản lý. Mỗi request `/v1` cần
+`AUTH_CONFIG_FILE` trỏ tới JSON registry do operator quản lý. Business request `/v1` (admin có cookie riêng) cần
 `Authorization: Bearer <JWT>` và `X-RAG-Service-Key`; app lấy từ service identity,
 user lấy từ `sub` đã verify. JWT phải có signed `app_id` khớp app, `iss`, `aud`,
 `exp`, `nbf`, `iat`; chỉ RS256. Chưa cấu hình auth thì `/v1` trả 503, không bypass.
@@ -244,6 +244,32 @@ uv run pytest tests/security/test_local_auth_http.py -s
 
 Endpoint `/v1/auth-test` chỉ được mount trong test. Application có đủ public routes; request thiếu auth hoặc business config fail closed. Unknown authenticated routes trả404. T09 chưa dựng issuer trong Compose hay tích hợp Scarlet. Evidence:
 [H-T09-A01](docs/handoffs.md#h-t09-a01).
+
+## Admin metadata API T27
+
+Admin uses independent local credentials, a scrypt password hash, revocable PG
+sessions and Origin/CSRF checks. App JWT/service keys carry no admin role. APIs
+under `/v1/admin` list escaped operational metadata with keyset pagination and
+filters; overview reads real counts/dependency health. Retry/cancel/reindex and
+session detach/tombstone commit with metadata-only audit records. No raw document,
+chunk, prompt, answer, source key or credential viewer is exposed.
+
+After configuring the verified target database, run `uv run alembic upgrade head`
+for additive revision `0004_admin_audit`. Create a private config with hidden
+password input:
+
+```powershell
+uv run python scripts/setup_admin.py --output .local/api/admin.json --origin http://127.0.0.1:8000 --allow-loopback-http
+```
+
+Set host `ADMIN_CONFIG_FILE=.local/api/admin.json`, or Compose
+`RAG_ADMIN_CONFIG_FILE=/run/config/admin.json`, then restart/rebuild the API.
+Unset config denies admin requests503; no default admin password. HTTPS enables
+Secure cookies; HTTP requires explicit loopback configuration and is rejected in
+production. Cookie is HttpOnly/SameSite=Strict, expires after one hour by default.
+Setup, API login/logout, permission/action matrix, exact real-service acceptance
+commands and limits: [RUNBOOK R10](RUNBOOK.md#r10). `/admin` browser UI remains T28;
+no UI/deployment/live-provider remeasurement claim is part of T27.
 
 ## Metadata và session scope T10
 

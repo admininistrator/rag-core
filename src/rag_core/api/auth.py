@@ -25,6 +25,11 @@ class AuthenticationMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         path = scope.get("path", "")
+        # Admin has an independent fail-closed cookie guard on every admin route.
+        # Match a path segment, never a general '/v1/admin' string prefix.
+        if path == "/v1/admin" or path.startswith("/v1/admin/"):
+            await self.app(scope, receive, send)
+            return
         if scope["type"] != "http" or not (path == "/v1" or path.startswith("/v1/")):
             await self.app(scope, receive, send)
             return

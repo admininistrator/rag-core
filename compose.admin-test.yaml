@@ -1,0 +1,11 @@
+# Overlay on the isolated ingestion test stack; start only the five listed services.
+# Dedicated loopback ports; no application volumes, models, providers or worker required.
+services:
+  postgres:
+    ports: ["127.0.0.1:55437:5432"]
+  redis:
+    ports: ["127.0.0.1:16387:6379"]
+  qdrant:
+    ports: ["127.0.0.1:56337:6333"]
+  minio:
+    ports: ["127.0.0.1:19007:9000"]

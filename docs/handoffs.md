@@ -6,6 +6,8 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-18 / T27-A01 acceptance closure:** direct Codex agent, exact runtime model/effort unavailable, no subagents. main baseline022e4e0 equals origin/main; legacy T07 scratch/user config preserved. Independent local admin scrypt/PG sessions/CSRF, allowlisted metadata/counts/health, atomic audited retry/cancel/reindex/detach/tombstone implemented. DoD1 actual PG/HTTP/MinIO/Qdrant15PASS30.88s; separate DoD2 privacy/authority4PASS9.72s;673regressionPASS133.08s;19realPGscope/migrationPASS6.55s. API image build and final quality/source/hash review recorded [H-T27-A01](#h-t27-a01), interfaces [S-T27-A01](implementation-summary.md#s-t27-a01). Completion subject `feat(T27): add audited administration APIs`; COMPLETE/D6 only effective with inspected successful commit, actual hash/normal authorized origin/main equality returned after execution. Stop only own isolated tmpfs stack, retain .env/secrets/model cache/source/app volumes/T07 scratch; no merge/deploy/Scarlet/drain. T28 dependencies ready after T27 closure, remains TODO; STOP T27.
+
 - **Current 2026-10-08 / T26-A01 acceptance closure:** direct Codex/exact model-effort unavailable/no subagents. Resumed checkpoint1f5b7efb23c1056bfc82ae6561cdba71a78835b3 after ignored .env configured. Final DoD1 six real public cases PASS180.29s; DoD2 actual DeepSeek deepseek-flash PASS110.91s and Anthropic claude-haiku-4-5-20251001 PASS74.99s, JSON/SSE/EN-VI/history/insufficient/citations/usage/retention. Static native Anthropic JSON schema/private port with unchanged strict parsing/bounds/exact quotes/scope; no fallback or model switch.673unit-contract-auth PASS176.83s;83affected service cases PASS across bounded subprocesses, original Windows/mount/OOM/live failures retained.97source/image hashes equal; API13ops/Torch absent; quality/lock177/OpenAPI/docs/scope/secret review PASS. [H-T26-A01 resumed](#h-t26-a01-resumed), [S-T26-A01 resumed](implementation-summary.md#s-t26-a01-resumed). COMPLETE/D6 effective only with inspected successful `test(T26): verify public RAG API with live providers` commit; actual hash/authorized origin/main equality returned post-execution. Stop own isolated project only, retain volumes/cache/source/.env/four legacy scratch paths; no deploy/Scarlet/load/full-corpus claim. T27 dependencies T26/T10 ready after closure, remains TODO; STOP T26, no drain.
 
 - **Historical 2026-10-07 / T26-A01 RESUMED, IN_PROGRESS:** user configured ignored `.env`; same attempt after checkpoint1f5b7efb23c1056bfc82ae6561cdba71a78835b3 verified equal origin/main. Both provider key/model fields set, secret values not printed. Legacy scratch retained. Revalidate trusted provider config and run mandatory live DeepSeek/Anthropic gates serially on isolated real stack; preserve prior evidence. Completion only after live gates/all applicable DoD and inspected commit/push; STOP T26. Exact model-effort unavailable, direct agent, no subagents.
@@ -10429,3 +10431,284 @@ D5 command: `uv run --no-sync python .local/t26_resumed_review.py`, exit0 after 
 ```text
 PASS staged scope14; actual env/local credential and new pattern scan clear; ignored .env/logs/fixtures/cache/scratch absent; temp live env removed
 ```
+
+<a id="h-t27-a01"></a>
+## Phase 6 / T27 / Attempt T27-A01 — Audited local administration
+
+### Baseline, scope and runtime
+
+Direct Codex agent; exact runtime model/effort unavailable, no subagents.
+Started/ended2026-10-18 Asia/Bangkok. Cwd for every command below:
+`C:\Users\Admin\Documents\GitHub\rag-core`. User authorizes scoped commit and
+normal origin/current-branch push; no force/merge/deploy/drain. Baseline:
+
+```text
+git branch --show-current -> main
+git rev-parse HEAD -> 022e4e0dd6bbec21041d611c6969aeef9056ea81
+git log -3 --oneline
+022e4e0 test(T26): verify public RAG API with live providers
+1f5b7ef test(T26): checkpoint public API pending live credentials
+a3dedbd feat(T25): stream scoped answers with cancellation
+git ls-remote origin refs/heads/main
+022e4e0dd6bbec21041d611c6969aeef9056ea81 refs/heads/main
+origin https://github.com/admininistrator/rag-core.git (fetch/push)
+git status --short -> ?? .ptmp-t07-a02/ ; ?? .tmp-t07-a02/
+```
+
+All Git read commands exit0; baseline status also emits existing ACL warnings for
+`.pytmp-t07-a02/`, `.tmp-t07-a02/pytest-tmp/`, `UsersAdminAppDataLocalTempt07a03/`
+and user global ignore. Preserve all legacy scratch/user .env/secrets/other apps.
+Read AGENTS/session prompt, T27, COMPLETE dependency T26/T10 notes, P01/P04/P05/
+P10/P12/P13, current checkpoint/implementation interfaces/README/RUNBOOK before
+implementation. Initial task-status shell replacement did not match Unicode
+Vietnamese under PowerShell stdin encoding; corrected with UTF8 patch during
+review. No dependency/task transition was bypassed.
+
+Actual host uv0.11.16, CPython3.12.4, pytest9.1.1/pytest-asyncio1.4.0; Windows
+SelectorEventLoop for Psycopg. Docker29.5.2. Native PG17.11/Redis8.10.1/
+Qdrant1.19.1/MinIO RELEASE.2025-07-23T15-54-02Z, image digests pinned in existing
+`compose.ingestion-test.yaml`. No provider/model/LLM mock or live call is needed
+for administration. No inference, worker or dispatcher is started in this task.
+
+### Services and actual test configuration
+
+Initial sandbox `docker version --format '{{.Server.Version}}'` exit1 denied
+Docker pipe/config access; normal sandbox restriction, no auto-review rejection.
+Same authorized local check with elevated tool access exit0 ->29.5.2. Remote
+read/hash also succeeds using authorized access. Stack command, exit0:
+
+```powershell
+docker compose -p rag-core-t27-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml up -d --wait postgres redis qdrant minio storage-fixture
+```
+
+Actual output excerpts: `Network rag-core-t27-test_default Created`,
+`Container rag-core-t27-test-postgres-1 Healthy`, Redis/Qdrant/MinIO Healthy;
+storage-fixture later `Exited (0)`. Own project has tmpfs, no application volumes/
+networks; loopback PG55437/Redis16387/Qdrant56337/MinIO19007. Existing ignored
+fixture credentials are read from `.local/secrets/`; no values printed/copied.
+Shared environment for DoD1/DoD2/migration commands:
+
+```powershell
+$env:UV_CACHE_DIR="$PWD/.uv-cache"
+$env:UV_PYTHON_INSTALL_DIR="$PWD/.uv-python"
+$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55437/t10_acceptance'
+$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+$env:RAG_ADMIN_TEST_STORAGE_URL='http://127.0.0.1:19007'
+$env:RAG_ADMIN_TEST_QDRANT_URL='http://127.0.0.1:56337'
+```
+
+Tests fail, never skip/SQLite/mock, if PG or required explicit retention endpoints
+are missing. Fixtures create/drop only `t10_test_<UUID>` databases; admin password
+is random per test, never an actual operator credential. Real MinIO uploader is
+only test setup; administration has no storage/vector client or delete capability.
+Synthetic2D Qdrant retention canary is not model/retrieval quality evidence.
+
+### DoD-1 — actual auth/operations/retention acceptance
+
+First command, exit1, log `.local/t27-dod1-first.log`:
+`uv run pytest tests/security/test_admin_auth.py tests/integration/test_admin_operations.py -v -s --tb=short --basetemp=.local/a27a -o cache_dir=.local/c27a`.
+Actual `1 failed, 12 passed in 21.14s`; fixture reused same session/external upload
+idempotency key when adding three metadata rows, causing `uq_registration_key`
+UniqueViolation. Corrected fixture creates a new explicit session per seed, keeping
+unique-key security gate unchanged. No product semantics/gate/assertion weakened.
+Second same gate/newbasetemp a27b/c27b exit0 ->`14 passed in 18.42s`,
+`.local/t27-dod1-second.log`. Added full native health probe acceptance; next run:
+
+```powershell
+uv run pytest tests/security/test_admin_auth.py tests/integration/test_admin_operations.py -v -s --tb=short --basetemp=.local/a27c -o cache_dir=.local/c27c
+```
+
+Exit0; `.local/t27-dod1-final.log`, actual excerpt:
+
+```text
+collecting ... collected 14 items
+Real PostgreSQL: separate database t10_test_9a1b963093af4d379475f286ac5ca8f8, public tables before migration=0
+Real PostgreSQL: migrated separate database t10_test_9a1b963093af4d379475f286ac5ca8f8
+T27 actual loopback HTTP: cookie/login/CSRF/logout/replay PASS
+T27 metadata: actual counts/keyset pagination/filters/escaping/privacy PASS
+T27 jobs: concurrent retry/one outbox/illegal transitions/denied audits PASS
+T27 cancellation/reindex: actual PG lease fence and old ready generation retained PASS
+T27 session detach/tombstone: revision/idempotence/scope invalidation/retention PASS
+T27 atomicity: actual PG audit INSERT failure rolls back action, error/log private PASS
+T27 actual MinIO HEAD/GET version/ETag/SHA + Qdrant point/vector + PG chunk retained PASS
+============================= 14 passed in 18.59s =============================
+```
+
+Expected/actual PASS: absent/expired/revoked/fixed/rotated/forged session fails;
+app headers have no admin authority; Origin/login and all mutation CSRF enforced;
+actual loopback HTTP sets HttpOnly/SameSite/path/TTL, logout/replay fails; HTTPS
+Secure flags/config startup checked in-process (not a deployed TLS server).
+Global metadata is escaped/paginated/filtered; counts and native PG/Redis/Qdrant
+health are real. Retry concurrency yields one outbox event; illegal transition409,
+missing404; cancel fences actual claimed worker lease and preserves published
+generation; detach/tombstone revision/idempotence/scope invalidation; no-source-
+delete checks actual retained source version/ETag/GET SHA + vector + PG chunk.
+Real PG trigger raises PRIVATE_DATABASE_SECRET on audit INSERT: API503, action
+rolled back, neither response nor captured logs expose that value. Final review
+added a login-body5s deadline and duplicate-cookie test; subsequent final run below.
+
+### DoD-2 — separate privacy/authority gate and permission documentation
+
+Command, exit0, log `.local/t27-dod2.log`:
+
+```powershell
+uv run pytest tests/security/test_admin_auth.py tests/integration/test_admin_operations.py -k 'unauthorized_and_app_credentials or no_secret_logging or escaped_metadata or audit_failure' -v -s --tb=short --basetemp=.local/a27p -o cache_dir=.local/c27p
+```
+
+Actual `4 passed, 10 deselected in 9.72s`; intentional four-case privacy gate,
+not a replacement for full DoD1. Cases check app/service headers403, authenticated
+cookie grants no public factual identity, DB metadata projections exclude private
+chunk/answer/source key/bucket/credential/error sentinels and arbitrary fingerprints,
+strict login failures/throttle/bounds do not log password/hash, SQL audit failure
+is sanitized. RUNBOOK R10 reviewed: independent setup, credentials/rotation,
+role matrix, allowed projections/filters/actions, errors/CSRF/logout, migration/
+retention, native health vs unmeasured null metrics, exact service commands and
+UI/deployment limits. No raw viewer/SQL/vector console/source-delete endpoint.
+
+### D2 regression, schema replay and packaging
+
+Command, exit0, `.local/t27-regression.log`:
+
+```powershell
+uv run --no-sync pytest tests/unit tests/contract tests/security/test_auth.py tests/security/test_local_auth_http.py tests/security/test_ingestion_storage_config.py -q --tb=short --basetemp=.local/a27r -o cache_dir=.local/c27r
+```
+
+Actual `673 passed in 133.08s (0:02:13)`. Existing public schema/auth/protocol,
+bounded domain/model clients, parser/corpus/streaming/answer/unit checks all covered;
+no LLM call, test gold/corpus/index data change. Actual PG dependency gate:
+
+```powershell
+uv run --no-sync pytest tests/integration/test_session_scope.py tests/integration/test_metadata_migrations.py -v -s --tb=short --basetemp=.local/a27m -o cache_dir=.local/c27m
+```
+
+Exit0; `.local/t27-migrations.log`, excerpts:
+
+```text
+PASS isolation: app/user/current-session, explicit new registration, independent detach
+PASS repeated/concurrent delete: one revision, retained rows byte-equivalent, no resurrection
+PASS real lock race: old coherent snapshot then revision invalidation; replay stays detached
+PASS separate empty PG migration -> repeat head -> downgrade base -> upgrade head: identical schema
+============================= 19 passed in 6.55s ==============================
+```
+
+Empty migrations/replay include additive0004 and all old tables/defaults/constraints/
+indexes. Destructive replay is only fixture's private DB, never application data.
+Normal application rollout is explicit upgrade head; existing public consumers
+unchanged. OpenAPI served snapshot adds9admin operations and cookie security scheme;
+designed public payload schema/examples unchanged (13ops/48schemas/37examples).
+
+`docker compose config --quiet` and isolated Compose config each exit0; build
+`docker compose build api` exit0, logs `.local/t27-api-build.log` (intermediate t26
+tag) and `.local/t27-api-build-final.log` (t27). Actual source/package inspection:
+
+```powershell
+docker run --rm --network none --entrypoint python --mount "type=bind,source=$PWD/src,target=/reference,readonly" --mount "type=bind,source=$PWD/.local/t27_image_check.py,target=/check.py,readonly" rag-core-api:t27 /check.py
+```
+
+Exit0, actual `T27 API image: 102 source hashes equal; Python 3.12.13; UID10001; Torch absent; operations=22/admin=9 PASS`.
+Final body-deadline review changes require a final rebuild/hash check below.
+No application API service was started or deployed by these image checks.
+
+Initial Ruff/mypy issues were formatting/import order, optional route.methods
+type, and SIM117 test context syntax; fixed, not suppressed. Pre-sync Ruff/mypy
+each exit0 (`All checks passed!`; `Success: no issues found in 102 source files`).
+`uv sync --locked --group dev --group api --group ingestion` exit0 resolves177 but
+removes33 optional inference packages from pre-existing host env; next full-source
+mypy fails on missing Torch/FlagEmbedding. Restore original pinned inference group
+before final checks rather than ignoring model source/gate. One docs check failed
+while new H-T27 anchor had not yet been appended; subsequent final checks below.
+Intermediate `uv run --no-sync ruff format --check` on13new/scoped Python files
+exit0; old persistence modules retain baseline formatting outside modified helpers.
+Setup `uv run --no-sync python scripts/setup_admin.py --help` exit0, actual usage
+lists output/username/origin/allow-loopback-http and no credential values.
+
+### D1–D6 review and final closure
+
+Final gate outputs, review and completion boundary appended below. Completion
+subject `feat(T27): add audited administration APIs`. D6/COMPLETE require successful
+inspected scoped commit; actual hash/authorized normal origin/main equality are
+reported post-execution, not inserted into their own commit. T28 remains TODO,
+dependency-ready only after T27 completion. STOP T27, no drain/merge/deploy/Scarlet.
+
+Final DoD1 after login body deadline/cookie review:
+`uv run pytest tests/security/test_admin_auth.py tests/integration/test_admin_operations.py -v -s --tb=short --basetemp=.local/a27d -o cache_dir=.local/c27d`,
+exit0, `.local/t27-dod1-closure.log`. Actual `collecting ... collected 15 items`,
+`test_login_body_deadline_and_duplicate_cookie_rejection PASSED`, all previous
+native checks above PASS, `15 passed in 30.88s`. This final run supersedes14-case
+intermediate count; all four separate DoD2 cases also remain in this final suite.
+
+Final sync `uv sync --locked --group dev --group api --group ingestion --group inference`
+exit0, `.local/t27-sync-final.log`: `Resolved 177 packages in 1ms`,
+`Installed 33 packages in 7.08s`, original optional inference dependencies restored.
+No lock/dependency version changes. Final individual static checks, each exit0:
+
+```text
+uv run --no-sync ruff check src tests scripts
+All checks passed!
+uv run --no-sync mypy src
+Success: no issues found in 102 source files
+uv run --no-sync ruff format --check src/rag_core/admin src/rag_core/adapters/persistence/admin.py src/rag_core/api/app.py scripts/setup_admin.py scripts/export_openapi.py migrations/versions/0004_admin_audit.py tests/fixtures/admin_support.py tests/security/test_admin_auth.py tests/integration/test_admin_operations.py tests/contract/test_api_schema.py
+13 files already formatted
+uv run --no-sync python scripts/check_docs.py
+PASS UTF-8/nonempty Markdown: 14 files
+PASS internal links/anchors: 420
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+DOCUMENTATION CHECK: PASS
+uv run --no-sync python scripts/export_openapi.py --check
+PASS checked docs/api/openapi-v1.designed.json
+PASS checked docs/api/openapi.served.json
+PASS checked docs/api/examples-v1.json
+PASS designed_operations=13 served_operations=22 admin_operations=9 served_health_routes=2 synthetic_examples=37
+PASS OpenAPI model + Draft2020-12 schemas=48; examples JSON Schema + Pydantic
+CONTRACT EXPORT: PASS (public routes mounted; export does not verify runtime/provider)
+uv lock --check
+Resolved 177 packages in 2ms
+git diff --check
+(no whitespace errors; only pre-existing CRLF normalization warning for compose.yaml)
+```
+
+Final packaging `docker compose build api` exit0,
+`.local/t27-api-build-closure.log`: `Image rag-core-api:t27 Built`, manifest list
+`sha256:72e4b4faeccecf777217ad87a42f1196bf6e16d1927621ef9fa7cea1b8221e75`.
+Same exact network-disabled source inspection command above repeated after the
+last source change, exit0:
+`T27 API image: 102 source hashes equal; Python 3.12.13; UID10001; Torch absent; operations=22/admin=9 PASS`.
+
+Cleanup command `docker compose -p rag-core-t27-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml stop`,
+exit0. `... ps --all` exit0: own PG/Redis/MinIO Exited(0), Qdrant Exited(143)
+on stop, storage-fixture Exited(0). No volumes/cache/source/application stack
+deleted. Own test data was explicitly tmpfs; no retained app/user source touched.
+
+D1 PASS: only27reviewed task paths, COMPLETE dependency notes, exact public session
+scope/retention invariants unchanged, diff whitespace gate clear. D2 PASS:
+673regression+19realPGreplay+15finaladmin+separate4privacy, actual static/image/
+lock/schema checks above. D3 PASS: distinct full lifecycle/auth and separate
+privacy/authority/manual RUNBOOK review, no skipped or fake-live verification.
+D4 PASS: README/RUNBOOK + tasks/handoffs/summary updated with actual interfaces,
+setup/auth/CSRF/permissions/metadata/actions/migration/backward compatibility and
+limits. D5/D6 final explicit staging/review/commit follow; no secret/raw corpus/
+weights/cache/scratch or unrelated user file may enter the commit.
+
+Final D4 closure recheck `uv run --no-sync python scripts/check_docs.py`, exit0:
+`PASS UTF-8/nonempty Markdown: 14 files`, `PASS internal links/anchors: 422`,
+`PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic`,
+`DOCUMENTATION CHECK: PASS`.
+
+D5 staged review command `uv run --no-sync python .local/t27_review.py`, exit0.
+Actual output:
+
+```text
+T27 D5 PASS: exact 27 staged paths; real local credential/private-key pattern scan clear; cached whitespace and configured Git author PASS; no corpus/cache/secrets/scratch staged
+```
+
+Initial generic pattern scan exit1 at a literal private-key marker already present
+in historical handoff text. Read-only comparison showed handoffs staged marker
+count1/baseline count1, no new marker. Final generic pattern scan applies to added
+lines; actual configured .env/local credential bytes still scan whole staged files.
+No credentials or private key material printed. Existing history was preserved.
+Explicit27-file stage/cached scope reviewed, no prompt/corpus/gold/dependency/lock
+change, source image102hashes equal, no unrelated file. D6 completion candidate
+includes all code/tests/docs and uses configured Git identity; actual successful
+commit and authorized normal push/hash verification reported after execution.
+Resolver: `git log -1 --format=%H --grep="^feat(T27):"`; no self-hash/amend.
+T28 remains TODO and ready only after this completion commit. STOP T27.

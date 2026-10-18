@@ -58,6 +58,9 @@ def test_migrations_reproduce_schema_on_separate_database(
         "outbox_events",
         "upload_registrations",
         "chunks",
+        "admin_sessions",
+        "admin_login_limits",
+        "audit_events",
     }
     assert migration_runner(pg_url, "upgrade", "head").returncode == 0
     assert schema() == before

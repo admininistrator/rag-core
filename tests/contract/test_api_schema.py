@@ -409,7 +409,16 @@ def test_openapi_snapshot_auth_status_refs_and_inventory() -> None:
     OpenAPI.model_validate(designed)
     served = json.loads((ROOT / "docs/api/openapi.served.json").read_text(encoding="utf-8"))
     OpenAPI.model_validate(served)
-    assert set(served["paths"]) == {endpoint.path for endpoint in ENDPOINTS}
+    assert {p for p in served["paths"] if not p.startswith("/v1/admin/")} == {
+        endpoint.path for endpoint in ENDPOINTS
+    }
+    for path, methods in served["paths"].items():
+        if path.startswith("/v1/admin/"):
+            for operation in methods.values():
+                assert operation["x-metadata-only"] is True
+                assert operation["security"] == (
+                    [] if path.endswith("/auth/login") else [{"AdminCookie": []}]
+                )
     for endpoint in ENDPOINTS:
         operation = designed["paths"][endpoint.path][endpoint.method]
         assert operation["x-served"] == endpoint.served

@@ -2178,6 +2178,12 @@
       }
     },
     "securitySchemes": {
+      "AdminCookie": {
+        "description": "Independent admin session; unsafe methods require Origin and X-CSRF-Token.",
+        "in": "cookie",
+        "name": "rag_admin",
+        "type": "apiKey"
+      },
       "AppServiceKey": {
         "in": "header",
         "name": "X-RAG-Service-Key",
@@ -2247,6 +2253,547 @@
         ],
         "x-implementation-status": "VERIFIED",
         "x-served": true
+      }
+    },
+    "/v1/admin/auth/login": {
+      "post": {
+        "operationId": "login_v1_admin_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "password": {
+                    "format": "password",
+                    "maxLength": 1024,
+                    "minLength": 1,
+                    "title": "Password",
+                    "type": "string",
+                    "writeOnly": true
+                  },
+                  "username": {
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "title": "Username",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "title": "LoginRequest",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [],
+        "summary": "Login",
+        "tags": [
+          "admin"
+        ],
+        "x-csrf-required": true,
+        "x-csrf-token-required": false,
+        "x-metadata-only": true
+      }
+    },
+    "/v1/admin/auth/logout": {
+      "post": {
+        "operationId": "logout_v1_admin_auth_logout_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "AdminCookie": []
+          }
+        ],
+        "summary": "Logout",
+        "tags": [
+          "admin"
+        ],
+        "x-csrf-required": true,
+        "x-csrf-token-required": true,
+        "x-metadata-only": true
+      }
+    },
+    "/v1/admin/auth/session": {
+      "get": {
+        "operationId": "current_v1_admin_auth_session_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Current V1 Admin Auth Session Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "AdminCookie": []
+          }
+        ],
+        "summary": "Current",
+        "tags": [
+          "admin"
+        ],
+        "x-csrf-required": false,
+        "x-csrf-token-required": false,
+        "x-metadata-only": true
+      }
+    },
+    "/v1/admin/jobs/{job_id}/{operation}": {
+      "post": {
+        "operationId": "job_operation_v1_admin_jobs__job_id___operation__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "operation",
+            "required": true,
+            "schema": {
+              "title": "Operation",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AdminCookie": []
+          }
+        ],
+        "summary": "Job Operation",
+        "tags": [
+          "admin"
+        ],
+        "x-csrf-required": true,
+        "x-csrf-token-required": true,
+        "x-metadata-only": true
+      }
+    },
+    "/v1/admin/overview": {
+      "get": {
+        "operationId": "summary_v1_admin_overview_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Summary V1 Admin Overview Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "AdminCookie": []
+          }
+        ],
+        "summary": "Summary",
+        "tags": [
+          "admin"
+        ],
+        "x-csrf-required": false,
+        "x-csrf-token-required": false,
+        "x-metadata-only": true
+      }
+    },
+    "/v1/admin/sessions/{session_id}": {
+      "delete": {
+        "operationId": "tombstone_v1_admin_sessions__session_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AdminCookie": []
+          }
+        ],
+        "summary": "Tombstone",
+        "tags": [
+          "admin"
+        ],
+        "x-csrf-required": true,
+        "x-csrf-token-required": true,
+        "x-metadata-only": true
+      }
+    },
+    "/v1/admin/sessions/{session_id}/documents": {
+      "get": {
+        "operationId": "links_v1_admin_sessions__session_id__documents_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Links V1 Admin Sessions  Session Id  Documents Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AdminCookie": []
+          }
+        ],
+        "summary": "Links",
+        "tags": [
+          "admin"
+        ],
+        "x-csrf-required": false,
+        "x-csrf-token-required": false,
+        "x-metadata-only": true
+      }
+    },
+    "/v1/admin/sessions/{session_id}/documents/{document_id}": {
+      "delete": {
+        "operationId": "detach_v1_admin_sessions__session_id__documents__document_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AdminCookie": []
+          }
+        ],
+        "summary": "Detach",
+        "tags": [
+          "admin"
+        ],
+        "x-csrf-required": true,
+        "x-csrf-token-required": true,
+        "x-metadata-only": true
+      }
+    },
+    "/v1/admin/{resource}": {
+      "get": {
+        "operationId": "page_v1_admin__resource__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource",
+            "required": true,
+            "schema": {
+              "title": "Resource",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "app",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 256,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "App"
+            }
+          },
+          {
+            "in": "query",
+            "name": "owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 256,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Owner"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "content_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Content Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Page V1 Admin  Resource  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "AdminCookie": []
+          }
+        ],
+        "summary": "Page",
+        "tags": [
+          "admin"
+        ],
+        "x-csrf-required": false,
+        "x-csrf-token-required": false,
+        "x-metadata-only": true
       }
     },
     "/v1/jobs/{job_id}": {
