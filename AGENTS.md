@@ -4,7 +4,7 @@
 
 ## 1. Đọc trước khi làm việc
 
-Đây là dự án RAG core độc lập, local-first, đóng gói Docker trên Windows. Đợt đầu có Default, Document, Multilingual EN/VI và UI quản trị. Scarlet/app chat gọi HTTP API sau này; **không sửa Scarlet trong backlog hiện tại**.
+Đây là dự án RAG core độc lập, local-first, đóng gói Docker trên macOS. Đợt đầu có Default, Document, Multilingual EN/VI và UI quản trị. Scarlet/app chat gọi HTTP API sau này; **không sửa Scarlet trong backlog hiện tại**.
 
 Nguồn cần đọc:
 
@@ -109,7 +109,7 @@ Blocker/next action: ...
 - Task notes ghi commit subject/Task-ID trước commit; worker trả actual hash sau commit. Không cố ghi hash vào chính commit đó; task sau có thể ghi hash task trước.
 - Không commit `.env`, JWT/service keys, model weights/cache, database dumps, raw PDFs/datasets không được phép, browser session data hoặc logs chứa nội dung riêng.
 - Không tự đặt danh tính Git giả. Nếu Git author chưa cấu hình, báo thiếu thông tin; không sửa global config. Không bỏ qua hook để tạo commit.
-- Windows: dùng PowerShell native với `-LiteralPath`; kiểm absolute target nằm trong workspace trước recursive delete/move. Không kết hợp PowerShell enumerate với `cmd /c` delete/move.
+- macOS/POSIX: kiểm absolute target nằm trong workspace trước khi thực hiện `rm -r` hoặc `mv`; không dùng glob chưa kiểm tra. Không xóa tài liệu gốc hoặc dữ liệu ngoài phạm vi cho phép.
 - Không dùng `docker compose down -v` trong flow mặc định. Backup/restore vào project/volumes riêng. Không tự xóa dữ liệu gốc ở storage.
 - Không in secret để debug. Handoffs output redacted phải đánh dấu `[REDACTED]`, giữ nguyên lỗi/count/exit có ích; không bịa output.
 

@@ -65,7 +65,7 @@ Không import module nội bộ RAG core vào Scarlet, không dùng DB chat củ
 
 **T01–T02 Python/settings/Docker health và T17 shared model runtime VERIFIED local.**
 
-- Windows/PowerShell, Git, Python 3.12, uv và Docker Desktop chạy Linux containers. T01/T02 chạy thật với uv 0.11.16 + CPython 3.12.4 trên host; `pyproject.toml`/`uv.lock` khóa interpreter ở `3.12.*`. API image dùng Python 3.12.13 pin digest. Docker daemon đã verify server 29.5.2.
+- macOS (Apple Silicon arm64), Git, Python 3.12, uv và Docker Desktop chạy Linux containers. Nền tảng local chuyển hoàn toàn sang macOS ngày 2026-10-30; host Python `3.12.*`; API image dùng Python 3.12.13 pin digest. Docker daemon đã verify Docker Desktop 4.96.3 / Engine 29.9.2 linux/arm64.
 - RAM 16 GB, GPU NVIDIA 8 GB tùy chọn cho inference; CPU path dùng để xác minh chức năng. Driver/WSL GPU passthrough phải kiểm thực tế.
 - Chừa disk cho source <=1 GB, corpus benchmark, parsed text/index, Docker images và model cache riêng; không dùng 1 GB làm dự báo dung lượng tổng.
 - `.env.example` chỉ chứa tên biến/default không bí mật. Copy thành `.env`, điền URL bắt buộc, và giữ mọi credential trong `.env`/secret store; không commit hoặc paste vào handoff.
@@ -74,9 +74,9 @@ Không import module nội bộ RAG core vào Scarlet, không dùng DB chat củ
 
 Chạy từ root repository. Trong môi trường bị giới hạn quyền ghi cache user, dùng hai biến local ở đầu; môi trường thường có thể bỏ hai dòng đó.
 
-```powershell
-$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'
-$env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'
+```bash
+export UV_CACHE_DIR="$PWD/.uv-cache"
+export UV_PYTHON_INSTALL_DIR="$PWD/.uv-python"
 uv sync --locked --group dev --group api --group ingestion
 uv run ruff check .
 uv run mypy src
@@ -133,13 +133,13 @@ Tên biến chính xác và defaults phải đồng bộ settings/`.env.example`
 
 Các lệnh sau đã chạy thật từ root repository. Script bootstrap tạo ba file secret local dưới `.local/secrets/` đã ignore, giữ file có sẵn và không in giá trị:
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap_local.ps1
+```bash
+./scripts/bootstrap_local.sh
 docker compose config --quiet
 docker compose --profile local-storage up -d --build postgres qdrant redis api minio minio-bootstrap
 docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
 docker compose --profile local-storage ps --all
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps1
+./scripts/smoke_local.sh
 ```
 
 Expected/verified: `api`, `postgres`, `qdrant`, `redis`, `minio` healthy; `minio-bootstrap` exit 0 sau khi tạo/kiểm fixture. API ở `http://127.0.0.1:8000`, MinIO API/console ở `http://127.0.0.1:9000` và `http://127.0.0.1:9001`. PG 5432, Qdrant 6333/6334 và Redis 6379 chỉ nội bộ. Profile MinIO mô phỏng app storage; API health T02 chưa dùng storage nên MinIO không nằm trong readiness.
@@ -154,11 +154,11 @@ GET /health/ready  -> 503 status=unavailable + component status khi một depend
 
 Stop/start giữ nguyên named volumes và fixtures:
 
-```powershell
+```bash
 docker compose --profile local-storage stop
 docker compose --profile local-storage up -d postgres qdrant redis api minio minio-bootstrap
 docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps1
+./scripts/smoke_local.sh
 ```
 
 Không dùng `docker compose down -v` trong flow mặc định. Không commit `.local/`, `.env`, key hoặc database files. MinIO/MC dùng release community lịch sử đã pin từ official Quay cho local simulation; server/cloud deployment ngoài scope.
@@ -234,7 +234,7 @@ Từ root repository, sync dev+api. Dùng thư mục mới dưới `.local/` đ�
 parent trên Windows vì mode0600 không thay Windows ACL. Không chia sẻ/copy private.pem,
 service-key hoặc JWT vào Git/log/browser. CLI từ chối directory/output đã tồn tại.
 
-```powershell
+```bash
 uv run python -m rag_core.auth.local_issuer init --directory .local/auth
 uv run python -m rag_core.auth.local_issuer token --directory .local/auth --subject local-user --output .local/auth/user.jwt --ttl 300
 uv run python -m rag_core.auth.local_issuer serve --directory .local/auth
@@ -245,17 +245,17 @@ Issuer `http://127.0.0.1:8765`, audience `rag-core:local-dev`, app `local-dev`;
 TTL token1–3600s. Serve chỉ trả `/.well-known/jwks.json`, không serve directory/private
 files, và đọc lại public file khi rotation. Không có HTTP endpoint mint token.
 `serve` là foreground process; dừng bằng Ctrl+C. Với API host, đặt
-`$env:AUTH_CONFIG_FILE='.local/auth/apps.json'` và giữ DSN/Redis/Qdrant theo R02.
+`export AUTH_CONFIG_FILE='.local/auth/apps.json'` và giữ DSN/Redis/Qdrant theo R02.
 Compose hiện không mount registry; loopback trong container không trỏ về host issuer.
 Docker issuer wiring/server deployment chưa được claim VERIFIED ở T09.
 
 Acceptance tự tạo credentials trong pytest temp đã ignore, khởi động CLI JWKS process
 và Uvicorn protected test app trên ephemeral loopback ports, rồi tự dừng đúng process:
 
-```powershell
-$env:PYTEST_ADDOPTS='--basetemp=.local/9s-new'
+```bash
+export PYTEST_ADDOPTS='--basetemp=.local/9s-new'
 uv run pytest tests/security/test_auth.py
-$env:PYTEST_ADDOPTS='--basetemp=.local/9h-new'
+export PYTEST_ADDOPTS='--basetemp=.local/9h-new'
 uv run pytest tests/security/test_local_auth_http.py -s
 ```
 
@@ -287,7 +287,7 @@ và retained generation/job/outbox rows được giữ. Binary nguồn và trans
 Từ checkout root, sync dev+api (hoặc nhóm metadata cho migration-only). Alembic đọc
 **process environment**, không tự load `.env`, không cần Redis/Qdrant/auth config:
 
-```powershell
+```bash
 uv sync --locked --group dev --group api
 # Set DATABASE_URL to the operator-verified target; never paste its password into logs.
 uv run alembic upgrade head
@@ -350,13 +350,13 @@ loopback55432 và **tmpfs disposable**, không volume hoặc network chung với
 Stop/recreate mất dữ liệu test; không dùng service này để giữ dữ liệu thật. Main Compose
 PG/Qdrant/Redis vẫn không publish host. Cần port55432 trống, secret mới đã ignore:
 
-```powershell
+```bash
 uv run python -c "from pathlib import Path; import secrets; p=Path('.local/secrets'); p.mkdir(parents=True, exist_ok=True); f=(p/'t10_postgres_password').open('x', encoding='utf-8'); f.write(secrets.token_hex(32)); f.close()"
 docker compose -f compose.metadata-test.yaml up -d --wait
-$env:DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
-$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
-$env:RAG_TEST_DATABASE_URL=$env:DATABASE_URL
-$env:PYTEST_ADDOPTS='--basetemp=.local/10-new --tb=short -o cache_dir=.local/10-test-cache'
+export DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+export DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+export RAG_TEST_DATABASE_URL="$DATABASE_URL"
+export PYTEST_ADDOPTS='--basetemp=.local/10-new --tb=short -o cache_dir=.local/10-test-cache'
 uv run alembic upgrade head
 uv run alembic current
 uv run pytest tests/integration/test_session_scope.py -v -s
@@ -402,13 +402,13 @@ Production yêu cầu HTTPS, không cho loopback HTTP; URL không được có u
 
 Reproduce live T11 từ root trên Docker Desktop (test bucket và users riêng, secrets ignored; không xóa MinIO volume):
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap_local.ps1
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap_storage_test.ps1
+```bash
+./scripts/bootstrap_local.sh
+./scripts/bootstrap_storage_test.sh
 docker compose -f compose.yaml -f compose.storage-test.yaml --profile local-storage --profile storage-test up -d --wait minio
 docker compose -f compose.yaml -f compose.storage-test.yaml --profile local-storage --profile storage-test run --rm storage-fixture
-$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'
-$env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.uv-python'
+export UV_CACHE_DIR="$PWD/.uv-cache"
+export UV_PYTHON_INSTALL_DIR="$PWD/.uv-python"
 uv sync --locked --group dev --group api --group ingestion
 uv run --no-sync pytest -q tests/integration/test_storage_reader.py --basetemp .local/t11-pytest
 ```
@@ -453,7 +453,7 @@ T12 ghi document/version/job/registration/link/outbox trong một transaction. O
 
 Chạy trên host từ root với env `DATABASE_URL`, optional `DATABASE_PASSWORD_FILE`, `REDIS_URL` trỏ các service đã kiểm; migration thực hiện riêng trước dispatcher:
 
-```powershell
+```bash
 uv sync --locked --group dev --group api --group ingestion
 uv run alembic upgrade head
 uv run python -m rag_core.adapters.broker.dispatcher --once
@@ -568,7 +568,7 @@ Isolated T26 acceptance prerequisites: existing bootstrap local/test storage rea
 and uploader secrets, T17 pinned `rag-core_model_cache` volume and inference image.
 The project uses tmpfs services/random private DBs and app-owned MinIO fixtures:
 
-```powershell
+```bash
 docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml up -d --wait postgres redis qdrant minio storage-fixture inference
 docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml build public-tests
 docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm public-tests
@@ -596,7 +596,7 @@ Do not commit that file, `.env`, keys, JWTs, source uploads or runtime logs.
 
 Independent backend CLI:
 
-```powershell
+```bash
 uv run python scripts/demo_app.py --config .local/demo.json
 ```
 
@@ -614,7 +614,7 @@ unverified until configured; CLI process itself is also tested against the isola
 
 ### Export và validation T03
 
-```powershell
+```bash
 uv run python scripts/export_openapi.py
 uv run python scripts/export_openapi.py --check
 uv run pytest tests/contract/test_api_schema.py
@@ -687,13 +687,13 @@ results được validate lại. Public error-envelope mapping thuộc T23–T26
 
 Kiểm T20 từ repo root (existing locked dev/api/ingestion groups và tokenizer T16):
 
-```powershell
-$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+```bash
+export UV_CACHE_DIR="$PWD/.uv-cache"
 uv sync --locked --group dev --group api --group ingestion
 docker compose -p rag-core-t20-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml up -d --wait
-$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
-$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
-$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+export RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+export DATABASE_PASSWORD_FILE="$PWD/.local/secrets/t10_postgres_password"
+export RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
 uv run --no-sync pytest tests/contract/test_domain_registry.py tests/security/test_history_scope.py
 uv run --no-sync pytest tests/contract/test_domain_registry.py::test_followup_rewrite_schema_session_and_language_defaults -v
 docker compose -p rag-core-t20-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml stop
@@ -787,14 +787,14 @@ log exporter, raw-score confidence, unmeasured recall/latency/SLA claim.
 Prepare model cache/image by R09-T17 (CPU tag `rag-core-inference:t17-cpu`) and own T10
 test secret by R03. Host groups dev/api/ingestion suffice; no host Torch/model load:
 
-```powershell
-$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+```bash
+export UV_CACHE_DIR="$PWD/.uv-cache"
 uv sync --locked --group dev --group api --group ingestion
 docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
-$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
-$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
-$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
-$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+export RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+export DATABASE_PASSWORD_FILE="$PWD/.local/secrets/t10_postgres_password"
+export RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+export RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
 uv run --no-sync pytest tests/integration/test_retrieval.py
 uv run --no-sync pytest tests/unit/test_retrieval_policy.py tests/integration/test_retrieval.py::test_real_dense_hybrid_toggle_reproducible_and_max_budget
 docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop
@@ -885,13 +885,13 @@ snapshot trước provider/final; không có LLM call/prompt/HTTP endpoint mới
 
 Lệnh kiểm tra đã tồn tại; services/weights bắt buộc, không skip/mock fallback:
 
-```powershell
-$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+```bash
+export UV_CACHE_DIR="$PWD/.uv-cache"
 docker compose -p rag-core-t22-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
-$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
-$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
-$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
-$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+export RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+export DATABASE_PASSWORD_FILE="$PWD/.local/secrets/t10_postgres_password"
+export RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+export RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
 uv run --no-sync pytest tests/integration/test_evidence_selection.py
 uv run --no-sync pytest tests/security/test_evidence_scope.py
 uv run --no-sync pytest tests/unit/test_evidence_policy.py
@@ -1026,8 +1026,8 @@ converted to a factual answer or document insufficiency.
 
 Reproduce T23 from repo root, without keys/services/network calls:
 
-```powershell
-$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+```bash
+export UV_CACHE_DIR="$PWD/.uv-cache"
 uv sync --locked --group dev --group api
 uv run --no-sync pytest tests/contract/test_llm_providers.py -q --tb=short --basetemp=.local/t23-new
 uv run --no-sync pytest tests/contract/test_llm_providers.py -k 'config or redirect_following' -q --tb=short --basetemp=.local/t23-config-new
@@ -1158,12 +1158,12 @@ DoD-2 đọc chính JSON blocks này và validate QueryResponse/ErrorEnvelope.
 
 Acceptance commands (same isolated services/settings as T22/T23, no live key):
 
-```powershell
+```bash
 docker compose -p rag-core-t24-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
-$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
-$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
-$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
-$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+export RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+export DATABASE_PASSWORD_FILE="$PWD/.local/secrets/t10_postgres_password"
+export RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+export RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
 uv run --no-sync pytest tests/integration/test_answer_pipeline.py tests/security/test_citations.py -v -s --tb=short --basetemp=.local/d24 -o cache_dir=.local/cd24
 uv run --no-sync pytest tests/security/test_citations.py -k 'round_trip or runbook' -v -s --tb=short --basetemp=.local/s24 -o cache_dir=.local/cs24
 ```
@@ -1281,7 +1281,7 @@ async def read_answer(client, request):
 
 Acceptance (real isolated services/env from R06-T24):
 
-```powershell
+```bash
 uv run --no-sync pytest tests/e2e/test_streaming.py
 uv run --no-sync pytest tests/e2e/test_streaming.py -k 'scope_change or equivalence or runbook'
 uv run --no-sync pytest tests/unit/test_streaming.py tests/contract/test_api_schema.py
@@ -1333,8 +1333,8 @@ Không có auto-delete derivative khi session hết link ở bản đầu. Admin
 
 Reproduce từ root (chọn basetemp mới mỗi lần để pytest không xóa artifact cũ):
 
-```powershell
-$env:UV_CACHE_DIR = Join-Path (Get-Location) '.uv-cache'
+```bash
+export UV_CACHE_DIR="$PWD/.uv-cache"
 uv sync --locked --group dev --group api --group ingestion
 uv run --no-sync pytest tests/integration/test_text_parsers.py -v -s --tb=short --basetemp=.local/t13-check
 uv run --no-sync pytest tests/integration/test_text_parsers.py -k safety -v -s --tb=short --basetemp=.local/t13-safety
@@ -1401,7 +1401,7 @@ Job state PG/outbox giữ T12 semantics; publication/retry/lease/reindex ở T19
 
 Commands ở root repo, với ingestion group ở trên; dùng basetemp mới:
 
-```powershell
+```bash
 uv run --no-sync pytest tests/integration/test_office_tables.py -v -s --tb=short --basetemp=.local/t14-check
 uv run --no-sync pytest tests/integration/test_office_tables.py -k safety -v -s --tb=short --basetemp=.local/t14-safety
 ```
@@ -1541,7 +1541,7 @@ regression kiểm host; OCR acceptance chuẩn là Linux Docker.
 
 Diagnostics đã chạy trên worker/test image (không cần API/PG/LLM key):
 
-```powershell
+```bash
 docker run --rm --network none --entrypoint tesseract rag-core-worker:t15 --version
 docker run --rm --network none --entrypoint tesseract rag-core-worker:t15 --list-langs
 docker run --rm --network none --entrypoint python rag-core-worker:t15 -c "import os; from importlib.metadata import version; print('uid', os.getuid(), 'docling-slim', version('docling-slim')); print('tessdata', os.environ.get('TESSDATA_PREFIX', 'system default'))"
@@ -1562,7 +1562,7 @@ use Debian repositories at build time, no claim of byte-identical future apt reb
 và actual T15 OCR word mapping; [H-T16-A01](docs/handoffs.md#h-t16-a01).
 Không cần PG/Qdrant/LLM key để nghiệm thu T16. API/job/ready không được nối ở task này.
 
-```powershell
+```bash
 uv sync --locked --group dev --group api --group ingestion
 uv run --no-sync python scripts/setup_tokenizer.py
 uv run --no-sync pytest tests/unit/test_chunking.py --basetemp=.local/t16-unit-check
@@ -1664,8 +1664,8 @@ include nội bộ, operator chọn `inference` hoặc `inference-gpu`.
 
 Host CPU gates từ repo root, fresh basetemp mỗi lần:
 
-```powershell
-$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+```bash
+export UV_CACHE_DIR="$PWD/.uv-cache"
 uv sync --locked --group dev --group api --group ingestion --group inference
 uv run --no-sync python scripts/setup_models.py
 uv run --no-sync pytest tests/integration/test_model_inference.py -v -s --tb=short --basetemp=.local/t17-check
@@ -1675,7 +1675,7 @@ uv run --no-sync pytest tests/unit/test_inference_scheduler.py tests/unit/test_m
 Docker standard: dedicated named volume `rag-core_model_cache`, runtime mount read-only,
 non-root10001, init,7GiB memory/2CPU, no host port. Inference/worker/dispatcher bật mặc định ở T19. API không phụ thuộc model để khởi động; start explicit services khi chỉ cần health skeleton. Operator có thể chạy setup trực tiếp vào volume mới:
 
-```powershell
+```bash
 docker build --target inference -f docker/inference.Dockerfile -t rag-core-inference:t17-cpu .
 docker volume create rag-core_model_cache
 docker run --rm --user 0 --mount type=volume,source=rag-core_model_cache,target=/models rag-core-inference:t17-cpu python scripts/setup_models.py --cache /models
@@ -1694,7 +1694,7 @@ là trust boundary; không publish internal inference cho browser/app bên ngoà
 
 Real Docker acceptance và CPU smoke (service child + four independent HTTP clients):
 
-```powershell
+```bash
 docker build --target inference-test -f docker/inference.Dockerfile -t rag-core-inference-test:t17-cpu .
 docker run --rm --init --network none --memory=7g --cpus=2 --mount type=volume,source=rag-core_model_cache,target=/models,readonly rag-core-inference-test:t17-cpu
 docker run --rm --init --network none --memory=7g --cpus=2 --mount type=volume,source=rag-core_model_cache,target=/models,readonly rag-core-inference-test:t17-cpu python scripts/smoke_inference.py --spawn
@@ -1703,7 +1703,7 @@ docker run --rm --init --network none --memory=7g --cpus=2 --mount type=volume,s
 GPU host/container capability check trước smoke; nếu container không có CUDA capability
 thì ghi NOT_AVAILABLE cùng output thật, không coi GPU là PASS. Khi khả dụng:
 
-```powershell
+```bash
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
 docker run --rm --gpus all python:3.12.13-slim-bookworm nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
 docker build --target inference-test --build-arg MODEL_GROUP=inference-gpu -f docker/inference.Dockerfile -t rag-core-inference-test:t17-gpu .
@@ -1818,13 +1818,13 @@ Reproduce gate từ root (secret T10 tạo exclusive theo R04, dev+api+ingestion
 sync). Service Qdrant test dùng loopback56333/tmpfs uid1000/gid1000/mode0700, giữ non-root;
 PG loopback55432 riêng. Không chạm main Compose/Scarlet hoặc xóa named volumes.
 
-```powershell
+```bash
 docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml config --quiet
 docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml up -d --wait postgres qdrant
-$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
-$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
-$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
-$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+export UV_CACHE_DIR="$PWD/.uv-cache"
+export RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+export DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+export RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
 uv run --no-sync pytest tests/integration/test_qdrant_scope.py -v -s --tb=short --basetemp=.local/18-new
 uv run --no-sync pytest tests/integration/test_qdrant_scope.py -k 'empty_scope or idempotent_update or publication_waits or collection_config' -v -s --tb=short --basetemp=.local/18-new2
 docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml stop postgres qdrant
@@ -1913,7 +1913,7 @@ fingerprint T17 và collection/generation riêng, không silently đổi CPU col
 
 Full stack commands sau khi chuẩn bị hai JSON configs, IAM reader và model cache:
 
-`````powershell
+`````bash
 docker compose --profile local-storage up -d --wait postgres qdrant redis minio
 docker compose build worker dispatcher
 docker compose run --rm --no-deps worker alembic upgrade head
@@ -1926,7 +1926,7 @@ MinIO theo nhu cầu), thay vì start full stack khi thiếu worker config/model
 
 Acceptance độc lập từ root:
 
-```powershell
+```bash
 docker compose -f compose.ingestion-test.yaml config --quiet
 docker build --target ingestion-test -f docker/worker.Dockerfile -t rag-core-ingestion-test:t19 .
 docker compose -f compose.ingestion-test.yaml up -d --wait postgres redis qdrant minio inference storage-fixture
@@ -1962,13 +1962,13 @@ unchanged. Migrations never run at startup. Backup before changing an existing
 database; recovery rehearsal remains T34. Explicit downgrade to0003 destroys admin
 session/audit data, so it is not the operational rollback path.
 
-```powershell
+```bash
 uv sync --locked --group dev --group api
 uv run python scripts/setup_admin.py --output .local/api/admin.json --origin http://127.0.0.1:8000 --allow-loopback-http
 # Host API only:
-$env:ADMIN_CONFIG_FILE='.local/api/admin.json'
+export ADMIN_CONFIG_FILE='.local/api/admin.json'
 # Or Compose, inside the existing read-only .local/api mount:
-$env:RAG_ADMIN_CONFIG_FILE='/run/config/admin.json'
+export RAG_ADMIN_CONFIG_FILE='/run/config/admin.json'
 docker compose up -d --build api
 ```
 
@@ -2009,19 +2009,32 @@ returns the current session CSRF token for page reload. All other unsafe request
 CSRF headers/cookies and forged/expired tokens fail closed. Login uses Origin
 protection before a CSRF token exists; it does not require that header.
 
-PowerShell API example (the same API is used by the `/admin` login form):
+cURL API example (the same API is used by the `/admin` login form):
 
-```powershell
-$adminOrigin='http://127.0.0.1:8000'
-$adminCredential=Get-Credential -UserName admin -Message 'Local RAG admin'
-$adminBody=@{username=$adminCredential.UserName; password=$adminCredential.GetNetworkCredential().Password} | ConvertTo-Json
-$adminLogin=Invoke-RestMethod "$adminOrigin/v1/admin/auth/login" -Method Post -ContentType application/json -Body $adminBody -Headers @{Origin=$adminOrigin} -SessionVariable adminSession
-$adminHeaders=@{Origin=$adminOrigin; 'X-CSRF-Token'=$adminLogin.csrf_token}
-Invoke-RestMethod "$adminOrigin/v1/admin/overview" -WebSession $adminSession
-# After selecting a UUID from the metadata list:
-# Invoke-RestMethod "$adminOrigin/v1/admin/jobs/$jobId/retry" -Method Post -WebSession $adminSession -Headers $adminHeaders
-Invoke-WebRequest "$adminOrigin/v1/admin/auth/logout" -Method Post -WebSession $adminSession -Headers $adminHeaders
-Remove-Variable adminCredential,adminBody,adminLogin,adminHeaders,adminSession
+```bash
+ADMIN_ORIGIN="http://127.0.0.1:8000"
+COOKIE_JAR="$(mktemp)"
+
+# Login with admin credentials and store cookie
+LOGIN_RESP=$(curl -s -c "$COOKIE_JAR" -X POST "$ADMIN_ORIGIN/v1/admin/auth/login" \
+  -H "Content-Type: application/json" \
+  -H "Origin: $ADMIN_ORIGIN" \
+  -d '{"username":"admin","password":"<ADMIN_PASSWORD>"}')
+
+CSRF_TOKEN=$(echo "$LOGIN_RESP" | python -c "import sys, json; print(json.load(sys.stdin)['csrf_token'])")
+
+# Overview query using session cookie
+curl -s -b "$COOKIE_JAR" "$ADMIN_ORIGIN/v1/admin/overview"
+
+# Audit action with CSRF token (example retry)
+# curl -s -b "$COOKIE_JAR" -X POST "$ADMIN_ORIGIN/v1/admin/jobs/$JOB_ID/retry" \
+#   -H "Origin: $ADMIN_ORIGIN" -H "X-CSRF-Token: $CSRF_TOKEN"
+
+# Logout
+curl -s -b "$COOKIE_JAR" -X POST "$ADMIN_ORIGIN/v1/admin/auth/logout" \
+  -H "Origin: $ADMIN_ORIGIN" -H "X-CSRF-Token: $CSRF_TOKEN"
+
+rm -f "$COOKIE_JAR"
 ```
 
 | Caller | Admin metadata/actions | Public factual query |
@@ -2080,17 +2093,17 @@ arbitrary file browser, vector search, source delete, eval runner or raw viewer.
 
 ### Real local acceptance and limits
 
-Use existing ignored fixture secrets from `scripts/bootstrap_storage_test.ps1`
+Use existing ignored fixture secrets from `scripts/bootstrap_storage_test.sh`
 and `.local/secrets/t10_postgres_password` (create exclusively as documented R04
 if absent). The project below has dedicated loopback ports and tmpfs; no app
 volume/network, inference model, real provider key, worker or dispatcher is needed:
 
-```powershell
+```bash
 docker compose -p rag-core-t27-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml up -d --wait postgres redis qdrant minio storage-fixture
-$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55437/t10_acceptance'
-$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
-$env:RAG_ADMIN_TEST_STORAGE_URL='http://127.0.0.1:19007'
-$env:RAG_ADMIN_TEST_QDRANT_URL='http://127.0.0.1:56337'
+export RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55437/t10_acceptance'
+export DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+export RAG_ADMIN_TEST_STORAGE_URL='http://127.0.0.1:19007'
+export RAG_ADMIN_TEST_QDRANT_URL='http://127.0.0.1:56337'
 uv run pytest tests/security/test_admin_auth.py tests/integration/test_admin_operations.py -v -s --tb=short --basetemp=.local/admin-new -o cache_dir=.local/admin-cache
 uv run pytest tests/integration/test_session_scope.py tests/integration/test_metadata_migrations.py -v -s --tb=short --basetemp=.local/admin-migrations-new
 docker compose -p rag-core-t27-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml stop
@@ -2156,7 +2169,7 @@ focus natively; Escape cancels. Error/status updates use alert/live regions.
 T28 integration (same isolated service/env setup as above, using a new project
 name `rag-core-t28-test` and fresh basetemp):
 
-```powershell
+```bash
 uv run pytest tests/integration/test_admin_views.py -v -s --tb=short --basetemp=.local/admin-views-new -o cache_dir=.local/admin-views-cache
 ```
 
@@ -2193,7 +2206,7 @@ Prompt gốc: [Build RAG Evaluation Corpus](corpus-documents/Codex%20Prompt%20%E
 
 Prerequisites: Python `3.12.*`, `uv sync --locked --group dev --group api`; shared utilities stdlib, schema dev-only jsonschema; T05 thêm `pyarrow==25.0.1`, T06 thêm dev-only `pypdf[crypto]==6.19.0` để đếm trang PDF/AES. Không dependency nào vào API image/model runtime. Không cần DSNs/services/providers/models. Commands từ root:
 
-```powershell
+```bash
 uv run python corpus-documents/scripts/setup_corpus.py --help
 uv run python corpus-documents/scripts/validate_corpus.py --metadata-only
 uv run pytest tests/unit/test_corpus_common.py
@@ -2218,7 +2231,7 @@ slice IDs and downloaded_at), and isolated synthetic unit tests. This verifies t
 existing local corpus; fresh downloads are verified separately in T08 below.
 
 Windows tests can use a fresh short ignored basetemp to avoid inherited TEMP ACLs:
-set `$env:PYTEST_ADDOPTS='--basetemp=.local/<fresh-run-name>'` before pytest. Use a
+set `export PYTEST_ADDOPTS='--basetemp=.local/<fresh-run-name>'` before pytest. Use a
 new name each run; pytest may remove an existing basetemp. Bilingual fixtures use
 compact directory names while keeping full SHA256 document IDs. `.local` is local
 test/runtime state, excluded from documentation traversal. Legacy Hermes scratch
@@ -2232,7 +2245,7 @@ automatic lock bypass, source deletion or concurrent-reader transaction is provi
 
 All-domain setup and validation are **VERIFIED in T08**:
 
-```powershell
+```bash
 uv run python corpus-documents/scripts/setup_corpus.py --all
 uv run python corpus-documents/scripts/validate_corpus.py --all
 ```
@@ -2253,7 +2266,7 @@ children of `corpus-documents/.repro/` are accepted; traversal, reserved Windows
 trailing dots/spaces, symlinks/junctions and source/script/domain directories are refused.
 The directory is ignored in Git and documentation scanning. No canonical corpus is deleted.
 
-```powershell
+```bash
 uv run python corpus-documents/scripts/setup_corpus.py --all --output-root corpus-documents/.repro/a1
 uv run python corpus-documents/scripts/validate_corpus.py --all --output-root corpus-documents/.repro/a1
 uv run python corpus-documents/scripts/verify_reproduction.py record --output-root corpus-documents/.repro/a1

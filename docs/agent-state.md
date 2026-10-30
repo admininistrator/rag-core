@@ -2,7 +2,7 @@
 
 ## Hiện hành: một task/session
 
-User xác nhận ngày 2026-09-26 agent hiện tại trực tiếp triển khai, kiểm chứng, cập nhật docs, commit và push task được giao; bỏ Orchestrator/Worker/Kanban cũ. T07-A06 COMPLETE khi completion commit `feat(T07): prepare XQuAD bilingual evaluation slices` thành công và được kiểm; runtime Codex gpt-6-sol/xhigh, không subagent.21bilingual+138regression tests, real setup/validator, rerun491published+3cache, Ruff/mypy17 và docs checks có evidence tại [H-T07-A06](handoffs.md#h-t07-a06). Commit hash/push result trả sau commit; resolve subject trong Git. Legacy scratch giữ nguyên local. **Dừng sau T07**; T08 TODO và đủ dependencies để người dùng mở session mới. AGENTS/P14 là workflow hiện hành; [prompt mẫu](task-session-prompt.md).
+User duyệt chuyển đổi nền tảng phát triển/vận hành local từ Windows sang macOS ngày 2026-10-30. T00–T28 COMPLETE; session hiện tại hoàn tất việc bảo trì nền tảng macOS (thay thế script PowerShell, build Docker arm64, capability check CUDA unavailable, local config mode 0600, docs/tests verification). T29–T36 TODO; T29 sẵn sàng bắt đầu trên macOS sau khi session migration hoàn thành. Áp dụng AGENTS.md workflow một task/session: agent hiện tại trực tiếp sửa code/tests/docs, kiểm chứng và commit; push khi được phép; không spawn subagent.
 
 ## Lịch sử Hermes (đã kết thúc)
 

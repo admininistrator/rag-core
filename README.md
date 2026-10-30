@@ -39,9 +39,9 @@ không là confidence/xác suất đúng; calibration pending T31.
 [Nghiệm thu thật T22](docs/handoffs.md#h-t22-a02),
 [hợp đồng và cách kiểm tra](RUNBOOK.md#r06-t22).
 
-T01/T02 đã kiểm chứng trên Windows/PowerShell với uv 0.11.16, CPython 3.12.4 cho host checks, Docker Desktop Linux containers và Docker server 29.5.2. Project chấp nhận Python `3.12.*`; API image dùng Python 3.12.13 đã pin digest. Cài [uv](https://docs.astral.sh/uv/) và Docker Desktop, rồi từ root repository chạy quality:
+T01/T02 ban đầu kiểm chứng trên Windows; ngày 2026-10-30 dự án đã chuyển toàn bộ nền tảng local sang macOS (Apple Silicon arm64, Docker Desktop). Project dùng Python `3.12.*`; API image dùng Python 3.12.13 đã pin digest. Cài [uv](https://docs.astral.sh/uv/) và Docker Desktop, rồi từ root repository chạy quality:
 
-```powershell
+```bash
 uv sync --locked --group dev --group api --group ingestion --group inference
 uv run ruff check .
 uv run mypy src
@@ -57,13 +57,13 @@ Typed settings đọc environment hoặc `.env`: `DATABASE_URL`, `REDIS_URL` và
 
 Trước khi start toàn bộ Compose T19: chuẩn bị model cache T17, migration và worker/storage config theo [RUNBOOK T19](RUNBOOK.md#r09-t19). Chỉ kiểm health có thể start explicit `postgres qdrant redis api`; full stack cần đủ cấu hình. Bootstrap tạo secret local ngẫu nhiên dưới `.local/secrets/` đã ignore và không in giá trị. Sau đó render/start/check stack:
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap_local.ps1
+```bash
+./scripts/bootstrap_local.sh
 docker compose config --quiet
 docker compose --profile local-storage up -d --build postgres qdrant redis api minio minio-bootstrap
 docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
 docker compose --profile local-storage ps --all
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_local.ps1
+./scripts/smoke_local.sh
 ```
 
 API chỉ bind `http://127.0.0.1:8000`; MinIO API/console tùy chọn bind `127.0.0.1:9000/9001`. PostgreSQL, Qdrant và Redis chỉ ở mạng Compose, không publish host. `/health/live` kiểm process; `/health/ready` chạy `SELECT 1`, Redis `PING` và Qdrant `/readyz`, trả 503 nếu dependency lỗi. MinIO không phải dependency readiness của API health skeleton T02.
@@ -72,7 +72,7 @@ Bằng chứng local outage/persistence nằm ở [T02-A02](docs/handoffs.md#h-t
 
 Dừng/khởi động lại mà giữ named volumes:
 
-```powershell
+```bash
 docker compose --profile local-storage stop
 docker compose --profile local-storage up -d postgres qdrant redis api minio minio-bootstrap
 docker compose --profile local-storage up -d --wait postgres qdrant redis api minio
@@ -84,7 +84,7 @@ Không dùng `docker compose down -v` trong flow mặc định. T19 đã thêm i
 
 Pydantic contracts tại `src/rag_core/contracts/` đã kiểm structural validation cho domain/subset, history roles, EN/VI, initial limits, locators, evidence links, error và logical SSE traces. Export/kiểm lại từ root với dev+api groups:
 
-```powershell
+```bash
 uv run python scripts/export_openapi.py
 uv run python scripts/export_openapi.py --check
 ```
@@ -112,8 +112,8 @@ Anthropic1.11.0 SDK and native Messages schema. Both implement private
 separate from untrusted question/history/evidence; no tools or provider fallback.
 T24 assembles scoped prompts/citations; T25/T26 wire public query/SSE.
 
-```powershell
-$env:UV_CACHE_DIR=Join-Path (Get-Location) '.uv-cache'
+```bash
+export UV_CACHE_DIR="$(pwd)/.uv-cache"
 uv sync --locked --group dev --group api
 uv run --no-sync pytest tests/contract/test_llm_providers.py
 uv run --no-sync pytest tests/contract/test_llm_providers.py -k 'config or redirect_following'
@@ -185,7 +185,7 @@ No automatic migration, transcript storage, old-session attach or source deletio
 
 Real isolated Docker acceptance (no provider credentials, native LLM wire synthetic):
 
-```powershell
+```bash
 docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml up -d --wait postgres redis qdrant minio storage-fixture inference
 docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml build public-tests
 docker compose -p rag-core-t26-test -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm public-tests
@@ -195,7 +195,7 @@ Supply independent funded `DEEPSEEK_API_KEY/DEEPSEEK_MODEL` and
 `ANTHROPIC_API_KEY/ANTHROPIC_MODEL` in ignored `.env` or environment, then run each
 mandatory gate separately from repository root:
 
-```powershell
+```bash
 uv run python scripts/smoke_llm.py --provider deepseek
 uv run python scripts/smoke_llm.py --provider anthropic
 ```
@@ -226,7 +226,7 @@ user lấy từ `sub` đã verify. JWT phải có signed `app_id` khớp app, `i
 `exp`, `nbf`, `iat`; chỉ RS256. Chưa cấu hình auth thì `/v1` trả 503, không bypass.
 Health routes vẫn public. T10 repository kiểm thêm owner/session/link/version/generation; principal tự nó không cấp quyền tài liệu.
 
-```powershell
+```bash
 uv run python -m rag_core.auth.local_issuer init --directory .local/auth
 uv run python -m rag_core.auth.local_issuer token --directory .local/auth --subject local-user --output .local/auth/user.jwt
 uv run python -m rag_core.auth.local_issuer serve --directory .local/auth
@@ -237,7 +237,7 @@ JWKS chỉ phục vụ public key trên loopback port 8765; giữ terminal này 
 API host với `AUTH_CONFIG_FILE=.local/auth/apps.json`. Quy trình đầy đủ, HTTP check
 tự quản lý hai server và rotation/revocation: [RUNBOOK R03](RUNBOOK.md#r03).
 
-```powershell
+```bash
 uv run pytest tests/security/test_auth.py
 uv run pytest tests/security/test_local_auth_http.py -s
 ```
@@ -258,7 +258,7 @@ After configuring the verified target database, run `uv run alembic upgrade head
 for additive revision `0004_admin_audit`. Create a private config with hidden
 password input:
 
-```powershell
+```bash
 uv run python scripts/setup_admin.py --output .local/api/admin.json --origin http://127.0.0.1:8000 --allow-loopback-http
 ```
 
@@ -295,7 +295,7 @@ subset ngoài quyền trả404, rỗng409, deleted410, selected chưa ready409.
 Migration `0001_session_metadata` chạy bằng lệnh operator, không tự chạy khi API boot.
 Với `DATABASE_URL` và optional `DATABASE_PASSWORD_FILE` trỏ tới DB đích đã kiểm:
 
-```powershell
+```bash
 uv run alembic upgrade head
 uv run alembic current
 ```
@@ -303,7 +303,7 @@ uv run alembic current
 [RUNBOOK R04](RUNBOOK.md#r04) có schema ownership, mapping, transaction/revision contract,
 credential riêng và commands cho PostgreSQL kiểm thử tách biệt. Acceptance đã chạy:
 
-```powershell
+```bash
 uv run pytest tests/integration/test_session_scope.py -v -s --tb=short
 uv run pytest tests/integration/test_metadata_migrations.py -v -s --tb=short
 ```
@@ -326,7 +326,7 @@ Migration `0002_upload_registrations` chạy bằng `uv run alembic upgrade head
 đã kiểm. Dispatcher có CLI `uv run python -m rag_core.adapters.broker.dispatcher`
 với `DATABASE_URL`, optional `DATABASE_PASSWORD_FILE` và `REDIS_URL`; Compose chuẩn có dispatcher image riêng, không tự mount HTTP routes. Test tích hợp thật:
 
-```powershell
+```bash
 uv sync --locked --group dev --group api --group ingestion
 uv run pytest tests/integration/test_registration_jobs.py -v -s
 ```
@@ -342,7 +342,7 @@ filename, MIME và `SourceIdentity(document_id, version_id, sha256)`. Kết qu�
 không cấp quyền session. T19 nối worker và kiểm current session/link trước publication.
 Một registry chạy tối đa một process, timeout mặc định60s và cleanup cả khi lỗi.
 
-```powershell
+```bash
 uv sync --locked --group dev --group api --group ingestion
 uv run --no-sync pytest tests/integration/test_text_parsers.py -v -s --tb=short --basetemp=.local/t13-check
 ```
@@ -362,7 +362,7 @@ Evidence: [H-T13-A01](docs/handoffs.md#h-t13-a01).
 giữ sheet/cell ranges, logical CSV records và slide/shape/block/XML nguồn.
 XLSX dùng `openpyxl==3.1.5`, PPTX dùng `python-pptx==1.0.2`, chỉ trong ingestion group.
 
-```powershell
+```bash
 uv sync --locked --group dev --group api --group ingestion
 uv run --no-sync pytest tests/integration/test_office_tables.py -v -s --tb=short --basetemp=.local/t14-check
 uv run --no-sync pytest tests/integration/test_office_tables.py -k safety -v -s --tb=short --basetemp=.local/t14-safety
@@ -385,7 +385,7 @@ T19 nối parser vào ingestion worker/index; parser không cấp quyền truy x
 vie/eng/osd và Docling slim2.132.0 OCR stage. CPU, không tải layout/VLM/Torch weights.
 Synthetic scan PDF EN/VI, PNG/JPEG, mixed PDF và searchable scan kiểm engine thật.
 
-```powershell
+```bash
 docker build --target worker -f docker/worker.Dockerfile -t rag-core-worker:t15 .
 docker build --target ocr-test -f docker/worker.Dockerfile -t rag-core-ocr-test:t15 .
 docker run --rm --init --network none --memory=2g --cpus=2 rag-core-ocr-test:t15
@@ -412,7 +412,7 @@ OCR word cells được ghép bằng khoảng trắng nhưng giữ locator/bbox 
 
 Từ root, sau locked sync dev+api+ingestion ở trên:
 
-```powershell
+```bash
 uv run --no-sync python scripts/setup_tokenizer.py
 uv run --no-sync pytest tests/unit/test_chunking.py --basetemp=.local/t16-unit-check
 uv run --no-sync pytest tests/integration/test_source_locators.py --basetemp=.local/t16-source-check
@@ -434,7 +434,7 @@ Một process nội bộ dùng chung BGE-M3 dense1024+sparse và reranker-v2-m3;
 chỉ dùng async HTTP client, không load weights. CPU FP32 mặc định, CUDA12.8/FP16 qua
 override. Cache tải rõ ràng, checksum/revision pin; runtime offline, cache read-only.
 
-```powershell
+```bash
 uv sync --locked --group dev --group api --group ingestion --group inference
 uv run --no-sync python scripts/setup_models.py
 uv run --no-sync pytest tests/integration/test_model_inference.py -v -s --tb=short --basetemp=.local/t17-check
@@ -457,11 +457,11 @@ fetch/neighbor có cùng scope và language policy. Scope rỗng không gửi qu
 Collection versioned theo fingerprint T17; PG xác minh và khóa generation khi ghi/
 count/cleanup. Active generation không được ghi đè hoặc cleanup; retry giữ point IDs.
 
-```powershell
+```bash
 docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml up -d --wait postgres qdrant
-$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
-$env:DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
-$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+export RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+export DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+export RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
 uv run --no-sync pytest tests/integration/test_qdrant_scope.py -v -s --tb=short --basetemp=.local/18-new
 docker compose -f compose.metadata-test.yaml -f compose.qdrant-test.yaml stop postgres qdrant
 ```
@@ -485,7 +485,7 @@ PG công bố generation/version/job `ready`. Reindex giữ generation cũ đế
 
 Reproduce riêng trên Docker (đã có T17 model volume và ignored local secrets T10/T11):
 
-```powershell
+```bash
 docker compose -f compose.ingestion-test.yaml config --quiet
 docker build --target ingestion-test -f docker/worker.Dockerfile -t rag-core-ingestion-test:t19 .
 docker compose -f compose.ingestion-test.yaml up -d --wait postgres redis qdrant minio inference storage-fixture
@@ -517,12 +517,12 @@ VERIFIED local; public query T26 VERIFIED local/live; full corpus quality T31 ch
 
 Setup model image/cache theo [RUNBOOK T17](RUNBOOK.md#r09-t17), test secrets theo R03:
 
-```powershell
+```bash
 docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml up -d --wait
-$env:RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
-$env:DATABASE_PASSWORD_FILE=Join-Path (Get-Location) '.local/secrets/t10_postgres_password'
-$env:RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
-$env:RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+export RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+export DATABASE_PASSWORD_FILE="$(pwd)/.local/secrets/t10_postgres_password"
+export RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+export RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
 uv run --no-sync pytest tests/integration/test_retrieval.py
 uv run --no-sync pytest tests/unit/test_retrieval_policy.py tests/integration/test_retrieval.py::test_real_dense_hybrid_toggle_reproducible_and_max_budget
 docker compose -p rag-core-t21-test -f compose.metadata-test.yaml -f compose.qdrant-test.yaml -f compose.retrieval-test.yaml stop
@@ -539,7 +539,7 @@ T08 nghiệm thu tải mới vào output root/cache độc lập, all-domain val
 
 [Corpus README](corpus-documents/README.md) và [source/license inventory](corpus-documents/source-license-inventory.json) ghi URLs/pins/license và ngoại lệ nguồn T05 được user phê duyệt tại [P11](docs/plan.md#p11). Default `ready`: 100 QA, 986 Markdown từ toàn context gồm distractors, supporting-only gold; 50 bridge/50 comparison, all hard theo nguồn thật. Document `ready` local: 150 open FinanceBench QA, 84 PDF được reference, 189 evidence giữ zero-based pages. Bilingual `ready`: XQuAD EN/VI v1.1, 240 aligned paragraphs per language and 1190 QA rows in each of four evaluation slices. Bilingual test checks alignment, counterpart gold, answer spans, setup/validation and deterministic reruns. Commands from root:
 
-```powershell
+```bash
 uv run python corpus-documents/scripts/setup_corpus.py --all
 uv run python corpus-documents/scripts/validate_corpus.py --all
 uv run python corpus-documents/scripts/validate_corpus.py --metadata-only
@@ -557,7 +557,7 @@ uv run pytest tests/unit/test_corpus_bilingual.py
 To reproduce without touching the standard corpus, use a new short name below the
 ignored `corpus-documents/.repro/` directory (the `a1` run was verified in T08):
 
-```powershell
+```bash
 uv run python corpus-documents/scripts/setup_corpus.py --all --output-root corpus-documents/.repro/a1
 uv run python corpus-documents/scripts/validate_corpus.py --all --output-root corpus-documents/.repro/a1
 ```

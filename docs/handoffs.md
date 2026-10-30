@@ -6,7 +6,54 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
-- **Current 2026-10-30 / chuyển máy Windows → macOS:** T00–T28 COMPLETE, T29–T36 TODO; main `34e5540` = origin/main, không có commit chưa push. Scratch T07 (`.ptmp/.pytmp/.tmp-t07-a02`, `UsersAdminAppDataLocalTempt07a03`) chỉ còn ở máy Windows, không vào Git. `.env` và corpus downloads không có trong Git. Chuẩn bị máy mới + prompt khởi động: [task-session-prompt.md](task-session-prompt.md). **T29 sẵn sàng bắt đầu ngay** (T27/T28 COMPLETE); cần Docker stack chạy được trên Mac. Khuyến nghị chạy session migration macOS (prompt cùng file) trước T29.
+- **Current 2026-10-30 / Chuyển nền tảng sang macOS (Apple Silicon arm64) COMPLETE:**
+  - **Quyết định 2026-10-30:** macOS là nền tảng local duy nhất được hỗ trợ; Windows chuyển thành lịch sử. Đổi scripts PowerShell (`scripts/bootstrap_local.ps1`, `scripts/bootstrap_storage_test.ps1`, `scripts/smoke_local.ps1`) sang POSIX shell (`.sh`) với cùng hành vi, bit thực thi `+x`, kiểm chứng PASS rồi xóa bản `.ps1`. Giữ nguyên lịch sử (handoffs, task notes, implementation-summary). T29 sẵn sàng bắt đầu trên macOS.
+  - **Phần cứng & Hệ điều hành đo thật:**
+    - macOS: macOS 27.0.1 (Build 26A434, Darwin Kernel 26.0.0 arm64)
+    - CPU: Apple Silicon `arm64` (`uname -m` = arm64)
+    - RAM: 32 GB (34,359,738,368 bytes)
+    - Docker Desktop: 4.96.3 (244472), Engine: 29.9.2 `linux/arm64`, Docker Compose: v5.6.1
+    - Python / uv: uv 0.13.6 (`/opt/homebrew/bin/uv`), Python 3.12.16 (trong `.venv`)
+    - Git: branch `main`, baseline commit `e217d1bb91f74955391ddf2fa6b270e40403aced` = origin/main
+  - **Bảng phân loại Inventory (`rg -i "windows|powershell|LiteralPath|\.ps1|C:\\\\"`):**
+    - *(a) Lệnh / hướng dẫn vận hành phải chuyển:* `scripts/bootstrap_local.ps1` -> `scripts/bootstrap_local.sh`, `scripts/bootstrap_storage_test.ps1` -> `scripts/bootstrap_storage_test.sh`, `scripts/smoke_local.ps1` -> `scripts/smoke_local.sh`. Cập nhật README.md, RUNBOOK.md từ PowerShell sang POSIX shell (zsh/bash).
+    - *(b) Code phụ thuộc nền tảng:* `dispatcher.py` (loại bỏ nhánh `WindowsSelectorEventLoopPolicy`), `registry.py` (loại bỏ `# type: ignore[attr-defined]` cho `os.killpg`), `local_issuer.py` và `setup_admin.py` (bảo đảm tạo secret file mode `0600` trên Mac/POSIX), `compose.yaml` và `compose.ingestion-test.yaml` (MinIO healthcheck dùng `wget -q --spider` vì MinIO Alpine thiếu `curl`), test assertion messages trong `test_storage_reader.py` và `test_registration_jobs.py` (chỉ sang `.sh`).
+    - *(c) Validation bảo mật đa nền tảng GIỮ:* `corpus-documents/scripts/common.py` (`safe_path`, `_SAFE_SEGMENT` kiểm tra và chặn reserved names Windows `CON`, `PRN`, `AUX`, `NUL`, `COM1-9`, `LPT1-9`, backslash, path traversal), các đường dẫn parser/domain sanitize traversal giữ nguyên để bảo đảm an toàn đa nền tảng.
+    - *(d) Lịch sử để nguyên:* Giữ nguyên toàn bộ handoffs cũ (H-T02 đến H-T28), task notes T00–T28 trong tasks.md, và implementation-summary lịch sử.
+  - **Docker Images trên Apple Silicon & Thay đổi Digests:**
+    - Local images build lại native linux/arm64: `rag-core-inference:t17-cpu`, `rag-core-worker:t19`, `rag-core-api:t26`, `rag-core-public-tests:t26`, `rag-core-live-smoke:t26`.
+    - Upstream multi-arch native arm64: `postgres:17.11-bookworm`, `redis:8.10.1-alpine3.23`, `qdrant/qdrant:v1.19.1-unprivileged`, `tianon/true:latest`.
+    - MinIO: Quay.io repository archived/401 unauthorized. Đã duyệt giải pháp dùng image local multi-arch arm64 `minio/minio:RELEASE.2025-10-15T17-29-55Z@sha256:b5689c72acc0b21a30283a04910cf972a9e34b9d0a79a3fa272e52bca7e868c2` và build local arm64 `rag-core-mc:local` từ `docker/mc.Dockerfile`.
+    - Model cache fingerprint: `c64bb884142dab88e44b2ceacb8239714bb3dad3624d98b0c1fd1ce5ca09f92a` (khớp hoàn toàn, embedding/reranker weights tương thích nguyên vẹn).
+  - **Capability Check GPU (compose.gpu.yaml, CUDA):**
+    - Kiểm tra thật qua PyTorch: `CUDA available: False, CUDA device count: 0`.
+    - Ghi nhận: **unavailable** (không coi là PASS, không tự port sang MPS/Metal theo quy tắc §5).
+  - **Kết quả kiểm chứng thực tế trên macOS:**
+    - `uv sync --locked`: PASS (exit 0)
+    - `uv run ruff check .`: PASS (0 errors, exit 0)
+    - `uv run ruff format --check .`: PASS (143 files formatted, exit 0)
+    - `uv run mypy src`: PASS (103 source files, 0 issues, exit 0)
+    - `python scripts/check_docs.py`: PASS (14 Markdown files, 428 links, 37 tasks acyclic, exit 0)
+    - Unit & Contract: `uv run pytest tests/unit tests/contract`: PASS (609 passed in 39.80s, exit 0)
+    - Security suite: `uv run pytest tests/security`: PASS (120 passed in 212.15s, exit 0). Tổng unit/contract/security: 729 passed.
+    - Integration Metadata: `uv run pytest tests/integration/test_session_scope.py tests/integration/test_metadata_migrations.py`: PASS (19 passed in 3.98s, exit 0)
+    - Integration Qdrant & Retrieval: `uv run pytest tests/integration/test_qdrant_scope.py tests/integration/test_retrieval.py`: PASS (33 passed in 54.37s, exit 0)
+    - Integration Answer Pipeline: `uv run pytest tests/integration/test_answer_pipeline.py`: PASS (13 passed in 84.75s, exit 0)
+    - Integration Storage Reader: `uv run pytest tests/integration/test_storage_reader.py`: PASS (5 passed in 1.48s, exit 0)
+    - Integration Registration Jobs: `uv run pytest tests/integration/test_registration_jobs.py`: PASS (3 passed in 8.33s, exit 0)
+    - Integration Ingestion Stack: `docker compose -f compose.ingestion-test.yaml run --rm ingestion-tests`: PASS (12 passed in 110.62s, exit 0)
+    - Public API Acceptance: `docker compose -p rag-core-t26-test run --rm public-tests`: PASS (6 passed in 104.45s, exit 0)
+    - Streaming Acceptance: `uv run pytest tests/e2e/test_streaming.py`: PASS (23 passed in 165.99s, exit 0)
+    - Bootstrap & Smoke Local: `./scripts/bootstrap_local.sh` PASS (exit 0); `./scripts/smoke_local.sh` PASS (exit 0, `/health/live` ok, `/health/ready` ready)
+    - Live Provider Smoke (T26 DeepSeek): `uv run python scripts/smoke_llm.py --provider deepseek`: PASS (1 passed in 28.99s, exit 0)
+    - Live Provider Smoke (T26 Anthropic): `uv run python scripts/smoke_llm.py --provider anthropic`: PASS (1 passed in 38.02s, exit 0)
+    - Corpus Setup & Validation: `uv run python corpus-documents/scripts/setup_corpus.py --all`: PASS (exit 0); `uv run python corpus-documents/scripts/validate_corpus.py --all`: PASS (exit 0). Manifest checksums khớp 100% bản pin.
+  - **Giới hạn còn lại:**
+    - GPU profile: unavailable trên Apple Silicon macOS; CPU profile là chế độ hoạt động chuẩn.
+    - Ngân sách T33: Giữ nguyên mức đã ghi trong plan (RAM <= 10 GiB, VRAM <= 7 GiB) theo chỉ đạo; máy Mac có 32 GB RAM thống nhất, sẵn sàng chờ người dùng điều chỉnh ngân sách nếu cần.
+  - **Sẵn sàng tiếp theo:** T29 sẵn sàng bắt đầu ngay trên macOS.
+
+- **Current 2026-10-30 / chuẩn bị máy Windows → macOS:** T00–T28 COMPLETE, T29–T36 TODO; main `34e5540` = origin/main, không có commit chưa push. Scratch T07 (`.ptmp/.pytmp/.tmp-t07-a02`, `UsersAdminAppDataLocalTempt07a03`) chỉ còn ở máy Windows, không vào Git. `.env` và corpus downloads không có trong Git. Chuẩn bị máy mới + prompt khởi động: [task-session-prompt.md](task-session-prompt.md). **T29 sẵn sàng bắt đầu ngay** (T27/T28 COMPLETE); cần Docker stack chạy được trên Mac. Khuyến nghị chạy session migration macOS (prompt cùng file) trước T29.
 
 - **Current 2026-10-18 / T28-A01 closure:** direct Codex agent, exact model/effort unavailable; no subagents. Baseline main/4e4d96e43ce0bb012bba1ea98e1987269ad84348 equals origin/main; T07 scratch preserved. Local Jinja2/CSS/ES-module `/admin` UI uses the existing protected metadata API, session/CSRF in memory, filtered cursor pages/polling, confirmation actions and responsive/keyboard states. DoD1 final9PASS10.80s; combined24admin/auth/retentionPASS30.31s;673regressionPASS138.61s. Actual Vivaldi desktop1920 and mobile390 observations/screenshots, Reset defect/fix and real browser Retry/PG outbox/audit verification at [H-T28-A01](#h-t28-a01). Final packaging/static/docs/staging/commit boundary appended there. Evaluation registry absent (future T30–T31), explicit empty state only; no fake reports/provider/load/restore/deploy claim. Completion subject `feat(T28): build the local administration interface`, COMPLETE/D6 effective only after successful inspected scoped commit; actual hash/authorized normal origin/main equality reported after execution. Own isolated stack/server stopped, application data/cache/secrets/T07 scratch retained. T29 depends on T28/T27 and is ready after closure; remains TODO. STOP T28, no drain/merge/deploy.
 

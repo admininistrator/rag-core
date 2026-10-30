@@ -2,6 +2,39 @@
 
 > Sổ ghi chú thực thi theo phase/task/attempt. Chỉ ghi implementation đã làm; kế hoạch tương lai nằm ở plan/tasks.
 
+<a id="s-macos-migration-20261030"></a>
+## Nền tảng / Migration macOS (2026-10-30) — Chuyển toàn bộ phát triển/vận hành local sang macOS Apple Silicon
+
+- **Quyết định (2026-10-30):**
+  - macOS (Apple Silicon arm64) là nền tảng local duy nhất được hỗ trợ chính thức từ 2026-10-30; Windows trở thành lịch sử.
+  - Thay thế toàn bộ scripts PowerShell (`scripts/bootstrap_local.ps1`, `scripts/bootstrap_storage_test.ps1`, `scripts/smoke_local.ps1`) bằng POSIX shell tương đương (`.sh`), cấp quyền `chmod +x`, kiểm chứng thật PASS rồi xóa bản `.ps1`.
+  - Không viết lại lịch sử: toàn bộ evidence/attempt handoffs cũ, tasks notes của T00–T28 và implementation-summary giữ nguyên; chỉ thêm ghi chú migration.
+  - Giữ nguyên bất biến bảo mật §3, không đổi logic nghiệp vụ, schema, OpenAPI, hay API behavior.
+- **Thay đổi kỹ thuật & Sửa lỗi nền tảng:**
+  - `src/rag_core/adapters/broker/dispatcher.py`: Loại bỏ nhánh cấu hình `WindowsSelectorEventLoopPolicy` chỉ-Windows.
+  - `src/rag_core/adapters/parsers/registry.py`: Loại bỏ `# type: ignore[attr-defined]` trên `os.killpg` (POSIX chuẩn hỗ trợ trực tiếp).
+  - `src/rag_core/auth/local_issuer.py` & `scripts/setup_admin.py`: Đảm bảo file credentials/secrets được tạo với file permissions POSIX `0600`.
+  - `compose.yaml` & `compose.ingestion-test.yaml`: Thay healthcheck MinIO từ `curl` sang `wget -q --spider http://127.0.0.1:9000/minio/health/live` vì MinIO image nền Alpine không có `curl`.
+  - Line endings & gitattributes: Chuẩn hóa `.gitattributes` cho `*.sh text eol=lf`, `*.ps1 text eol=crlf`.
+- **Docker Images & Thay đổi Digests:**
+  - Build lại native linux/arm64 trên Apple Silicon cho toàn bộ images local: `rag-core-inference:t17-cpu`, `rag-core-worker:t19`, `rag-core-api:t26`, `rag-core-public-tests:t26`, `rag-core-live-smoke:t26`.
+  - MinIO: Do Quay.io upstream archived (401 Unauthorized), áp dụng phương án đã duyệt: pin digest multi-arch arm64 `minio/minio:RELEASE.2025-10-15T17-29-55Z@sha256:b5689c72acc0b21a30283a04910cf972a9e34b9d0a79a3fa272e52bca7e868c2` và build local arm64 `rag-core-mc:local` từ `docker/mc.Dockerfile`.
+  - Model cache & permissions: Model weights BGE-M3 và BGE-reranker-v2-m3 trong volume `rag-core_model_cache` được đặt quyền `a+rX` để unprivileged container user `10001:10001` truy cập không lỗi permission. Fingerprint `c64bb884142dab88e44b2ceacb8239714bb3dad3624d98b0c1fd1ce5ca09f92a` khớp hoàn toàn giữa arm64 và amd64.
+- **Capability Check GPU:**
+  - Chạy capability check thật bằng PyTorch: `CUDA available: False, device count: 0`.
+  - Ghi nhận trạng thái: "unavailable". Không tự ý port sang Metal/MPS (thay đổi kiến trúc).
+- **Kiểm chứng toàn diện:**
+  - Toàn bộ 729 tests (609 unit/contract + 120 security) PASS trên macOS.
+  - Toàn bộ integration suites (metadata, storage reader, registration jobs, qdrant scope, retrieval, answer pipeline, ingestion stack, public API acceptance, streaming) PASS với Docker services thật.
+  - Bootstrap & smoke local PASS trên stack mặc định `compose.yaml`.
+  - Live provider smoke T26 cho cả DeepSeek và Anthropic PASS qua API thật.
+  - Corpus setup và validation (`setup_corpus.py --all`, `validate_corpus.py --all`) PASS 100%, tái tạo hoàn chỉnh trên macOS với checksums khớp bản pin.
+  - Static analysis: Ruff (0 errors), Ruff format (check PASS), mypy (103 files, 0 issues), check_docs.py (14 files, 428 links, 37 tasks acyclic PASS).
+- **Known Limits & Sẵn sàng:**
+  - GPU profile không khả dụng trên Apple Silicon (CPU profile là mặc định).
+  - Ngân sách T33 giữ nguyên số đo tài liệu hiện có (RAM <= 10 GiB, VRAM <= 7 GiB); máy thực tế có 32 GB RAM thống nhất.
+  - Task T29 (Admin UI Browser Acceptance) hoàn toàn sẵn sàng bắt đầu trên macOS.
+
 <a id="s-t26-a01"></a>
 ## Phase 5 / T26 / Attempt T26-A01 — Public API, live credentials pending
 

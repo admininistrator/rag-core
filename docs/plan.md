@@ -11,7 +11,7 @@
 - Scarlet hiện có FastAPI, JWT, lịch sử chat trên PostgreSQL; đang dùng DeepSeek/Anthropic. Không sửa hay tích hợp Scarlet trong đợt triển khai này.
 - RAG core trả câu trả lời hoàn chỉnh, trích dẫn và các đoạn truy xuất. App gọi có thể tiếp tục dùng LLM của app để diễn đạt lại.
 - Phiên bản đầu: Default RAG, Document RAG, Multilingual RAG (EN/VI); thiết kế điểm mở rộng cho Technical/Custom Domain sau này.
-- Local trước, Windows + Docker Desktop/WSL2, RAM 16 GB, RTX 4060 Laptop 8 GB VRAM. Tài liệu gốc dự kiến tổng khoảng <= 1 GB; 15–20 người dùng truy vấn đồng thời. Không có cam kết độ trễ cụ thể; phải đo và công bố.
+- Nền tảng local: Chuyển hoàn toàn sang macOS (Apple Silicon arm64, 32 GB RAM, Docker Desktop) theo quyết định người dùng 2026-10-30; Windows + Docker Desktop/WSL2 (RAM 16 GB, RTX 4060 Laptop 8 GB VRAM) chỉ còn là lịch sử. Tài liệu gốc dự kiến tổng khoảng <= 1 GB; 15–20 người dùng truy vấn đồng thời. Profile CUDA GPU không khả dụng trên Mac (chỉ chạy CPU profile). Ngân sách RAM/VRAM của T33 giữ nguyên số thiết kế (Docker RAM <= 10 GiB, VRAM <= 7 GiB); nếu cần điều chỉnh ngân sách cho phần cứng mới thì hỏi người dùng. Không có cam kết độ trễ cụ thể; phải đo và công bố.
 - App sở hữu storage S3/MinIO và tài liệu gốc. App upload rồi thông báo RAG core qua API; không quét bucket tự động.
 - RAG core sở hữu PostgreSQL metadata, Qdrant, hàng đợi và dữ liệu dẫn xuất của mình.
 - Quyền dữ liệu tách theo ứng dụng + người dùng + session. Yêu cầu mới nhất của người dùng: **tài liệu ngoài session tuyệt đối không tham gia truy vấn**, kể cả của cùng người dùng.
@@ -347,7 +347,7 @@ Ground truth không đi vào ingestion: ingest riêng `documents/`; `qa/`, answe
 ## P12. Docker, vận hành và tài nguyên
 
 - Compose: `api`, `worker`, `dispatcher`, `inference`, `postgres`, `qdrant`, `redis`; MinIO + bootstrap upload fixture là profile `local-storage` để mô phỏng app.
-- Docker Linux containers, named volumes cho PG/Qdrant/MinIO/model cache. Không bind mount database files vào NTFS; repo bind mount chỉ dev code khi cần.
+- Docker Linux containers, named volumes cho PG/Qdrant/MinIO/model cache. Không bind mount database files vào host filesystem (dùng named volumes); repo bind mount chỉ dev code khi cần.
 - API publish `127.0.0.1:8000`; MinIO dev console loopback nếu bật; database/broker/inference không publish mặc định. Không tự bật firewall/tunnel/hosting.
 - Separate build stages/dependency groups; API image không chứa model/OCR dependencies nếu không cần; cache revisions có manifest, download rõ ràng.
 - Healthcheck phân biệt process alive và dependencies ready; API readiness không đánh đồng LLM trả lời tốt; provider live probe riêng và có hạn mức.
@@ -423,7 +423,7 @@ Hash commit không thể ghi vào chính nó. Task ghi commit subject/Task-ID đ
 
 Trong từng task, cập nhật hai file gốc cùng lúc với phần tính năng tương ứng; không đợi cuối dự án. Không ghi command chưa tồn tại như đã chạy được. Phân biệt `DESIGNED`, `IMPLEMENTED`, `VERIFIED`, ghi task/commit chứng minh.
 
-RUNBOOK cuối phải có: source-of-truth ownership, auth/JWKS/app config, S3 upload registration, session mapping, API schemas/examples/error/status, retry/idempotency, SSE parser/cancel, history/token budget, language selection, citations khi app rewrite answer, deletion/retention, timeouts/rate limits, metrics/redaction, schema/index migration, backup/restore, Docker Windows/GPU, tests/corpus/eval, checklist tích hợp Scarlet và client FastAPI/HTTPX độc lập đã chạy thật.
+RUNBOOK cuối phải có: source-of-truth ownership, auth/JWKS/app config, S3 upload registration, session mapping, API schemas/examples/error/status, retry/idempotency, SSE parser/cancel, history/token budget, language selection, citations khi app rewrite answer, deletion/retention, timeouts/rate limits, metrics/redaction, schema/index migration, backup/restore, Docker macOS/GPU (GPU unavailable trên Apple Silicon), tests/corpus/eval, checklist tích hợp Scarlet và client FastAPI/HTTPX độc lập đã chạy thật.
 
 Khi sau này tích hợp Scarlet, agent không được dùng session_id hoặc document_ids phía browser mà bỏ kiểm user ownership ở backend. Không dùng PostgreSQL chat của Scarlet như database riêng của core. Không import code core trực tiếp vào Scarlet để thay cho hợp đồng HTTP.
 
