@@ -40,7 +40,7 @@ SECRETS = Path(".local/secrets")
 def secret(name: str) -> str:
     path = SECRETS / name
     if not path.is_file():
-        pytest.fail(f"Missing ignored {path}; run scripts/bootstrap_storage_test.ps1")
+        pytest.fail(f"Missing ignored {path}; run scripts/bootstrap_storage_test.sh")
     return path.read_text(encoding="ascii").strip()
 
 

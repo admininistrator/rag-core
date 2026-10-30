@@ -153,7 +153,7 @@ class ParserRegistry:
             )
         else:
             with suppress(ProcessLookupError):
-                os.killpg(process.pid, 9)  # type: ignore[attr-defined]  # POSIX branch
+                os.killpg(process.pid, 9)  # POSIX process group kill
         if process.poll() is None:
             process.kill()
         process.wait()

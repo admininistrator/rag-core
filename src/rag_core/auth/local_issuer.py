@@ -21,10 +21,11 @@ from rag_core.auth.config import AuthConfig
 
 
 def _write_new(path: Path, content: bytes) -> None:
-    # Exclusive creation prevents silent replacement. Windows uses inherited ACLs;
-    # the operator must restrict the parent directory to the current account.
-    with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb") as stream:
+    # Exclusive creation prevents silent replacement. On POSIX/macOS, created with mode 0600.
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as stream:
         stream.write(content)
+    os.chmod(path, 0o600)
 
 
 def initialize(directory: Path, *, app_id: str, port: int) -> None:

@@ -163,7 +163,7 @@ services:
 
   minio:
     profiles: [local-storage]
-    image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z@sha256:d249d1fb6966de4d8ad26c04754b545205ff15a62e4fd19ebd0f26fa5baacbc0
+    image: minio/minio:RELEASE.2025-10-15T17-29-55Z@sha256:b5689c72acc0f8d7aa5532ec5462a0e4a9d9ada2c03176ee1f72d3db64dbab55
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
@@ -179,7 +179,7 @@ services:
       - "127.0.0.1:${RAG_CORE_MINIO_PORT:-9000}:9000"
       - "127.0.0.1:${RAG_CORE_MINIO_CONSOLE_PORT:-9001}:9001"
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:9000/minio/health/live"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:9000/minio/health/live"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -189,7 +189,10 @@ services:
 
   minio-bootstrap:
     profiles: [local-storage]
-    image: quay.io/minio/mc:RELEASE.2025-07-21T05-28-08Z@sha256:fb8f773eac8ef9d6da0486d5dec2f42f219358bcb8de579d1623d518c9ebd4cc
+    image: rag-core-mc:local
+    build:
+      context: .
+      dockerfile: docker/mc.Dockerfile
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |

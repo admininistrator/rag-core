@@ -45,8 +45,6 @@ def main() -> int:
     args = parser.parse_args()
     if not 0.1 <= args.interval <= 60:
         parser.error("interval must be between 0.1 and 60 seconds")
-    if sys.platform == "win32":
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     try:
         return asyncio.run(_run(once=args.once, interval=args.interval))
     except ValueError as exc:

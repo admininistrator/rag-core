@@ -32,17 +32,19 @@ def main() -> int:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     values = config.model_dump(mode="json")
     values["password_hash"] = config.password_hash.get_secret_value()
-    # Exclusive creation, owner-only mode on POSIX. Windows operator manages ACLs.
+    # Exclusive creation, owner-only mode 0600 on POSIX/macOS.
     import os
 
+    fd = os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(
-        os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600),
+        fd,
         "w",
         encoding="utf-8",
         newline="\n",
     ) as output:
         json.dump(values, output, indent=2)
         output.write("\n")
+    os.chmod(args.output, 0o600)
     print("Admin configuration created; no credential values printed.")
     return 0
 

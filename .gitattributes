@@ -6,6 +6,7 @@
 *.md text working-tree-encoding=UTF-8 eol=lf
 *.json text working-tree-encoding=UTF-8 eol=lf
 *.jsonl text working-tree-encoding=UTF-8 eol=lf
+*.sh text working-tree-encoding=UTF-8 eol=lf
 *.yaml text working-tree-encoding=UTF-8 eol=lf
 *.yml text working-tree-encoding=UTF-8 eol=lf
 
