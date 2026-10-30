@@ -1,0 +1,78 @@
+schema_version: 1
+evaluation_name: "rag-core-reproducible-evaluation"
+description: "RAG Core evaluation harness configuration, split policies, and acceptance gates before T31 tuning"
+
+platform:
+  os: "macOS"
+  architecture: "arm64"
+  hardware: "Apple Silicon, 32GB RAM"
+  runtime: "Python 3.12"
+
+corpus:
+  root: "corpus-documents"
+  default:
+    domain: "default"
+    dataset: "HotpotQA"
+    documents_dir: "corpus-documents/default/documents"
+    qa_file: "corpus-documents/default/qa/eval.jsonl"
+  document:
+    domain: "document"
+    dataset: "FinanceBench"
+    documents_dir: "corpus-documents/document/documents"
+    qa_file: "corpus-documents/document/qa/eval.jsonl"
+    page_indexing: "zero_based"
+  bilingual:
+    domain: "multilingual"
+    dataset: "XQuAD"
+    documents_en_dir: "corpus-documents/bilingual/documents/en"
+    documents_vi_dir: "corpus-documents/bilingual/documents/vi"
+    qa_dir: "corpus-documents/bilingual/qa"
+    slices: ["en_en", "vi_vi", "vi_en", "en_vi"]
+
+splits:
+  splits_file: "configs/evaluation_splits.json"
+  seed: 42
+  tuning_ratio: 0.5
+  held_out_ratio: 0.5
+  strategy:
+    default: "connected_documents"
+    document: "document_pdf"
+    bilingual: "parallel_group"
+
+sampling:
+  generation:
+    total_target: 130
+    sample_targets:
+      default: 20
+      document: 30
+      bilingual_en_en: 20
+      bilingual_vi_vi: 20
+      bilingual_vi_en: 20
+      bilingual_en_vi: 20
+    rationale: "Generation benchmark is sampled to 130 questions to bound execution time and provider cost according to P11 specification."
+
+retrieval_policies:
+  baseline:
+    name: "dense-baseline"
+    branch: "dense"
+    top_k: 20
+    prefetch_limit: 30
+  tuned:
+    name: "hybrid-rerank"
+    branch: "hybrid"
+    fusion: "qdrant-rrf-k2-v1"
+    top_k: 20
+    prefetch_limit: 30
+    candidate_budget: 20
+
+gates:
+  max_held_out_recall10_drop: 0.02
+  min_citation_validity: 1.0
+  max_out_of_scope_citations: 0
+  min_isolation_pass_rate: 1.0
+
+limitations:
+  - "XQuAD contains no unanswerable questions; unanswerable/hallucination resistance is measured on synthetic failure fixtures, not XQuAD."
+  - "Generation benchmark is sampled to 130 deterministic questions due to LLM provider latency and cost limits."
+  - "Zero-based gold page in FinanceBench is converted to one-based physical page in the evaluation adapter."
+

@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T29 administration browser acceptance VERIFIED; verification recorded with its completion commit.** T28 admin UI, T27 admin APIs and T26 public API/both real provider gates remain verified. Evaluation/load/restore remain T30–T36. [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T30 evaluation harness and anti-leakage protocol VERIFIED; verification recorded with its completion commit.** T29 admin browser acceptance, T28 admin UI, T27 admin APIs and T26 public API/both real provider gates remain verified. T31 quality benchmark, load and restore remain T31–T36. [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 
 ## Phạm vi đã chốt
 
@@ -600,7 +600,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T24 VERIFIED answer/citation fixtures; T25 VERIFIED opt-in SSE HTTP:** scoped allowlist/final subset, bounded admission/buffers/heartbeat/cancellation; LLM protocol vẫn synthetic.
 - **T26 VERIFIED:** production business routes, independent app CLI/lifecycle and two real provider gates; evidence [H-T26-A01 resumed](docs/handoffs.md#h-t26-a01-resumed).
 - **T27–T29 VERIFIED local:** admin API/UI, real-data integration, desktop/mobile visual smoke và Playwright browser e2e acceptance workflows (auth, session expiry, XSS safety, filtering/pagination, worker retry/reindex, tombstone/source retention); evidence [H-T29-A01](docs/handoffs.md#h-t29-a01).
-- **T30–T34:** benchmark reports, performance, reliability, backup/restore.
+- **T30 VERIFIED:** evaluation harness, anti-leakage protocol, gold adapters, frozen splits, Unicode/financial numeric metrics and reproducible CLI runner; evidence [H-T30-A01](docs/handoffs.md#h-t30-a01).
+- **T31–T34:** live quality benchmark reports, performance, reliability, backup/restore.
 - **T35–T36:** quickstart tích hợp đã kiểm chứng và trạng thái nghiệm thu cuối.
 
 ## Nguyên tắc cập nhật

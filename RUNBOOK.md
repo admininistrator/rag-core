@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T29 administration browser acceptance VERIFIED local with the completion commit.** T28 admin UI, T27 admin APIs and T26 public API/both provider gates remain verified. Evaluation/load/restore remain T30–T36. [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T30 evaluation harness and anti-leakage protocol VERIFIED; verification recorded with its completion commit.** T29 admin browser acceptance, T28 admin UI, T27 admin APIs and T26 public API/both provider gates remain verified. T31 quality benchmark, load and restore remain T31–T36. [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -38,7 +38,9 @@
 | Query HTTP/SSE | T25 transport verified; T26 full DI/public HTTP local acceptance and both real provider gates PASS | T25–T26 |
 | Admin auth/metadata/actions/audit API | VERIFIED local with T27 completion commit | T27 |
 | Admin UI | VERIFIED local integration, manual visual smoke & Playwright browser acceptance | T28–T29 |
-| Evaluation/load/recovery | DESIGNED | T30–T34 |
+| Evaluation harness & anti-leakage protocol | VERIFIED reproducible CLI & fixture benchmark; frozen splits and gate contracts | T30 |
+| Quality benchmark / load / recovery | DESIGNED | T31–T34 |
+| Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
 
 Mỗi mục sau này ghi: task + commit reference, prerequisites, exact command/request, expected output, evidence link và limitations. Không điền PASS mẫu vào log thực thi.
@@ -2210,7 +2212,7 @@ part of recovery.
 <a id="r11"></a>
 ## R11. Corpus và quality evaluation
 
-**T04–T08 tooling, ba domain và all-domain clean reproduction VERIFIED local; evaluation DESIGNED — T30–T31.**
+**T04–T08 tooling và ba domain VERIFIED; T30 evaluation harness và protocol chống leakage VERIFIED local; T31 live quality benchmark DESIGNED.**
 
 Prompt gốc: [Build RAG Evaluation Corpus](corpus-documents/Codex%20Prompt%20%E2%80%93%20Build%20RAG%20Evaluation%20Corpus.md).
 
@@ -2313,6 +2315,57 @@ sequentially; a failure preserves completed domains, returns nonzero and stops b
 next domain. Rerun can resume verified downloads. Readers must wait until setup finishes.
 Inspect interrupted initialization, retained stages and stale locks before operator recovery;
 no automatic deletion or lock bypass. Network failures remain failures, never synthetic success.
+
+### T30 Evaluation harness và anti-leakage protocol (VERIFIED)
+
+Harness đánh giá chất lượng RAG core độc lập, chống rò rỉ dữ liệu (anti-leakage) và bảo đảm tính tái lập (reproducibility) trước khi tiến hành tuning (T31).
+
+#### 1. Nguyên tắc chống rò rỉ (Anti-Leakage Invariants)
+- **Tách biệt Ingestion:** Tuyệt đối không ingest câu hỏi (`qa`), câu trả lời (`answer`), căn cứ (`evidence`) hoặc lập luận (`justification`) vào corpus hay vector database. Hàm `is_ingestable_document(path)` và `assert_no_qa_leakage(paths)` tự động chặn và ném lỗi `EvaluationLeakageError` nếu phát hiện bất kỳ file QA nào.
+- **Phân hoạch Độc lập (Disjoint Splits):**
+  - **FinanceBench:** Phân chia ở cấp độ tài liệu PDF (document-level split). 42 PDF (69 QA) cho tuning và 42 PDF (81 QA) cho held-out; tỷ lệ trùng lặp PDF giữa 2 tập là đúng 0%.
+  - **XQuAD (Bilingual):** Phân chia theo cụm song ngữ tương đương (`parallel_group_id`). 120 nhóm cho tuning và 120 nhóm cho held-out; tỷ lệ trùng lặp nhóm là 0%. Cả 4 lát cắt (`en_en`, `vi_vi`, `vi_en`, `en_vi`) chia sẻ chung ranh giới phân hoạch.
+  - **HotpotQA (Default):** Phân chia 50 QA tuning và 50 QA held-out; 0 tài liệu chứng cứ giao thoa.
+- **Đồng nhất Scope giữa Baseline và Tuned:** Cả cấu hình baseline và tuned phải thực thi trên cùng một session, cùng danh sách tài liệu được phép, cùng `app_id`, `user_id` và `generation_id`.
+- **Không lọc trước trang (No Retrieval Page Pre-filtering):** Trong domain Document (FinanceBench), truy vấn retrieval không được lọc trước theo trang gold (`PdfLocator.page`). Đánh giá retrieval phải đo lường khả năng tìm kiếm trên toàn bộ tài liệu PDF. Adapter chuyển đổi trang 0-based của FinanceBench sang 1-based vật lý (`to_one_based_page`) để kiểm chứng trích dẫn (`citations`).
+- **XQuAD Boundary:** XQuAD không chứa câu hỏi unanswerable. Khả năng từ chối trả lời (`insufficient_evidence`) được kiểm thử bằng fixture riêng, không được coi XQuAD là benchmark đo hallucination rejection.
+- **Mẫu Generation Benchmark Cố định:** 130 câu hỏi cố định (deterministic 20 Default, 30 Document, 20 cho mỗi lát cắt bilingual: `en_en`, `vi_vi`, `vi_en`, `en_vi`).
+
+#### 2. Lệnh thực thi Harness (`scripts/evaluate.py`)
+```bash
+# Xem trợ giúp CLI
+uv run python scripts/evaluate.py --help
+
+# Chạy kiểm thử an toàn và benchmark fixture nhanh
+uv run python scripts/evaluate.py --mode fixture
+
+# Chạy đánh giá từng domain hoặc từng stage (retrieval, generation, report)
+uv run python scripts/evaluate.py --domain default --stage retrieval --mode fixture
+uv run python scripts/evaluate.py --domain document --stage generation --mode fixture
+uv run python scripts/evaluate.py --domain bilingual --stage all --mode fixture
+
+# Giới hạn kích thước mẫu khi kiểm thử nhanh
+uv run python scripts/evaluate.py --sample-size 5 --mode fixture
+```
+
+#### 3. Chỉ số đo lường (Metrics) và Chuẩn hóa (Normalization)
+- **Chuẩn hóa chuỗi:** Unicode NFKC + lowercasing + loại bỏ mạo từ/dấu câu cho cả tiếng Việt và tiếng Anh (`normalize_text`).
+- **Token F1 & Exact Match:** So khớp tập token trích xuất trên câu trả lời chuẩn hóa.
+- **Trích xuất và so khớp số học tài chính (`numeric_match`):**
+  - Xử lý ký hiệu tiền tệ (`$`, `€`, `£`, `₫`), phần trăm (`%`), dấu phẩy hàng nghìn.
+  - Chuyển đổi định dạng số âm kế toán: `(370)` hoặc `(370.5)` thành `-370` / `-370.5`.
+  - So sánh dung sai tương đối và tuyệt đối (mặc định `tolerance=1e-3`).
+- **Chỉ số Retrieval:** Recall@K, MRR, nDCG@K trên danh sách văn bản và trang tài liệu (`page_recall`).
+- **Tính hợp lệ của Trích dẫn (`citation_validity`):** Kiểm tra 100% trích dẫn (`citations`) phải nằm trong phạm vi tài liệu và số trang hợp lệ của session, tuyệt đối 0 trích dẫn ngoài phạm vi.
+
+#### 4. Acceptance Gates (P11)
+Harness tự động thẩm định 4 cổng chấp thuận chất lượng:
+1. `held_out_recall10_degradation`: Độ sụt giảm Recall@10 trên tập held-out so với tuning không vượt quá 2 điểm phần trăm (`drop <= 0.02`).
+2. `citation_validity_100_percent`: Tỷ lệ trích dẫn hợp lệ đạt 100% (`1.0`).
+3. `out_of_scope_citations_zero`: Số lượng trích dẫn ngoài phạm vi bằng đúng 0.
+4. `security_isolation_pass_rate`: Tỷ lệ vượt qua kiểm tra an toàn và cô lập đạt 100%.
+
+Kết quả đánh giá được ghi nhận tại `artifacts/eval/evaluation_manifest.json` và `artifacts/eval/evaluation_report.md`.
 
 <a id="r12"></a>
 ## R12. Hiệu năng và observability

@@ -556,3 +556,33 @@ Final affected regression:83cases PASS across bounded real-service subprocesses 
   6. *Evaluations Empty State & Responsive Accessibility*: Verified honest evaluations empty state ("Evaluations are not yet configured"); verified keyboard navigation with Tab / Shift+Tab and `#skip-nav` link; verified responsive mobile rendering at 390x844 viewport and horizontal table scrolling region.
 - **Evidence & Artifacts:** All 6 test cases passed (`6 passed in 48.35s`). 12 screenshots captured in `.local/screenshots/` (gitignored, zero secrets); all paths and commands recorded in `docs/handoffs.md`. Unit/contract/integration regression suites (619 cases), Ruff, mypy (103 source files), and `check_docs.py` all PASS.
 - **Next / Readiness:** T29 complete. Test Docker stack stopped cleanly. Task T30 dependencies (T29, T08, T26) are all COMPLETE and ready to start.
+
+<a id="s-t30-a01"></a>
+## Phase 7 / T30 / Attempt T30-A01 — Reproducible RAG evaluation harness and anti-leakage protocol
+
+- **Runtime/baseline:** Direct single-task agent; macOS Darwin arm64 (Apple Silicon 32 GB RAM), Docker Desktop 29.9.2, Python 3.12.16 (in `.venv`), uv 0.13.6; no subagents; 2026-10-30 Asia/Bangkok. Baseline HEAD `16c5611378476a6c94519b95cd44bd8917576391` equals `origin/main`. Complete T29, T08, T26 dependency notes/interfaces and plan references P11, P01, P13 read.
+- **Implemented Architecture (`src/rag_core/evaluation/` & `scripts/evaluate.py`):**
+  - **Protocol & Ingestion Safety (`protocol.py`):**
+    - `SplitKind`: `tuning` and `held_out`.
+    - `is_ingestable_document(path)`: Statically rejects any QA or ground-truth files (`*qa*.json*`, `*eval*.json*`, `*_splits.json`, `*ground_truth*`, `*metadata*`).
+    - `assert_no_qa_leakage(document_paths)`: Validates that zero QA files can ever be uploaded or indexed into Qdrant/Postgres, raising `EvaluationLeakageError`.
+    - `generate_deterministic_splits()`: Computes deterministic document-level and parallel-group-level disjoint partitions with 0 document/group overlap.
+    - Deterministic generation sample: Exactly 130 questions (20 Default, 30 Document, 20 each bilingual slice: `en_en`, `vi_vi`, `vi_en`, `en_vi`).
+  - **Gold Adapters (`adapters.py`):**
+    - `DefaultGoldAdapter`: Evaluates HotpotQA questions against multi-hop supporting facts.
+    - `FinanceBenchGoldAdapter`: Accurately bridges 0-based page numbers in FinanceBench gold evidence (`0 <= page < total_pages`) to 1-based physical pages (`page >= 1`) used by RAG Core (`PdfLocator`). Enforces that retrieval query requests must NEVER pre-filter by page number, ensuring retrieval evaluates full PDF search.
+    - `BilingualGoldAdapter`: Bridges the dataset domain name `bilingual` to core API domain `multilingual`. Across all 4 slices (`en_en`, `vi_vi`, `vi_en`, `en_vi`), injects real `corpus_languages` and `answer_language` filter parameters into the query. Marks `is_unanswerable_benchmark = False` to prevent confusing XQuAD's answerable questions with rejection/unanswerable tests.
+  - **Metrics & Normalization (`metrics.py`):**
+    - Text normalization: Unicode NFKC + lowercasing + article/punctuation stripping for robust Vietnamese and English token F1 and Exact Match (EM).
+    - Financial numeric matching: `extract_numbers()` handles currency symbols (`$`, `€`, `£`, `₫`), percentages (`%`), thousands separators, and financial accounting negative numbers `(370)` -> `-370.0`. Validates within configurable numeric tolerance (default 1e-3).
+    - Retrieval metrics: `calculate_retrieval_metrics()` computes Recall@K, MRR, nDCG@K across retrieved contexts against gold evidence documents and pages.
+    - Citation validity: `citation_validity()` verifies that 100% of generated citations reference valid documents and valid 1-based physical pages within the scoped session, with 0 out-of-scope citations.
+  - **Evaluation Manifest & Runner (`manifest.py`, `runner.py`, `scripts/evaluate.py`):**
+    - Manifest schemas: Pydantic models `RetrievalMetricsSummary`, `GenerationMetricsSummary`, `SliceEvaluationReport`, `EvaluationGateStatus`, `EvaluationRunManifest`.
+    - Verification gates: `held_out_recall10_degradation` (drop <= 0.02), `citation_validity_100_percent` (= 1.0), `out_of_scope_citations_zero` (= 0), `security_isolation_pass_rate` (= 1.0).
+    - CLI harness: `scripts/evaluate.py` supports `--config`, `--domain`, `--stage` (`ingest`, `retrieval`, `generation`, `report`, `all`), `--split` (`tuning`, `held_out`, `all`), `--mode` (`fixture`, `service`), `--output-dir`, and `--sample-size`.
+- **Verification & DoD Proof:**
+  - **DoD-1:** `uv run --no-sync pytest tests/contract/test_eval_protocol.py tests/security/test_eval_leakage.py -v` PASSED (16 test cases in 0.24s).
+  - **DoD-2:** `uv run --no-sync python scripts/evaluate.py --help` exit 0. `uv run --no-sync python scripts/evaluate.py` completed real fixture benchmark, all 4 gates PASS, written to `artifacts/eval/evaluation_manifest.json` and `artifacts/eval/evaluation_report.md`.
+  - Static analysis: Ruff check/format PASS, mypy 112 source files exit 0, `check_docs.py` PASS.
+- **Next / Readiness:** Task T30 is COMPLETE. Next task T31 dependencies (T30, T21, T22) are all COMPLETE and ready to start in next session. STOP T30.

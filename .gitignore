@@ -38,6 +38,7 @@ htmlcov/
 # Database backups and generated reports
 /backups/
 /reports/generated/
+/artifacts/
 
 # Downloaded or generated evaluation corpus. Scripts, manifests, lightweight
 # metadata, licenses, and the user-supplied source prompt remain trackable.
