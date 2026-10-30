@@ -530,7 +530,7 @@
 <a id="t29"></a>
 ### T29 — Browser acceptance của admin
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T28, T27.
 - **Tham chiếu kế hoạch:** [P10](plan.md#p10), [P13](plan.md#p13).
 - **Công việc:** Playwright flows có backend thật cho login/logout/list/filter/retry/detach/reindex và evaluation empty state; fix lỗi trong scope UI, không thêm chức năng.
@@ -538,7 +538,10 @@
   1. `uv run pytest tests/e2e/test_admin_browser.py` PASS với Docker backend và browser thật; đánh giá loading/error, session expiry, CSRF/XSS metadata, responsive/keyboard.
   2. Retry/reindex có job/audit thật, UI session deletion không đổi source hash; screenshots/logs không chứa secrets, paths ghi handoff. RUNBOOK troubleshooting UI đã thử.
 - **Cạm bẫy:** HTTP template 200 chưa chứng minh UI dùng được; không dùng ảnh/mock data thay backend thật; không để browser session admin credentials vào Git.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `test(T29): verify administration browser workflows`.
+- **Ghi chú thực thi:** T29-A01 | direct single-task agent; macOS Darwin arm64 (Apple Silicon), Docker Desktop 28.5.1, Python 3.12.16; no subagents | Started 2026-10-30 Asia/Bangkok. Baseline main/34e5540 equals origin/main. Pinned `playwright==1.64.1` in `pyproject.toml` dev group, updated `uv.lock`, installed Playwright Chromium, mapped inference port 58087:8080 in `compose.admin-test.yaml`. Created `tests/e2e/test_admin_browser.py` (6 e2e test cases) exercising real Playwright Chromium against real Docker stack (`rag-core-t29-test`: PostgreSQL, Redis, Qdrant, MinIO, Inference, Ingestion Worker).
+- **T29-A01 results / 2026-10-30:** 4 code/config/test paths (`pyproject.toml`, `uv.lock`, `compose.admin-test.yaml`, `tests/e2e/test_admin_browser.py`) and 5 living docs (`docs/tasks.md`, `docs/implementation-summary.md`, `docs/handoffs.md`, `README.md`, `RUNBOOK.md`). **DoD-1 PASS:** `uv run pytest tests/e2e/test_admin_browser.py -v -s` passed (6 passed in 48.35s). Verified: auth flow (login, invalid credentials, sign out, database session expiry, CSRF enforcement), overview live counts and honest "Not measured" fields, metadata XSS escaping (script/HTML injection tags rendered safely as plain text in DOM), document keyset pagination & multi-facet filtering, job retry & reindex with live Celery worker container execution, session link detach and tombstone, evaluations honest empty state, responsive mobile viewports (390x844), table overflow scrolling, and keyboard navigation with skip links. **DoD-2 PASS:** PostgreSQL audit events verified (`session_detach`, `session_tombstone`, `job_retry`, `job_reindex`); MinIO raw source object verified immutable byte-for-byte (SHA256, ETag, VersionId unchanged after session detach/tombstone); screenshots recorded in `.local/screenshots/` (gitignored, no secrets, paths recorded in `docs/handoffs.md`); UI troubleshooting commands in RUNBOOK verified.
+- **D1 PASS:** dependencies/scope/baseline preserved; **D2 PASS:** 610 unit/contract tests PASS, 9 admin views integration tests PASS, Ruff check/format PASS, mypy 103 source files exit 0, check_docs.py 14 files / 428 anchors PASS; **D3 PASS:** all task DoDs verified against real services/browser without mocks; **D4 PASS:** five living docs updated; **D5 PASS:** strict review of diff, zero secrets, zero database/index migration changes, raw source immutability verified; **D6:** completion subject `test(T29): verify administration browser workflows`.
+- **Limits/next:** No unresolved task blockers. Evaluation harness/report registry remains future T30–T31. Test containers stopped cleanly without deleting data/volumes. T30 dependencies (T29, T08, T26) are all COMPLETE and ready. **STOP T29**, no auto-drain.
 
 ## Phase 7 — Đánh giá chất lượng
 

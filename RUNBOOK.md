@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T28 admin UI VERIFIED local with the completion commit.** T27 admin APIs and T26 public API/both provider gates remain verified. Full browser acceptance/evaluation/load/restore remain T29–T36. [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T29 administration browser acceptance VERIFIED local with the completion commit.** T28 admin UI, T27 admin APIs and T26 public API/both provider gates remain verified. Evaluation/load/restore remain T30–T36. [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -37,7 +37,7 @@
 | Answer assembly/citation resolver | VERIFIED actual PG/Qdrant/CPU/source; synthetic wire and independent live T26 gates | T24 |
 | Query HTTP/SSE | T25 transport verified; T26 full DI/public HTTP local acceptance and both real provider gates PASS | T25–T26 |
 | Admin auth/metadata/actions/audit API | VERIFIED local with T27 completion commit | T27 |
-| Admin UI | VERIFIED local integration + manual desktop/mobile | T28; full browser acceptance T29 |
+| Admin UI | VERIFIED local integration, manual visual smoke & Playwright browser acceptance | T28–T29 |
 | Evaluation/load/recovery | DESIGNED | T30–T34 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
 
@@ -488,7 +488,7 @@ PG/Redis/Qdrant and do not prove provider/model/ingestion readiness.
 | GET `/v1/sessions/{session_id}/citations/{chunk_id}` | UUIDs → CitationResolveResponse | Mounted T26; current scope only |
 | GET `/health/live`, `/health/ready` | health-specific responses | Mounted T02 |
 | `/v1/admin/*` | independent admin cookie/CSRF, metadata/actions | VERIFIED local T27; details R10 |
-| `/admin`, `/admin/*` | local UI shell/assets; data/actions use protected `/v1/admin` | VERIFIED local T28; full browser acceptance T29 |
+| `/admin`, `/admin/*` | local UI shell/assets; data/actions use protected `/v1/admin` | VERIFIED local T28–T29; Playwright e2e acceptance |
 | protected `/metrics` | deferred | DESIGNED T32 |
 
 Không có route xóa object nguồn, arbitrary search hoặc user-wide query bỏ session.
@@ -1947,10 +1947,10 @@ Các số đo synthetic không là benchmark corpus/20users/full-stack budget T3
 <a id="r10"></a>
 ## R10. UI quản trị
 
-**T27 API VERIFIED local; T28 local UI IMPLEMENTED with real-data integration
-and manual browser verification recorded at completion. Full browser acceptance
-remains T29.** Evidence: [H-T27-A01](docs/handoffs.md#h-t27-a01),
-[H-T28-A01](docs/handoffs.md#h-t28-a01).
+**T27 API, T28 local UI & T29 browser acceptance VERIFIED local with real-data
+integration, Playwright automated workflows, and immutable source retention.**
+Evidence: [H-T27-A01](docs/handoffs.md#h-t27-a01), [H-T28-A01](docs/handoffs.md#h-t28-a01),
+[H-T29-A01](docs/handoffs.md#h-t29-a01).
 
 ### Independent setup, sessions and credential rotation
 
@@ -2174,11 +2174,28 @@ uv run pytest tests/integration/test_admin_views.py -v -s --tb=short --basetemp=
 ```
 
 Manual desktop/mobile browser observations and screenshots are in T28 handoff.
-They do not replace T29's full real-browser automation, retention/source hash and
-fault matrix. Evaluation reports, telemetry/load, backup restore and deployment
-remain future tasks.
+T29 automated full real-browser workflows (auth, CSRF/XSS, filtering, pagination,
+retry/reindex with live worker execution, session tombstone, immutable source retention,
+and mobile/keyboard accessibility) are executed via Playwright Chromium against
+the real Docker stack:
 
-### UI troubleshooting verified in T28
+```bash
+# Start Docker test stack
+docker compose -p rag-core-t29-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml up -d
+
+# Execute Playwright e2e browser acceptance
+export RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55437/t10_acceptance'
+export DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+export RAG_ADMIN_TEST_STORAGE_URL='http://127.0.0.1:19007'
+export RAG_ADMIN_TEST_QDRANT_URL='http://127.0.0.1:56337'
+export REDIS_URL='redis://127.0.0.1:16387/0'
+export INFERENCE_URL='http://127.0.0.1:58087'
+uv run pytest tests/e2e/test_admin_browser.py -v -s --tb=short
+```
+
+Evaluation reports, telemetry/load, backup restore and deployment remain future tasks.
+
+### UI troubleshooting verified in T28–T29
 
 If data cannot load, use Refresh now and check local API/dependencies; no demo
 numbers replace a failure. A 503 at sign-in means the admin config or dependencies

@@ -6,6 +6,14 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-30 / T29-A01 acceptance closure:**
+  - **Task & Scope:** T29 (Browser acceptance của admin) COMPLETE. macOS Darwin arm64, Python 3.12.16, Docker Desktop 28.5.1, Playwright 1.64.1 Chromium. Direct single-task agent, no subagents.
+  - **4 Code / Test Paths & 5 Living Docs:** `pyproject.toml`, `uv.lock`, `compose.admin-test.yaml`, `tests/e2e/test_admin_browser.py`, `docs/tasks.md`, `docs/implementation-summary.md`, `docs/handoffs.md`, `README.md`, `RUNBOOK.md`.
+  - **DoD-1 PASS:** `uv run pytest tests/e2e/test_admin_browser.py -v -s` (6 passed in 48.35s). Real Chromium against real Docker test stack (`rag-core-t29-test`: PG, Redis, Qdrant, MinIO, Inference, Ingestion Worker). Verified auth flow (login, bad credentials, logout, DB session expiry, CSRF), overview live counts and honest "Not measured", metadata XSS escaping (HTML injection tags rendered harmlessly as plain text in DOM), document filtering & keyset pagination, job retry & reindex with live Celery worker container execution, session link detach and tombstone, evaluations honest empty state, responsive mobile viewports (390x844), table overflow scrolling, and keyboard navigation with skip links.
+  - **DoD-2 PASS:** PostgreSQL audit events verified (`session_detach`, `session_tombstone`, `job_retry`, `job_reindex`); MinIO raw source object verified immutable byte-for-byte (SHA256, ETag, VersionId unchanged after session detach/tombstone); 12 screenshots captured in `.local/screenshots/` (gitignored, zero secrets); UI troubleshooting commands in RUNBOOK verified.
+  - **Quality Gates D1–D6:** D1 PASS (scoped paths, baseline preserved); D2 PASS (610 unit/contract + 9 admin integration PASS, Ruff check/format PASS, mypy 103 source files exit 0, check_docs.py PASS); D3 PASS (all task DoDs verified against real services/browser without mocks); D4 PASS (tasks.md, implementation-summary.md, handoffs.md, README.md, RUNBOOK.md updated); D5 PASS (strict review of diff, zero secrets, zero database/index migration changes, raw source immutability verified); D6 candidate commit `test(T29): verify administration browser workflows`.
+  - **Next:** Task T30 dependencies (T29, T08, T26) are all COMPLETE and ready to start in next session. STOP T29.
+
 - **Current 2026-10-30 / Chuyển nền tảng sang macOS (Apple Silicon arm64) COMPLETE:**
   - **Quyết định 2026-10-30:** macOS là nền tảng local duy nhất được hỗ trợ; Windows chuyển thành lịch sử. Đổi scripts PowerShell (`scripts/bootstrap_local.ps1`, `scripts/bootstrap_storage_test.ps1`, `scripts/smoke_local.ps1`) sang POSIX shell (`.sh`) với cùng hành vi, bit thực thi `+x`, kiểm chứng PASS rồi xóa bản `.ps1`. Giữ nguyên lịch sử (handoffs, task notes, implementation-summary). T29 sẵn sàng bắt đầu trên macOS.
   - **Phần cứng & Hệ điều hành đo thật:**
@@ -11145,3 +11153,118 @@ candidate includes code/tests/config/docs, subject
 successful commit. Actual hash/authorized normal push/remote equality returned
 after execution, no self-hash/amend. T29 ready after inspected T28 completion,
 remains TODO. STOP T28; no drain/merge/deploy.
+
+<a id="h-t29-a01"></a>
+## Attempt T29-A01 — Administration Browser Workflows Acceptance
+
+### 1. Execution Environment & Baseline
+- **OS:** macOS Darwin Kernel Version 26.0.0 arm64 (Apple Silicon)
+- **Host Docker:** Docker Desktop 28.5.1 (Engine 29.9.2 linux/arm64)
+- **Python / uv:** uv 0.13.6, Python 3.12.16
+- **Playwright:** playwright==1.64.1 (Chromium headless)
+- **Baseline Git:** HEAD `34e554066cbc17a3eba7f46ac51bc3c1316f5d0e` = `origin/main`
+- **Docker Test Stack (`rag-core-t29-test`):**
+  - PostgreSQL 16 on `127.0.0.1:55437` (DB `t10_acceptance`, credentials `.local/secrets/t10_postgres_password`)
+  - Redis 7 on `127.0.0.1:16387`
+  - Qdrant on `127.0.0.1:56337`
+  - MinIO on `127.0.0.1:19007` (Storage fixture initialized bucket `rag-core-test`)
+  - Inference service on `127.0.0.1:58087` (BGE-M3 / BGE-reranker)
+  - Ingestion Worker container (`rag-core-ingestion-test:t19`) executing real tasks against test DB
+
+### 2. Commands & Real Tool Outputs
+
+#### Test Stack Start
+```bash
+docker compose -p rag-core-t29-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml up -d
+```
+Exit: 0. Services healthy.
+
+#### DoD-1 & DoD-2 Verification: Playwright e2e Test Suite
+```bash
+export PATH="/opt/homebrew/bin:/Applications/Docker.app/Contents/Resources/bin:$PATH"
+export RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55437/t10_acceptance'
+export DATABASE_PASSWORD_FILE='.local/secrets/t10_postgres_password'
+export RAG_ADMIN_TEST_STORAGE_URL='http://127.0.0.1:19007'
+export RAG_ADMIN_TEST_QDRANT_URL='http://127.0.0.1:56337'
+export REDIS_URL='redis://127.0.0.1:16387/0'
+export INFERENCE_URL='http://127.0.0.1:58087'
+uv run pytest tests/e2e/test_admin_browser.py -v -s --tb=short
+```
+Output:
+```text
+============================= test session starts ==============================
+platform darwin -- Python 3.12.16, pytest-9.1.1, pluggy-1.6.0 -- /Users/dophucthinh/Documents/GitHub/rag-core/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/dophucthinh/Documents/GitHub/rag-core
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, anyio-4.15.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 6 items
+
+tests/e2e/test_admin_browser.py::test_admin_browser_auth_flow PASSED
+tests/e2e/test_admin_browser.py::test_admin_browser_overview_and_metadata_xss PASSED
+tests/e2e/test_admin_browser.py::test_admin_browser_documents_filtering_and_pagination PASSED
+tests/e2e/test_admin_browser.py::test_admin_browser_jobs_retry_and_reindex_flow PASSED
+tests/e2e/test_admin_browser.py::test_admin_browser_sessions_detach_tombstone_source_retention PASSED
+tests/e2e/test_admin_browser.py::test_admin_browser_evaluations_empty_state_and_responsive PASSED
+
+============================== 6 passed in 48.35s ==============================
+```
+Exit: 0.
+
+#### Quality & Static Analysis Checks
+```bash
+uv run ruff check .
+# Output: All checks passed!
+# Exit: 0
+
+uv run ruff format --check tests/e2e/test_admin_browser.py
+# Output: 1 file already formatted
+# Exit: 0
+
+uv run mypy src
+# Output: Success: no issues found in 103 source files
+# Exit: 0
+
+uv run python scripts/check_docs.py
+# Output:
+# PASS UTF-8/nonempty Markdown: 14 files
+# PASS internal links/anchors: 428
+# PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+# DOCUMENTATION CHECK: PASS
+# Exit: 0
+
+uv run pytest tests/unit tests/contract
+# Output: 610 passed in 40.54s
+# Exit: 0
+
+uv run pytest tests/integration/test_admin_views.py
+# Output: 9 passed in 5.94s
+# Exit: 0
+```
+
+#### Test Stack Clean Stop
+```bash
+docker compose -p rag-core-t29-test -f compose.ingestion-test.yaml -f compose.admin-test.yaml stop
+# Output: All 6 containers stopped cleanly without volume/data loss.
+# Exit: 0
+```
+
+### 3. Captured Screenshots (in `.local/screenshots/`, gitignored)
+- `.local/screenshots/t29_auth_initial_login.png`: Login modal presented upon initial unauthenticated navigation.
+- `.local/screenshots/t29_auth_signed_in.png`: Admin shell navigation loaded with CSRF token in memory.
+- `.local/screenshots/t29_auth_session_expired.png`: Automatic prompt return when database session expires.
+- `.local/screenshots/t29_overview_screen.png`: Live Postgres counts and honest "Not measured" metrics.
+- `.local/screenshots/t29_documents_xss_safe.png`: Escaped HTML/script strings displayed safely as text nodes.
+- `.local/screenshots/t29_dialog_retry_confirmation.png`: Native HTML `<dialog>` confirmation before action.
+- `.local/screenshots/t29_jobs_retried_ready.png`: Job state updated to `ready` after real worker execution.
+- `.local/screenshots/t29_sessions_view_links.png`: Slide-out panel showing attached documents.
+- `.local/screenshots/t29_session_tombstoned.png`: Session marked as deleted while raw source remains unchanged.
+- `.local/screenshots/t29_evaluations_empty_desktop.png`: Honest "not yet configured" empty evaluations UI.
+- `.local/screenshots/t29_mobile_overview.png`: Responsive 390x844 layout for mobile viewports.
+- `.local/screenshots/t29_mobile_documents.png`: Responsive table with horizontal scroll region.
+
+### 4. Summary & Verification of Criteria
+- **DoD-1:** Full Playwright e2e test suite against real Docker backend passed (6 test cases covering auth, session expiry, CSRF, XSS escaping, document pagination/filters, retry/reindex worker execution, session tombstoning, and mobile/keyboard navigation).
+- **DoD-2:** Real audit records in PostgreSQL verified (`session_detach`, `session_tombstone`, `job_retry`, `job_reindex`). MinIO source retention verified byte-for-byte SHA256 immutable. Screenshots and logs contain zero secrets.
+- **D1–D6:** Scope and quality criteria met. Ready for completion commit and push to origin/main.
