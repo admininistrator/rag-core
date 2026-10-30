@@ -1,5 +1,6 @@
 """Local metadata UI shell. Only the cookie-protected API supplies operational data."""
 
+import json
 from pathlib import Path
 
 from fastapi import APIRouter, Request
@@ -7,6 +8,7 @@ from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
 
 ROOT = Path(__file__).parent
+REPO_ROOT = ROOT.parents[2]
 TEMPLATES = Jinja2Templates(directory=ROOT / "templates")
 PAGES = {
     "overview": ("Overview", "Local operations at a glance"),
@@ -45,10 +47,24 @@ def build_admin_views() -> APIRouter:
         if page not in PAGES:
             return Response(status_code=404, headers=HEADERS)
         title, subtitle = PAGES[page]
+        eval_report = None
+        if page == "evaluations":
+            manifest_path = REPO_ROOT / "artifacts" / "eval" / "evaluation_manifest.json"
+            if manifest_path.is_file():
+                try:
+                    eval_report = json.loads(manifest_path.read_text(encoding="utf-8"))
+                except Exception:
+                    eval_report = None
         return TEMPLATES.TemplateResponse(
             request=request,
             name="admin.html",
-            context={"page": page, "title": title, "subtitle": subtitle, "pages": PAGES},
+            context={
+                "page": page,
+                "title": title,
+                "subtitle": subtitle,
+                "pages": PAGES,
+                "eval_report": eval_report,
+            },
             headers=HEADERS,
         )
 

@@ -93,6 +93,130 @@ class EvaluationRunner:
                 doc_paths = list(doc_dir.rglob("*"))
                 assert_no_qa_leakage(doc_paths)
 
+    def run_benchmark(
+        self,
+        domain_filter: str = "all",
+        stage_filter: EvaluationStage = "all",
+        split_filter: str = "all",
+        sample_size: int | None = None,
+        provider_name: str = "deepseek",
+    ) -> EvaluationRunManifest:
+        """Run benchmark dispatching to service mode or fixture mode."""
+        if self.mode == "service":
+            return self.run_service_benchmark(
+                domain_filter=domain_filter,
+                stage_filter=stage_filter,
+                split_filter=split_filter,
+                sample_size=sample_size,
+                provider_name=provider_name,
+            )
+        return self.run_fixture_benchmark(
+            domain_filter=domain_filter,
+            stage_filter=stage_filter,
+            split_filter=split_filter,
+            sample_size=sample_size,
+        )
+
+    def run_service_benchmark(
+        self,
+        domain_filter: str = "all",
+        stage_filter: EvaluationStage = "all",
+        split_filter: str = "all",
+        sample_size: int | None = None,
+        provider_name: str = "deepseek",
+    ) -> EvaluationRunManifest:
+        """Run measured service benchmark across real corpus documents and live stack."""
+        import asyncio
+
+        from rag_core.evaluation.service_runner import ServiceBenchmarkEngine
+
+        if self._splits is None:
+            raise ValueError("Splits file not found or empty for service benchmark")
+
+        run_id = f"eval-run-{uuid4().hex[:12]}"
+        timestamp = datetime.now(UTC).isoformat()
+        git_commit = self.get_git_commit()
+        platform_info = self.get_platform_info()
+
+        engine = ServiceBenchmarkEngine(
+            repo_root=Path("."),
+            splits=self._splits,
+        )
+        engine.validate_safety()
+
+        reports: dict[str, list[SliceEvaluationReport]] = {
+            "default": [],
+            "document": [],
+            "bilingual": [],
+        }
+        all_splits: tuple[SplitKind, ...] = ("tuning", "held_out")
+
+        # 1. Default Domain
+        if domain_filter in ("all", "default"):
+            for split in all_splits:
+                if split_filter in ("all", split):
+                    reports["default"].append(
+                        engine.evaluate_default_slice(split=split, sample_size=sample_size)
+                    )
+
+        # 2. Document Domain
+        if domain_filter in ("all", "document"):
+            for split in all_splits:
+                if split_filter in ("all", split):
+                    reports["document"].append(
+                        engine.evaluate_document_slice(split=split, sample_size=sample_size)
+                    )
+
+        # 3. Bilingual Domain
+        if domain_filter in ("all", "bilingual", "multilingual"):
+            for slice_name in ("en_en", "vi_vi", "vi_en", "en_vi"):
+                for split in all_splits:
+                    if split_filter in ("all", split):
+                        reports["bilingual"].append(
+                            engine.evaluate_bilingual_slice(
+                                slice_name=slice_name, split=split, sample_size=sample_size
+                            )
+                        )
+
+        # 4. Generation Benchmark
+        if stage_filter in ("all", "generation"):
+            gen_summaries = asyncio.run(
+                engine.run_generation_benchmark(
+                    provider_name=provider_name, sample_size=sample_size
+                )
+            )
+            # Attach generation metrics to reports
+            for _domain_name, slice_list in reports.items():
+                for idx, rep in enumerate(slice_list):
+                    if rep.slice_name in gen_summaries and rep.split == "tuning":
+                        slice_list[idx] = rep.model_copy(
+                            update={"generation": gen_summaries[rep.slice_name]}
+                        )
+
+        gates = self._evaluate_gates(reports)
+        passed_all = all(g.passed for g in gates)
+
+        limitations = [
+            "XQuAD contains no unanswerable questions; unanswerable/hallucination resistance is measured on synthetic failure fixtures, not XQuAD.",
+            "Generation benchmark is sampled to 130 deterministic questions due to LLM provider latency and cost limits.",
+            "Zero-based gold page in FinanceBench is converted to one-based physical page in the evaluation adapter.",
+            "Measured service benchmark executes on isolated local stack with BGE-M3 and BGE-reranker on real corpus documents.",
+        ]
+
+        return EvaluationRunManifest(
+            schema_version=1,
+            run_id=run_id,
+            timestamp=timestamp,
+            git_commit=git_commit,
+            platform=platform_info,
+            mode="service",
+            config_fingerprint=self.config_fingerprint,
+            domains=reports,
+            gates=gates,
+            passed_all_gates=passed_all,
+            limitations=limitations,
+        )
+
     def run_fixture_benchmark(
         self,
         domain_filter: str = "all",

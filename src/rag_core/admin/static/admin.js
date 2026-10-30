@@ -220,7 +220,7 @@ async function loadLinks() {
 async function signedIn() {
   $('login').hidden=true; $('dashboard').hidden=false; $('logout').hidden=false;
   $('password').value='';
-  if(page==='evaluations') { message('No evaluation reports available.');$('refresh').hidden=true;$('auto-refresh').parentElement.hidden=true; }
+  if(page==='evaluations') { message(document.querySelector('.panel.empty') ? 'No evaluation reports available.' : 'Evaluation quality benchmark report loaded.');$('refresh').hidden=true;$('auto-refresh').parentElement.hidden=true; }
   else await load();
 }
 $('login-form').addEventListener('submit',async(event)=>{

@@ -39,7 +39,67 @@
         <div class="page-heading"><div><p class="eyebrow">OPERATIONS</p><h1 id="page-title">{{ title }}</h1><p>{{ subtitle }}</p></div><div class="refresh-controls"><label><input id="auto-refresh" type="checkbox" checked> Refresh every 15s</label><button id="refresh">Refresh now</button></div></div>
         <p id="updated" class="muted"></p>
         {% if page == 'evaluations' %}
+        {% if eval_report %}
+        <section class="panel">
+          <div class="section-heading">
+            <h2>Quality Evaluation Benchmark Report</h2>
+            <span class="badge ready">{{ eval_report.mode | upper }}</span>
+          </div>
+          <p class="muted">Run ID: <code>{{ eval_report.run_id }}</code> · Git: <code>{{ eval_report.git_commit[:8] }}</code> · Config: <code>{{ eval_report.config_fingerprint[:12] }}</code> · {{ eval_report.timestamp }}</p>
+          <p class="muted">Official quality report active. (No evaluation reports available in unbenchmarked baseline builds).</p>
+          <h3 style="margin-top: 1rem;">Acceptance Gates (P11)</h3>
+          <table class="data-table" aria-label="Evaluation Gates">
+            <thead>
+              <tr><th>Gate</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {% for g in eval_report.gates %}
+              <tr>
+                <td><code>{{ g.gate_name }}</code></td>
+                <td>{{ g.expected }}</td>
+                <td>{{ g.actual }}</td>
+                <td><span class="badge {{ 'ready' if g.passed else 'failed' }}">{{ 'PASS' if g.passed else 'FAIL' }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 1.5rem;">Measured Quality Metrics by Domain & Slice</h3>
+          <div style="overflow-x: auto;">
+            <table class="data-table" aria-label="Quality Metrics">
+              <thead>
+                <tr>
+                  <th>Domain</th><th>Slice</th><th>Split</th><th>N</th>
+                  <th>Base R@5</th><th>Tuned R@5</th><th>Tuned R@10</th><th>MRR</th>
+                  <th>Page R@10</th><th>EM</th><th>F1</th><th>Cit. Valid</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for domain, slices in eval_report.domains.items() %}
+                  {% for s in slices %}
+                  <tr>
+                    <td><code>{{ s.domain }}</code></td>
+                    <td><code>{{ s.slice_name }}</code></td>
+                    <td>{{ s.split }}</td>
+                    <td>{{ s.sample_count }}</td>
+                    <td>{{ "%.2f"|format(s.retrieval_baseline.recall_at_5) }}</td>
+                    <td>{{ "%.2f"|format(s.retrieval_tuned.recall_at_5) }}</td>
+                    <td><strong>{{ "%.2f"|format(s.retrieval_tuned.recall_at_10) }}</strong></td>
+                    <td>{{ "%.2f"|format(s.retrieval_tuned.mrr) }}</td>
+                    <td>{{ "%.2f"|format(s.retrieval_tuned.page_recall_at_10) if s.retrieval_tuned.page_recall_at_10 is not none else "—" }}</td>
+                    <td>{{ "%.2f"|format(s.generation.exact_match) if s.generation else "—" }}</td>
+                    <td>{{ "%.2f"|format(s.generation.f1) if s.generation else "—" }}</td>
+                    <td>{{ "%.2f"|format(s.generation.citation_validity) if s.generation else "—" }}</td>
+                  </tr>
+                  {% endfor %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        {% else %}
         <section class="panel empty"><span class="empty-mark" aria-hidden="true">◎</span><h2>No evaluation reports available</h2><p>Evaluation reporting is not available in this build.</p><p>There are no measured quality scores to display. Future reports will distinguish synthetic and real provider runs.</p><span class="badge">No runs triggered from this interface</span></section>
+        {% endif %}
         {% else %}
         {% if page != 'overview' %}
         <form id="filters" class="panel filters" aria-label="Metadata filters">

@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T30 evaluation harness and anti-leakage protocol VERIFIED; verification recorded with its completion commit.** T29 admin browser acceptance, T28 admin UI, T27 admin APIs and T26 public API/both provider gates remain verified. T31 quality benchmark, load and restore remain T31–T36. [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T31 quality benchmark and measured RAG baselines VERIFIED; verification recorded with its completion commit.** T30 evaluation harness, T29 admin browser acceptance, T28 admin UI, T27 admin APIs and T26 public API/both provider gates remain verified. T32 isolation fault injection, T33 load testing, and T34 recovery remain T32–T36. [T31 evidence](docs/handoffs.md#h-t31-a01), [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -39,7 +39,8 @@
 | Admin auth/metadata/actions/audit API | VERIFIED local with T27 completion commit | T27 |
 | Admin UI | VERIFIED local integration, manual visual smoke & Playwright browser acceptance | T28–T29 |
 | Evaluation harness & anti-leakage protocol | VERIFIED reproducible CLI & fixture benchmark; frozen splits and gate contracts | T30 |
-| Quality benchmark / load / recovery | DESIGNED | T31–T34 |
+| Quality benchmark / calibration | VERIFIED real corpus retrieval & generation benchmark, all P11 gates PASS | T31 |
+| Session isolation / load / recovery | DESIGNED | T32–T34 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
 | Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
 
@@ -2366,6 +2367,57 @@ Harness tự động thẩm định 4 cổng chấp thuận chất lượng:
 4. `security_isolation_pass_rate`: Tỷ lệ vượt qua kiểm tra an toàn và cô lập đạt 100%.
 
 Kết quả đánh giá được ghi nhận tại `artifacts/eval/evaluation_manifest.json` và `artifacts/eval/evaluation_report.md`.
+
+### T31 Benchmark chất lượng, calibration và báo cáo đo thật (VERIFIED)
+
+Benchmark chất lượng RAG Core trên toàn bộ tập dữ liệu thật với phần cứng Apple Silicon MPS acceleration, hiệu chuẩn tham số dung hợp và thẩm định 4 cổng chấp thuận chất lượng (P11 Acceptance Gates).
+
+#### 1. Lệnh thực thi Benchmark thật (`scripts/evaluate.py --mode service`)
+```bash
+# Thực thi toàn diện benchmark chất lượng (retrieval full QA + 130 sample generation)
+python scripts/evaluate.py --config configs/evaluation.yaml --mode service
+
+# Thực thi riêng stage retrieval trên từng domain
+python scripts/evaluate.py --config configs/evaluation.yaml --domain default --stage retrieval
+python scripts/evaluate.py --config configs/evaluation.yaml --domain document --stage retrieval
+python scripts/evaluate.py --config configs/evaluation.yaml --domain bilingual --stage retrieval
+
+# Thực thi riêng stage generation (130 câu với DeepSeek live API)
+python scripts/evaluate.py --config configs/evaluation.yaml --stage generation
+```
+
+#### 2. Quyết định hiệu chuẩn (Calibration Decisions)
+1. **Dung hợp RRF cho Document RAG (`qdrant-rrf-k2-v1`):**
+   - Tài liệu báo cáo tài chính 10-K có độ dài lớn (50–250 trang). Việc xếp hạng chỉ dựa vào cross-encoder reranker trên đầu đoạn trích có thể làm sụt giảm thứ hạng của trang chứa bảng số liệu tài chính.
+   - Hiệu chuẩn áp dụng Reciprocal Rank Fusion giữa Dense rank và Rerank score (`1 / (60 + dense_rank) + 1 / (60 + rerank_rank)`), bảo toàn 100% khả năng truy xuất trang của mô hình dense BGE-M3 (đạt Max drop = 0.0000 trên held-out).
+2. **Chính sách Hybrid nhận biết ngôn ngữ (Language-Aware Hybrid Retrieval):**
+   - Lát cắt đơn ngữ (`en_en`, `vi_vi`): Sử dụng kết hợp Dense + Lexical Sparse với RRF để tận dụng độ khớp từ khóa chính xác.
+   - Lát cắt xuyên ngôn ngữ (`vi_en`, `en_vi`): Do từ vựng tiếng Việt và tiếng Anh không có giao thoa từ khóa trực tiếp (zero lexical overlap), nhánh sparse chỉ tạo ra nhiễu ngẫu nhiên. Lát cắt xuyên ngôn ngữ sử dụng không gian vector ngữ nghĩa đa ngôn ngữ (Multilingual Dense Space của BGE-M3), đạt Recall@10 > 97% và triệt tiêu hoàn toàn suy giảm chất lượng.
+
+#### 3. Bảng số đo chất lượng thật (Measured Baselines)
+
+| Domain | Lát cắt | Phân hoạch | Số mẫu | Baseline R@5 | Tuned R@5 | Tuned R@10 | MRR | Page R@10 | Citation Validity |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `default` | `default` | `tuning` | 50 | 0.93 | 0.96 | 0.99 | 0.99 | N/A | 1.00 |
+| `default` | `default` | `held_out` | 50 | 0.88 | 0.92 | 0.97 | 0.98 | N/A | N/A |
+| `document` | `document` | `tuning` | 69 | 0.52 | 0.61 | 0.70 | 0.41 | 0.70 | 1.00 |
+| `document` | `document` | `held_out` | 81 | 0.52 | 0.52 | 0.70 | 0.39 | 0.70 | N/A |
+| `bilingual` | `en_en` | `tuning` | 596 | 0.99 | 0.99 | 1.00 | 0.98 | N/A | 1.00 |
+| `bilingual` | `en_en` | `held_out` | 594 | 0.98 | 0.98 | 0.99 | 0.95 | N/A | N/A |
+| `bilingual` | `vi_vi` | `tuning` | 596 | 0.99 | 0.99 | 1.00 | 0.95 | N/A | 1.00 |
+| `bilingual` | `vi_vi` | `held_out` | 594 | 0.98 | 0.97 | 0.99 | 0.94 | N/A | N/A |
+| `bilingual` | `vi_en` | `tuning` | 596 | 0.98 | 0.98 | 0.99 | 0.93 | N/A | 1.00 |
+| `bilingual` | `vi_en` | `held_out` | 594 | 0.96 | 0.96 | 0.97 | 0.91 | N/A | N/A |
+| `bilingual` | `en_vi` | `tuning` | 596 | 0.98 | 0.98 | 0.99 | 0.93 | N/A | 1.00 |
+| `bilingual` | `en_vi` | `held_out` | 594 | 0.97 | 0.97 | 0.98 | 0.91 | N/A | N/A |
+
+#### 4. Thẩm định Acceptance Gates (P11)
+- `held_out_recall10_degradation`: **PASS** — Max drop: `0.0000` (Ngưỡng yêu cầu <= `0.02`).
+- `citation_validity_100_percent`: **PASS** — `1.0000` (100% trích dẫn hợp lệ, trỏ đúng tài liệu và vị trí locator).
+- `out_of_scope_citations_zero`: **PASS** — `0` trích dẫn ngoài phạm vi session.
+- `security_isolation_pass_rate`: **PASS** — `100%` pass rate về cô lập session.
+
+Báo cáo chi tiết và manifest được lưu tại `artifacts/eval/evaluation_manifest.json` và hiển thị trực quan tại Admin UI `http://127.0.0.1:58000/admin/evaluations`.
 
 <a id="r12"></a>
 ## R12. Hiệu năng và observability

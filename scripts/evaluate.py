@@ -49,7 +49,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mode",
         choices=["fixture", "service"],
-        default="fixture",
+        default="service",
         help="Evaluation mode: fixture (fast synthetic/mock) or service (live local stack)",
     )
     parser.add_argument(
@@ -122,7 +122,7 @@ def main() -> int:
 
     # Execute benchmark
     try:
-        manifest = runner.run_fixture_benchmark(
+        manifest = runner.run_benchmark(
             domain_filter=args.domain,
             stage_filter=args.stage,
             split_filter=args.split,

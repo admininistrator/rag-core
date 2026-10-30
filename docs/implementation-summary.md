@@ -586,3 +586,30 @@ Final affected regression:83cases PASS across bounded real-service subprocesses 
   - **DoD-2:** `uv run --no-sync python scripts/evaluate.py --help` exit 0. `uv run --no-sync python scripts/evaluate.py` completed real fixture benchmark, all 4 gates PASS, written to `artifacts/eval/evaluation_manifest.json` and `artifacts/eval/evaluation_report.md`.
   - Static analysis: Ruff check/format PASS, mypy 112 source files exit 0, `check_docs.py` PASS.
 - **Next / Readiness:** Task T30 is COMPLETE. Next task T31 dependencies (T30, T21, T22) are all COMPLETE and ready to start in next session. STOP T30.
+
+<a id="s-t31-a01"></a>
+## Phase 7 / T31 / Attempt T31-A01 — Measured RAG quality baselines, calibration, and benchmark report
+
+- **Runtime/baseline:** Direct single-task agent; macOS Darwin arm64 (Apple Silicon 32 GB RAM), Python 3.12.16 (in `.venv`), PyTorch 2.2.2 MPS hardware acceleration, uv 0.13.6; no subagents; 2026-10-30 Asia/Bangkok. Baseline HEAD `cd3bf2ae8122e3cd7bb9f9f3ec15f1890615716c` equals `origin/main`. Complete T30, T21, T22 dependency notes/interfaces and plan references P11, P08, P13 read.
+- **Implemented Architecture (`src/rag_core/evaluation/service_runner.py`):**
+  - **ServiceBenchmarkEngine:**
+    - High-throughput MPS acceleration for BGE-M3 (dense and lexical sparse embeddings) and BGE-reranker-v2-m3 (cross-encoder sequence classification).
+    - Cache management: pre-embeddings for 986 Default documents (`default_docs_embed.npz`), 480 Bilingual documents (`bilingual_docs_embed.npz`), 2,619 evaluation queries (`all_queries_embed.npz`), and 84 FinanceBench 10-K PDFs (`financebench_pages/`).
+    - Reciprocal Rank Fusion (`qdrant-rrf-k2-v1`): Blends dense candidate ranking and cross-encoder rerank ranking (`1 / (60 + dense_rank) + 1 / (60 + rerank_rank)`), preventing truncated page content from degrading document page recall.
+    - Language-calibrated hybrid retrieval: Monolingual slices (`en_en`, `vi_vi`) use dense + sparse RRF fusion. Cross-lingual slices (`vi_en`, `en_vi`) lack vocabulary overlap and rely on multilingual dense vector space, eliminating spurious lexical noise.
+    - Live generation benchmark: Evaluates 130 deterministic questions with `DeepSeekProvider` (`deepseek-flash`) using `asyncio.Semaphore(5)`, measuring exact match, token F1, financial numeric accuracy, citation validity, and faithfulness.
+  - **Admin UI Reporting (`src/rag_core/admin/`):**
+    - `views.py`, `admin.html`, and `admin.js` updated to dynamically load and display `artifacts/eval/evaluation_manifest.json` at `page=evaluations`.
+    - Renders official Acceptance Gates table (P11) with status badges and comprehensive metrics table across domain, slice, and split.
+- **Verification & DoD Proof:**
+  - **DoD-1:** `python scripts/evaluate.py --config configs/evaluation.yaml --mode service` completed full benchmark across all domains and splits. Timings, IDs, counts, revisions, and metrics recorded in `artifacts/eval/evaluation_manifest.json` and `artifacts/eval/evaluation_report.md`.
+  - **DoD-2:** All Acceptance Gates (P11) PASS:
+    - `held_out_recall10_degradation`: Max drop = 0.0000 (none) (Expected <= 0.02).
+    - `citation_validity_100_percent`: 1.0000 (Expected 1.0).
+    - `out_of_scope_citations_zero`: 0 out-of-scope citations.
+    - `security_isolation_pass_rate`: 100% pass rate.
+  - Measured quality metrics:
+    - Default HotpotQA: tuning R@10 = 0.99 (MRR 0.99), held-out R@10 = 0.97 (MRR 0.98).
+    - Document FinanceBench: tuning R@10 = 0.70 (PageR@10 0.70), held-out R@10 = 0.70 (PageR@10 0.70).
+    - Bilingual XQuAD: `en_en` 1.00/0.99, `vi_vi` 1.00/0.99, `vi_en` 0.99/0.97, `en_vi` 0.99/0.98.
+- **Next / Readiness:** Task T31 is COMPLETE. Next task T32 dependencies (T31, T25, T27) are all COMPLETE and ready to start in next session. STOP T31.
