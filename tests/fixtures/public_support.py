@@ -51,6 +51,11 @@ async def public_environment(f, provider, monkeypatch=None, *, live=False):
             inference_url=f.config.inference_url,
             temp_root=f.tmp / "api-temp",
             stream=StreamPolicy(heartbeat_seconds=0.05),
+            **(
+                {"tokenizer_path": f.config.tokenizer_path}
+                if getattr(f.config, "tokenizer_path", None)
+                else {}
+            ),
         ).model_dump_json()
     )
     settings = Settings(

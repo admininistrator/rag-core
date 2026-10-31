@@ -48,9 +48,7 @@ def _markdown_files() -> list[Path]:
     for current, directories, names in walk(ROOT):
         current_path = Path(current)
         directories[:] = [
-            name
-            for name in directories
-            if not _ignored_directory(current_path / name)
+            name for name in directories if not _ignored_directory(current_path / name)
         ]
         files.extend(current_path / name for name in names if name.endswith(".md"))
     return sorted(files)
@@ -63,7 +61,8 @@ def _ignored_directory(path: Path) -> bool:
     if len(relative.parts) == 1 and path.name in IGNORED_ROOT_DIRECTORIES:
         return True
     if relative.parts[:2] in {
-        ("corpus-documents", ".downloads"), ("corpus-documents", ".repro"),
+        ("corpus-documents", ".downloads"),
+        ("corpus-documents", ".repro"),
     }:
         return True
     return (
@@ -114,7 +113,9 @@ def check_links(files: Iterable[Path]) -> int:
             try:
                 target.relative_to(ROOT)
             except ValueError as exc:
-                raise DocumentationError(f"Link escapes repository in {source}: {raw_target}") from exc
+                raise DocumentationError(
+                    f"Link escapes repository in {source}: {raw_target}"
+                ) from exc
             if not target.is_file():
                 raise DocumentationError(f"Broken link in {source}: {raw_target}")
             if fragment:
@@ -134,7 +135,9 @@ def _task_bodies(text: str) -> list[tuple[str, str]]:
     return [
         (
             match.group(1),
-            text[match.end() : matches[index + 1].start() if index + 1 < len(matches) else len(text)],
+            text[
+                match.end() : matches[index + 1].start() if index + 1 < len(matches) else len(text)
+            ],
         )
         for index, match in enumerate(matches)
     ]
@@ -173,7 +176,11 @@ def check_tasks(path: Path) -> tuple[int, int]:
         if dependency_match is None:
             raise DocumentationError(f"Missing dependency value in {task}")
         dependencies = re.findall(r"T\d{2}", dependency_match.group(1))
-        unknown = [dependency for dependency in dependencies if dependency not in {f"T{i:02d}" for i in range(37)}]
+        unknown = [
+            dependency
+            for dependency in dependencies
+            if dependency not in {f"T{i:02d}" for i in range(37)}
+        ]
         if unknown:
             raise DocumentationError(f"Unknown dependencies in {task}: {unknown}")
         if any(int(dependency[1:]) >= index for dependency in dependencies):
@@ -183,6 +190,85 @@ def check_tasks(path: Path) -> tuple[int, int]:
         graph[task] = dependencies
     _assert_acyclic(graph)
     return len(graph), sum(len(dependencies) for dependencies in graph.values())
+
+
+def check_runbook_alignment(runbook_path: Path, openapi_path: Path) -> dict[str, int]:
+    """Verify that RUNBOOK.md aligns with served OpenAPI, error definitions, and env vars (T35 DoD-2)."""
+    import json
+    from typing import get_args
+
+    from rag_core.domain.metadata import ScopeCode
+
+    text = runbook_path.read_text(encoding="utf-8")
+    if not openapi_path.is_file():
+        raise DocumentationError(f"Missing openapi specification file: {openapi_path}")
+
+    openapi = json.loads(openapi_path.read_text(encoding="utf-8"))
+    openapi_paths = set(openapi.get("paths", {}).keys())
+
+    # 1. Routes check
+    # All public core routes in OpenAPI must be documented in RUNBOOK.md
+    core_public_routes = {p for p in openapi_paths if not p.startswith("/v1/admin")}
+    runbook_routes = set(re.findall(r"`((?:/v1|/health)/[a-zA-Z0-9_{}/-]+)`", text))
+    missing_routes = [r for r in core_public_routes if r not in runbook_routes]
+    if missing_routes:
+        raise DocumentationError(
+            f"RUNBOOK.md missing documented core routes: {sorted(missing_routes)}"
+        )
+
+    # Documented routes in RUNBOOK (except test fixture routes like /v1/auth-test) must exist in OpenAPI
+    for route in runbook_routes:
+        if (
+            route != "/v1/auth-test"
+            and not route.startswith("/v1/admin")
+            and route not in openapi_paths
+        ):
+            raise DocumentationError(f"RUNBOOK.md documents route not in OpenAPI: {route}")
+
+    # 2. Error codes check
+    known_error_codes = set(get_args(ScopeCode)) | {
+        "busy",
+        "timeout",
+        "provider_error",
+        "invalid_citation",
+        "dependency_unavailable",
+        "source_changed",
+        "file_too_large",
+        "insufficient_evidence",
+        "session_scope_changed",
+        "idempotency_conflict",
+    }
+    r05_section = text[text.find("## R05") : text.find("## R06")] if "## R05" in text else ""
+    r05_table_errors = set(re.findall(r"\d{3}\s+`([a-z_]{3,30})`", r05_section))
+    unknown_errors = [e for e in r05_table_errors if e not in known_error_codes]
+    if unknown_errors:
+        raise DocumentationError(
+            f"RUNBOOK.md documents unknown error codes in R05: {unknown_errors}"
+        )
+
+    # 3. Environment variables check: ensure no leaked live API keys in markdown
+    secret_leak_pattern = re.compile(r"sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{20,}")
+    if secret_leak_pattern.search(text):
+        raise DocumentationError("RUNBOOK.md contains hardcoded live secret pattern")
+
+    # 4. Scarlet checklist check (R15)
+    if "## R15. Checklist dành cho agent tích hợp Scarlet sau này" not in text:
+        raise DocumentationError(
+            "Missing Section R15 (Scarlet integration checklist) in RUNBOOK.md"
+        )
+
+    r15_text = text[text.find("## R15") :]
+    checklist_items = re.findall(r"- \[[ xX]\] (.+)", r15_text)
+    if len(checklist_items) < 10:
+        raise DocumentationError(
+            f"Scarlet checklist in R15 has only {len(checklist_items)} items; expected complete checklist"
+        )
+
+    return {
+        "routes": len(core_public_routes),
+        "errors": len(r05_table_errors),
+        "checklist_items": len(checklist_items),
+    }
 
 
 def main() -> int:
@@ -196,6 +282,9 @@ def main() -> int:
                 raise DocumentationError(f"Unicode replacement character in {path}")
         link_count = check_links(files)
         task_count, edge_count = check_tasks(ROOT / "docs" / "tasks.md")
+        alignment = check_runbook_alignment(
+            ROOT / "RUNBOOK.md", ROOT / "docs" / "api" / "openapi.served.json"
+        )
     except (DocumentationError, UnicodeDecodeError) as exc:
         print(f"DOCUMENTATION CHECK: FAIL: {exc}", file=sys.stderr)
         return 1
@@ -203,6 +292,10 @@ def main() -> int:
     print(f"PASS UTF-8/nonempty Markdown: {len(files)} files")
     print(f"PASS internal links/anchors: {link_count}")
     print(f"PASS task fields/status/dependencies: {task_count} tasks, {edge_count} edges, acyclic")
+    print(
+        f"PASS RUNBOOK alignment: {alignment['routes']} core routes, "
+        f"{alignment['errors']} error codes, {alignment['checklist_items']} Scarlet checklist items"
+    )
     print("DOCUMENTATION CHECK: PASS")
     return 0
 

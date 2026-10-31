@@ -719,3 +719,45 @@ Final affected regression:83cases PASS across bounded real-service subprocesses 
   - Integration suite: `uv run pytest tests/integration/test_backup_restore.py -v -s` PASSED (4/4 passed trong 6.11s).
   - Static analysis: Ruff check PASS, Ruff format PASS, mypy 112 source files exit 0, `check_docs.py` PASS (454 internal links, 37 tasks acyclic).
 - **Next / Readiness:** Task T34 is COMPLETE. Next task T35 dependencies (T34, T26, T29) are all COMPLETE and ready to start in next session. STOP T34.
+
+<a id="s-t35-a01"></a>
+## Phase 9 / T35 / Attempt T35-A01 — RUNBOOK tích hợp và client app độc lập
+
+- **Thời điểm hoàn thành:** 2026-10-31.
+- **Trạng thái:** COMPLETE (DoD-1 PASS, DoD-2 PASS, D1–D6 PASS).
+- **Môi trường runtime kiểm chứng:**
+  - OS: macOS Darwin 27.0.0 arm64 (`Darwin Quintet.local 27.0.0 Darwin Kernel Version 27.0.0 arm64`).
+  - CPU: Apple M1 Pro (8 cores, 32 GB RAM).
+  - Python: 3.12.16 (trong `.venv`).
+  - uv: 0.13.6 (Homebrew 2026-10-26 aarch64-apple-darwin).
+  - Docker Desktop: 29.9.2 (build a82e528).
+  - Services test loopback: PostgreSQL (port 55432), Qdrant (port 56333), Redis (port 16379), MinIO (port 9000), Inference HTTP (port 58080).
+- **Phạm vi triển khai (`examples/`, `tests/e2e/test_reference_client.py`, `scripts/check_docs.py`):**
+  - **`examples/reference_client.py`:**
+    - Async HTTP reference client (`RagCoreReferenceClient`) viết bằng `httpx` thuần, hoàn toàn độc lập với codebase `rag_core` (zero private imports, kiểm chứng qua `ast.parse`).
+    - Hỗ trợ đầy đủ: xác thực kép (User JWT + X-RAG-Service-Key), tạo session mapping với `external_session_id`, đăng ký tài liệu idempotent với header `Idempotency-Key` (bảo đảm trùng key/payload trả về job cũ, khác payload trả 409 `idempotency_conflict`), polling ingestion job trạng thái `ready` với backoff, JSON queries với conversation history và đa ngôn ngữ, Server-Sent Events (SSE) streaming đầy đủ lifecycle (`meta`, `evidence`, `answer_delta`, `done`, `error`) kèm khả năng hủy giữa chừng (`aclose()`), tra cứu trích dẫn (`resolve_citation`), và xóa phiên chat idempotent (`delete_session`).
+  - **`examples/fastapi_app.py`:**
+    - Sample application kết nối RAG Core API v1 cho frontend chat app (tương tự kiến trúc tương lai của Scarlet), phân tách rõ ranh giới tin cậy (trust boundary): app backend sở hữu tài liệu gốc trong S3 và lịch sử transcript; RAG Core sở hữu index và metadata.
+  - **`examples/README.md`:**
+    - Tài liệu kiến trúc, luồng tích hợp, quy tắc bảo mật và hướng dẫn chạy thử.
+  - **`tests/e2e/test_reference_client.py` & `tests/fixtures/standalone_server.py`:**
+    - Test suite 8 ca kiểm thử qua HTTP thật trên loopback, bao phủ toàn bộ luồng tích hợp:
+      1. `test_no_private_core_services_imported`: Phân tích AST của client và test suite xác nhận không import module nội bộ nào từ `rag_core`.
+      2. `test_health_endpoints`: Kiểm chứng `/health/live` và `/health/ready`.
+      3. `test_authentication_and_authorization`: Xác thực token/service key hợp lệ và từ chối các trường hợp sai/thiếu.
+      4. `test_source_upload_registration_and_job_polling`: Upload tài liệu vào MinIO S3, đăng ký qua RAG Core với Idempotency-Key, kiểm tra tính idempotent (cùng key trả lại cùng job_id, khác payload trả 409), poll job đến trạng thái ready và liệt kê tài liệu.
+      5. `test_session_only_queries_and_history`: Truy vấn có căn cứ (grounded), từ chối session rỗng (409 `no_session_documents`), duy trì ngữ cảnh qua history, và bảo đảm cô lập tuyệt đối giữa các session và giữa các user.
+      6. `test_sse_streaming_and_cancellation`: Kiểm chứng trình tự sự kiện SSE (`meta` -> `evidence` -> `answer_delta` -> `done`), tích lũy delta mượt mà, và hủy kết nối an toàn giữa chừng mà không làm rò rỉ socket/admission slot.
+      7. `test_citation_resolution`: Tra cứu chi tiết nguồn trích dẫn và xác nhận user khác không thể resolve citation ngoài session của họ.
+      8. `test_session_deletion_and_source_retention`: Xóa session mapping (tombstone), truy vấn sau xóa trả 410 `session_deleted`, session mới không kế thừa tài liệu cũ, tài liệu gốc S3 giữ nguyên 100% byte-for-byte SHA256, và vector index trong Qdrant được lưu giữ nguyên vẹn (retention policy).
+  - **`scripts/check_docs.py` (DoD-2):**
+    - Mở rộng hàm `check_runbook_alignment`:
+      - Đối chiếu toàn bộ 11 public core routes và health probes trong `RUNBOOK.md` khớp chính xác với `docs/api/openapi.served.json`.
+      - Đối chiếu các mã lỗi documented trong R05/R14 khớp với `ScopeCode` và domain error mappings.
+      - Kiểm tra quickstart operators sử dụng placeholders chuẩn cho credentials/secrets (không leak live secret patterns).
+      - Kiểm tra checklist tích hợp Scarlet (R15) đầy đủ 12 hạng mục và không còn quyết định kiến trúc ngầm nào chưa được làm rõ.
+- **Verification & DoD Proof:**
+  - **DoD-1:** PASS — `uv run pytest tests/e2e/test_reference_client.py -v -s` (8/8 passed trong 59.60s) trên HTTP thật. Zero private imports. Evidence: [H-T35-A01](handoffs.md#h-t35-a01).
+  - **DoD-2:** PASS — `uv run python scripts/check_docs.py` (19 markdown files, 462 internal links, 37 tasks acyclic, 11 core routes, 2 error codes, 12 Scarlet checklist items) PASS. Evidence: [H-T35-A01](handoffs.md#h-t35-a01).
+  - Static analysis: Ruff check PASS, Ruff format PASS, mypy 110 source files exit 0.
+- **Next / Readiness:** Task T35 is COMPLETE. Task T36 (Nghiệm thu cuối và handoff sẵn sàng tích hợp) đã đủ điều kiện bắt đầu trong session mới. STOP T35.

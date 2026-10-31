@@ -6,6 +6,25 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-31 / T35-A01 acceptance closure:**
+  - **Task & Scope:** T35 (RUNBOOK tích hợp và client app độc lập) COMPLETE. macOS Darwin arm64 (`Darwin Quintet.local 27.0.0 arm64`, Apple Silicon M1 Pro, 32 GB RAM), Python 3.12.16 (in `.venv`), Docker Desktop 29.9.2 (build a82e528), uv 0.13.6. Direct single-task agent, no subagents.
+  - **Files Implemented / Verified:** `examples/reference_client.py`, `examples/fastapi_app.py`, `examples/README.md`, `tests/e2e/test_reference_client.py`, `tests/fixtures/standalone_server.py`, `scripts/check_docs.py`. Living docs: `docs/tasks.md`, `docs/implementation-summary.md`, `docs/handoffs.md`, `README.md`, `RUNBOOK.md`.
+  - **DoD-1 PASS:** `uv run pytest tests/e2e/test_reference_client.py -v -s` (8 passed in 59.60s) over real loopback HTTP:
+    - Zero private core imports verified via AST inspection (`test_no_private_core_services_imported`).
+    - App & user dual-header authentication and authorization verified (`/health/live`, `/health/ready`, token rejection 401).
+    - Source upload, idempotent document registration (`Idempotency-Key`), job polling to `ready`, and document listing verified.
+    - Session-only query isolation, empty session rejection (409 `no_session_documents`), conversation history rewrite grounding, cross-session and cross-user isolation verified.
+    - SSE streaming (`/v1/query/stream`) event progression (`meta` -> `evidence` -> `answer_delta` -> `done`), chunk accumulation, and clean client cancellation (`aclose()`) verified.
+    - Citation resolution (`/v1/sessions/{session_id}/citations/{chunk_id}`) and stranger access rejection (404) verified.
+    - Session deletion tombstone semantics (410 `session_deleted`), fresh session isolation, 100% byte-for-byte SHA256 source retention, and vector index retention in Qdrant verified.
+  - **DoD-2 PASS:** `uv run python scripts/check_docs.py` (19 markdown files, 462 internal links, 37 tasks acyclic, 11 core routes, 2 error codes, 12 Scarlet checklist items) PASS:
+    - All 11 core public routes and health probes in RUNBOOK.md verified against served OpenAPI specification (`docs/api/openapi.served.json`).
+    - Documented error codes cross-referenced against `ScopeCode` and API error definitions.
+    - Quickstart operator snippets verified to use standard secret placeholders with explicit anti-leak notices.
+    - Section R15 verified with all 12 complete Scarlet integration checklist items with zero hidden architectural decisions.
+  - **Quality Gates D1–D6:** D1 PASS (scoped paths, baseline preserved); D2 PASS (Ruff check/format PASS, mypy 110 source files exit 0, test suite 8 passed in 59.60s, check_docs.py PASS); D3 PASS (all task DoDs verified against real Docker dependencies without mocks); D4 PASS (`tasks.md`, `implementation-summary.md`, `handoffs.md`, `README.md`, `RUNBOOK.md` updated); D5 PASS (strict review of diff, zero secrets, zero schema migrations); D6 completion commit subject `docs(T35): deliver verified application integration runbook`.
+  - **Limitations & Next:** Task T36 dependencies (T35 and all T00–T34) are COMPLETE. T36 is ready to start in a new session. STOP T35, no auto-drain.
+
 - **Current 2026-10-31 / T34-A01 acceptance closure:**
   - **Task & Scope:** T34 (Backup, restore, restart và index migration rehearsal) COMPLETE. macOS Darwin arm64 (`Darwin Quintet.local 27.0.0 arm64`, Apple Silicon M1 Pro, 32 GB RAM), Python 3.12.16 (in `.venv`), Docker Desktop 29.9.2 (build a82e528), uv 0.13.6. Direct single-task agent, no subagents.
   - **Files Implemented / Verified:** `scripts/backup.py`, `scripts/restore_check.py`, `tests/integration/test_backup_restore.py`. Living docs: `docs/tasks.md`, `docs/implementation-summary.md`, `docs/handoffs.md`, `README.md`, `RUNBOOK.md`.
@@ -3254,6 +3273,7 @@ The exact ignored local helper used above (snapshot JSON at `corpus-documents/.d
 
 ```python
 """Local T07-A06 evidence helper; never a shipped corpus command."""
+
 import hashlib
 import json
 import sys
@@ -3262,27 +3282,54 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 domain = root / "bilingual"
 paths = [root / "manifest.json", *sorted(p for p in domain.rglob("*") if p.is_file())]
-cache = [root / ".downloads" / name for name in ("xquad.en.json", "xquad.vi.json", "xquad-download.json")]
+cache = [
+    root / ".downloads" / name for name in ("xquad.en.json", "xquad.vi.json", "xquad-download.json")
+]
+
+
 def receipt(path):
-    return {"sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "mtime_ns": path.stat().st_mtime_ns}
+    return {
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        "mtime_ns": path.stat().st_mtime_ns,
+    }
+
+
 snapshot = {
     "files": {str(p.relative_to(root)): receipt(p) for p in paths},
     "cache": {p.name: receipt(p) for p in cache},
-    "ids": {name: [json.loads(line)["id"] for line in (domain / "qa" / (name + ".jsonl")).read_text(encoding="utf-8").splitlines()] for name in ("en_en", "vi_vi", "vi_en", "en_vi")},
-    "downloaded_at": json.loads((domain / "manifest.json").read_text(encoding="utf-8"))["downloaded_at"],
+    "ids": {
+        name: [
+            json.loads(line)["id"]
+            for line in (domain / "qa" / (name + ".jsonl")).read_text(encoding="utf-8").splitlines()
+        ]
+        for name in ("en_en", "vi_vi", "vi_en", "en_vi")
+    },
+    "downloaded_at": json.loads((domain / "manifest.json").read_text(encoding="utf-8"))[
+        "downloaded_at"
+    ],
 }
 baseline = root / ".downloads/t07-a06-before.json"
 if sys.argv[1] == "before":
     baseline.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"BEFORE: {len(paths)} published files; {len(cache)} cache files; slice IDs={ {name: len(ids) for name, ids in snapshot['ids'].items()} }")
+    print(
+        f"BEFORE: {len(paths)} published files; {len(cache)} cache files; slice IDs={ {name: len(ids) for name, ids in snapshot['ids'].items()} }"
+    )
 else:
-    assert snapshot == json.loads(baseline.read_text(encoding="utf-8")), "Rerun changed bytes/mtime/IDs/timestamp"
-    print(f"RERUN PASS: {len(paths)} published + {len(cache)} cache hashes/mtimes, all slice IDs and downloaded_at unchanged")
+    assert snapshot == json.loads(baseline.read_text(encoding="utf-8")), (
+        "Rerun changed bytes/mtime/IDs/timestamp"
+    )
+    print(
+        f"RERUN PASS: {len(paths)} published + {len(cache)} cache hashes/mtimes, all slice IDs and downloaded_at unchanged"
+    )
 report = json.loads((domain / "qa/preparation.json").read_text(encoding="utf-8"))
 print("source_sha256=" + json.dumps(report["source_sha256"], sort_keys=True))
 print("downloaded_at=" + snapshot["downloaded_at"])
 for name in snapshot["ids"]:
-    print(name + "_sha256=" + hashlib.sha256((domain / "qa" / (name + ".jsonl")).read_bytes()).hexdigest())
+    print(
+        name
+        + "_sha256="
+        + hashlib.sha256((domain / "qa" / (name + ".jsonl")).read_bytes()).hexdigest()
+    )
 ```
 
 
@@ -5161,21 +5208,32 @@ PASS corpus/prompt and API snapshots unchanged; no schema/DB/index migration
 ```
 
 ```python
-import subprocess,tomllib
+import subprocess, tomllib
 from pathlib import Path
-old=tomllib.loads(subprocess.check_output(['git','show','HEAD:uv.lock'],text=True,encoding='utf-8'))
-new=tomllib.loads(Path('uv.lock').read_text(encoding='utf-8'))
-before={p['name']:p['version'] for p in old['package']}
-after={p['name']:p['version'] for p in new['package']}
-assert all(after[k]==v for k,v in before.items())
-assert set(after)-set(before)=={'openpyxl','python-pptx','et-xmlfile','xlsxwriter'}
-assert subprocess.run(['git','diff','--exit-code','--','corpus-documents','docs/api']).returncode==0
-cfg=tomllib.loads(Path('pyproject.toml').read_text(encoding='utf-8'))
-prior=tomllib.loads(subprocess.check_output(['git','show','HEAD:pyproject.toml'],text=True,encoding='utf-8'))
-for name in cfg['dependency-groups']:
- if name!='ingestion': assert cfg['dependency-groups'][name]==prior['dependency-groups'][name]
-print('PASS existing lock versions unchanged; 4 Office packages added; other dependency groups unchanged')
-print('PASS corpus/prompt and API snapshots unchanged; no schema/DB/index migration')
+
+old = tomllib.loads(
+    subprocess.check_output(["git", "show", "HEAD:uv.lock"], text=True, encoding="utf-8")
+)
+new = tomllib.loads(Path("uv.lock").read_text(encoding="utf-8"))
+before = {p["name"]: p["version"] for p in old["package"]}
+after = {p["name"]: p["version"] for p in new["package"]}
+assert all(after[k] == v for k, v in before.items())
+assert set(after) - set(before) == {"openpyxl", "python-pptx", "et-xmlfile", "xlsxwriter"}
+assert (
+    subprocess.run(["git", "diff", "--exit-code", "--", "corpus-documents", "docs/api"]).returncode
+    == 0
+)
+cfg = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+prior = tomllib.loads(
+    subprocess.check_output(["git", "show", "HEAD:pyproject.toml"], text=True, encoding="utf-8")
+)
+for name in cfg["dependency-groups"]:
+    if name != "ingestion":
+        assert cfg["dependency-groups"][name] == prior["dependency-groups"][name]
+print(
+    "PASS existing lock versions unchanged; 4 Office packages added; other dependency groups unchanged"
+)
+print("PASS corpus/prompt and API snapshots unchanged; no schema/DB/index migration")
 ```
 
 Source schema1 fields additive with defaults, parser revisions updated where table
@@ -12104,3 +12162,103 @@ uv run python scripts/check_docs.py
 - **DoD-1:** Full backup harness `scripts/backup.py` and isolated restore verification harness `scripts/restore_check.py` executed with exit code 0. Manifest validated, counts match, raw source document SHA-256 byte-for-byte identical, 0 uncommitted rows, 0 dangling vectors, scoped query returns correct citations, stranger access fails closed.
 - **DoD-2:** Restart recovery, cold-start transactional outbox reconciliation, schema migration rollback, and zero-downtime Qdrant reindex generation upgrade verified in automated integration tests. RUNBOOK §R13 updated to VERIFIED with exact CLI commands, manifest schema, write pause procedure, and recovery boundaries.
 - **D1–D6:** Scope and quality criteria met. Ready for completion commit and authorized push to origin/main.
+
+---
+
+<a id="h-t35-a01"></a>
+## [H-T35-A01] Verification Evidence: RUNBOOK tích hợp và client app độc lập
+
+### 1. Execution Environment & Metadata
+- **Date & Attempt:** 2026-10-31 / Attempt T35-A01.
+- **Platform:** macOS Darwin 27.0.0 arm64 (`Darwin Quintet.local 27.0.0 Darwin Kernel Version 27.0.0 arm64`).
+- **CPU:** Apple M1 Pro (8 physical cores, 32 GB RAM).
+- **Python / uv:** Python 3.12.16 (in `.venv`), uv 0.13.6.
+- **Docker Desktop:** 29.9.2 (build a82e528).
+- **Active Docker Containers:**
+  - `rag-core-metadata-test-postgres-1` (port 55432)
+  - `rag-core-metadata-test-qdrant-1` (port 56333)
+  - `rag-core-metadata-test-redis-1` (port 16379)
+  - `rag-core-minio-1` (port 9000-9001)
+  - `rag-core-t31-eval-inference-1` (port 58080)
+
+### 2. DoD Verification Commands and Real Outputs
+
+#### A. DoD-1: Real Loopback HTTP E2E Test Suite (`test_reference_client.py`)
+```bash
+cwd: /Users/dophucthinh/Documents/GitHub/rag-core
+export PATH="/opt/homebrew/bin:/Users/dophucthinh/.docker/bin:$PATH"
+uv run pytest tests/e2e/test_reference_client.py -v -s
+
+# Output:
+============================= test session starts ==============================
+platform darwin -- Python 3.12.16, pytest-9.1.1, pluggy-1.6.0 -- /Users/dophucthinh/Documents/GitHub/rag-core/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/dophucthinh/Documents/GitHub/rag-core
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, anyio-4.15.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 8 items
+
+tests/e2e/test_reference_client.py::test_no_private_core_services_imported PASSED
+tests/e2e/test_reference_client.py::test_health_endpoints PASSED
+tests/e2e/test_reference_client.py::test_authentication_and_authorization PASSED
+tests/e2e/test_reference_client.py::test_source_upload_registration_and_job_polling PASSED
+tests/e2e/test_reference_client.py::test_session_only_queries_and_history PASSED
+tests/e2e/test_reference_client.py::test_sse_streaming_and_cancellation PASSED
+tests/e2e/test_reference_client.py::test_citation_resolution PASSED
+tests/e2e/test_reference_client.py::test_session_deletion_and_source_retention PASSED
+
+============================== 8 passed in 59.60s ==============================
+# Exit Code: 0
+```
+
+#### B. DoD-2: RUNBOOK Alignment & Scarlet Checklist Verification (`scripts/check_docs.py`)
+```bash
+cwd: /Users/dophucthinh/Documents/GitHub/rag-core
+export PATH="/opt/homebrew/bin:/Users/dophucthinh/.docker/bin:$PATH"
+uv run python scripts/check_docs.py
+
+# Output:
+PASS UTF-8/nonempty Markdown: 19 files
+PASS internal links/anchors: 462
+PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+PASS RUNBOOK alignment: 11 core routes, 2 error codes, 12 Scarlet checklist items
+DOCUMENTATION CHECK: PASS
+# Exit Code: 0
+```
+
+#### C. Quality Gates D1–D6 Verifications
+```bash
+cwd: /Users/dophucthinh/Documents/GitHub/rag-core
+export PATH="/opt/homebrew/bin:/Users/dophucthinh/.docker/bin:$PATH"
+
+# 1. Ruff linting check
+uv run ruff check .
+# Output: All checks passed!
+# Exit Code: 0
+
+# 2. Ruff formatting check
+uv run ruff format --check examples/ tests/e2e/test_reference_client.py scripts/check_docs.py
+# Output: 5 files already formatted
+# Exit Code: 0
+
+# 3. Mypy type-checking
+uv run mypy src
+# Output: Success: no issues found in 110 source files
+# Exit Code: 0
+
+# 4. OpenAPI consistency check
+uv run python scripts/export_openapi.py --check
+# Output:
+# Validating OpenAPI model against JSON Schema 2020-12
+# Validating 37 examples against their schemas
+# PASS OpenAPI schema validation
+# PASS 37 example validations
+# OpenAPI contract is up to date: docs/api/openapi.served.json
+# Exit Code: 0
+```
+
+### 3. Verification Summary
+- **DoD-1:** Full reference client (`RagCoreReferenceClient`) verified over loopback HTTP with real test server running PostgreSQL, Qdrant, MinIO, Redis, and inference services. Zero private core imports (`ast.parse` verified). Verified authentication, registration idempotency with `Idempotency-Key`, job polling, session-only grounded queries, history conversation handling, full SSE lifecycle (`meta`, `evidence`, `answer_delta`, `done`, `error`) and mid-stream cancellation, citation resolution, and session tombstone with byte-for-byte SHA256 source retention and vector retention.
+- **DoD-2:** `scripts/check_docs.py` verifies all 11 core public routes and health probes match served OpenAPI specification, error codes match `ScopeCode` and API error definitions, operator quickstarts use documented placeholders for secrets, and the Scarlet checklist in R15 contains all 12 complete integration checkpoints without hidden architectural decisions.
+- **D1–D6:** Scoped code, test, and documentation criteria met. Ready for completion commit and authorized push to origin/main.

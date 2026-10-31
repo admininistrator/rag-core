@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T34 backup, restore, restart and schema/index migration rehearsal VERIFIED; verification recorded with its completion commit.** T33 concurrency load, T32 isolation and fault recovery regression suite, T31 quality benchmark, T30 evaluation harness, T29 admin browser acceptance, T28 admin UI, T27 admin APIs and T26 public API/both real provider gates remain verified. T35 integration runbook and T36 final acceptance remain. [T34 evidence](docs/handoffs.md#h-t34-a01), [T33 evidence](docs/handoffs.md#h-t33-a01), [T32 evidence](docs/handoffs.md#h-t32-a01), [T31 evidence](docs/handoffs.md#h-t31-a01), [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T35 reference client, sample FastAPI app, integration runbook, and Scarlet integration checklist VERIFIED; verification recorded with its completion commit.** T34 backup/restore, T33 concurrency load, T32 isolation and fault recovery regression suite, T31 quality benchmark, T30 evaluation harness, T29 admin browser acceptance, T28 admin UI, T27 admin APIs and T26 public API/both real provider gates remain verified. T36 final acceptance remains. [T35 evidence](docs/handoffs.md#h-t35-a01), [T34 evidence](docs/handoffs.md#h-t34-a01), [T33 evidence](docs/handoffs.md#h-t33-a01), [T32 evidence](docs/handoffs.md#h-t32-a01), [T31 evidence](docs/handoffs.md#h-t31-a01), [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 
 ## Phạm vi đã chốt
 
@@ -90,6 +90,15 @@ uv run python scripts/export_openapi.py --check
 ```
 
 [OpenAPI v1 thiết kế](docs/api/openapi-v1.designed.json) có 13 operations với `x-served`/`x-implementation-status`; [OpenAPI đang serve](docs/api/openapi.served.json) có đủ 13 health/public operations; runtime config/auth thiếu vẫn fail closed. [37 examples](docs/api/examples-v1.json) là dữ liệu synthetic minh họa, không phải response runtime. Export kiểm OpenAPI model, JSON Schema Draft 2020-12 và examples bằng cả JSON Schema/Pydantic; không đọc secret hoặc chạy dependency/provider probes. Hợp đồng và các gate runtime còn thiếu nằm ở [RUNBOOK R05–R08](RUNBOOK.md#r05), actual evidence [H-T03-A02](docs/handoffs.md#h-t03-a02); [H-T03-A01](docs/handoffs.md#h-t03-a01) ghi recovery do runtime quota trước commit.
+
+## Reference Client & Tích hợp ứng dụng T35
+
+Thư mục `examples/` chứa reference client và ứng dụng FastAPI mẫu minh họa tích hợp RAG Core API v1:
+- `examples/reference_client.py`: Async HTTP client độc lập (`RagCoreReferenceClient`) viết bằng `httpx` thuần, không phụ thuộc nội bộ core (`zero private imports`). Hỗ trợ xác thực kép JWT/service key, session mapping, upload registration idempotent (`Idempotency-Key`), job polling, JSON query, SSE streaming với cancellation, và citation resolution.
+- `examples/fastapi_app.py`: Backend FastAPI mẫu kết nối RAG Core, chuyển tiếp upload vào S3, proxy query/SSE stream về trình duyệt, và xử lý xóa phiên an toàn.
+- `tests/e2e/test_reference_client.py`: Test suite nghiệm thu 8 luồng tích hợp qua HTTP thật (DoD-1).
+
+Chi tiết hợp đồng và checklist tích hợp cho agent sau này: xem [RUNBOOK R01](RUNBOOK.md#r01) và [RUNBOOK R15](RUNBOOK.md#r15).
 
 ## Domain preparation và hội thoại T20
 
@@ -605,7 +614,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T32 VERIFIED:** session isolation (same owner different sessions, different users same external session ID, cross-app isolation, prompt injection immunity, admin zero content/citation leakage) and fault injection (Qdrant outage, Postgres disconnect, LLM stream timeout/429/500 midway, detach/delete under stream, worker interruption staging isolation, source byte-for-byte immutability); evidence [H-T32-A01](docs/handoffs.md#h-t32-a01).
 - **T33 VERIFIED local:** concurrency load test driver (15–20 virtual users), stub and live DeepSeek benchmarks, technical resource budgets (Docker RAM <= 10 GiB, VRAM <= 7 GiB), zero slot leaks, zero cross-session data leaks, 100% terminal request outcomes; evidence [H-T33-A01](docs/handoffs.md#h-t33-a01).
 - **T34 VERIFIED local:** unified backup harness (`scripts/backup.py`), isolated restore verification (`scripts/restore_check.py`), cold-start recovery with transactional outbox, schema migration downgrade/upgrade rehearsal, zero-downtime Qdrant index generation upgrade, 100% byte-for-byte SHA256 immutability, zero uncommitted rows, zero dangling vectors; evidence [H-T34-A01](docs/handoffs.md#h-t34-a01).
-- **T35–T36:** quickstart tích hợp đã kiểm chứng và trạng thái nghiệm thu cuối.
+- **T35 VERIFIED:** verified reference client (`examples/reference_client.py`), FastAPI sample application (`examples/fastapi_app.py`), complete application integration runbook (R00–R15), route/error/env OpenAPI alignment checks (`scripts/check_docs.py`), and Scarlet integration checklist without hidden architectural decisions; evidence [H-T35-A01](docs/handoffs.md#h-t35-a01).
+- **T36:** final acceptance audit, clean-environment smoke, and integration handoff closure.
 
 ## Nguyên tắc cập nhật
 

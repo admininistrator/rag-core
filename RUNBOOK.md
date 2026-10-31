@@ -40,9 +40,9 @@
 | Admin UI | VERIFIED local integration, manual visual smoke & Playwright browser acceptance | T28–T29 |
 | Evaluation harness & anti-leakage protocol | VERIFIED reproducible CLI & fixture benchmark; frozen splits and gate contracts | T30 |
 | Quality benchmark / calibration | VERIFIED real corpus retrieval & generation benchmark, all P11 gates PASS | T31 |
-| Session isolation / load / recovery | DESIGNED | T32–T34 |
-| Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
-| Client tích hợp mẫu/final acceptance | DESIGNED | T35–T36 |
+| Session isolation / load / recovery | VERIFIED | T32–T34 |
+| Client tích hợp mẫu và runbook tích hợp | VERIFIED | T35 |
+| Nghiệm thu cuối và handoff | DESIGNED | T36 |
 
 Mỗi mục sau này ghi: task + commit reference, prerequisites, exact command/request, expected output, evidence link và limitations. Không điền PASS mẫu vào log thực thi.
 
@@ -62,6 +62,25 @@ Scarlet có FastAPI backend, JWT authentication và PostgreSQL lịch sử hội
 | Delete chat | Gọi delete core và cập nhật transcript app | Tombstone session/links, giữ source/index |
 
 Không import module nội bộ RAG core vào Scarlet, không dùng DB chat của Scarlet làm metadata DB của core. Giao tiếp qua API v1 có schema. App backend giữ service key; browser không gọi core với service key.
+
+### Reference Client & FastAPI Sample App (VERIFIED T35)
+
+RAG Core cung cấp reference client và backend mẫu hoàn chỉnh tại thư mục `examples/`:
+- `examples/reference_client.py`: Async client (`RagCoreReferenceClient`) viết bằng `httpx` thuần, hoàn toàn độc lập với `rag_core` (zero private imports). Hỗ trợ:
+  1. Header authentication kép (`Authorization: Bearer <user_jwt>` và `X-RAG-Service-Key: <service_key>`).
+  2. Tạo/resolve session mapping với external session ID.
+  3. Đăng ký tài liệu idempotent với header `Idempotency-Key` và payload tracking.
+  4. Poll trạng thái ingestion job đến `ready` với backoff.
+  5. JSON Query hỗ trợ conversation history và answer language.
+  6. Robust SSE streaming (`/v1/query/stream`) phân tách các sự kiện `meta`, `evidence`, `answer_delta`, `done`, `error` và hỗ trợ hủy luồng truyền an toàn (`aclose()`).
+  7. Tra cứu chi tiết trích dẫn (`/v1/sessions/{session_id}/citations/{chunk_id}`).
+  8. Xóa session mapping (tombstone) bảo toàn 100% byte-for-byte dữ liệu gốc và vector index.
+- `examples/fastapi_app.py`: Backend FastAPI minh họa ứng dụng chat kết nối RAG Core API v1:
+  - Tiếp nhận file upload từ user frontend, ghi vào S3 bucket của ứng dụng, và đăng ký với RAG Core qua `RagCoreReferenceClient`.
+  - Quản lý session chat, chuyển tiếp câu hỏi cùng history người dùng và proxy luồng SSE về trình duyệt.
+  - Xử lý xóa phiên chat an toàn.
+- `examples/README.md`: Hướng dẫn kiến trúc, ranh giới tin cậy (trust boundary) và quickstart chạy thử.
+- Kiểm thử tích hợp HTTP thật: `tests/e2e/test_reference_client.py` xác minh 8 kịch bản tích hợp hoàn chỉnh qua HTTP loopback thật.
 
 <a id="r02"></a>
 ## R02. Local prerequisites và cấu hình
@@ -1242,6 +1261,7 @@ import json
 from pydantic import TypeAdapter
 from rag_core.contracts.sse import SSEEvent, SSESequence
 
+
 async def read_answer(client, request):
     # client has Authorization and X-RAG-Service-Key headers; cancel closes both streams.
     trace, fields, data = [], {}, []
@@ -1264,10 +1284,13 @@ async def read_answer(client, request):
                 continue
             if not fields:
                 continue
-            event = TypeAdapter(SSEEvent).validate_python({
-                "event": fields["event"], "id": int(fields["id"]),
-                "data": json.loads("\n".join(data)),
-            })
+            event = TypeAdapter(SSEEvent).validate_python(
+                {
+                    "event": fields["event"],
+                    "id": int(fields["id"]),
+                    "data": json.loads("\n".join(data)),
+                }
+            )
             if trace and event.id <= trace[-1].id:
                 raise RuntimeError("invalid_event_order")
             trace.append(event)
@@ -1290,7 +1313,7 @@ uv run --no-sync pytest tests/e2e/test_streaming.py -k 'scope_change or equivale
 uv run --no-sync pytest tests/unit/test_streaming.py tests/contract/test_api_schema.py
 ```
 
-T26 đã thêm independent backend CLI demo; T35 vẫn chịu trách nhiệm standalone reference web app/integration acceptance. T25 chỉ verify parser code ở trên cùng stream fixtures; chưa claim standalone app/Scarlet integration.
+T26 đã thêm independent backend CLI demo; T35 đã VERIFIED reference client (`examples/reference_client.py`), FastAPI sample application (`examples/fastapi_app.py`) và test suite e2e qua HTTP thật (`tests/e2e/test_reference_client.py`). Standalone app integration acceptance hoàn tất; chưa thực hiện sửa Scarlet trong backlog hiện tại. T25 verify parser code ở trên cùng stream fixtures.
 
 <a id="r08"></a>
 ## R08. Citations, xóa chat và retained index
@@ -1586,8 +1609,11 @@ from rag_core.domain.chunking import ChunkProfiles, StructuralChunker
 
 profile = ChunkProfiles().for_domain("document")  # trusted operator/domain config
 chunker = StructuralChunker(BgeM3Tokenizer(tokenizer_path), profile)
-chunks = chunker.chunk(parsed_document, generation_id=generation_id,
-                       extraction_fingerprint=extraction_config_fingerprint)
+chunks = chunker.chunk(
+    parsed_document,
+    generation_id=generation_id,
+    extraction_fingerprint=extraction_config_fingerprint,
+)
 ```
 
 Đây là synchronous CPU API, async worker caller phải offload. `default`, `document`,

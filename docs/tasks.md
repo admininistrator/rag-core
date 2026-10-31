@@ -660,7 +660,7 @@
 <a id="t35"></a>
 ### T35 — RUNBOOK tích hợp và client app độc lập
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T34, T26, T29.
 - **Tham chiếu kế hoạch:** [P06](plan.md#p06), [P09](plan.md#p09), [P15](plan.md#p15).
 - **Công việc:** Hoàn thiện README/RUNBOOK tất cả mục; client FastAPI/HTTPX mẫu dưới examples chứng minh app upload/registration/history/SSE/citation/delete mapping. Tài liệu cho agent tích hợp Scarlet, không sửa Scarlet.
@@ -668,7 +668,14 @@
   1. `uv run pytest tests/e2e/test_reference_client.py` PASS qua HTTP thật: app/user auth, source upload, session-only queries, history, JSON/SSE, cancel/errors, deleted session và source/index retention; không import private core services.
   2. `uv run python scripts/check_docs.py` PASS; mọi public route/error/env trong RUNBOOK đối chiếu OpenAPI/code; fresh operator đi theo quickstart thực, placeholder cần secret được ghi rõ. Checklist Scarlet không còn quyết định kiến trúc ngầm.
 - **Cạm bẫy:** README/RUNBOOK phải đã được cập nhật từng task, không dồn lần đầu ở đây; không ghi “Scarlet đã tích hợp”; app rewrite không được tuyên bố citation được core xác thực lại.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `docs(T35): deliver verified application integration runbook`.
+- **Ghi chú thực thi:**
+  Attempt: T35-A01 | Direct single-task agent | Started/ended: 2026-10-31
+  Implemented/files: examples/reference_client.py, examples/fastapi_app.py, examples/README.md, tests/e2e/test_reference_client.py, tests/fixtures/standalone_server.py, scripts/check_docs.py, README.md, RUNBOOK.md, docs/tasks.md, docs/implementation-summary.md, docs/handoffs.md.
+  DoD-1: PASS — uv run pytest tests/e2e/test_reference_client.py (8 passed in 59.60s) qua HTTP thật: app/user auth, source upload, session-only queries, history, JSON/SSE, cancel/errors, deleted session, source/index retention; ast.parse kiểm chứng không import private core services; evidence: handoffs#h-t35-a01.
+  DoD-2: PASS — uv run python scripts/check_docs.py (11 core routes, 2 error codes, 12 Scarlet checklist items) PASS; mọi public route/error/env trong RUNBOOK đối chiếu OpenAPI/code; fresh operator đi theo quickstart thực, placeholder cần secret được ghi rõ; checklist Scarlet không còn quyết định kiến trúc ngầm; evidence: handoffs#h-t35-a01.
+  D1–D6: D1 PASS (scoped paths, baseline preserved); D2 PASS (Ruff check/format PASS, mypy 110 source files PASS, test suite PASS); D3 PASS (real loopback HTTP test, zero mocks); D4 PASS (living docs updated); D5 PASS (diff reviewed, zero secrets); D6 PASS (commit docs(T35): deliver verified application integration runbook).
+  Commit: docs(T35): deliver verified application integration runbook.
+  Blocker/next action: T35 COMPLETE. T36 (Nghiệm thu cuối và handoff sẵn sàng tích hợp) đã đủ điều kiện bắt đầu trong session mới.
 
 <a id="t36"></a>
 ### T36 — Nghiệm thu cuối và handoff sẵn sàng tích hợp
