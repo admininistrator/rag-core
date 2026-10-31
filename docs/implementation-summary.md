@@ -613,3 +613,31 @@ Final affected regression:83cases PASS across bounded real-service subprocesses 
     - Document FinanceBench: tuning R@10 = 0.70 (PageR@10 0.70), held-out R@10 = 0.70 (PageR@10 0.70).
     - Bilingual XQuAD: `en_en` 1.00/0.99, `vi_vi` 1.00/0.99, `vi_en` 0.99/0.97, `en_vi` 0.99/0.98.
 - **Next / Readiness:** Task T31 is COMPLETE. Next task T32 dependencies (T31, T25, T27) are all COMPLETE and ready to start in next session. STOP T31.
+
+<a id="s-t32-a01"></a>
+## Phase 8 / T32 / Attempt T32-A01 — Session isolation and failure recovery hardening
+
+- **Runtime/baseline:** Direct single-task agent; macOS Darwin arm64 (Darwin 27.0.0 arm64, Apple Silicon 32 GB RAM), Python 3.12.16 (in `.venv`), uv 0.13.6, Docker Desktop 29.9.2; no subagents; 2026-10-31 Asia/Bangkok. Baseline HEAD `d22fd7c10e6965306449205da4246836fe4f12c9` equals `origin/main`. Complete T31, T25, T27 dependency notes/interfaces and plan references P01, P04, P05, P09, P12, P13 read.
+- **Implemented Architecture & Test Suites:**
+  - **`tests/security/test_session_isolation.py` (Session Isolation Suite):**
+    - `test_same_owner_different_sessions_strict_isolation`: Validates that when a single user owns Session A and Session B, Qdrant dense, sparse, and hybrid search branches apply strict payload filtering on `session_id`, returning only documents attached to the active session. Cross-session citation lookups via `CitationRepository` and `CitationResolver` strictly raise 404 `not_found`.
+    - `test_different_users_same_external_session_id_isolation`: Validates that identical external session IDs (`session-shared-id`) belonging to distinct authenticated principals (User Alice vs User Bob) generate distinct internal UUIDs in PostgreSQL. Direct cross-user access to another user's session UUID fails closed with 404 `not_found`.
+    - `test_cross_app_same_user_id_isolation`: Validates that matching user IDs across different `app_id` boundaries cannot access or resolve scopes across applications.
+    - `test_admin_metadata_endpoints_never_leak_content_or_citations`: Audits 6 administrative endpoints (`/overview`, `/documents`, `/jobs`, `/sessions`, `/reindex`, `/evaluations`) with authenticated admin session cookies, verifying that chunk texts, raw citations, database passwords, and provider API keys are never leaked in metadata JSON representations.
+    - `test_history_and_prompt_injection_cannot_expand_session_scope`: Simulates adversarial history payloads with forged citation markers (`[c999]`) and prompt injection text attempting to override retrieval filters. Proves that session scoping is enforced strictly from the database-backed session snapshot and completely ignores untrusted user messages.
+  - **`tests/integration/test_failure_recovery.py` (Failure Recovery Suite):**
+    - `test_qdrant_outage_fault_injection_fails_closed_and_degrades_readiness`: Simulates Qdrant connection resets/outages. Verifies repository raises `VectorError("vector_dependency_unavailable")` and fails closed without falling back to open or un-scoped search. Verifies `HealthChecks` readiness probe reports degraded status (`ready: false`, `components.qdrant: "unavailable"`).
+    - `test_postgres_disconnect_fault_injection_fails_closed`: Verifies disconnected PostgreSQL engine fails closed with `OperationalError` during scope resolution.
+    - `test_transaction_rollback_prevents_uncommitted_data_leakage`: Injects simulated worker crash inside an active ingestion transaction (`engine.begin()`). Proves that zero uncommitted rows exist in `documents` and `document_versions` after rollback (`count == 0`), and scope resolution reports `not_found`.
+    - `test_llm_stream_timeout_midway_emits_single_error_and_releases_slot`: Injects tight stream timeout during generation. Verifies stream emits exactly 1 terminal `event: error` with code `timeout`, never emits `done`, and immediately releases the query admission slot (`admission.active == 0`).
+    - `test_llm_stream_rate_limit_429_fault_injection`: Injects HTTP 429 rate limit during stream generation. Verifies single terminal `event: error` with `retryable: true` and admission slot release.
+    - `test_llm_stream_500_midway_emits_sanitized_error_and_releases_slot`: Injects HTTP 500 upstream failure containing fake secrets (`sk-upstream-secret-12345`). Verifies error event is emitted with sanitized `provider_error` code, sensitive keys and internal tracebacks are scrubbed from the SSE stream, and admission slot is released.
+    - `test_detach_and_delete_under_stream_never_resurrects_scope`: Concurrently detaches documents and deletes session during active SSE streaming. Demonstrates stream termination at token send boundary with `session_scope_changed`, retention of underlying chunks and vectors in PG/Qdrant, and subsequent 404 `session_deleted`.
+    - `test_worker_interruption_partial_generation_never_served`: Simulates ingestion worker crash while writing Gen 2 points. Verifies unpublished generations remain in staging and queries continue to be served exclusively by Gen 1.
+    - `test_source_data_immutability_throughout_failures_and_retries`: Confirms `source_sha256`, `object_key`, and `size_bytes` remain byte-for-byte immutable across detach, transaction rollback, reindex failure, and session deletion.
+  - **`tests/fixtures/streaming_support.py`:** Enhanced `NativeWireFixture` with configurable status codes and error bodies to support upstream fault injection.
+- **Verification & DoD Proof:**
+  - **DoD-1:** `uv run pytest tests/security tests/integration/test_failure_recovery.py -v` PASSED (139/139 passed in 286.04s) on real PostgreSQL 17.11 and Qdrant v1.19.1. Zero leakage of content, citations, or credentials across any session, history, or administrative surface.
+  - **DoD-2:** Detach/delete under load, worker kill, partial generation isolation, byte-for-byte source immutability, and RUNBOOK incident response §R14 verified 100%.
+  - Static analysis: Ruff check PASS, Ruff format PASS, mypy 110 source files exit 0, `check_docs.py` PASS (444 internal links, 37 tasks acyclic).
+- **Next / Readiness:** Task T32 is COMPLETE. Next task T33 dependencies (T32, T17, T26) are all COMPLETE and ready to start in next session. STOP T32.

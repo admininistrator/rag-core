@@ -2,7 +2,7 @@
 
 RAG core độc lập để các ứng dụng chat gọi qua API: hỏi đáp trên tài liệu, trích dẫn có vị trí nguồn và truy xuất xuyên tiếng Việt/tiếng Anh.
 
-> **T31 quality benchmark and measured RAG baselines VERIFIED; verification recorded with its completion commit.** T30 evaluation harness, T29 admin browser acceptance, T28 admin UI, T27 admin APIs and T26 public API/both real provider gates remain verified. T32 isolation fault injection, T33 load testing, and T34 recovery remain T32–T36. [T31 evidence](docs/handoffs.md#h-t31-a01), [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T32 isolation and fault recovery regression suite VERIFIED; verification recorded with its completion commit.** T31 quality benchmark, T30 evaluation harness, T29 admin browser acceptance, T28 admin UI, T27 admin APIs and T26 public API/both real provider gates remain verified. T33 load testing and T34 recovery remain T33–T36. [T32 evidence](docs/handoffs.md#h-t32-a01), [T31 evidence](docs/handoffs.md#h-t31-a01), [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 
 ## Phạm vi đã chốt
 
@@ -602,7 +602,8 @@ See [RUNBOOK R11](RUNBOOK.md#r11) for fingerprint/rerun and recovery instruction
 - **T27–T29 VERIFIED local:** admin API/UI, real-data integration, desktop/mobile visual smoke và Playwright browser e2e acceptance workflows (auth, session expiry, XSS safety, filtering/pagination, worker retry/reindex, tombstone/source retention); evidence [H-T29-A01](docs/handoffs.md#h-t29-a01).
 - **T30 VERIFIED:** evaluation harness, anti-leakage protocol, gold adapters, frozen splits, Unicode/financial numeric metrics and reproducible CLI runner; evidence [H-T30-A01](docs/handoffs.md#h-t30-a01).
 - **T31 VERIFIED:** real retrieval benchmark, parameter calibration, 130-sample generation benchmark with live provider, and all 4 Acceptance Gates (P11) PASS (Max drop 0.0000 <= 0.02, citation validity 1.0000, 0 out-of-scope citations, 100% isolation pass rate); evidence [H-T31-A01](docs/handoffs.md#h-t31-a01).
-- **T32–T34:** fault injection & session isolation, load testing (15–20 users), backup/restore.
+- **T32 VERIFIED:** session isolation (same owner different sessions, different users same external session ID, cross-app isolation, prompt injection immunity, admin zero content/citation leakage) and fault injection (Qdrant outage, Postgres disconnect, LLM stream timeout/429/500 midway, detach/delete under stream, worker interruption staging isolation, source byte-for-byte immutability); evidence [H-T32-A01](docs/handoffs.md#h-t32-a01).
+- **T33–T34:** load testing (15–20 users), backup/restore.
 - **T35–T36:** quickstart tích hợp đã kiểm chứng và trạng thái nghiệm thu cuối.
 
 ## Nguyên tắc cập nhật

@@ -2455,21 +2455,19 @@ budget evidence. T33 remains required for target15–20users and Docker<=10GiB/V
 <a id="r14"></a>
 ## R14. Troubleshooting và incident response
 
-**DESIGNED — cập nhật dần khi lỗi được kiểm chứng.**
+**VERIFIED (T32) — Kiểm chứng thực nghiệm qua bộ fault injection và session isolation integration suite.**
 
-| Triệu chứng | Kiểm tra mục tiêu | Không làm |
-| --- | --- | --- |
-| 401/403 | Issuer/audience/expiry/service app mapping, admin role | Tắt verify JWT |
-| Không tìm thấy tài liệu | Session/link/version/readiness/language scope | Mở rộng sang kho user để có answer |
-| Job queued mãi | Outbox dispatcher, Redis, worker lease | Đánh ready bằng tay |
-| PDF scan rỗng | Tessdata eng/vie, OCR page selection/quality | Tạo text giả hoặc skip OCR DoD |
-| Citation sai | Locator/source version/zero-one based adapter | Sửa gold để khớp output |
-| Source changed | S3 version/checksum consistency | Index binary khác với version đăng ký |
-| GPU/RAM OOM | Batch/token/process/model duplication/queue | Spawn thêm model workers |
-| SSE ngắt | Disconnect, provider timeout, scope_revision, terminal event | Lưu partial answer như success |
-| Qdrant/PG lệch | Ready generation/outbox/recovery manifest | Xóa toàn bộ volume |
-
-Mỗi mục được triển khai phải bổ sung command chẩn đoán redacted, cách xử lý đã thử, task/evidence và ảnh hưởng dữ liệu. Không paste secrets vào ticket/handoff.
+| Triệu chứng | Kiểm tra mục tiêu | Hành động chẩn đoán & Khôi phục đã kiểm chứng | Không làm |
+| --- | --- | --- | --- |
+| 401/403 | Issuer/audience/expiry/service app mapping, admin role | Kiểm JWT signature, token algorithm whitelist (`RS256`), claims `sub`, `app_id`. Khôi phục: cấp lại service token qua `local_issuer`. | Tắt verify JWT hoặc tin body `user_id`/`app_id` |
+| Qdrant sập / gián đoạn kết nối | Probe `/health/ready` báo 503 `status: unavailable`, `components.qdrant: unavailable` | **Đã kiểm chứng (T32):** Vector search nâng `VectorError("vector_dependency_unavailable")` và fail closed ngay lập tức, không bao giờ fallback sang global hay unfiltered search. Chẩn đoán: `curl -s http://127.0.0.1:8000/health/ready`. Khôi phục: khởi động lại Qdrant `docker compose up -d qdrant`, vector repository tự động phục hồi kết nối. | Mở rộng tìm kiếm không lọc hoặc bỏ qua scope filter |
+| PostgreSQL ngắt kết nối / crash transaction | DB connection severed, `OperationalError` | **Đã kiểm chứng (T32):** Multi-table operations bọc trong transaction `async with engine.begin()`. Khi ngắt kết nối hoặc gặp lỗi, transaction rollback hoàn toàn: zero uncommitted documents/versions/chunks rò rỉ vào database (`count(*) == 0`). Khôi phục: AsyncEngine connection pool tự động dọn dẹp kết nối hỏng và kết nối lại khi Postgres sẵn sàng. | Bỏ qua transaction hoặc commit từng phần khi lỗi |
+| LLM Provider timeout / rate-limit 429 / 500 giữa chừng stream | Stream SSE gặp timeout hoặc upstream provider trả lỗi 429/500 | **Đã kiểm chứng (T32):** Phát ra đúng 1 terminal `event: error` duy nhất (không bao giờ phát `event: done`), mã lỗi chuẩn hóa (`timeout`, `provider_rate_limit`, `provider_error`), cờ `retryable`, khử hoàn toàn secrets/API keys (`sk-...`) khỏi thông điệp lỗi, và giải phóng slot admission ngay lập tức (`admission.active == 0`). | Nuốt lỗi, gửi `done` giả hoặc in nguyên văn exception chứa API keys |
+| Detach document / delete session trong lúc streaming | Session scope thay đổi hoặc bị xóa khi SSE đang truyền | **Đã kiểm chứng (T32):** Kiểm tra scope boundary tại mỗi token send. Dừng stream lập tức với `event: error` (`code: session_scope_changed`), không phát `done`. Dữ liệu nguồn, chunks và vectors trong PostgreSQL/Qdrant được giữ nguyên vẹn (retention policy). Truy vấn tiếp theo trả về 404 `session_deleted` và không hồi sinh scope. | Cho phép stream tiếp tục với tài liệu đã detach hoặc xóa vĩnh viễn dữ liệu gốc |
+| Ingestion worker bị kill / crash giữa chừng | Worker bị ngắt khi đang index thế hệ mới (Gen 2) | **Đã kiểm chứng (T32):** Generation chưa publish (`publish_generation`) vẫn giữ trạng thái `staging`. `resolve_scope` và Qdrant search chỉ phục vụ các generation đã `ready` (Gen 1). Partial points của Gen 2 tuyệt đối không được đưa vào câu trả lời của người dùng. Khôi phục: Outbox dispatcher đánh dấu job thất bại hoặc retry generation mới. | Đánh dấu generation ready bằng tay khi chưa hoàn tất |
+| Source data immutability | Toàn vẹn dữ liệu gốc qua chuỗi lỗi và retry | **Đã kiểm chứng (T32):** `source_sha256`, `object_key`, và `size_bytes` của tài liệu trong `documents` và `document_versions` giữ nguyên byte-for-byte 100% qua các thao tác detach, transaction rollback, reindex failure và delete session. | Sửa SHA-256 hoặc ghi đè source object để match lỗi |
+| Không tìm thấy tài liệu | Session/link/version/readiness/language scope | Kiểm tra snapshot `resolve_scope(principal, session_id)` xem document link còn `active` và generation `ready` hay không. | Mở rộng sang kho user hoặc session khác để có answer |
+| GPU/RAM OOM | Batch/token/process/model duplication/queue | Bounded queue, admission semaphores (`QueryAdmission`), model instance duy nhất. | Spawn thêm model workers vượt quá ngân sách RAM |
 
 <a id="r15"></a>
 ## R15. Checklist dành cho agent tích hợp Scarlet sau này

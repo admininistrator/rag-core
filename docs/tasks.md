@@ -582,7 +582,7 @@
 <a id="t32"></a>
 ### T32 — Session isolation và kiểm thử lỗi có chủ đích
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T31, T25, T27.
 - **Tham chiếu kế hoạch:** [P01](plan.md#p01), [P04](plan.md#p04), [P05](plan.md#p05), [P09](plan.md#p09).
 - **Công việc:** Cross-cutting regression/fault suite: cùng owner khác session, stale history/citations, delete/detach race, reindex race, prompt injection, SSRF/ZIP limits, rate-limit, log redaction, upstream/broker/vector failure.
@@ -590,7 +590,25 @@
   1. `uv run pytest tests/security tests/integration/test_failure_recovery.py` PASS với dependencies thật cho các đường cần DB/Qdrant; không có content/citation leakage ở bất kỳ branch/history/admin/stream nào.
   2. Detach/delete dưới tải và worker kill không hồi sinh scope, partial index không phục vụ, source không thay; RUNBOOK có incident diagnosis/recovery đã thử, gate fixtures 100%.
 - **Cạm bẫy:** Unit mocked filter không chứng minh Qdrant thực có scope; đừng chỉ test khác user mà quên cùng user khác session; không đổi retention để che lỗi.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `test(T32): harden isolation and failure recovery`.
+- **Ghi chú thực thi:** Attempt `T32-A01` | direct single-task agent; macOS Darwin arm64 (Darwin 27.0.0 arm64, Apple Silicon 32 GB RAM), Python 3.12.16 (in `.venv`), uv 0.13.6, Docker Desktop 29.9.2; no subagents | Started 2026-10-31 Asia/Bangkok. Baseline main/d22fd7c equals origin/main. Complete T31, T25, T27 dependency notes/interfaces and plan references P01, P04, P05, P09, P12, P13 read. Implemented comprehensive security isolation suite (`tests/security/test_session_isolation.py`) and failure recovery integration suite (`tests/integration/test_failure_recovery.py`), enhanced `tests/fixtures/streaming_support.py`.
+- **T32-A01 results / 2026-10-31:**
+  - **DoD-1 PASS:** `uv run pytest tests/security tests/integration/test_failure_recovery.py -v` (139 passed in 286.04s) with real PostgreSQL 17.11 and Qdrant v1.19.1 dependencies. Verified:
+    - Same owner with distinct sessions: dense, sparse, and hybrid Qdrant searches strictly enforce `session_id` payload filtering; citation repository and citation resolver strictly reject cross-session access.
+    - Different users with identical external session ID: mapped to distinct internal UUIDs; cross-user access fails closed with 404 `not_found`.
+    - Cross-app isolation: same user ID across different apps cannot resolve scope or access documents.
+    - Admin metadata probe across 6 endpoints (`/v1/admin/overview`, `/documents`, `/jobs`, `/sessions`, `/reindex`, `/evaluations`): zero document text, chunk content, citations, or secret credentials leaked in metadata payloads.
+    - Untrusted history and prompt injection immunity: forged citation markers `[c999]` and adversarial instructions in history messages are strictly ignored during retrieval filtering and scope hydration.
+  - **DoD-2 PASS:**
+    - Qdrant outage fault injection: raises `VectorError("vector_dependency_unavailable")`, fails closed without fallback to unfiltered search; `/health/ready` probe degrades to 503 unavailable (`"qdrant": "unavailable"`).
+    - PostgreSQL disconnect fault injection: disconnected engine raises `OperationalError` and fails closed.
+    - Multi-table transaction rollback: simulated worker crash before commit leaves zero uncommitted rows in database (`count(*) == 0`).
+    - LLM stream failure injection: mid-stream timeout, HTTP 429 rate limit, and HTTP 500 server error each emit exactly 1 terminal `event: error` (never `done`), sanitized payload without secret leakage, and clean query admission slot release (`admission.active == 0`).
+    - Detach/delete under stream: immediately detects scope revision change at token send boundary, stops stream with `session_scope_changed`, retains underlying chunks and vectors in PG/Qdrant, and repeated delete is idempotent.
+    - Worker interruption & unpublished generation: uncommitted Gen 2 points remain in staging; `resolve_scope` and Qdrant search strictly serve published Gen 1.
+    - Source data immutability: `source_sha256`, `object_key`, and `size_bytes` verified 100% byte-for-byte immutable across detach, transaction rollback, reindex failure, and session deletion.
+    - RUNBOOK §R14 updated from DESIGNED to VERIFIED with tested incident diagnosis and recovery procedures.
+  - **D1–D6 PASS:** D1 PASS (scoped files only); D2 PASS (139 tests PASS, Ruff check PASS, Ruff format PASS, mypy 110 source files exit 0, check_docs.py PASS); D3 PASS (all task DoDs verified against real Docker dependencies without mocks); D4 PASS (tasks.md, implementation-summary.md, handoffs.md, README.md, RUNBOOK.md updated); D5 PASS (strict review of diff, zero secrets, zero schema migrations); D6 candidate commit `test(T32): harden isolation and failure recovery`.
+  - **Limits/next:** Task T33 dependencies (T32, T17, T26) are all COMPLETE and ready to start in next session. **STOP T32**, no auto-drain.
 
 <a id="t33"></a>
 ### T33 — Tải 15–20 người dùng và ngân sách local

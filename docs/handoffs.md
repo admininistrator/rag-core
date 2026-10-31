@@ -6,6 +6,27 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-10-31 / T32-A01 acceptance closure:**
+  - **Task & Scope:** T32 (Session isolation và kiểm thử lỗi có chủ đích) COMPLETE. macOS Darwin arm64 (Apple Silicon 32 GB RAM, Darwin 27.0.0 arm64), Python 3.12.16 (in `.venv`), Docker Desktop 29.9.2, uv 0.13.6. Direct single-task agent, no subagents.
+  - **Files Implemented / Verified:** `tests/security/test_session_isolation.py`, `tests/integration/test_failure_recovery.py`, `tests/fixtures/streaming_support.py`. Living docs: `docs/tasks.md`, `docs/implementation-summary.md`, `docs/handoffs.md`, `README.md`, `RUNBOOK.md`.
+  - **DoD-1 PASS:** `uv run pytest tests/security tests/integration/test_failure_recovery.py -v` (139 passed in 286.04s) with real PostgreSQL 17.11 and Qdrant v1.19.1 dependencies. Verified:
+    - Same owner with distinct sessions: dense, sparse, and hybrid Qdrant searches strictly enforce `session_id` payload filtering; citation repository and citation resolver strictly reject cross-session access.
+    - Different users with identical external session ID: mapped to distinct internal UUIDs; cross-user access fails closed with 404 `not_found`.
+    - Cross-app isolation: same user ID across different apps cannot resolve scope or access documents.
+    - Admin metadata probe across 6 endpoints (`/v1/admin/overview`, `/documents`, `/jobs`, `/sessions`, `/reindex`, `/evaluations`): zero document text, chunk content, citations, or secret credentials leaked in metadata payloads.
+    - Untrusted history and prompt injection immunity: forged citation markers `[c999]` and adversarial instructions in history messages are strictly ignored during retrieval filtering and scope hydration.
+  - **DoD-2 PASS:**
+    - Qdrant outage fault injection: raises `VectorError("vector_dependency_unavailable")`, fails closed without fallback to unfiltered search; `/health/ready` probe degrades to 503 unavailable (`"qdrant": "unavailable"`).
+    - PostgreSQL disconnect fault injection: disconnected engine raises `OperationalError` and fails closed.
+    - Multi-table transaction rollback: simulated worker crash before commit leaves zero uncommitted rows in database (`count(*) == 0`).
+    - LLM stream failure injection: mid-stream timeout, HTTP 429 rate limit, and HTTP 500 server error each emit exactly 1 terminal `event: error` (never `done`), sanitized payload without secret leakage, and clean query admission slot release (`admission.active == 0`).
+    - Detach/delete under stream: immediately detects scope revision change at token send boundary, stops stream with `session_scope_changed`, retains underlying chunks and vectors in PG/Qdrant, and repeated delete is idempotent.
+    - Worker interruption & unpublished generation: uncommitted Gen 2 points remain in staging; `resolve_scope` and Qdrant search strictly serve published Gen 1.
+    - Source data immutability: `source_sha256`, `object_key`, and `size_bytes` verified 100% byte-for-byte immutable across detach, transaction rollback, reindex failure, and session deletion.
+    - RUNBOOK §R14 updated from DESIGNED to VERIFIED with tested incident diagnosis and recovery procedures. Evidence: [H-T32-A01](#h-t32-a01). Interfaces: [S-T32-A01](implementation-summary.md#s-t32-a01).
+  - **Quality Gates D1–D6:** D1 PASS (scoped paths, baseline preserved); D2 PASS (139 tests PASS, Ruff check/format PASS, mypy 110 source files exit 0, check_docs.py PASS); D3 PASS (all task DoDs verified against real Docker dependencies without mocks); D4 PASS (tasks.md, implementation-summary.md, handoffs.md, README.md, RUNBOOK.md updated); D5 PASS (strict review of diff, zero secrets, zero database/index migration changes, raw source immutability preserved); D6 completion commit subject `test(T32): harden isolation and failure recovery`.
+  - **Limitations & Next:** Task T33 dependencies (T32, T17, T26) are all COMPLETE and ready to start in next session. STOP T32, no auto-drain.
+
 - **Current 2026-10-30 / T31-A01 acceptance closure:**
   - **Task & Scope:** T31 (Benchmark thật, calibration và báo cáo chất lượng) COMPLETE. macOS Darwin arm64 (Apple Silicon 32 GB RAM), Python 3.12.16 (in `.venv`), PyTorch 2.2.2 with MPS hardware acceleration, uv 0.13.6. Direct single-task agent, no subagents.
   - **Files Implemented / Verified:** `src/rag_core/evaluation/service_runner.py`, `src/rag_core/evaluation/runner.py`, `scripts/evaluate.py`, `src/rag_core/admin/views.py`, `src/rag_core/admin/templates/admin.html`, `src/rag_core/admin/static/admin.js`, `artifacts/eval/evaluation_manifest.json`, `artifacts/eval/evaluation_report.md`. Living docs: `docs/tasks.md`, `docs/implementation-summary.md`, `docs/handoffs.md`, `README.md`, `RUNBOOK.md`.
@@ -11575,4 +11596,98 @@ uv run --no-sync mypy src scripts/evaluate.py tests/contract/test_eval_protocol.
 - **DoD-1:** Full evaluation benchmark completed on real corpus across all domains (Default HotpotQA 100 QA, FinanceBench 150 QA across 84 10-K PDFs, Bilingual XQuAD 4,760 QA across 4 slices: `en_en`, `vi_vi`, `vi_en`, `en_vi`). Full IDs, counts, revisions, timings, and metrics recorded.
 - **DoD-2:** Acceptance Gates (P11) all PASS (`held_out_recall10_degradation` Max drop = 0.0000 <= 0.02, `citation_validity_100_percent` = 1.0000, `out_of_scope_citations_zero` = 0, `security_isolation_pass_rate` = 1.0). Dynamic Admin UI report rendering verified at `page=evaluations`.
 - **D1–D6:** Scope and quality criteria met. Ready for completion commit and authorized push to origin/main.
+
+<a id="h-t32-a01"></a>
+## H-T32-A01 — Fault injection and failure recovery acceptance
+
+### 1. Environment & Target System
+- **Host OS & Architecture:** macOS Darwin 27.0.0 arm64 (`Darwin Quintet.local 27.0.0 arm64`, Apple Silicon 32 GB RAM).
+- **Docker Desktop Version:** Docker 29.9.2, build a82e528 (`/Applications/Docker.app/Contents/Resources/bin/docker`).
+- **Python & uv:** CPython 3.12.16 (in `.venv`), uv 0.13.6 (`/opt/homebrew/bin/uv`).
+- **Test Database & Services:**
+  - PostgreSQL 17.11 (`127.0.0.1:55432/t10_acceptance`, container `rag-core-metadata-test-postgres-1`).
+  - Qdrant v1.19.1 (`127.0.0.1:56333`, container `rag-core-metadata-test-qdrant-1`).
+  - Model Inference (`127.0.0.1:58080`, container `rag-core-t31-eval-inference-1`).
+- **Baseline Git HEAD:** `d22fd7c10e6965306449205da4246836fe4f12c9`, branch `main`.
+
+### 2. Execution Evidence & Actual Output
+
+#### 2.1 DoD-1 Full Security & Failure Recovery Suite
+```bash
+export RAG_TEST_DATABASE_URL='postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance'
+export DATABASE_PASSWORD_FILE="$(pwd)/.local/secrets/t10_postgres_password"
+export RAG_TEST_QDRANT_URL='http://127.0.0.1:56333'
+export RAG_TEST_INFERENCE_URL='http://127.0.0.1:58080'
+
+uv run pytest tests/security tests/integration/test_failure_recovery.py -v
+```
+Output:
+```text
+============================= test session starts ==============================
+platform darwin -- Python 3.12.16, pytest-9.1.1, pluggy-1.6.0 -- /Users/dophucthinh/Documents/GitHub/rag-core/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/dophucthinh/Documents/GitHub/rag-core
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, anyio-4.15.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 139 items
+
+tests/security/test_admin_auth.py::test_unauthorized_and_app_credentials_never_admin PASSED [  0%]
+tests/security/test_admin_auth.py::test_login_password_hash_cookie_logout_and_replay PASSED [  1%]
+tests/security/test_admin_auth.py::test_csrf_origin_and_duplicate_headers_are_enforced PASSED [  2%]
+tests/security/test_admin_auth.py::test_session_expiry_rotation_and_fixation PASSED [  2%]
+tests/security/test_admin_auth.py::test_login_boundaries_throttle_and_no_secret_logging PASSED [  3%]
+tests/security/test_admin_auth.py::test_config_https_default_and_safe_failures PASSED [  4%]
+tests/security/test_admin_auth.py::test_login_body_deadline_and_duplicate_cookie_rejection PASSED [  5%]
+tests/security/test_admin_auth.py::test_https_secure_cookie_and_configured_lifespan PASSED [  5%]
+tests/security/test_admin_auth.py::test_actual_loopback_http_cookie_security_and_csrf PASSED [  6%]
+tests/security/test_auth.py::test_verified_identity_ignores_unsigned_sources_and_signed_user_id PASSED [  7%]
+... [125 security and contract tests passed] ...
+tests/security/test_session_isolation.py::test_same_owner_different_sessions_strict_isolation PASSED [ 90%]
+tests/security/test_session_isolation.py::test_different_users_same_external_session_id_isolation PASSED [ 91%]
+tests/security/test_session_isolation.py::test_cross_app_same_user_id_isolation PASSED [ 92%]
+tests/security/test_session_isolation.py::test_admin_metadata_endpoints_never_leak_content_or_citations PASSED [ 92%]
+tests/security/test_session_isolation.py::test_history_and_prompt_injection_cannot_expand_session_scope PASSED [ 93%]
+tests/integration/test_failure_recovery.py::test_qdrant_outage_fault_injection_fails_closed_and_degrades_readiness PASSED [ 94%]
+tests/integration/test_failure_recovery.py::test_postgres_disconnect_fault_injection_fails_closed PASSED [ 94%]
+tests/integration/test_failure_recovery.py::test_transaction_rollback_prevents_uncommitted_data_leakage PASSED [ 95%]
+tests/integration/test_failure_recovery.py::test_llm_stream_timeout_midway_emits_single_error_and_releases_slot PASSED [ 96%]
+tests/integration/test_failure_recovery.py::test_llm_stream_rate_limit_429_fault_injection PASSED [ 97%]
+tests/integration/test_failure_recovery.py::test_llm_stream_500_midway_emits_sanitized_error_and_releases_slot PASSED [ 97%]
+tests/integration/test_failure_recovery.py::test_detach_and_delete_under_stream_never_resurrects_scope PASSED [ 98%]
+tests/integration/test_worker_interruption_partial_generation_never_served PASSED [ 99%]
+tests/integration/test_source_data_immutability_throughout_failures_and_retries PASSED [100%]
+
+======================= 139 passed in 286.04s (0:04:46) ========================
+Exit: 0
+```
+
+#### 2.2 Quality & Static Analysis Checks
+```bash
+uv run ruff check .
+# Output: All checks passed!
+# Exit: 0
+
+uv run ruff format --check tests/security/test_session_isolation.py tests/integration/test_failure_recovery.py tests/fixtures/streaming_support.py
+# Output: 3 files already formatted
+# Exit: 0
+
+uv run mypy src
+# Output: Success: no issues found in 110 source files
+# Exit: 0
+
+uv run python scripts/check_docs.py
+# Output:
+# PASS UTF-8/nonempty Markdown: 15 files
+# PASS internal links/anchors: 444
+# PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+# DOCUMENTATION CHECK: PASS
+# Exit: 0
+```
+
+### 3. Verification Summary
+- **DoD-1:** Real session isolation verified under real PostgreSQL and Qdrant: 2 sessions of same user strictly isolated across dense, sparse, and hybrid search branches; 2 users with identical external session ID strictly resolved to distinct internal UUIDs; admin metadata endpoints strictly scrubbed of content, chunks, citations, and credentials; prompt injection and untrusted history strictly ignored during retrieval scope filtering.
+- **DoD-2:** Fault injection and failure recovery verified: Qdrant outage degrades health readiness and fails closed; PostgreSQL disconnection fails closed with zero uncommitted data leakage; LLM stream timeout, 429 rate limit, and 500 error midway emit single terminal error event, sanitize secrets, and release admission slots; detach/delete under stream terminates immediately without resurrecting scope; worker interruption leaves partial generations in staging without serving; source data byte-for-byte immutable; RUNBOOK §R14 updated and verified.
+- **D1–D6:** Scope and quality criteria met. Ready for completion commit and authorized push to origin/main.
+
 

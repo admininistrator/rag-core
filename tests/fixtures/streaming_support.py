@@ -80,11 +80,20 @@ class NativeWireFixture:
         self.first = asyncio.Event()
         self.closed = asyncio.Event()
         self.raw_fragments = []
+        self.status_code = 200
+        self.error_body = None
         self.app = FastAPI()
 
         @self.app.post("/v1/{operation}")
         async def protocol(request: Request, operation: str):
             body = await request.json()
+            if self.status_code != 200 and (
+                body.get("stream") or getattr(self, "fail_rewrite", False)
+            ):
+                return JSONResponse(
+                    self.error_body or {"error": {"message": "Upstream error"}},
+                    status_code=self.status_code,
+                )
             self.calls.append(body)
             data = json.loads(body["messages"][-1]["content"])
             if "answerability" not in data:
