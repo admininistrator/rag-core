@@ -2485,16 +2485,173 @@ uv run python scripts/load_test.py --users 20 --requests 40 --mode live
 <a id="r13"></a>
 ## R13. Backup, restore và thay đổi index/schema
 
-**DESIGNED — T34.**
+**VERIFIED (T34) — Scripts và quy trình backup, restore, cold-start recovery và schema/index migration rehearsal đã được kiểm chứng thực nghiệm.**
 
-- Backup metadata PG và Qdrant snapshot cùng maintenance boundary; ghi model/index/corpus/config revisions, checksum và thời điểm.
-- App backup S3 nguồn riêng; core không xóa/sao chép toàn bộ app storage như một phần backup thường lệ.
-- Restore sang Compose project/volumes mới; verify session scope, link/version/counts và citations trước chấp nhận.
-- Reindex tạo generation mới, publish atomic trong PG, giữ generation cũ khi thất bại. Đổi embedding dimension/revision cần index version mới.
-- Migration có explicit command và rollback/recovery plan; không để nhiều worker tự migrate lúc boot.
-- Stop/start giữ volumes. Không `down -v` hoặc restore đè môi trường đang dùng trong quickstart.
+### 1. Lệnh thực thi Backup và Restore Check
 
-Điền exact backup/restore commands, manifest schema, quyền truy cập, write pause procedure, test evidence và dữ liệu nào chưa được backup sau T34.
+#### A. Unified Backup (`scripts/backup.py`)
+Tạo snapshot hợp nhất điểm-thời-gian gồm metadata PostgreSQL, Qdrant vectors, MinIO raw source document blobs, và `manifest.json`:
+```bash
+uv run python scripts/backup.py --output .local/backups/t34-snapshot \
+  --database-url postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance \
+  --password-file .local/secrets/t10_postgres_password \
+  --qdrant-url http://127.0.0.1:56333 \
+  --s3-endpoint http://127.0.0.1:9000 \
+  --s3-user-file .local/secrets/minio_root_user \
+  --s3-password-file .local/secrets/minio_root_password
+```
+
+#### B. Isolated Post-Restore Verification (`scripts/restore_check.py`)
+Khôi phục backup vào môi trường cô lập hoàn toàn (`<project>_pg_<uuid>`, `<project>_<col>_<uuid>`, `<project>-bucket-<uuid>`) và kiểm chứng tự động toàn bộ bất biến:
+```bash
+uv run python scripts/restore_check.py --backup .local/backups/t34-snapshot \
+  --project rag-restore-check \
+  --database-url postgresql://rag_core_test@127.0.0.1:55432/t10_acceptance \
+  --password-file .local/secrets/t10_postgres_password \
+  --qdrant-url http://127.0.0.1:56333 \
+  --s3-endpoint http://127.0.0.1:9000 \
+  --s3-user-file .local/secrets/minio_root_user \
+  --s3-password-file .local/secrets/minio_root_password
+```
+*(Thêm cờ `--keep-restore` nếu operator muốn giữ lại tài nguyên cô lập để đối soát thủ công thay vì tự động dọn dẹp).*
+
+---
+
+### 2. Cấu trúc và Schema của Backup Manifest (`manifest.json`)
+
+Mỗi bản backup sinh ra file `manifest.json` chuẩn hóa để kiểm chứng tính toàn vẹn:
+```json
+{
+  "manifest_version": "1.0",
+  "created_at": "2026-10-31T10:29:36.960241+00:00",
+  "git_commit": "4bce11ae93c293d02ff9da19594c429545f4713e",
+  "revisions": {
+    "alembic_version": "0004_admin_audit",
+    "bge_m3_fingerprint": "c64bb884142dab88e44b2ceacb8239714bb3dad3624d98b0c1fd1ce5ca09f92a"
+  },
+  "postgres": {
+    "table_counts": {
+      "sessions": 1,
+      "documents": 1,
+      "document_versions": 1,
+      "index_generations": 1,
+      "session_documents": 1,
+      "chunks": 1,
+      "ingestion_jobs": 0,
+      "outbox_events": 0,
+      "upload_registrations": 0,
+      "admin_sessions": 0,
+      "admin_login_limits": 0,
+      "audit_events": 0,
+      "alembic_version": 1
+    },
+    "table_files": { ... },
+    "table_hashes": { ... },
+    "in_flight_jobs": 0,
+    "active_app_ids": ["rag-core-rehearsal-app"],
+    "active_fingerprints": ["e51ba6e0914f3fd4ca3f28ee63e3f42ad31fd2eb14f103f3626a65e9e45baaf0"]
+  },
+  "qdrant": {
+    "rag_chunks_v1_...": {
+      "points_count": 1,
+      "points_file": "qdrant/rag_chunks_v1_..._points.json",
+      "points_hash": "...",
+      "snapshot_name": "rag_chunks_v1_...snapshot",
+      "config": {
+        "vectors": { "dense": { "size": 1024, "distance": "Cosine" } },
+        "sparse_vectors": { "sparse": { "index": { "on_disk": false } } },
+        "metadata": { "index_fingerprint": "..." }
+      }
+    }
+  },
+  "minio": {
+    "total_objects": 1,
+    "objects": [
+      {
+        "bucket": "rag-core-storage-test",
+        "key": "allowed/t34_rehearsal_document.txt",
+        "source_sha256": "...",
+        "size_bytes": 75,
+        "verified_sha256": "...",
+        "file_path": "minio/rag-core-storage-test/allowed/t34_rehearsal_document.txt",
+        "file_sha256": "..."
+      }
+    ]
+  },
+  "platform": {
+    "system": "Darwin",
+    "release": "27.0.0",
+    "machine": "arm64",
+    "python": "3.12.16"
+  },
+  "status": "completed"
+}
+```
+
+---
+
+### 3. Quy trình bảo trì & Tạm dừng ghi (Write Pause Procedure)
+
+1. **Kiểm tra trạng thái Ingestion:** Trước khi backup, xác nhận không có job nào đang trong quá trình xử lý:
+   ```sql
+   SELECT count(*) FROM ingestion_jobs WHERE state IN ('fetching', 'parsing', 'chunking', 'embedding', 'indexing');
+   ```
+   Nếu `count > 0`, chờ job hoàn tất hoặc chuyển sang trạng thái terminal (`ready`/`failed`).
+2. **PostgreSQL Repeatable Read:** `scripts/backup.py` tự động áp dụng transaction isolation level `REPEATABLE READ READ ONLY` trên toàn bộ 13 bảng core, bảo đảm snapshot đồng nhất tại một điểm thời gian và zero uncommitted rows.
+3. **Qdrant Native Snapshot & Payload Dump:** Tạo native snapshot collection song song với việc trích xuất JSON toàn bộ point vectors/payloads theo bộ lọc `active_app_ids` và `active_fingerprints`.
+4. **MinIO Raw Blobs Export & Checksum:** Tải các file nguồn gốc từ S3 bucket và xác thực byte-for-byte SHA256 đối chiếu với `document_versions.source_sha256`.
+
+---
+
+### 4. Quy trình diễn tập khôi phục (Restore Rehearsal Procedure)
+
+1. **Tạo tài nguyên tách biệt:** Không bao giờ khôi phục đè lên database hoặc collection đang hoạt động. Script tự động tạo `<project>_pg_<uuid>`, `<project>_<col>_<uuid>`, và `<project>-bucket-<uuid>`.
+2. **Alembic Migration:** Chạy `alembic upgrade head` trên database mới để bảo đảm schema đồng bộ với codebase hiện tại.
+3. **Phá vỡ và tái lập Foreign Key vòng:**
+   - Khi nạp dữ liệu: Nạp `document_versions` với trạng thái `queued` (`active_generation_id = NULL`), sau đó nạp `index_generations`, rồi cập nhật `document_versions` sang `ready` với `active_generation_id`.
+4. **Kiểm chứng các cổng nghiệm thu tự động:**
+   - **Counts Match:** Khớp số lượng dòng các bảng, số vector points, số file blobs.
+   - **Data Immutability:** 100% SHA256 byte-for-byte của raw document blobs khớp tuyệt đối.
+   - **Zero Uncommitted Rows:** `ingestion_jobs` và `outbox_events` không có bản ghi treo lơ lửng.
+   - **Zero Dangling Vectors:** Mọi point trong Qdrant đều trỏ về chunk và version hợp lệ trong PostgreSQL.
+   - **Scoped Query Verification:** Truy vấn trong session được cấp quyền trả về chunks với trích dẫn chính xác.
+   - **Session Restrictions:** Truy vấn từ principal lạ (stranger) bị từ chối tuyệt đối (fail closed: `ScopeError` hoặc 0 chunks).
+5. **Dọn dẹp:** Xóa database, collection và bucket cô lập ngay sau khi kiểm chứng hoàn tất.
+
+---
+
+### 5. Diễn tập Schema Migration Rollback & Index Upgrade Không Gián Đoạn
+
+#### A. Schema Migration Rollback Rehearsal
+Đã kiểm chứng thực nghiệm qua `test_schema_migration_and_rollback_rehearsal`:
+1. `alembic upgrade head`: Dựng schema đầy đủ (gồm bảng admin/audit `0004_admin_audit`).
+2. Seed dữ liệu session và audit events.
+3. `alembic downgrade 0003_ingestion_publication`: Rollback schema về phiên bản 0003. Bảng `audit_events` bị xóa an toàn, bảng `sessions` và dữ liệu người dùng được bảo toàn 100%.
+4. `alembic upgrade head`: Nâng cấp lại lên head, bảng `audit_events` được tái lập, dữ liệu sessions tiếp tục nguyên vẹn.
+
+#### B. Zero-Downtime Qdrant Index Upgrade Rehearsal
+Đã kiểm chứng thực nghiệm qua `test_qdrant_reindex_generation_upgrade_zero_downtime`:
+1. Thế hệ 1 (`gen1`) đang ở trạng thái `ready` và phục vụ 100% truy vấn tìm kiếm của người dùng.
+2. Bắt đầu reindexing: Thế hệ 2 (`gen2`) được tạo ở trạng thái `staging` và upsert điểm vào Qdrant.
+3. **Concurrent Availability:** Trong suốt quá trình staging `gen2`, truy vấn của người dùng vẫn phục vụ bình thường từ `gen1`. `resolve_scope` chỉ chứa `gen1`, điểm của `gen2` hoàn toàn vô hình đối với người dùng.
+4. **Atomic Publication:** Cập nhật `index_generations.state = 'ready'` và `document_versions.active_generation_id = gen2_id` trong một transaction PostgreSQL nguyên tử.
+5. Truy vấn tiếp theo chuyển tức thời và liền mạch sang phục vụ từ `gen2`.
+6. **Failure & Abort Simulation:** Giả lập Thế hệ 3 (`gen3`) bị lỗi trong quá trình staging. Đánh dấu `state = 'failed'` và xóa các điểm của `gen3` khỏi Qdrant. Kết quả: `gen2` tiếp tục phục vụ 100% ổn định, 0 dangling vectors còn sót lại trong Qdrant.
+
+#### C. Cold Start & Broker Crash Recovery Rehearsal
+Đã kiểm chứng thực nghiệm qua `test_cold_start_and_restart_recovery_rehearsal`:
+1. Ingestion job được đăng ký cùng outbox event trong PostgreSQL transaction.
+2. Giả lập sập engine và broker: Đột ngột ngắt kết nối engine và đóng client Redis.
+3. Cold start: Khởi động lại engine và dispatcher mới. Outbox dispatcher tự động quét `outbox_events WHERE dispatched_at IS NULL` và reconcile job vào hàng đợi Redis `rag_core_ingestion` mà không làm mất job.
+4. Bất biến toàn vẹn: SHA256 của tài liệu gốc trong PostgreSQL và MinIO giữ nguyên 100% byte-for-byte; các thế hệ `ready` tiếp tục phục vụ truy vấn bình thường sau khi khởi động lại.
+
+---
+
+### 6. Giới hạn và Dữ liệu không thuộc phạm vi Backup của RAG Core
+
+- **Cơ sở dữ liệu người dùng / Chat transcript của ứng dụng bên ngoài:** Thuộc trách nhiệm của ứng dụng gọi API (như Scarlet); RAG Core chỉ lưu trữ metadata trích dẫn và index vectors.
+- **API Keys / LLM Provider secrets:** Không được lưu trữ hay backup vào dump files; cấu hình qua environment variables hoặc secret files.
+- **Redis volatile cache / Celery broker internal memory:** Dữ liệu hàng đợi tạm thời được bảo vệ bởi mẫu Transactional Outbox trong PostgreSQL; bản thân Redis không yêu cầu snapshot định kỳ.
 
 <a id="r14"></a>
 ## R14. Troubleshooting và incident response

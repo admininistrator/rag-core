@@ -676,3 +676,46 @@ Final affected regression:83cases PASS across bounded real-service subprocesses 
   - Integration suite: `uv run pytest tests/integration/test_load_concurrency.py -v` PASSED (3/3 passed in 21.28s).
   - Static analysis: Ruff check PASS, Ruff format PASS, mypy 110 source files exit 0, `check_docs.py` PASS.
 - **Next / Readiness:** Task T33 is COMPLETE. Next task T34 dependencies (T33, T19) are all COMPLETE and ready to start in next session. STOP T33.
+
+<a id="s-t34-a01"></a>
+## Phase 8 / T34 / Attempt T34-A01 — Backup, restore, restart và index migration rehearsal
+
+- **Thời điểm hoàn thành:** 2026-10-31.
+- **Trạng thái:** COMPLETE (DoD-1 PASS, DoD-2 PASS, D1–D6 PASS).
+- **Môi trường runtime kiểm chứng:**
+  - OS: macOS Darwin 27.0.0 arm64 (`Darwin Quintet.local 27.0.0 Darwin Kernel Version 27.0.0 arm64`).
+  - CPU: Apple M1 Pro (8 cores, 32 GB RAM).
+  - Python: 3.12.16 (trong `.venv`).
+  - uv: 0.13.6 (Homebrew 2026-10-26 aarch64-apple-darwin).
+  - Docker Desktop: 29.9.2 (build a82e528).
+  - Containers đang chạy: `rag-core-metadata-test-postgres-1` (port 55432), `rag-core-metadata-test-qdrant-1` (port 56333), `rag-core-metadata-test-redis-1` (port 16379), `rag-core-minio-1` (port 9000).
+- **Phạm vi triển khai (`scripts/backup.py`, `scripts/restore_check.py`, `tests/integration/test_backup_restore.py`):**
+  - **`scripts/backup.py` (Unified Point-in-Time Backup):**
+    - Trích xuất PostgreSQL metadata qua transaction isolation level `REPEATABLE READ READ ONLY` trên 13 bảng cốt lõi (`sessions`, `documents`, `document_versions`, `index_generations`, `session_documents`, `ingestion_jobs`, `outbox_events`, `upload_registrations`, `chunks`, `admin_sessions`, `admin_login_limits`, `audit_events`, `alembic_version`), xác nhận zero in-flight ingestion jobs.
+    - Trích xuất Qdrant vector collections: Tạo native snapshot collection song song với JSON export toàn bộ points (vectors dense 1024D, sparse, payloads) với bộ lọc tenant `active_app_ids` và `active_fingerprints` để chống ô nhiễm dữ liệu từ test khác.
+    - Trích xuất MinIO raw source document blobs từ bucket S3, tính toán và kiểm chứng byte-for-byte SHA256 đối chiếu với `document_versions.source_sha256`.
+    - Sinh `manifest.json` ghi nhận git commit, Alembic revision, model fingerprints, table counts, file hashes, platform metadata và trạng thái completed.
+  - **`scripts/restore_check.py` (Isolated Post-Restore Verification Harness):**
+    - Khôi phục vào môi trường hoàn toàn cô lập: database PostgreSQL `<project>_pg_<uuid>`, Qdrant collection `<project>_<col>_<uuid>`, và MinIO bucket `<project>-bucket-<uuid>`.
+    - Dựng schema chuẩn qua `alembic upgrade head`.
+    - Xử lý quan hệ foreign key vòng giữa `document_versions.active_generation_id` và `index_generations.version_id`: Chèn document_versions với `state='queued'` và `active_generation_id=NULL`, sau đó chèn index_generations, rồi cập nhật document_versions sang `state='ready'` với `active_generation_id`.
+    - Khôi phục Qdrant collection và nạp toàn bộ vector points cùng 8 payload indexes (`app_id`, `owner_id`, `document_id`, `document_version_id`, `index_generation`, `chunk_id`, `language`, `ordinal`).
+    - Khôi phục MinIO blobs vào bucket cô lập và tái kiểm chứng SHA256.
+    - Kiểm chứng 5 cổng nghiệm thu tự động:
+      1. Khớp số lượng bản ghi: Bảng PG, Qdrant collection points, MinIO objects.
+      2. 100% byte-for-byte SHA256 immutability của raw document blobs.
+      3. Zero uncommitted rows trong database.
+      4. Zero dangling vectors trong Qdrant.
+      5. Scoped query trả về chunks hợp lệ với đúng citation metadata; stranger principal truy cập bị từ chối và fail closed (ScopeError / 0 chunks).
+    - Tự động dọn dẹp tài nguyên cô lập sau khi hoàn tất kiểm chứng (có cờ `--keep-restore` nếu operator muốn giữ lại).
+  - **`tests/integration/test_backup_restore.py`:**
+    - `test_backup_and_restore_check_cli`: Chạy subprocess thực thi `backup.py` và `restore_check.py` trên môi trường thật, xác nhận báo cáo `ALL POST-RESTORE VERIFICATION GATES PASSED.`
+    - `test_cold_start_and_restart_recovery_rehearsal`: Giả lập sập engine/Redis đột ngột khi có job trong transactional outbox; cold start khởi động lại engine và dispatcher, xác nhận job được reconcile sang Redis queue mà không mất mát, source document SHA256 nguyên vẹn, active generation tiếp tục phục vụ truy vấn bình thường.
+    - `test_schema_migration_and_rollback_rehearsal`: Diễn tập migration rollback trên database riêng: `upgrade head` -> seed dữ liệu -> `downgrade 0003_ingestion_publication` (xóa bảng admin audit, bảo toàn bảng sessions/documents) -> `upgrade head` (phục hồi bảng admin, bảo toàn dữ liệu sessions ban đầu).
+    - `test_qdrant_reindex_generation_upgrade_zero_downtime`: Diễn tập nâng cấp index generation: Thế hệ 1 (`ready`) phục vụ 100% truy vấn trong khi Thế hệ 2 (`staging`) đang được index trong Qdrant; switch nguyên tử sang Thế hệ 2; giả lập abort Thế hệ 3 và xóa điểm staging khỏi Qdrant, bảo đảm Thế hệ 2 tiếp tục hoạt động 100% không gián đoạn và 0 dangling vectors cho Thế hệ 3.
+- **Verification & DoD Proof:**
+  - **DoD-1:** PASS — `uv run python scripts/backup.py --output .local/backups/t34-rehearsal` tạo `manifest.json` thật; `uv run python scripts/restore_check.py --backup .local/backups/t34-rehearsal --project rag-restore-check` khôi phục vào tài nguyên cô lập, kiểm tra và pass 100% các cổng verification (counts match, SHA256 match, 0 uncommitted rows, 0 dangling vectors, scoped query PASS, stranger denied PASS). Evidence: [H-T34-A01](handoffs.md#h-t34-a01).
+  - **DoD-2:** PASS — Worker/API/Redis restart vẫn reconcile outbox events qua Celery job publisher không mất mát, source document SHA256 giữ nguyên 100% byte-for-byte; RUNBOOK §R13 cập nhật từ DESIGNED sang VERIFIED với exact commands và recovery boundaries; không commit bất kỳ backup files hay secret dumps nào vào Git (đã kiểm `.gitignore` và `git status`). Evidence: [H-T34-A01](handoffs.md#h-t34-a01).
+  - Integration suite: `uv run pytest tests/integration/test_backup_restore.py -v -s` PASSED (4/4 passed trong 6.11s).
+  - Static analysis: Ruff check PASS, Ruff format PASS, mypy 112 source files exit 0, `check_docs.py` PASS (454 internal links, 37 tasks acyclic).
+- **Next / Readiness:** Task T34 is COMPLETE. Next task T35 dependencies (T34, T26, T29) are all COMPLETE and ready to start in next session. STOP T34.

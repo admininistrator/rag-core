@@ -636,7 +636,7 @@
 <a id="t34"></a>
 ### T34 — Backup, restore, restart và index migration rehearsal
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T33, T19.
 - **Tham chiếu kế hoạch:** [P04](plan.md#p04), [P12](plan.md#p12), [P15](plan.md#p15).
 - **Công việc:** Scripts/quy trình maintenance snapshot PG+Qdrant+config, restore môi trường tách biệt, restart persistence, model/index revision migration rollback không mất nguồn; redacted diagnostics và disk growth notes.
@@ -644,7 +644,16 @@
   1. `uv run python scripts/backup.py --output <workspace-backup-dir>` tạo manifest thật; `uv run python scripts/restore_check.py --backup <workspace-backup-dir> --project rag-restore-check` restore vào volumes riêng, kiểm counts/query/citations/session restrictions sau restore.
   2. Worker/API/Redis restart vẫn reconcile jobs, source hashes không đổi; RUNBOOK chứa commands đã chạy và recovery boundaries; không ghi backup/secret dumps vào Git.
 - **Cạm bẫy:** PG/Qdrant snapshots khác thời điểm có thể lệch generation; không restore đè môi trường đang chạy; không dùng recursive delete hoặc `down -v` để tiện rehearsal.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `chore(T34): verify backup and recovery procedures`.
+- **Ghi chú thực thi:**
+  - **Attempt:** T34-A01 | **Worker/model/effort:** single-agent session (2026-09-26 workflow) | **Started/ended:** 2026-10-31 16:30 – 17:35 UTC+7.
+  - **Implemented/files:**
+    - `scripts/backup.py`: Script backup hợp nhất điểm-thời-gian cho PostgreSQL metadata (13 bảng core dưới repeatable read readonly snapshot, kiểm tra 0 in-flight jobs), Qdrant vector collections (native snapshot và JSON dump vector/payload lọc theo tenant app/fingerprint), MinIO raw source document blobs (tải và kiểm chứng byte-for-byte SHA256), và sinh `manifest.json` đầy đủ git commit, revisions, counts, hashes, platform metadata.
+    - `scripts/restore_check.py`: Script diễn tập khôi phục và kiểm chứng tự động vào tài nguyên cô lập hoàn toàn (`<project>_pg_<uuid>`, `<project>_<col>_<uuid>`, `<project>-bucket-<uuid>`); chạy Alembic migration, xử lý circular foreign-key giữa document_versions và index_generations; kiểm tra đầy đủ các cổng: khớp counts bảng/vector/blob, 100% SHA256 byte-for-byte bất biến, 0 uncommitted rows, 0 dangling vectors, scoped query trả về chunks hợp lệ, stranger session denied (fail closed); tự động cleanup tài nguyên cô lập sau diễn tập.
+    - `tests/integration/test_backup_restore.py`: Bộ kiểm thử tích hợp 4 kịch bản hoàn chỉnh: (1) CLI backup & restore check qua subprocess thật; (2) Cold-start & broker restart recovery qua transactional outbox; (3) Alembic schema migration downgrade/rollback (`head` -> `0003_ingestion_publication` -> `head`) bảo toàn dữ liệu sessions/docs; (4) Zero-downtime Qdrant reindex generation upgrade (Gen 1 phục vụ 100% trong lúc Gen 2 staging, switch nguyên tử, abort Gen 3 dọn dẹp sạch không dangling vector).
+  - **DoD-1:** PASS — `uv run python scripts/backup.py --output .local/backups/t34-rehearsal` tạo `manifest.json` thật; `uv run python scripts/restore_check.py --backup .local/backups/t34-rehearsal --project rag-restore-check` khôi phục vào tài nguyên cô lập, kiểm tra và pass 100% các cổng verification (counts match, SHA256 match, 0 uncommitted rows, 0 dangling vectors, scoped query PASS, stranger denied PASS). Evidence: [H-T34-A01](handoffs.md#h-t34-a01).
+  - **DoD-2:** PASS — Worker/API/Redis restart vẫn reconcile outbox events qua Celery job publisher không mất mát, source document SHA256 giữ nguyên 100% byte-for-byte; RUNBOOK §R13 cập nhật từ DESIGNED sang VERIFIED với exact commands và recovery boundaries; không commit bất kỳ backup files hay secret dumps nào vào Git (đã kiểm `.gitignore` và `git status`). Evidence: [H-T34-A01](handoffs.md#h-t34-a01).
+  - **D1–D6 PASS:** D1 PASS (đúng phạm vi task T34); D2 PASS (`tests/integration/test_backup_restore.py` 4 passed trong 6.11s, Ruff check PASS, Ruff format PASS, mypy 112 source files exit 0, check_docs.py PASS); D3 PASS (toàn bộ task DoD kiểm chứng trên Postgres, Qdrant, MinIO, Redis thật không dùng mock); D4 PASS (`tasks.md`, `implementation-summary.md`, `handoffs.md`, `README.md`, `RUNBOOK.md` cập nhật đồng bộ); D5 PASS (review diff nghiêm ngặt, không secrets, không phá vỡ schema); D6 candidate commit `feat(T34): verify backup restore and schema migration rehearsal`.
+  - **Limits/next:** Task T35 (RUNBOOK tích hợp và client app độc lập) đã đủ điều kiện bắt đầu trong session tiếp theo (phụ thuộc T34, T26, T29 đều COMPLETE). **STOP T34**, không auto-drain.
 
 ## Phase 9 — Bàn giao
 
