@@ -641,3 +641,38 @@ Final affected regression:83cases PASS across bounded real-service subprocesses 
   - **DoD-2:** Detach/delete under load, worker kill, partial generation isolation, byte-for-byte source immutability, and RUNBOOK incident response §R14 verified 100%.
   - Static analysis: Ruff check PASS, Ruff format PASS, mypy 110 source files exit 0, `check_docs.py` PASS (444 internal links, 37 tasks acyclic).
 - **Next / Readiness:** Task T32 is COMPLETE. Next task T33 dependencies (T32, T17, T26) are all COMPLETE and ready to start in next session. STOP T32.
+
+<a id="s-t33-a01"></a>
+## Phase 8 / T33 / Attempt T33-A01 — 15–20 user load testing and local resource budget verification
+
+- **Runtime/baseline:** Direct single-task agent; macOS Darwin arm64 (Darwin 27.0.0 arm64, Apple M1 Pro, 32 GB RAM), Python 3.12.16 (in `.venv`), uv 0.13.6, Docker Desktop 29.9.2 (build a82e528); no subagents; 2026-10-31 Asia/Bangkok. Baseline HEAD `62a4e0b8564ca861f176ef6752c6f11e3f298d91` equals `origin/main`. Complete T32, T17, T26 dependency notes/interfaces and plan references P02, P12, P13 read.
+- **Implemented Architecture (`scripts/load_test.py` & `tests/integration/test_load_concurrency.py`):**
+  - **`scripts/load_test.py` (Async Multi-User Load Driver):**
+    - High-concurrency driver supporting 15–20 virtual users with distinct authenticated principals (`app-load-test` / `user_00` to `user_19`), external sessions, and secret session canary markers (`SEC_U00_...`).
+    - Exercises realistic mixed workloads: alternating streaming SSE (`/v1/query/stream`) and non-streaming JSON (`/v1/query`).
+    - Continuous concurrent background ingestion: `_background_ingestion_worker` indexes synthetic documents at `concurrency=1` with `priority="index"` concurrently with queries.
+    - Two provider modes:
+      - `mode="stub"`: `StubLlmServer` with configurable simulated latency (0.05s) and token chunking, isolating core RAG overhead, PG queries, Qdrant search, and evidence hydration from remote network jitter.
+      - `mode="live"`: Real remote LLM generation with `DeepSeekProvider` (`deepseek-flash`), authenticated API key, bounded admission concurrency (default 6), and queueing.
+    - Real-time telemetry sampler (`_telemetry_worker`): Samples Process RSS, virtual memory %, host CPU %, Docker container memory (`docker stats --no-stream` across PostgreSQL, Qdrant, and Inference containers), PyTorch MPS VRAM, and active/waiting admission leases at 1.0s intervals.
+    - Exact dispatch semaphore: Guarantees exact request counts under request-capped runs (e.g. 40 in live mode) across all concurrent users without mid-flight connection drops during teardown.
+    - Post-test safety invariants verification: 100% terminal request outcomes, zero cross-session evidence/canary leakage, zero query admission slot leakage (`admission.active == 0`), zero unbounded queue growth (`max_waiters <= queue_size`), zero OOM or process crashes, Docker RAM <= 10 GiB, and VRAM <= 7 GiB.
+    - Report generation: Produces separate, comprehensive Markdown and JSON reports in `artifacts/load/` with detailed environment metadata, throughput, TTFT p50/p95 (strictly measuring first `answer_delta` event), total latency p50/p95, and resource consumption.
+  - **`tests/integration/test_load_concurrency.py`:**
+    - `test_query_admission_concurrency_and_waiter_bounds`: Validates slot acquisition, queue waiting, fast 429 rejection on full queue, immediate lease transfer on release, and complete slot release.
+    - `test_system_info_and_docker_telemetry`: Verifies host telemetry extraction (macOS/Darwin, Apple M1 Pro, Docker version) and non-blocking Docker container memory sampling.
+    - `test_load_harness_multi_user_concurrency_and_isolation`: Executes automated multi-user test with 3 concurrent virtual users, verifying 100% admission, 100% success, zero cross-session leakage, and report artifact creation.
+- **Verification & DoD Proof:**
+  - **DoD-1 Benchmark Runs:**
+    1. `uv run python scripts/load_test.py --users 15 --duration 120 --mode stub`: **PASS** (141.31s actual duration, 75 requests offered, 75 admitted [100.00% >= 95% gate], 0 429, 0 5xx, 75 success [100.00% >= 99% gate], TTFT p50/p95: 27.4s / 30.3s, peak process RSS: 1111.78 MB, peak Docker RAM: 2601.98 MB [<= 10 GiB], peak MPS VRAM: 0.0 MB [<= 7 GiB], max waiters: 0 <= 20).
+    2. `uv run python scripts/load_test.py --users 20 --duration 120 --mode stub`: **PASS** (153.24s actual duration, 80 requests offered, 80 admitted [100.00% >= 95% gate], 0 429, 0 5xx, 80 success [100.00% >= 99% gate], TTFT p50/p95: 36.5s / 39.1s, peak process RSS: 1115.08 MB, peak Docker RAM: 3543.04 MB [<= 10 GiB], peak MPS VRAM: 0.0 MB [<= 7 GiB], max waiters: 0 <= 20).
+    3. `uv run python scripts/load_test.py --users 20 --requests 40 --mode live`: **PASS** with real DeepSeek provider (79.20s duration, 40 requests offered, 36 admitted, 4 429 backpressure rejections recorded separately, 0 5xx errors, 36 success [100.00% of admitted], TTFT p50/p95: 33.7s / 39.3s, peak process RSS: 1114.69 MB, peak Docker RAM: 3455.18 MB [<= 10 GiB], peak MPS VRAM: 0.0 MB [<= 7 GiB], max waiters: 14 <= 20).
+    - Preserved separate reports: `artifacts/load/load_test_report_stub_15.md`, `artifacts/load/load_test_report_stub_20.md`, `artifacts/load/load_test_report_live_20.md`.
+  - **DoD-2 Invariants & Resource Budgets:**
+    - Zero process crashes, zero OOMs, 100% terminal request outcomes.
+    - Zero cross-session evidence leakage verified by asserting that no response body or citation quote ever contains canary secrets of other users.
+    - Zero query admission slot leakage: `admission.active == 0` and `admission.waiting == 0` at teardown across all runs.
+    - Technical resource budgets verified: Docker RAM stayed under 3.6 GiB (well within <= 10 GiB budget); MPS VRAM remained 0.0 MB (well within <= 7 GiB budget); Process RSS stable at ~1.1 GiB.
+  - Integration suite: `uv run pytest tests/integration/test_load_concurrency.py -v` PASSED (3/3 passed in 21.28s).
+  - Static analysis: Ruff check PASS, Ruff format PASS, mypy 110 source files exit 0, `check_docs.py` PASS.
+- **Next / Readiness:** Task T33 is COMPLETE. Next task T34 dependencies (T33, T19) are all COMPLETE and ready to start in next session. STOP T33.

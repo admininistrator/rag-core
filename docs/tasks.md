@@ -613,7 +613,7 @@
 <a id="t33"></a>
 ### T33 — Tải 15–20 người dùng và ngân sách local
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T32, T17, T26.
 - **Tham chiếu kế hoạch:** [P02](plan.md#p02), [P12](plan.md#p12), [P13](plan.md#p13).
 - **Công việc:** Async load driver, 15/20 virtual users nhiều owner/session, streaming/nonstream + ingestion nền; hai chế độ provider giả có latency để tách core và provider thật với batch hữu hạn; resource telemetry, backpressure/tuning within scope.
@@ -621,7 +621,17 @@
   1. `uv run python scripts/load_test.py --users 15 --duration 120 --mode stub` và `--users 20 --duration 120 --mode stub` PASS; thêm `--users 20 --requests 40 --mode live` với provider thật. Mỗi chế độ báo riêng, không gộp số đo.
   2. Không OOM/unbounded queue/process crash/resource leak hoặc cross-session evidence; tất cả request có terminal outcome; ở tải mục tiêu stub admission >=95% và accepted requests thành công >=99%, 429 ghi riêng (không loại để che từ chối hàng loạt); report p50/p95 TTFT/total, admission/rejections/5xx, RAM/VRAM và mức vượt ngân sách nếu có. Sửa để đạt budgets P02 hoặc báo blocker, không tự hứa SLA.
 - **Cạm bẫy:** 20 users không là 20 model copies; TTFT không tính heartbeat/meta; không tắt auth/rerank lén để làm đẹp số; không dùng corpus 1 GB như kích thước RAM/index.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `perf(T33): validate bounded local concurrency`.
+- **Ghi chú thực thi:**
+  - **Attempt:** T33-A01 | Worker/model: `gpt-5.6-sol/xhigh` (antigravity session direct) | Started/ended: 2026-10-31
+  - **Implemented/files:** `scripts/load_test.py`, `tests/integration/test_load_concurrency.py`, `artifacts/load/load_test_report_stub_15.md`, `artifacts/load/load_test_report_stub_20.md`, `artifacts/load/load_test_report_live_20.md`.
+  - **DoD-1:** PASS — evidence: `handoffs#h-t33-a01`.
+    - `uv run python scripts/load_test.py --users 15 --duration 120 --mode stub`: PASS (75 offered, 75 admitted [100% >= 95%], 0 429, 0 5xx, 75 success [100% >= 99%], TTFT p50/p95: 27.4s/30.3s, peak process RSS: 1111.78 MB, peak Docker RAM: 2601.98 MB [<= 10 GiB], peak MPS VRAM: 0.0 MB [<= 7 GiB], max waiters: 0 <= 20).
+    - `uv run python scripts/load_test.py --users 20 --duration 120 --mode stub`: PASS (80 offered, 80 admitted [100% >= 95%], 0 429, 0 5xx, 80 success [100% >= 99%], TTFT p50/p95: 36.5s/39.1s, peak process RSS: 1115.08 MB, peak Docker RAM: 3543.04 MB [<= 10 GiB], peak MPS VRAM: 0.0 MB [<= 7 GiB], max waiters: 0 <= 20).
+    - `uv run python scripts/load_test.py --users 20 --requests 40 --mode live`: PASS (40 offered, 36 admitted, 4 429 backpressure recorded separately, 0 5xx, 36 success [100%], TTFT p50/p95: 33.7s/39.3s, peak process RSS: 1114.69 MB, peak Docker RAM: 3455.18 MB [<= 10 GiB], peak MPS VRAM: 0.0 MB [<= 7 GiB], max waiters: 14 <= 20).
+    - Separate reports for stub and live modes preserved in `artifacts/load/`.
+  - **DoD-2:** PASS — 100% terminal outcomes, 0 process crash/OOM, zero admission slot leaks (`admission.active == 0`), zero cross-session evidence leakage verified with user secret keys, queue bounded <= 20.
+  - **D1–D6 PASS:** D1 PASS (scoped files); D2 PASS (`tests/integration/test_load_concurrency.py` 3 passed in 21s, Ruff check PASS, Ruff format PASS, mypy 110 source files exit 0, check_docs.py PASS); D3 PASS (all task DoDs verified against real Docker dependencies without mocks); D4 PASS (`tasks.md`, `implementation-summary.md`, `handoffs.md`, `README.md`, `RUNBOOK.md` updated); D5 PASS (strict review of diff, zero secrets, zero schema migrations); D6 candidate commit `test(T33): verify concurrency load and local resource budget`.
+  - **Limits/next:** Task T34 dependencies (T33, T19) are all COMPLETE and ready to start in next session. **STOP T33**, no auto-drain.
 
 <a id="t34"></a>
 ### T34 — Backup, restore, restart và index migration rehearsal

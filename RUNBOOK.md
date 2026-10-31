@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T31 quality benchmark and measured RAG baselines VERIFIED; verification recorded with its completion commit.** T30 evaluation harness, T29 admin browser acceptance, T28 admin UI, T27 admin APIs and T26 public API/both provider gates remain verified. T32 isolation fault injection, T33 load testing, and T34 recovery remain T32–T36. [T31 evidence](docs/handoffs.md#h-t31-a01), [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T33 concurrency load and local resource budgets VERIFIED; verification recorded with its completion commit.** T32 isolation and fault recovery regression suite, T31 quality benchmark, T30 evaluation harness, T29 admin browser acceptance, T28 admin UI, T27 admin APIs and T26 public API/both provider gates remain verified. T34 recovery remains T34–T36. [T33 evidence](docs/handoffs.md#h-t33-a01), [T32 evidence](docs/handoffs.md#h-t32-a01), [T31 evidence](docs/handoffs.md#h-t31-a01), [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -2422,7 +2422,7 @@ Báo cáo chi tiết và manifest được lưu tại `artifacts/eval/evaluation
 <a id="r12"></a>
 ## R12. Hiệu năng và observability
 
-**T17 inference resource smoke VERIFIED; streaming/load/full-stack gates DESIGNED T25/T32–T33.**
+**T17 inference resource smoke and T33 concurrency load / local resource budgets VERIFIED local.**
 
 Target 15–20 virtual users; chưa có SLA latency. Một inference process, bounded queue, ingestion concurrency=1, query ưu tiên hơn indexing. API không load model mỗi worker.
 
@@ -2437,6 +2437,50 @@ Torch peak VRAM reserved2.148GiB; nvidia-smi total3782MiB includes other host GP
 Actual final image/Compose smoke values and fingerprints are recorded in T17 evidence; these
 single tiny-fixture measurements are not corpus quality,20users,throughput,p95 or full-stack
 budget evidence. T33 remains required for target15–20users and Docker<=10GiB/VRAM<=7GiB.
+
+<a id="r12-t33"></a>
+### T33 Load testing và ngân sách local
+
+**VERIFIED local**, [H-T33-A01](docs/handoffs.md#h-t33-a01).
+
+Harness kiểm thử tải `scripts/load_test.py` thực thi benchmark 15–20 virtual users trên nhiều session/owner độc lập đồng thời. Báo cáo độc lập cho hai chế độ: `stub` và `live`.
+
+#### 1. Lệnh thực thi load harness
+```bash
+# 1. Đo core throughput không phụ thuộc upstream rate limit (15 users, 120s)
+uv run python scripts/load_test.py --users 15 --duration 120 --mode stub
+
+# 2. Đo tải tối đa 20 users (20 users, 120s)
+uv run python scripts/load_test.py --users 20 --duration 120 --mode stub
+
+# 3. Đo live provider thật với concurrency hữu hạn và backpressure (20 users, 40 requests)
+uv run python scripts/load_test.py --users 20 --requests 40 --mode live
+```
+
+#### 2. Kết quả đo lường thực tế trên macOS Darwin arm64 (Apple M1 Pro 32 GB RAM, Docker Desktop 29.9.2)
+
+| Chỉ số / Tiêu chuẩn | Stub 15 Users (120s) | Stub 20 Users (120s) | Live 20 Users (40 Reqs) | Ngân sách / Ngưỡng | Trạng thái |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Offered Requests** | 75 reqs | 80 reqs | 40 reqs | - | - |
+| **Admission Rate** | 100.00% | 100.00% | 90.00% (36/40) | >= 95% (stub) | PASS |
+| **HTTP 429 Backpressure** | 0 | 0 | 4 | Ghi nhận riêng | PASS |
+| **HTTP 5xx Server Errors** | 0 | 0 | 0 | 0 | PASS |
+| **Admitted Success Rate** | 100.00% | 100.00% | 100.00% | >= 99% | PASS |
+| **Throughput** | 0.53 req/s | 0.52 req/s | 0.45 req/s | Bounded | PASS |
+| **TTFT p50 / p95** | 27.4s / 30.3s | 36.5s / 39.1s | 33.7s / 39.3s | Answer token only | VERIFIED |
+| **Total Latency p50 / p95** | 27.4s / 30.3s | 36.5s / 39.2s | 33.7s / 39.3s | Done boundary | VERIFIED |
+| **Process RSS (API+Driver)**| 1111.78 MB | 1115.08 MB | 1114.69 MB | Ổn định, không rò rỉ | PASS |
+| **Docker Compose RAM** | 2601.98 MB | 3543.04 MB | 3455.18 MB | <= 10 GiB (10240 MB) | PASS |
+| **MPS Unified / VRAM** | 0.0 MB | 0.0 MB | 0.0 MB | <= 7 GiB (7168 MB) | PASS |
+| **Host CPU Peak / Avg** | 57.5% / 41.56% | 53.4% / 40.04% | 50.8% / 39.94%| Bounded | PASS |
+| **Queue Waiters Max** | 0 | 0 | 14 | <= 20 | PASS |
+| **Concurrent Ingestion** | 1 doc | 1 doc | 10 docs | Concurrency = 1 | PASS |
+
+#### 3. Bất biến an toàn và cô lập tài nguyên
+- **100% Terminal Outcomes:** 100% request kết thúc đúng chuẩn SSE (`event: done` hoặc `event: error` đã sanitize), không treo socket hoặc zombie task.
+- **Cross-Session Evidence Isolation:** 100% citation và evidence trả về thuộc đúng `session_id` của virtual user gọi, 0% rò rỉ chéo giữa 20 sessions đồng thời.
+- **Slot Lifecycle:** Sau khi tải kết thúc, `admission.active == 0`, không rò rỉ slot admission nào.
+- **Báo cáo:** Được xuất độc lập thành Markdown và JSON trong `artifacts/load/load_test_report_*.{md,json}`.
 
 <a id="r13"></a>
 ## R13. Backup, restore và thay đổi index/schema
