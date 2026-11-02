@@ -17,16 +17,31 @@ from rag_core.ports.storage import StorageError, StorageReader
 from rag_core.ports.vectors import VectorRepository
 
 # Transient technical failures retry through the PG outbox, never unbounded Celery retry.
-_RETRYABLE = {"storage_unavailable", "model_unavailable", "model_busy", "model_timeout",
-              "vector_dependency_unavailable", "ingestion_timeout"}
+_RETRYABLE = {
+    "storage_unavailable",
+    "model_unavailable",
+    "model_busy",
+    "model_timeout",
+    "vector_dependency_unavailable",
+    "ingestion_timeout",
+}
 
 
 class IngestionPipeline:
     def __init__(
-        self, repository: IngestionRepository, storage: StorageReader, parser: DocumentParser,
-        chunker: StructuralChunker, inference: ModelInference, vectors: VectorRepository,
-        profile: IndexProfile, *, extraction_fingerprint: str, pipeline_fingerprint: str,
-        heartbeat_seconds: float = 5, timeout_seconds: float = 1800,
+        self,
+        repository: IngestionRepository,
+        storage: StorageReader,
+        parser: DocumentParser,
+        chunker: StructuralChunker,
+        inference: ModelInference,
+        vectors: VectorRepository,
+        profile: IndexProfile,
+        *,
+        extraction_fingerprint: str,
+        pipeline_fingerprint: str,
+        heartbeat_seconds: float = 5,
+        timeout_seconds: float = 1800,
     ) -> None:
         if not 0.1 <= heartbeat_seconds <= 30 or not 1 <= timeout_seconds <= 3600:
             raise ValueError("invalid worker limits")
@@ -53,8 +68,14 @@ class IngestionPipeline:
                 else:
                     await heartbeat
             return "ready"
-        except (StorageError, ParseError, ChunkingError, InferenceError, VectorError,
-                IngestionError) as exc:
+        except (
+            StorageError,
+            ParseError,
+            ChunkingError,
+            InferenceError,
+            VectorError,
+            IngestionError,
+        ) as exc:
             code = exc.code if hasattr(exc, "code") else str(exc)
             await self.repo.fail(lease, code, retryable=code in _RETRYABLE)
             return code
@@ -94,12 +115,20 @@ class IngestionPipeline:
             if downloaded.sha256 != lease.source.sha256 or downloaded.size != lease.size_bytes:
                 raise IngestionError("source_changed")
             await self.repo.advance(lease, "parsing", 20)
-            parse = asyncio.create_task(asyncio.to_thread(
-                self.parser.parse, downloaded.path, filename=lease.filename,
-                content_type=lease.content_type, source=SourceIdentity(
-                    document_id=lease.scope.pair.document_id, version_id=lease.scope.pair.version_id,
-                    sha256=downloaded.sha256), cancel=cancel,
-            ))
+            parse = asyncio.create_task(
+                asyncio.to_thread(
+                    self.parser.parse,
+                    downloaded.path,
+                    filename=lease.filename,
+                    content_type=lease.content_type,
+                    source=SourceIdentity(
+                        document_id=lease.scope.pair.document_id,
+                        version_id=lease.scope.pair.version_id,
+                        sha256=downloaded.sha256,
+                    ),
+                    cancel=cancel,
+                )
+            )
             try:
                 return await asyncio.shield(parse)
             except asyncio.CancelledError:
@@ -115,30 +144,51 @@ class IngestionPipeline:
 
         parsed = await self._extract(lease, cancel)
         await self.repo.advance(lease, "chunking", 40)
-        chunks = await asyncio.to_thread(self.chunker.chunk, parsed,
+        chunks = await asyncio.to_thread(
+            self.chunker.chunk,
+            parsed,
             generation_id=lease.scope.pair.generation_id,
-            extraction_fingerprint=self.extraction_fingerprint)
+            extraction_fingerprint=self.extraction_fingerprint,
+        )
         await self.repo.stage_chunks(lease, chunks)
         await self.repo.advance(lease, "embedding", 55)
         for offset in range(0, len(chunks), 32):
             await self.repo.heartbeat(lease)
-            batch = chunks[offset:offset+32]
-            result = await self.inference.infer(InferenceRequest(
-                operation="embed", priority="index", texts=[c.text for c in batch],
-                timeout_seconds=120.0,
-            ))
-            if result.fingerprint != self.profile.model_fingerprint or len(result.embeddings) != len(batch):
+            batch = chunks[offset : offset + 32]
+            result = await self.inference.infer(
+                InferenceRequest(
+                    operation="embed",
+                    priority="index",
+                    texts=[c.text for c in batch],
+                    timeout_seconds=120.0,
+                )
+            )
+            if result.fingerprint != self.profile.model_fingerprint or len(
+                result.embeddings
+            ) != len(batch):
                 raise IngestionError("model_revision_mismatch")
-            points = tuple(VectorWrite(VectorChunk(
-                document_id=c.source.document_id, document_version_id=c.source.version_id,
-                index_generation=c.generation_id, chunk_id=c.id, language="und",
-                ordinal=c.ordinal, unit_id=vector_unit_id(c), locator=c.segments[0].locator,
-            ), embedding) for c, embedding in zip(batch, result.embeddings, strict=True))
+            points = tuple(
+                VectorWrite(
+                    VectorChunk(
+                        document_id=c.source.document_id,
+                        document_version_id=c.source.version_id,
+                        index_generation=c.generation_id,
+                        chunk_id=c.id,
+                        language="und",
+                        ordinal=c.ordinal,
+                        unit_id=vector_unit_id(c),
+                        locator=c.segments[0].locator,
+                    ),
+                    embedding,
+                )
+                for c, embedding in zip(batch, result.embeddings, strict=True)
+            )
             # Progress stays indexing while later batches alternate embedding and writes.
             await self.repo.advance(lease, "indexing", 80 + int(15 * offset / len(chunks)))
             await self.vectors.upsert(lease.scope, points, result.fingerprint)
             await self.vectors.verify_generation(lease.scope, points)
         if await self.vectors.count_generation(lease.scope) != len(chunks):
             raise IngestionError("ingestion_vector_count_mismatch")
-        await self.repo.publish(lease, len(chunks), chunk_manifest(chunks),
-                                self.extraction_fingerprint)
+        await self.repo.publish(
+            lease, len(chunks), chunk_manifest(chunks), self.extraction_fingerprint
+        )

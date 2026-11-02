@@ -219,9 +219,7 @@ def test_normalization_preserves_gold_evidence_metadata_and_filename(tmp_path: P
     "mutation",
     ["closed", "answer", "duplicate_id", "evidence_doc", "negative_page", "missing_field"],
 )
-def test_invalid_or_closed_source_is_refused(
-    tmp_path: Path, mutation: str
-) -> None:
+def test_invalid_or_closed_source_is_refused(tmp_path: Path, mutation: str) -> None:
     records = source_records()
     if mutation == "closed":
         records[0]["dataset_subset_label"] = "CLOSED_SOURCE"
@@ -247,9 +245,7 @@ def test_zero_based_last_page_is_valid_and_out_of_range_fails(tmp_path: Path) ->
         DOCS[0]: {"sha256": "1" * 64, "bytes": 100, "page_count": 3},
         DOCS[1]: {"sha256": "2" * 64, "bytes": 200, "page_count": 4},
     }
-    document.build_artifacts(
-        records, meta, pdfs, source_sha256="3" * 64, metadata_sha256="4" * 64
-    )
+    document.build_artifacts(records, meta, pdfs, source_sha256="3" * 64, metadata_sha256="4" * 64)
     pdfs[DOCS[0]]["page_count"] = 2
     with pytest.raises(common.CorpusError, match="outside the real PDF"):
         document.build_artifacts(

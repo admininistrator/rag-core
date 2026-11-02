@@ -45,35 +45,70 @@ def extraction_revision(parser: ParserRegistry) -> str:
 
     module = Path(__file__).parents[1]
     data = Path("/usr/share/tesseract-ocr/5/tessdata")
-    engine = subprocess.run(["tesseract", "--version"], capture_output=True,
-                            check=True, timeout=5).stdout.decode().splitlines()[0]
+    engine = (
+        subprocess.run(["tesseract", "--version"], capture_output=True, check=True, timeout=5)
+        .stdout.decode()
+        .splitlines()[0]
+    )
     files = tuple(sorted((module / "adapters/parsers").glob("*.py")))
-    return digest({
-        "revision": "extraction-v1", "limits": parser.limits.model_dump(),
-        "ocr": parser.ocr.model_dump(mode="json"), "engine": engine,
-        "languages": ["vie", "eng"], "dpi": 216, "image_scale": 1, "psm": 3,
-        "traineddata": {name: hashlib.sha256((data / (name + ".traineddata")).read_bytes()).hexdigest()
-                        for name in ("vie", "eng", "osd")},
-        "code": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
-        "runtime": {name: version(name) for name in ("docling-parse", "docling-slim",
-            "pypdfium2", "openpyxl", "pypdf", "python-docx", "python-pptx")},
-    })
+    return digest(
+        {
+            "revision": "extraction-v1",
+            "limits": parser.limits.model_dump(),
+            "ocr": parser.ocr.model_dump(mode="json"),
+            "engine": engine,
+            "languages": ["vie", "eng"],
+            "dpi": 216,
+            "image_scale": 1,
+            "psm": 3,
+            "traineddata": {
+                name: hashlib.sha256((data / (name + ".traineddata")).read_bytes()).hexdigest()
+                for name in ("vie", "eng", "osd")
+            },
+            "code": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
+            "runtime": {
+                name: version(name)
+                for name in (
+                    "docling-parse",
+                    "docling-slim",
+                    "pypdfium2",
+                    "openpyxl",
+                    "pypdf",
+                    "python-docx",
+                    "python-pptx",
+                )
+            },
+        }
+    )
 
 
 async def run_job(job_id: UUID, config: WorkerConfig) -> str:
     engine = build_engine(database_url_from_env())
     client = AsyncQdrantClient(url=config.qdrant_url, timeout=5, trust_env=False)
     config.temp_root.mkdir(parents=True, exist_ok=True)
-    storage = S3StorageReader(load_storage_registry(config.storage_config,
-        production=os.environ.get("APP_ENV") == "production"), temp_dir=config.temp_root)
+    storage = S3StorageReader(
+        load_storage_registry(
+            config.storage_config, production=os.environ.get("APP_ENV") == "production"
+        ),
+        temp_dir=config.temp_root,
+    )
     parser = ParserRegistry(config.temp_root, ParserLimits(), ocr=OcrConfig(enabled=True))
     chunker = StructuralChunker(BgeM3Tokenizer(config.tokenizer_path))
     profile = IndexProfile(config.model_fingerprint)
     extraction = extraction_revision(parser)
-    pipeline = digest({"worker": "ingestion-v1", "extraction": extraction,
-        "chunker": "structure-v1", "tokenizer": chunker.tokenizer.fingerprint,
-        "chunk_code": digest(Path(__file__).parents[1].joinpath("domain/chunking.py").read_text()),
-        "profile": asdict(chunker.profile), "index": profile.fingerprint})
+    pipeline = digest(
+        {
+            "worker": "ingestion-v1",
+            "extraction": extraction,
+            "chunker": "structure-v1",
+            "tokenizer": chunker.tokenizer.fingerprint,
+            "chunk_code": digest(
+                Path(__file__).parents[1].joinpath("domain/chunking.py").read_text()
+            ),
+            "profile": asdict(chunker.profile),
+            "index": profile.fingerprint,
+        }
+    )
     sessions = PostgresSessionRepository(engine)
     vectors = QdrantVectorRepository(client, profile, sessions, PostgresGenerationAuthority(engine))
     try:
@@ -81,9 +116,16 @@ async def run_job(job_id: UUID, config: WorkerConfig) -> str:
             await vectors.ensure_collection()
             return await IngestionPipeline(
                 PostgresIngestionRepository(engine, lease_seconds=config.lease_seconds),
-                storage, parser, chunker, HttpModelInference(http, profile.model_fingerprint),
-                vectors, profile, extraction_fingerprint=extraction, pipeline_fingerprint=pipeline,
-                heartbeat_seconds=config.heartbeat_seconds, timeout_seconds=config.timeout_seconds,
+                storage,
+                parser,
+                chunker,
+                HttpModelInference(http, profile.model_fingerprint),
+                vectors,
+                profile,
+                extraction_fingerprint=extraction,
+                pipeline_fingerprint=pipeline,
+                heartbeat_seconds=config.heartbeat_seconds,
+                timeout_seconds=config.timeout_seconds,
             ).run(job_id)
     finally:
         await client.close()

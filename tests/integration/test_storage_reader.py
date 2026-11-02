@@ -66,7 +66,9 @@ def test_real_read_and_reader_iam(storage) -> None:
     reader, uploader, key, temp = storage
     payload = b"T11 immutable source\n"
     uploader.put_object(Bucket=BUCKET, Key=key, Body=payload)
-    original = hashlib.sha256(uploader.get_object(Bucket=BUCKET, Key=key)["Body"].read()).hexdigest()
+    original = hashlib.sha256(
+        uploader.get_object(Bucket=BUCKET, Key=key)["Body"].read()
+    ).hexdigest()
     source = SourceObject("test-store", BUCKET, key, sha256=original)
     with reader.read("test-app", source) as item:
         assert item.path.read_bytes() == payload
@@ -203,14 +205,19 @@ def test_live_http_redirect_never_reaches_target(tmp_path: Path) -> None:
             pass
 
     redirect = ThreadingHTTPServer(("127.0.0.1", 0), Redirect)
-    threads = [threading.Thread(target=server.serve_forever, daemon=True) for server in (target, redirect)]
+    threads = [
+        threading.Thread(target=server.serve_forever, daemon=True) for server in (target, redirect)
+    ]
     for thread in threads:
         thread.start()
     try:
         location = StorageLocation(
-            app_id="test-app", alias="test-store",
+            app_id="test-app",
+            alias="test-store",
             endpoint=f"http://127.0.0.1:{redirect.server_port}",
-            region="us-east-1", bucket=BUCKET, prefix="allowed/",
+            region="us-east-1",
+            bucket=BUCKET,
+            prefix="allowed/",
             access_key_file=SECRET_DIR / "minio_reader_user",
             secret_key_file=SECRET_DIR / "minio_reader_password",
             allow_loopback_http=True,

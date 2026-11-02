@@ -38,9 +38,7 @@ ALGORITHM = "balanced-present-type-level-v1"
 
 
 def json_bytes(value: Any) -> bytes:
-    return (json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode(
-        "utf-8"
-    )
+    return (json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode("utf-8")
 
 
 def digest(value: Any) -> str:
@@ -110,7 +108,9 @@ def source_records(path: Path) -> list[dict[str, Any]]:
                 or type(fact[1]) is not int
                 or fact[0] not in by_title
             ):
-                raise CorpusError("HotpotQA supporting fact has no valid title/integer sentence index")
+                raise CorpusError(
+                    "HotpotQA supporting fact has no valid title/integer sentence index"
+                )
     return records
 
 
@@ -121,10 +121,14 @@ def annotation_anomalies(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         for title, index in record["supporting_facts"]:
             count = len(context[title])
             if not 0 <= index < count:
-                result.append({
-                    "source_id": record["_id"], "title": title,
-                    "sent_id": index, "sentence_count": count,
-                })
+                result.append(
+                    {
+                        "source_id": record["_id"],
+                        "title": title,
+                        "sent_id": index,
+                        "sentence_count": count,
+                    }
+                )
     return result
 
 
@@ -139,9 +143,19 @@ def parquet_records(path: Path) -> list[dict[str, Any]]:
 
     try:
         parquet = pq.ParquetFile(path)
-        expected_columns = {"id", "question", "answer", "type", "level", "supporting_facts", "context"}
+        expected_columns = {
+            "id",
+            "question",
+            "answer",
+            "type",
+            "level",
+            "supporting_facts",
+            "context",
+        }
         if set(parquet.schema_arrow.names) != expected_columns:
-            raise CorpusError("Approved HF Parquet columns differ from the expected semantic fields")
+            raise CorpusError(
+                "Approved HF Parquet columns differ from the expected semantic fields"
+            )
         result = []
         for batch in parquet.iter_batches(batch_size=1024, use_threads=False):
             for row in batch.to_pylist():
@@ -150,17 +164,28 @@ def parquet_records(path: Path) -> list[dict[str, Any]]:
                     raise CorpusError("Approved HF nested facts/context must be structured objects")
                 result.append(
                     {
-                        "_id": row["id"], "question": row["question"], "answer": row["answer"],
-                        "type": row["type"], "level": row["level"],
-                        "supporting_facts": [list(pair) for pair in zip(facts["title"], facts["sent_id"], strict=True)],
-                        "context": [list(pair) for pair in zip(context["title"], context["sentences"], strict=True)],
+                        "_id": row["id"],
+                        "question": row["question"],
+                        "answer": row["answer"],
+                        "type": row["type"],
+                        "level": row["level"],
+                        "supporting_facts": [
+                            list(pair)
+                            for pair in zip(facts["title"], facts["sent_id"], strict=True)
+                        ],
+                        "context": [
+                            list(pair)
+                            for pair in zip(context["title"], context["sentences"], strict=True)
+                        ],
                     }
                 )
         return result
     except CorpusError:
         raise
     except (OSError, ValueError, TypeError, KeyError):
-        raise CorpusError("Approved HF Parquet could not be decoded with aligned semantic fields") from None
+        raise CorpusError(
+            "Approved HF Parquet could not be decoded with aligned semantic fields"
+        ) from None
 
 
 def validate_parquet(path: Path) -> None:
@@ -210,12 +235,18 @@ def sample_records(
 
 
 def build_artifacts(
-    records: list[dict[str, Any]], source_sha256: str, *, size: int = TARGET_QA, seed: int = SEED,
+    records: list[dict[str, Any]],
+    source_sha256: str,
+    *,
+    size: int = TARGET_QA,
+    seed: int = SEED,
     converted_json_sha256: str | None = None,
 ) -> tuple[dict[str, bytes], dict[str, Any]]:
     selected = sample_records(records, size=size, seed=seed)
     if annotation_anomalies(selected):
-        raise CorpusError("Selected HotpotQA supporting annotation has an out-of-range sentence; do not resample")
+        raise CorpusError(
+            "Selected HotpotQA supporting annotation has an out-of-range sentence; do not resample"
+        )
     contents: dict[str, bytes] = {}
     documents: dict[str, dict[str, Any]] = {}
     qa: list[dict[str, Any]] = []
@@ -341,9 +372,10 @@ def validate_default(domain_root: Path) -> dict[str, Any]:
     contents, report = build_artifacts(
         source_records(raw), sha256_file(parquet), converted_json_sha256=sha256_file(raw)
     )
-    if manifest["qa_count"] != report["qa_count"] or manifest["document_count"] != report[
-        "document_count"
-    ]:
+    if (
+        manifest["qa_count"] != report["qa_count"]
+        or manifest["document_count"] != report["document_count"]
+    ):
         raise CorpusError("Default manifest counts differ from actual artifacts")
     expected_paths = {"manifest.json", RAW_PATH, PARQUET_PATH, *contents}
     if set(_tree_files(domain_root)) != expected_paths:
@@ -390,7 +422,10 @@ def _publish(stage: Path, root: Path) -> None:
     proposed = stage / "default"
     current = safe_path(root, "default")
     aggregate = safe_path(root, "manifest.json", must_exist=True)
-    if _same_files(current, proposed) and aggregate.read_bytes() == (stage / "manifest.json").read_bytes():
+    if (
+        _same_files(current, proposed)
+        and aggregate.read_bytes() == (stage / "manifest.json").read_bytes()
+    ):
         return
     backup = stage / "previous-default"
     aggregate_backup = stage / "previous-aggregate.json"
@@ -429,7 +464,9 @@ def prepare_default(root: Path = CORPUS_ROOT) -> dict[str, Any]:
     try:
         descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
     except FileExistsError:
-        raise CorpusError("Default setup lock exists; inspect the active/stopped setup first") from None
+        raise CorpusError(
+            "Default setup lock exists; inspect the active/stopped setup first"
+        ) from None
     stage: Path | None = None
     succeeded = False
     try:
@@ -459,7 +496,9 @@ def prepare_default(root: Path = CORPUS_ROOT) -> dict[str, Any]:
             or cache_info.get("sha256") != source["expected_sha256"]
             or not _nonempty(cache_info.get("downloaded_at"))
         ):
-            raise CorpusError("Approved source cache receipt is invalid; published corpus is unchanged")
+            raise CorpusError(
+                "Approved source cache receipt is invalid; published corpus is unchanged"
+            )
         pin = prior["checksum"].get(PARQUET_PATH)
         if pin:
             shutil.copy2(safe_path(prior_root, PARQUET_PATH, must_exist=True), parquet)
@@ -473,15 +512,22 @@ def prepare_default(root: Path = CORPUS_ROOT) -> dict[str, Any]:
             attempts=2,
             max_bytes=128 * 1024 * 1024,
         )
-        downloaded_at = receipt.downloaded_at or prior["downloaded_at"] or (
-            cache_info["downloaded_at"] if cache_info else None
+        downloaded_at = (
+            receipt.downloaded_at
+            or prior["downloaded_at"]
+            or (cache_info["downloaded_at"] if cache_info else None)
         )
         if receipt.downloaded_at:
             atomic_write(cache_parquet, [parquet.read_bytes()])
-            write_json(cache_info_path, {
-                "url": source["url"], "sha256": receipt.sha256, "bytes": receipt.byte_count,
-                "downloaded_at": receipt.downloaded_at,
-            })
+            write_json(
+                cache_info_path,
+                {
+                    "url": source["url"],
+                    "sha256": receipt.sha256,
+                    "bytes": receipt.byte_count,
+                    "downloaded_at": receipt.downloaded_at,
+                },
+            )
         # The published upstream byte pin verifies transport before this semantic
         # check. Retain exact verified Parquet bytes in the failed stage for diagnosis.
         validate_parquet(parquet)
@@ -526,7 +572,9 @@ def prepare_default(root: Path = CORPUS_ROOT) -> dict[str, Any]:
         }
         aggregate["notes"] = AGGREGATE_NOTES
         write_json(stage / "manifest.json", aggregate)
-        shutil.copy2(root / "source-license-inventory.json", stage / "source-license-inventory.json")
+        shutil.copy2(
+            root / "source-license-inventory.json", stage / "source-license-inventory.json"
+        )
         for domain in ("document", "bilingual"):
             (stage / domain).mkdir()
             shutil.copy2(root / domain / "manifest.json", stage / domain / "manifest.json")
@@ -541,8 +589,8 @@ def prepare_default(root: Path = CORPUS_ROOT) -> dict[str, Any]:
         # Failed stages are ignored forensic checkpoints, including any rollback backup.
         if succeeded and stage is not None:
             resolved = stage.resolve(strict=True)
-            if not resolved.is_relative_to(cache.resolve(strict=True)) or not resolved.name.startswith(
-                "default-stage-"
-            ):
+            if not resolved.is_relative_to(
+                cache.resolve(strict=True)
+            ) or not resolved.name.startswith("default-stage-"):
                 raise CorpusError("Refuse to clean a staging path outside the corpus cache")
             shutil.rmtree(resolved)

@@ -31,9 +31,12 @@ def verify_cache(cache: Path, pins: Path = DEFAULT_PINS) -> dict[str, Any]:
             raise ValueError("model_cache_invalid_directory")
         for artifact in model["files"]:
             path = folder / artifact["name"]
-            if (path.is_symlink() or not path.is_file()
+            if (
+                path.is_symlink()
+                or not path.is_file()
                 or path.stat().st_size != artifact["bytes"]
-                or digest_file(path, artifact["algorithm"]) != artifact["digest"]):
+                or digest_file(path, artifact["algorithm"]) != artifact["digest"]
+            ):
                 raise ValueError("model_artifact_mismatch")
         if {p.name for p in folder.iterdir()} != {f["name"] for f in model["files"]}:
             raise ValueError("model_cache_unexpected_files")

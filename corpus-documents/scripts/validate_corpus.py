@@ -87,7 +87,11 @@ def validate_data(root: Path, selected: tuple[str, ...] = DOMAINS) -> dict[str, 
     from prepare_document import validate_document
 
     validate_metadata(root)
-    validators = {"default": validate_default, "document": validate_document, "bilingual": validate_bilingual}
+    validators = {
+        "default": validate_default,
+        "document": validate_document,
+        "bilingual": validate_bilingual,
+    }
     reports = {}
     for domain in selected:
         if read_json(root / domain / "manifest.json")["status"] != "ready":
@@ -99,7 +103,9 @@ def validate_data(root: Path, selected: tuple[str, ...] = DOMAINS) -> dict[str, 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate corpus metadata or prepared data.")
     selection = parser.add_mutually_exclusive_group(required=True)
-    selection.add_argument("--metadata-only", action="store_true", help="Check metadata only; no data acceptance.")
+    selection.add_argument(
+        "--metadata-only", action="store_true", help="Check metadata only; no data acceptance."
+    )
     selection.add_argument("--all", action="store_true", help="Validate every domain.")
     selection.add_argument("--domain", choices=DOMAINS)
     parser.add_argument("--output-root", help="Isolated output: corpus-documents/.repro/<name>.")
@@ -108,7 +114,9 @@ def main(argv: list[str] | None = None) -> int:
         root = output_root(args.output_root)
         if args.metadata_only:
             validate_metadata(root)
-            print("CORPUS METADATA: PASS - 3 domain manifests + inventory; corpus data NOT validated.")
+            print(
+                "CORPUS METADATA: PASS - 3 domain manifests + inventory; corpus data NOT validated."
+            )
         else:
             reports = validate_data(root, DOMAINS if args.all else (args.domain,))
             print_summary(reports)

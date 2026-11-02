@@ -36,5 +36,7 @@ def upgrade() -> None:
             CONSTRAINT uq_registration_job UNIQUE (job_id)
         )
     """)
+
+
 def downgrade() -> None:
     op.execute("DROP TABLE upload_registrations")

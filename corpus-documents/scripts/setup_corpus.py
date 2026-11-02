@@ -1,4 +1,5 @@
 """Reproduce and validate the pinned evaluation corpus without model dependencies."""
+
 from __future__ import annotations
 
 import argparse
@@ -13,7 +14,10 @@ def main(argv: list[str] | None = None) -> int:
     selection = parser.add_mutually_exclusive_group(required=True)
     selection.add_argument("--all", action="store_true", help="Prepare and validate all domains.")
     selection.add_argument("--domain", choices=DOMAINS, help="Prepare one corpus domain.")
-    parser.add_argument("--output-root", help="Isolated output: corpus-documents/.repro/<name> (cwd-relative or absolute).")
+    parser.add_argument(
+        "--output-root",
+        help="Isolated output: corpus-documents/.repro/<name> (cwd-relative or absolute).",
+    )
     args = parser.parse_args(argv)
     try:
         from prepare_bilingual import prepare_bilingual
@@ -24,7 +28,11 @@ def main(argv: list[str] | None = None) -> int:
         root = output_root(args.output_root)
         initialize_root(root)
         selected = DOMAINS if args.all else (args.domain,)
-        prepare = {"default": prepare_default, "document": prepare_document, "bilingual": prepare_bilingual}
+        prepare = {
+            "default": prepare_default,
+            "document": prepare_document,
+            "bilingual": prepare_bilingual,
+        }
         with setup_lock(root):
             for domain in selected:
                 print(f"Preparing {domain}...", flush=True)

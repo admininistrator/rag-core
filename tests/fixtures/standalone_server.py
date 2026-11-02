@@ -62,7 +62,11 @@ async def run_server() -> None:
     )
 
     # 2. Configs & endpoints
-    inference_url = os.environ.get("INFERENCE_URL", "http://127.0.0.1:58080")
+    inference_url = (
+        os.environ.get("INFERENCE_URL")
+        or os.environ.get("RAG_TEST_INFERENCE_URL")
+        or "http://127.0.0.1:58080"
+    )
     qdrant_url = os.environ.get("QDRANT_URL", "http://127.0.0.1:56333")
     redis_url = os.environ.get("REDIS_URL", "redis://127.0.0.1:16379/15")
     s3_endpoint = os.environ.get("S3_ENDPOINT", "http://127.0.0.1:9000")

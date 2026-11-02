@@ -361,7 +361,7 @@ DOCX page break/bảng/header/footer và TXT/MD/HTML EN/VI, chạy parser thật
 physical page one-based + native textline/bbox; DOCX paragraph/table + XML part/path,
 không có page giả. HTML không render/fetch/execute. File rỗng/hỏng/mã hóa có safe
 error; PDF có trang thiếu text trả `partial`/`needs_ocr_pages`, toàn bộ thiếu text
-trả `ocr_required` khi OCR chưa bật. T15 thêm OCR bên dưới; T16 chunking đã kiểm, index orchestration vẫn DESIGNED.
+trả `ocr_required` khi OCR chưa bật. T15 thêm OCR bên dưới; T16 chunking và T19 index orchestration đã VERIFIED.
 MIME/limits/offset conventions/format matrix: [RUNBOOK R09](RUNBOOK.md#r09).
 Evidence: [H-T13-A01](docs/handoffs.md#h-t13-a01).
 

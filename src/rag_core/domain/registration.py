@@ -7,8 +7,15 @@ from uuid import UUID
 from rag_core.domain.metadata import Session
 
 JobState = Literal[
-    "queued", "fetching", "parsing", "chunking", "embedding", "indexing",
-    "ready", "failed", "cancelled",
+    "queued",
+    "fetching",
+    "parsing",
+    "chunking",
+    "embedding",
+    "indexing",
+    "ready",
+    "failed",
+    "cancelled",
 ]
 
 

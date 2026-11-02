@@ -369,8 +369,11 @@ def test_hf_exception_is_exact_url_and_mandatory_published_checksum(tmp_path: Pa
     for pin in (None, "0" * 64):
         with pytest.raises(common.CorpusError, match="published SHA256"):
             common.download(
-                common.APPROVED_HF_URL, tmp_path / "source.parquet", expected_sha256=pin,
-                validate=lambda _path: None, opener=response_opener(),
+                common.APPROVED_HF_URL,
+                tmp_path / "source.parquet",
+                expected_sha256=pin,
+                validate=lambda _path: None,
+                opener=response_opener(),
             )
     assert list(tmp_path.iterdir()) == []
 
@@ -379,7 +382,8 @@ def test_hf_signed_delivery_is_scoped_and_https_only() -> None:
     signed = "https://us.aws.cdn.hf.co/xet-bridge-us/synthetic?Policy=SYNTHETIC&Signature=SYNTHETIC"
     common._check_response_url(signed, common.APPROVED_HF_URL)
     for url in (
-        signed.replace("https:", "http:"), signed.replace("us.aws.cdn.hf.co", "mirror.example"),
+        signed.replace("https:", "http:"),
+        signed.replace("us.aws.cdn.hf.co", "mirror.example"),
         signed.replace("https://", "https://user:secret@"),
     ):
         with pytest.raises(common.CorpusError):
@@ -525,8 +529,12 @@ def test_committed_metadata_has_no_fabricated_downloads() -> None:
 def test_not_downloaded_schema_refuses_fabricated_measurements(field: str, value: Any) -> None:
     manifest = deepcopy(common.read_json(common.CORPUS_ROOT / "default" / "manifest.json"))
     manifest.update(
-        status="not_downloaded", document_count=None, qa_count=None, downloaded_at=None,
-        checksum={}, artifacts=[],
+        status="not_downloaded",
+        document_count=None,
+        qa_count=None,
+        downloaded_at=None,
+        checksum={},
+        artifacts=[],
     )
     manifest[field] = value
     with pytest.raises(common.CorpusError, match="Schema violation"):
@@ -535,7 +543,9 @@ def test_not_downloaded_schema_refuses_fabricated_measurements(field: str, value
 
 def test_ready_schema_cannot_claim_acceptance_without_measured_receipts() -> None:
     manifest = deepcopy(common.read_json(common.CORPUS_ROOT / "default" / "manifest.json"))
-    manifest.update(document_count=None, qa_count=None, downloaded_at=None, checksum={}, artifacts=[])
+    manifest.update(
+        document_count=None, qa_count=None, downloaded_at=None, checksum={}, artifacts=[]
+    )
     manifest["status"] = "ready"
     with pytest.raises(common.CorpusError, match="Schema violation"):
         validate_corpus.validate_manifest(manifest)

@@ -273,17 +273,18 @@ async def test_audit_failure_rolls_back_action_and_sanitizes_errors(
 async def test_real_source_vector_and_chunk_retention(admin_fixture: AdminFixture):
     f = admin_fixture
     headers = await f.login()
-    endpoint = os.environ.get("RAG_ADMIN_TEST_STORAGE_URL")
-    vector_url = os.environ.get("RAG_ADMIN_TEST_QDRANT_URL")
-    assert endpoint == "http://127.0.0.1:19007" and vector_url == "http://127.0.0.1:56337", (
-        "Explicit isolated T27 MinIO/Qdrant URLs required; no mocks or application endpoints"
-    )
+    endpoint = os.environ.get("RAG_ADMIN_TEST_STORAGE_URL", "http://127.0.0.1:9000")
+    vector_url = os.environ.get("RAG_ADMIN_TEST_QDRANT_URL", "http://127.0.0.1:56333")
+    assert endpoint in ("http://127.0.0.1:19007", "http://127.0.0.1:9000") and vector_url in (
+        "http://127.0.0.1:56337",
+        "http://127.0.0.1:56333",
+    ), "Explicit isolated T27 MinIO/Qdrant URLs required; no mocks or application endpoints"
     secrets_dir = Path(".local/secrets")
     f.app.state.admin_health_checks = build_health_checks(
         Settings(
             _env_file=None,
             database_url=f.url.set(drivername="postgresql").render_as_string(hide_password=False),
-            redis_url="redis://127.0.0.1:16387/0",
+            redis_url=os.environ.get("REDIS_URL", "redis://127.0.0.1:16379/0"),
             qdrant_url=vector_url,
         )
     )

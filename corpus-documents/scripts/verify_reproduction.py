@@ -1,4 +1,5 @@
 """Record/check isolated corpus equality and rerun stability without exposing QA text."""
+
 from __future__ import annotations
 
 import argparse
@@ -22,7 +23,9 @@ from corpus_root import output_root
 
 
 def digest(value: Any) -> str:
-    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, ensure_ascii=False).encode()
+    ).hexdigest()
 
 
 def snapshot(root: Path) -> dict[str, Any]:
@@ -63,7 +66,14 @@ def snapshot(root: Path) -> dict[str, Any]:
         safe_path(root, name)
         if path.is_file():
             cache[name] = [sha256_file(path), path.stat().st_mtime_ns, path.stat().st_size]
-    return {"published": published, "content": content, "ids": ids, "counts": counts, "downloaded_at": timestamps, "cache": cache}
+    return {
+        "published": published,
+        "content": content,
+        "ids": ids,
+        "counts": counts,
+        "downloaded_at": timestamps,
+        "cache": cache,
+    }
 
 
 def compare_content(reference: dict[str, Any], candidate: dict[str, Any]) -> None:
@@ -89,8 +99,12 @@ def main(argv: list[str] | None = None) -> int:
         elif read_json(record) != candidate:
             raise CorpusError("Rerun changed hashes, mtimes, IDs, counts or download timestamps")
         print(f"REPRODUCTION {args.mode}: PASS")
-        print(f"published_files={len(candidate['published'])} cache_files={len(candidate['cache'])}")
-        print(f"content_sha256={digest(candidate['content'])} IDs_sha256={digest(candidate['ids'])}")
+        print(
+            f"published_files={len(candidate['published'])} cache_files={len(candidate['cache'])}"
+        )
+        print(
+            f"content_sha256={digest(candidate['content'])} IDs_sha256={digest(candidate['ids'])}"
+        )
         print(f"counts={candidate['counts']}")
         print(f"downloaded_at={candidate['downloaded_at']}")
         return 0

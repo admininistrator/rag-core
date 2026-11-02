@@ -87,8 +87,10 @@ def load_storage_registry(path: Path, *, production: bool = False) -> StorageReg
         if path.stat().st_size > 262144:
             raise ValueError("oversized registry")
         registry = StorageRegistry.model_validate_json(path.read_bytes())
-        if production and any(location.allow_loopback_http or location.allow_compose_http
-                              for location in registry.locations):
+        if production and any(
+            location.allow_loopback_http or location.allow_compose_http
+            for location in registry.locations
+        ):
             raise ValueError("development transport in production")
         return registry
     except (OSError, ValueError, ValidationError):
@@ -137,6 +139,7 @@ class S3StorageReader:
                         raise StorageError("storage_forbidden")
 
                 client.meta.events.register("before-send.s3", enforce_endpoint)
+
                 def reject_redirect(response: Any = None, **_kwargs: Any) -> None:
                     if response is not None and 300 <= response[0].status_code < 400:
                         raise StorageError("storage_forbidden")
@@ -157,7 +160,8 @@ class S3StorageReader:
         if source.version_id is None and source.sha256 is None:
             raise StorageError("source_unpinned")
         if source.sha256 is not None and (
-            len(source.sha256) != 64 or any(c not in "0123456789abcdefABCDEF" for c in source.sha256)
+            len(source.sha256) != 64
+            or any(c not in "0123456789abcdefABCDEF" for c in source.sha256)
         ):
             raise StorageError("invalid_source")
 

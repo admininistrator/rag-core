@@ -29,12 +29,19 @@ class BlockingBackend:
         assert self.release.wait(5)
         if request.texts[0] == "fail":
             raise RuntimeError("PRIVATE upstream text")
-        return InferenceResult(fingerprint=self.fingerprint, scores=tuple(1.0 for _ in request.texts))
+        return InferenceResult(
+            fingerprint=self.fingerprint, scores=tuple(1.0 for _ in request.texts)
+        )
 
 
 def request(text="index", *, priority="index", count=1, timeout=2):
-    return InferenceRequest(operation="rerank", query="query", priority=priority,
-                            texts=[text]*count, timeout_seconds=float(timeout))
+    return InferenceRequest(
+        operation="rerank",
+        query="query",
+        priority=priority,
+        texts=[text] * count,
+        timeout_seconds=float(timeout),
+    )
 
 
 async def admitted(scheduler, request_id):
@@ -64,6 +71,7 @@ def test_query_preempts_index_between_batches_and_single_executor():
             assert len(backend.threads) == 1
         finally:
             await scheduler.close()
+
     asyncio.run(run())
 
 
@@ -94,6 +102,7 @@ def test_reserved_query_capacity_bounded_admission_and_queued_cancel():
             assert backend.calls == [["index"], ["query"]]
         finally:
             await scheduler.close()
+
     asyncio.run(run())
 
 
@@ -119,6 +128,7 @@ def test_running_timeout_holds_slot_failure_is_sanitized_and_recovers():
             assert len((await scheduler.infer(uuid4(), request("recover"))).scores) == 1
         finally:
             await scheduler.close()
+
     asyncio.run(run())
 
 
@@ -136,20 +146,24 @@ def test_duplicate_id_and_shutdown_reject_new_work():
         await scheduler.close()
         with pytest.raises(InferenceError, match="model_unavailable"):
             await scheduler.infer(uuid4(), request())
+
     asyncio.run(run())
 
 
-@pytest.mark.parametrize("payload", [
-    {"operation":"embed", "texts":[]},
-    {"operation":"embed", "texts":["x"]*33},
-    {"operation":"embed", "texts":[" "]},
-    {"operation":"embed", "texts":["x"*32769]},
-    {"operation":"embed", "texts":["x"], "query":"q"},
-    {"operation":"rerank", "texts":["x"]},
-    {"operation":"rerank", "texts":["x"]*21, "query":"q"},
-    {"operation":"embed", "texts":["x"], "timeout_seconds":121.0},
-    {"operation":"embed", "texts":["x"], "user_id":"owner"},
-])
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"operation": "embed", "texts": []},
+        {"operation": "embed", "texts": ["x"] * 33},
+        {"operation": "embed", "texts": [" "]},
+        {"operation": "embed", "texts": ["x" * 32769]},
+        {"operation": "embed", "texts": ["x"], "query": "q"},
+        {"operation": "rerank", "texts": ["x"]},
+        {"operation": "rerank", "texts": ["x"] * 21, "query": "q"},
+        {"operation": "embed", "texts": ["x"], "timeout_seconds": 121.0},
+        {"operation": "embed", "texts": ["x"], "user_id": "owner"},
+    ],
+)
 def test_request_bounds_before_admission(payload):
     with pytest.raises(ValidationError):
         InferenceRequest.model_validate(payload)

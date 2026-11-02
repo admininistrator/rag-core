@@ -59,12 +59,18 @@ class Fixture:
     async def counts(self) -> tuple[int, int, int, int]:
         async with self.engine.connect() as conn:
             counts = []
-            for table in ("upload_registrations", "session_documents",
-                          "ingestion_jobs", "outbox_events"):
-                count = (await conn.execute(
-                    text(f"SELECT count(*) FROM {table} WHERE app_id=:app"),
-                    {"app": self.principal.app_id},
-                )).scalar_one()
+            for table in (
+                "upload_registrations",
+                "session_documents",
+                "ingestion_jobs",
+                "outbox_events",
+            ):
+                count = (
+                    await conn.execute(
+                        text(f"SELECT count(*) FROM {table} WHERE app_id=:app"),
+                        {"app": self.principal.app_id},
+                    )
+                ).scalar_one()
                 counts.append(int(count))
             return tuple(counts)  # type: ignore[return-value]
 
@@ -76,38 +82,69 @@ async def fixture(pg_url: URL, tmp_path: Path) -> AsyncIterator[Fixture]:
     baseline_queue = broker.llen("rag_core_ingestion")
     principal = Principal("t12-" + uuid4().hex, "owner")
     engine = build_engine(pg_url)
-    reader = S3StorageReader(StorageRegistry(locations=(StorageLocation(
-        app_id=principal.app_id, alias="test-store", endpoint="http://127.0.0.1:9000",
-        region="us-east-1", bucket=BUCKET, prefix="allowed/",
-        access_key_file=SECRETS / "minio_reader_user",
-        secret_key_file=SECRETS / "minio_reader_password",
-        allow_loopback_http=True, max_bytes=1024,
-    ),)), temp_dir=tmp_path)
+    reader = S3StorageReader(
+        StorageRegistry(
+            locations=(
+                StorageLocation(
+                    app_id=principal.app_id,
+                    alias="test-store",
+                    endpoint="http://127.0.0.1:9000",
+                    region="us-east-1",
+                    bucket=BUCKET,
+                    prefix="allowed/",
+                    access_key_file=SECRETS / "minio_reader_user",
+                    secret_key_file=SECRETS / "minio_reader_password",
+                    allow_loopback_http=True,
+                    max_bytes=1024,
+                ),
+            )
+        ),
+        temp_dir=tmp_path,
+    )
     uploader = boto3.client(
-        "s3", endpoint_url="http://127.0.0.1:9000", region_name="us-east-1",
+        "s3",
+        endpoint_url="http://127.0.0.1:9000",
+        region_name="us-east-1",
         aws_access_key_id=secret("minio_uploader_user"),
         aws_secret_access_key=secret("minio_uploader_password"),
     )
     key = "allowed/t12-" + uuid4().hex + ".txt"
     payload = b"T12 verified immutable source\n"
     version = uploader.put_object(Bucket=BUCKET, Key=key, Body=payload)["VersionId"]
-    body = DocumentRegisterRequest.model_validate({
-        "external_upload_id": "app-upload-1",
-        "source": {"storage_alias": "test-store", "bucket": BUCKET, "key": key,
-                   "version_id": version, "sha256": hashlib.sha256(payload).hexdigest()},
-        "filename": "source.txt", "content_type": "text/plain",
-    })
+    body = DocumentRegisterRequest.model_validate(
+        {
+            "external_upload_id": "app-upload-1",
+            "source": {
+                "storage_alias": "test-store",
+                "bucket": BUCKET,
+                "key": key,
+                "version_id": version,
+                "sha256": hashlib.sha256(payload).hexdigest(),
+            },
+            "filename": "source.txt",
+            "content_type": "text/plain",
+        }
+    )
     repo = PostgresRegistrationRepository(engine, reader)
     session = await repo.sessions.create_session(principal, "chat-1")
     try:
-        yield Fixture(engine, repo, principal, session.session_id, body, broker,
-                      baseline_queue, uploader, key)
+        yield Fixture(
+            engine, repo, principal, session.session_id, body, broker, baseline_queue, uploader, key
+        )
     finally:
         async with engine.begin() as conn:
-            for table in ("outbox_events", "session_documents", "upload_registrations",
-                          "ingestion_jobs", "document_versions", "documents", "sessions"):
-                await conn.execute(text(f"DELETE FROM {table} WHERE app_id=:app"),
-                                   {"app": principal.app_id})
+            for table in (
+                "outbox_events",
+                "session_documents",
+                "upload_registrations",
+                "ingestion_jobs",
+                "document_versions",
+                "documents",
+                "sessions",
+            ):
+                await conn.execute(
+                    text(f"DELETE FROM {table} WHERE app_id=:app"), {"app": principal.app_id}
+                )
         versions = uploader.list_object_versions(Bucket=BUCKET, Prefix=key)
         for entry in (*versions.get("Versions", []), *versions.get("DeleteMarkers", [])):
             if entry["Key"] == key:
@@ -117,7 +154,8 @@ async def fixture(pg_url: URL, tmp_path: Path) -> AsyncIterator[Fixture]:
 
 
 async def test_idempotency_concurrency_owner_and_broker_recovery(
-    fixture: Fixture, pg_url: URL,
+    fixture: Fixture,
+    pg_url: URL,
 ) -> None:
     f = fixture
     first = await f.repo.register(f.principal, f.session_id, "same-key", f.body)
@@ -128,12 +166,14 @@ async def test_idempotency_concurrency_owner_and_broker_recovery(
         await f.repo.register(f.principal, f.session_id, "same-key", different)
     with pytest.raises(ScopeError, match="idempotency_conflict"):
         await f.repo.register(f.principal, f.session_id, "different-key", f.body)
-    attempts = await asyncio.gather(*(
-        f.repo.register(f.principal, f.session_id, "same-key", f.body) for _ in range(6)
-    ))
+    attempts = await asyncio.gather(
+        *(f.repo.register(f.principal, f.session_id, "same-key", f.body) for _ in range(6))
+    )
     assert all(item == first for item in attempts)
     assert await f.counts() == (1, 1, 1, 1)
-    assert (await f.repo.list_documents(f.principal, f.session_id))[1][0].document_id == first.document_id
+    assert (await f.repo.list_documents(f.principal, f.session_id))[1][
+        0
+    ].document_id == first.document_id
     assert (await f.repo.get_job(f.principal, first.job.job_id)).state == "queued"
     for stranger in (Principal(f.principal.app_id, "other"), Principal("other", "owner")):
         for operation in (
@@ -152,8 +192,12 @@ async def test_idempotency_concurrency_owner_and_broker_recovery(
         await unavailable.dispatch_one()
     assert await f.counts() == (1, 1, 1, 1)
     async with f.engine.connect() as conn:
-        assert (await conn.execute(text("SELECT dispatched_at FROM outbox_events WHERE app_id=:app"),
-                                   {"app": f.principal.app_id})).scalar_one() is None
+        assert (
+            await conn.execute(
+                text("SELECT dispatched_at FROM outbox_events WHERE app_id=:app"),
+                {"app": f.principal.app_id},
+            )
+        ).scalar_one() is None
     recovered = OutboxDispatcher(f.engine, CeleryJobPublisher(BROKER))
     assert await recovered.dispatch_one()
     assert not await recovered.dispatch_one()
@@ -164,7 +208,11 @@ async def test_idempotency_concurrency_owner_and_broker_recovery(
     env["REDIS_URL"] = BROKER
     command = subprocess.run(
         [sys.executable, "-m", "rag_core.adapters.broker.dispatcher", "--once"],
-        env=env, capture_output=True, text=True, timeout=15, check=False,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=15,
+        check=False,
     )
     assert command.returncode == 0 and command.stdout == "" and command.stderr == ""
     print("PASS real PG/MinIO/Redis: idempotency, concurrent duplicate, owner, broker recovery")
@@ -183,8 +231,12 @@ async def test_crash_redelivery_delete_and_retry_are_safe(fixture: Fixture) -> N
     with pytest.raises(RuntimeError, match="simulated process crash"):
         await OutboxDispatcher(f.engine, CrashAfterPublish()).dispatch_one()
     async with f.engine.connect() as conn:
-        assert (await conn.execute(text("SELECT dispatched_at FROM outbox_events WHERE app_id=:app"),
-                                   {"app": f.principal.app_id})).scalar_one() is None
+        assert (
+            await conn.execute(
+                text("SELECT dispatched_at FROM outbox_events WHERE app_id=:app"),
+                {"app": f.principal.app_id},
+            )
+        ).scalar_one() is None
     assert f.broker.llen("rag_core_ingestion") == f.baseline_queue + 1
     assert await OutboxDispatcher(f.engine, real).dispatch_one()
     assert f.broker.llen("rag_core_ingestion") == f.baseline_queue + 2
@@ -192,10 +244,13 @@ async def test_crash_redelivery_delete_and_retry_are_safe(fixture: Fixture) -> N
     assert not await f.repo.claim_job(result.job.job_id, "worker-2")
     assert await f.counts() == (1, 1, 1, 1)
     async with f.engine.begin() as conn:
-        await conn.execute(text("""
+        await conn.execute(
+            text("""
             UPDATE ingestion_jobs SET state='failed',error_code='source_changed',
                 lease_owner=NULL,lease_until=NULL WHERE job_id=:job
-        """), {"job": result.job.job_id})
+        """),
+            {"job": result.job.job_id},
+        )
     retried = await f.repo.retry_job(f.principal, result.job.job_id)
     assert retried.state == "queued" and retried.attempts == 1
     assert (await f.repo.retry_job(f.principal, result.job.job_id)).state == "queued"
@@ -214,7 +269,9 @@ async def test_crash_redelivery_delete_and_retry_are_safe(fixture: Fixture) -> N
 
 async def test_source_validation_detach_and_new_registration(fixture: Fixture) -> None:
     f = fixture
-    bad = f.body.model_copy(update={"source": f.body.source.model_copy(update={"key": "outside/x"})})
+    bad = f.body.model_copy(
+        update={"source": f.body.source.model_copy(update={"key": "outside/x"})}
+    )
     with pytest.raises(StorageError, match="storage_forbidden"):
         await f.repo.register(f.principal, f.session_id, "bad-key", bad)
     assert await f.counts() == (0, 0, 0, 0)
@@ -237,4 +294,6 @@ async def test_source_validation_detach_and_new_registration(fixture: Fixture) -
     assert len((await f.repo.list_documents(f.principal, f.session_id))[1]) == 1
     assert len((await f.repo.list_documents(f.principal, next_session.session_id))[1]) == 1
     assert await f.counts() == (3, 3, 3, 3)
-    print("PASS real MinIO/PG: invalid prefix rollback; detached replay; fresh session upload binding")
+    print(
+        "PASS real MinIO/PG: invalid prefix rollback; detached replay; fresh session upload binding"
+    )

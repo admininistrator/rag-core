@@ -33,15 +33,24 @@ class IngestionLease:
 
 
 def digest(value: object) -> str:
-    return hashlib.sha256(json.dumps(
-        value, sort_keys=True, ensure_ascii=False, separators=(",", ":")
-    ).encode()).hexdigest()
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
+    ).hexdigest()
 
 
 def chunk_manifest(chunks: tuple[Chunk, ...]) -> str:
     adapter = TypeAdapter(Chunk)
-    return digest([(str(c.id), c.ordinal, c.checksum,
-                    digest(adapter.dump_python(c, mode="json", exclude={"text"}))) for c in chunks])
+    return digest(
+        [
+            (
+                str(c.id),
+                c.ordinal,
+                c.checksum,
+                digest(adapter.dump_python(c, mode="json", exclude={"text"})),
+            )
+            for c in chunks
+        ]
+    )
 
 
 def vector_unit_id(chunk: Chunk) -> str:
@@ -49,7 +58,9 @@ def vector_unit_id(chunk: Chunk) -> str:
     content = tuple(s for s in chunk.segments if s.role == "content") or chunk.segments
     first = content[0]
     loc = first.locator.model_dump(mode="json")
-    boundary = {k: loc[k] for k in ("kind", "page", "sheet", "slide", "shape", "image_id")
-                if k in loc}
-    return digest([boundary, chunk.heading_path, first.block_index, first.source_part,
-                   first.source_path])
+    boundary = {
+        k: loc[k] for k in ("kind", "page", "sheet", "slide", "shape", "image_id") if k in loc
+    }
+    return digest(
+        [boundary, chunk.heading_path, first.block_index, first.source_part, first.source_path]
+    )

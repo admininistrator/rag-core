@@ -41,9 +41,9 @@ SOURCES = (
 @pytest_asyncio.fixture
 async def real_models():
     url = os.environ.get("RAG_TEST_INFERENCE_URL")
-    if url != "http://127.0.0.1:58080":
+    if url not in ("http://127.0.0.1:58080", "http://127.0.0.1:58087"):
         pytest.fail(
-            "RAG_TEST_INFERENCE_URL=http://127.0.0.1:58080 required; no fake model fallback"
+            "RAG_TEST_INFERENCE_URL=http://127.0.0.1:58080 or 58087 required; no fake model fallback"
         )
     async with httpx.AsyncClient(base_url=url, trust_env=False, timeout=10) as client:
         response = await client.get("/health/ready")

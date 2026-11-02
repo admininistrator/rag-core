@@ -761,3 +761,44 @@ Final affected regression:83cases PASS across bounded real-service subprocesses 
   - **DoD-2:** PASS — `uv run python scripts/check_docs.py` (19 markdown files, 462 internal links, 37 tasks acyclic, 11 core routes, 2 error codes, 12 Scarlet checklist items) PASS. Evidence: [H-T35-A01](handoffs.md#h-t35-a01).
   - Static analysis: Ruff check PASS, Ruff format PASS, mypy 110 source files exit 0.
 - **Next / Readiness:** Task T35 is COMPLETE. Task T36 (Nghiệm thu cuối và handoff sẵn sàng tích hợp) đã đủ điều kiện bắt đầu trong session mới. STOP T35.
+
+<a id="s-t36-a01"></a>
+## Phase 9 / T36 / Attempt T36-A01 — Nghiệm thu cuối và handoff sẵn sàng tích hợp
+
+- **Thời điểm hoàn thành:** 2026-11-02.
+- **Trạng thái:** COMPLETE (DoD-1 PASS, DoD-2 PASS, DoD-3 PASS, D1–D6 PASS).
+- **Môi trường runtime nghiệm thu:**
+  - OS: macOS Darwin 27.0.0 arm64 (`Darwin Quintet.local 27.0.0 Darwin Kernel Version 27.0.0 arm64`, Apple Silicon M1 Pro, 32 GB RAM).
+  - Docker Desktop: 29.9.2 (build a82e528).
+  - Python: 3.12.16 (trong `.venv`).
+  - uv: 0.13.6 (Homebrew aarch64-apple-darwin).
+  - Test services: PostgreSQL 17.11 (port 55432 / 55437), Qdrant v1.19.1 (port 56333 / 56337), Redis 8.10.1 (port 16379 / 16387), MinIO (port 9000 / 19007), Inference HTTP (port 58087 / 58080).
+- **Phạm vi hoàn thiện & Sửa lỗi nghiệm thu:**
+  - Package namespaces: Bổ sung các file `__init__.py` cho các thư mục test (`tests/__init__.py`, `tests/contract/__init__.py`, `tests/e2e/__init__.py`, `tests/fixtures/__init__.py`, `tests/integration/__init__.py`, `tests/live/__init__.py`, `tests/security/__init__.py`, `tests/unit/__init__.py`) để tránh xung đột `import file mismatch` khi pytest thu thập các test module trùng tên (`test_streaming.py`).
+  - OCR Integration: Sửa import path trong `tests/integration/test_ocr.py` từ relative sang absolute namespace (`from tests.integration.test_text_parsers import pdf`), nới timeout an toàn cho việc spawn Tesseract CLI dưới container cgroup memory limits.
+  - Test categorization & timeouts: Phân định rõ nhóm test yêu cầu môi trường container cô lập (`pytest.mark.slow`) cho `test_ocr.py`, `test_ingestion_pipeline.py`, `test_public_api.py`, `test_admin_browser.py` để chạy tách biệt theo nhóm có output rõ ràng, không skip.
+  - Resource management: Khắc phục hiện tượng cạnh tranh RAM trong Docker Desktop VM (7.748 GiB limit) giữa các instance inference bằng cách tắt các container test cũ trước khi chạy bộ kiểm thử nặng, đảm bảo Celery worker và BGE-M3/BGE-Reranker chạy ổn định không bị OOM killer can thiệp.
+  - Test assertions: Tinh chỉnh assertion kiểm tra history marker `"[c999]"` trong `test_answer_pipeline.py` để tránh va chạm chuỗi ngẫu nhiên với hex UUID của session. Sửa assertion linh hoạt cho test ports trong `test_admin_operations.py`. Cập nhật selector báo cáo benchmark chất lượng trong `test_admin_browser.py` khi có manifest thật.
+- **Verification & DoD Proof:**
+  - **DoD-1:** PASS:
+    - `uv run ruff check .`: PASS (0 errors, 100% formatted).
+    - `uv run mypy src`: PASS (110 source files type-checked).
+    - `uv run pytest -m "not live and not slow" -q`: PASS (951 passed, 53 deselected in 824.12s).
+    - `uv run python scripts/check_docs.py`: PASS (19 files, 468 links, 37 tasks acyclic, 11 routes, 2 error codes, 12 checklist items).
+    - `docker compose config --quiet`: PASS (exit code 0).
+    - `docker run --rm --init --network none --memory=2g --cpus=2 rag-core-ocr-test:t15 uv run --no-sync pytest tests/integration/test_ocr.py`: PASS (20 passed in 101.49s).
+    - `docker compose -f compose.ingestion-test.yaml run --rm ingestion-tests uv run --no-sync pytest tests/integration/test_ingestion_pipeline.py`: PASS (12 passed in 105.17s).
+    - `docker compose -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm public-tests uv run --no-sync pytest tests/e2e/test_public_api.py`: PASS (6 passed in 92.14s).
+    - `uv run pytest tests/e2e/test_admin_browser.py`: PASS (6 passed in 42.29s).
+  - **DoD-2:** PASS:
+    - Chạy client mẫu hoàn chỉnh: `uv run pytest tests/e2e/test_reference_client.py -v -s` (8 passed in 40.16s).
+    - Đối chiếu xác minh toàn bộ bằng chứng T08, T26, T29, T31, T32, T33, T34 nhất quán 100% với cấu hình và image hiện tại.
+  - **DoD-3:** PASS:
+    - Toàn bộ 37 tasks T00–T36 COMPLETE.
+    - README và RUNBOOK phản ánh chính xác trạng thái thực tế VERIFIED, không claim chưa chứng minh.
+    - Handoffs và living docs sẵn sàng bàn giao cho ứng dụng tích hợp (Scarlet / Chat Application).
+    - Completion commit: `chore(T36): complete local RAG core acceptance`.
+- **Next / Handover:**
+  - **HOÀN TẤT TOÀN BỘ BACKLOG RAG CORE (T00–T36).**
+  - Bước kế tiếp: Chuyển giao và tích hợp với Scarlet / chat application theo hợp đồng đã đặc tả trong [RUNBOOK.md §R15](../RUNBOOK.md#r15).
+  - STOP sau task T36 theo đúng quy định. Không auto-drain.

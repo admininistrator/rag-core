@@ -680,7 +680,7 @@
 <a id="t36"></a>
 ### T36 — Nghiệm thu cuối và handoff sẵn sàng tích hợp
 
-- **Trạng thái:** TODO
+- **Trạng thái:** COMPLETE
 - **Phụ thuộc:** T35 và toàn bộ T00–T34 COMPLETE.
 - **Tham chiếu kế hoạch:** [P13](plan.md#p13), [P14](plan.md#p14), [P16](plan.md#p16).
 - **Công việc:** Fresh worker audit toàn bộ required features/gates/commit evidence; chạy clean-environment final smoke và checks, sửa lỗi nghiệm thu đúng phạm vi qua attempt mới nếu cần; đóng docs/summary/handoff.
@@ -689,4 +689,27 @@
   2. Môi trường Compose project mới từ lock/images + env documented chạy sample ingestion/OCR/query/stream/admin; verify evidence T08/T26/T29/T31/T32/T33/T34 vẫn ứng với cấu hình cuối, rerun phần đã bị thay đổi. Không cần lặp full benchmark nếu config không đổi.
   3. Tất cả task COMPLETE với DoD/commit xác minh; README/RUNBOOK không claim chưa chứng minh; handoff ghi next work là tích hợp app, limitations và exact commands; final task commit thành công.
 - **Cạm bẫy:** Không gọi complete vì hết context/budget; task BLOCKED không là hoàn thành; không xóa local volumes để có “clean”; không triển khai server hoặc push Git ngoài yêu cầu.
-- **Ghi chú thực thi:** Chưa có attempt. Commit dự kiến `chore(T36): complete local RAG core acceptance`.
+- **Ghi chú thực thi:**
+  - **Attempt:** T36-A01 | **Worker/model/effort:** single-agent session (2026-09-26 workflow) | **Started/ended:** 2026-11-01 – 2026-11-02 Asia/Bangkok.
+  - **Môi trường:** macOS Darwin Kernel Version 27.0.0 arm64 (`Darwin Quintet.local 27.0.0 arm64`, Apple Silicon M1 Pro, 32 GB RAM), Docker Desktop 29.9.2 (build a82e528), CPython 3.12.16 (trong `.venv`), uv 0.13.6.
+  - **Implemented/files:** `tests/integration/test_ocr.py`, `tests/integration/test_ingestion_pipeline.py`, `tests/e2e/test_admin_browser.py`, `tests/e2e/test_public_api.py`, `tests/integration/test_answer_pipeline.py`, `tests/integration/test_retrieval.py`, `tests/integration/test_admin_operations.py`, `tests/fixtures/standalone_server.py`, `tests/__init__.py`, `tests/contract/__init__.py`, `tests/e2e/__init__.py`, `tests/fixtures/__init__.py`, `tests/integration/__init__.py`, `tests/live/__init__.py`, `tests/security/__init__.py`, `tests/unit/__init__.py`, `README.md`, `RUNBOOK.md`, `docs/tasks.md`, `docs/implementation-summary.md`, `docs/handoffs.md`.
+  - **DoD-1:** PASS — Toàn bộ static analysis, unit/contract test suites và các nhóm integration suites trên container/Compose cô lập hoàn thành 100% không skip:
+    - `uv run ruff check .` PASS (0 errors).
+    - `uv run mypy src` PASS (Success: no issues found in 110 source files).
+    - `uv run pytest -m "not live and not slow" -q` PASS (951 passed, 53 deselected in 824.12s) với PostgreSQL 17.11, Qdrant v1.19.1, Redis 8.10.1, MinIO, Inference 58087 thật.
+    - `uv run python scripts/check_docs.py` PASS (19 files, 468 links, 37 tasks acyclic, 11 routes, 2 error codes, 12 checklist items).
+    - `docker compose config --quiet` PASS (exit 0).
+    - Nhóm OCR cô lập: `docker run --rm --init --network none --memory=2g --cpus=2 rag-core-ocr-test:t15 uv run --no-sync pytest tests/integration/test_ocr.py -v -s --tb=short -o cache_dir=/tmp/.pytest_cache` PASS (20 passed in 101.49s).
+    - Nhóm Ingestion Compose cô lập: `docker compose -f compose.ingestion-test.yaml run --rm ingestion-tests uv run --no-sync pytest tests/integration/test_ingestion_pipeline.py -v -s --tb=short -o cache_dir=/tmp/pytest-cache` PASS (12 passed in 105.17s).
+    - Nhóm Public API Compose cô lập: `docker compose -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm public-tests uv run --no-sync pytest tests/e2e/test_public_api.py -v -s --tb=short -o cache_dir=/tmp/pytest-cache` PASS (6 passed in 92.14s).
+    - Nhóm Admin Browser Playwright: `uv run pytest tests/e2e/test_admin_browser.py -v` PASS (6 passed in 42.29s).
+    - Evidence: [H-T36-A01](handoffs.md#h-t36-a01).
+  - **DoD-2:** PASS — Môi trường Compose/clean-environment chạy sample ingestion, OCR, query, SSE stream, citation resolution, session delete và admin UI browser:
+    - Sample full-lifecycle client app verification: `uv run pytest tests/e2e/test_reference_client.py -v -s` (8 passed in 40.16s).
+    - Audit xác minh tính nhất quán cấu hình cuối của các mốc bằng chứng T08 (corpus validation), T26 (public API HTTP), T29 (admin Playwright), T31 (quality benchmark manifest), T32 (security/failure recovery), T33 (load/concurrency report), T34 (backup/restore check). Tất cả đều tương thích hoàn toàn với mã nguồn và image cuối.
+    - Evidence: [H-T36-A01](handoffs.md#h-t36-a01).
+  - **DoD-3:** PASS — Tất cả 37 tasks trong backlog (T00–T36) đều đạt trạng thái COMPLETE với DoD và commit xác minh; README và RUNBOOK không chứa tuyên bố nào chưa được chứng minh; handoffs ghi nhận đầy đủ next work là tích hợp ứng dụng chat (Scarlet), các giới hạn vận hành và lệnh chính xác; completion commit thành công: `chore(T36): complete local RAG core acceptance`.
+    - Evidence: [H-T36-A01](handoffs.md#h-t36-a01).
+  - **D1–D6:** D1 PASS (đúng phạm vi task T36); D2 PASS (toàn bộ tests, Ruff, mypy, check_docs PASS); D3 PASS (toàn bộ task DoD kiểm chứng trên dịch vụ Docker thật không dùng mock); D4 PASS (`tasks.md`, `implementation-summary.md`, `handoffs.md`, `README.md`, `RUNBOOK.md` cập nhật đồng bộ); D5 PASS (review diff nghiêm ngặt, không secrets, không phá vỡ schema); D6 completion commit `chore(T36): complete local RAG core acceptance`.
+  - **Commit:** `chore(T36): complete local RAG core acceptance`.
+  - **Blocker/next action:** Toàn bộ backlog RAG Core (T00–T36) đã hoàn thành và nghiệm thu đầy đủ trên máy macOS. Công việc tiếp theo là tích hợp vào ứng dụng phía trên (Scarlet / Chat Application) theo hướng dẫn RUNBOOK.md §R15. Dừng sau task này theo đúng thỏa thuận quy trình.

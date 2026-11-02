@@ -23,7 +23,9 @@ class Job:
 
 
 class InferenceScheduler:
-    def __init__(self, backend: ModelBackend, *, capacity: int = 32, index_capacity: int = 24) -> None:
+    def __init__(
+        self, backend: ModelBackend, *, capacity: int = 32, index_capacity: int = 24
+    ) -> None:
         if not 0 < index_capacity < capacity <= 128:
             raise ValueError("invalid_inference_capacity")
         self.backend = backend
@@ -52,8 +54,11 @@ class InferenceScheduler:
             raise InferenceError("model_unavailable")
         if request_id in self.jobs:
             raise InferenceError("duplicate_inference_id")
-        if len(self.jobs) >= self.capacity or (request.priority == "index"
-            and sum(j.request.priority == "index" for j in self.jobs.values()) >= self.index_capacity):
+        if len(self.jobs) >= self.capacity or (
+            request.priority == "index"
+            and sum(j.request.priority == "index" for j in self.jobs.values())
+            >= self.index_capacity
+        ):
             raise InferenceError("model_busy")
         future: asyncio.Future[InferenceResult] = asyncio.get_running_loop().create_future()
         self.jobs[request_id] = Job(request, future, time.monotonic() + request.timeout_seconds)
@@ -87,9 +92,13 @@ class InferenceScheduler:
                     raise InferenceError("model_cancelled")
                 if time.monotonic() >= job.deadline:
                     raise InferenceError("model_timeout")
-                batch = job.request.model_copy(update={"texts": job.request.texts[job.offset:job.offset+2]})
+                batch = job.request.model_copy(
+                    update={"texts": job.request.texts[job.offset : job.offset + 2]}
+                )
                 result = await asyncio.get_running_loop().run_in_executor(
-                    self.executor, self.backend.infer, batch,
+                    self.executor,
+                    self.backend.infer,
+                    batch,
                 )
                 job.embeddings.extend(result.embeddings)
                 job.scores.extend(result.scores)
@@ -103,9 +112,13 @@ class InferenceScheduler:
                     self.queues[job.request.priority].append(request_id)
                     continue
                 if not job.future.done():
-                    job.future.set_result(InferenceResult(fingerprint=self.backend.fingerprint,
-                                                         embeddings=tuple(job.embeddings),
-                                                         scores=tuple(job.scores)))
+                    job.future.set_result(
+                        InferenceResult(
+                            fingerprint=self.backend.fingerprint,
+                            embeddings=tuple(job.embeddings),
+                            scores=tuple(job.scores),
+                        )
+                    )
             except Exception as exc:
                 error = exc if isinstance(exc, InferenceError) else InferenceError("model_failed")
                 if not job.future.done():

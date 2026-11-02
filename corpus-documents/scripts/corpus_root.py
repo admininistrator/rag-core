@@ -45,8 +45,13 @@ def output_root(value: str | None) -> Path:
 
 def empty_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
     return {
-        **manifest, "status": "not_downloaded", "downloaded_at": None,
-        "document_count": None, "qa_count": None, "checksum": {}, "artifacts": [],
+        **manifest,
+        "status": "not_downloaded",
+        "downloaded_at": None,
+        "document_count": None,
+        "qa_count": None,
+        "checksum": {},
+        "artifacts": [],
     }
 
 
@@ -63,11 +68,16 @@ def initialize_root(root: Path) -> None:
     for domain in DOMAINS:
         manifests[domain] = empty_manifest(read_json(CORPUS_ROOT / domain / "manifest.json"))
         aggregate["domains"][domain].update(
-            status="not_downloaded", document_count=None, qa_count=None,
+            status="not_downloaded",
+            document_count=None,
+            qa_count=None,
         )
     aggregate["notes"] = AGGREGATE_NOTES
     root.mkdir(parents=True, exist_ok=True)
-    atomic_write(root / "source-license-inventory.json", [(CORPUS_ROOT / "source-license-inventory.json").read_bytes()])
+    atomic_write(
+        root / "source-license-inventory.json",
+        [(CORPUS_ROOT / "source-license-inventory.json").read_bytes()],
+    )
     for domain, manifest in manifests.items():
         write_json(root / domain / "manifest.json", manifest)
     write_json(root / "manifest.json", aggregate)
@@ -105,7 +115,9 @@ def setup_lock(root: Path) -> Iterator[None]:
     try:
         descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
     except FileExistsError:
-        raise CorpusError("Corpus setup lock exists; inspect the active/stopped setup first") from None
+        raise CorpusError(
+            "Corpus setup lock exists; inspect the active/stopped setup first"
+        ) from None
     try:
         yield
     finally:
@@ -117,12 +129,18 @@ def print_summary(reports: dict[str, dict[str, Any]]) -> None:
     print("RAG Evaluation Corpus")
     for domain, report in reports.items():
         if domain == "default":
-            print(f"Default / HotpotQA: documents={report['document_count']} QA={report['qa_count']}")
+            print(
+                f"Default / HotpotQA: documents={report['document_count']} QA={report['qa_count']}"
+            )
             print(f"  seed={report['seed']} distribution={report['selected_distribution']}")
         elif domain == "document":
-            print(f"Document / FinanceBench: PDFs={report['document_count']} QA={report['qa_count']}")
+            print(
+                f"Document / FinanceBench: PDFs={report['document_count']} QA={report['qa_count']}"
+            )
             print(f"  evidence={report['evidence_count']} page_indexing={report['page_indexing']}")
         else:
             print(f"Bilingual / XQuAD: documents={report['paragraph_count_by_language']}")
-            print(f"  QA_slices={report['qa_count_by_slice']} parallel_groups={report['parallel_group_count']}")
+            print(
+                f"  QA_slices={report['qa_count_by_slice']} parallel_groups={report['parallel_group_count']}"
+            )
     print("Validation: PASS")

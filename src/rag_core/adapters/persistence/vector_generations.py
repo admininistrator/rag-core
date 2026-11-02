@@ -53,8 +53,10 @@ class PostgresGenerationAuthority:
                 raise VectorError("active_generation_immutable")
             if operation == "write" and row["state"] != "staging":
                 raise VectorError("generation_not_staging")
-            if operation == "write" and row["job_id"] is not None and (
-                row["lease_owner"] != row["current_lease"] or not row["lease_valid"]
+            if (
+                operation == "write"
+                and row["job_id"] is not None
+                and (row["lease_owner"] != row["current_lease"] or not row["lease_valid"])
             ):
                 raise VectorError("generation_lease_lost")
             # Retain these locks through the bounded Qdrant wait=true acknowledgement.

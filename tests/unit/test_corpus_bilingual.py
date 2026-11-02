@@ -241,12 +241,17 @@ def corpus_root(
 
 
 def test_metadata_only_checkout_can_rebuild_without_changing_qa(
-    corpus_root: Path, download_calls: list[bool],
+    corpus_root: Path,
+    download_calls: list[bool],
 ) -> None:
     expected = bilingual.prepare_bilingual(corpus_root)
     clone = corpus_root.parent / (corpus_root.name + "c")
     clone.mkdir()
-    for name in ["manifest.json", "source-license-inventory.json", *[f"{d}/manifest.json" for d in common.DOMAINS]]:
+    for name in [
+        "manifest.json",
+        "source-license-inventory.json",
+        *[f"{d}/manifest.json" for d in common.DOMAINS],
+    ]:
         target = clone / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(corpus_root / name, target)

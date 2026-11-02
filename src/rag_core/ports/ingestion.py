@@ -19,7 +19,10 @@ class IngestionRepository(Protocol):
     async def stage_chunks(self, lease: IngestionLease, chunks: tuple[Chunk, ...]) -> None: ...
 
     async def publish(
-        self, lease: IngestionLease, expected_count: int, expected_manifest: str,
+        self,
+        lease: IngestionLease,
+        expected_count: int,
+        expected_manifest: str,
         extraction_fingerprint: str,
     ) -> None: ...
 

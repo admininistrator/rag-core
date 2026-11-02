@@ -15,12 +15,21 @@ if not broker_url.startswith(("redis://", "rediss://")):
     raise ValueError("Redis broker URL required")
 app = Celery("rag_core_worker", broker=broker_url)
 app.conf.update(
-    task_serializer="json", accept_content=["json"], task_ignore_result=True,
-    task_acks_late=True, task_reject_on_worker_lost=True, worker_prefetch_multiplier=1,
-    worker_concurrency=1, worker_cancel_long_running_tasks_on_connection_loss=True,
-    task_soft_time_limit=3610, task_time_limit=3630,
-    broker_transport_options={"visibility_timeout": 3700, "socket_timeout": 5,
-                              "socket_connect_timeout": 5},
+    task_serializer="json",
+    accept_content=["json"],
+    task_ignore_result=True,
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
+    worker_prefetch_multiplier=1,
+    worker_concurrency=1,
+    worker_cancel_long_running_tasks_on_connection_loss=True,
+    task_soft_time_limit=3610,
+    task_time_limit=3630,
+    broker_transport_options={
+        "visibility_timeout": 3700,
+        "socket_timeout": 5,
+        "socket_connect_timeout": 5,
+    },
     broker_connection_retry_on_startup=True,
 )
 

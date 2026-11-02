@@ -18,15 +18,22 @@ class HttpModelInference:
     async def infer(self, request: InferenceRequest) -> InferenceResult:
         path = f"/internal/infer/{uuid4()}"
         try:
-            response = await self.client.post(path, json=request.model_dump(mode="json"),
-                                              timeout=request.timeout_seconds + 5)
+            response = await self.client.post(
+                path, json=request.model_dump(mode="json"), timeout=request.timeout_seconds + 5
+            )
             if response.status_code != 200:
                 payload = response.json()
                 if not isinstance(payload, dict):
                     raise InferenceError("model_invalid_response")
                 code = payload.get("code")
-                if not isinstance(code, str) or code not in {"model_busy", "model_token_limit", "model_cancelled",
-                                "model_timeout", "model_failed", "invalid_model_request"}:
+                if not isinstance(code, str) or code not in {
+                    "model_busy",
+                    "model_token_limit",
+                    "model_cancelled",
+                    "model_timeout",
+                    "model_failed",
+                    "invalid_model_request",
+                }:
                     code = "model_unavailable"
                 raise InferenceError(code)
             result = InferenceResult.model_validate(response.json())
@@ -35,8 +42,9 @@ class HttpModelInference:
             count = len(result.embeddings) if request.operation == "embed" else len(result.scores)
             if count != len(request.texts):
                 raise InferenceError("model_invalid_response")
-            if ((request.operation == "embed" and result.scores)
-                or (request.operation == "rerank" and result.embeddings)):
+            if (request.operation == "embed" and result.scores) or (
+                request.operation == "rerank" and result.embeddings
+            ):
                 raise InferenceError("model_invalid_response")
             return result
         except asyncio.CancelledError:

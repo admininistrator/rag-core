@@ -22,7 +22,8 @@ def create_app() -> FastAPI:
     async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
         started = time.monotonic()
         backend = await asyncio.to_thread(
-            FlagModels, Path(os.environ.get("MODEL_CACHE", "/models")),
+            FlagModels,
+            Path(os.environ.get("MODEL_CACHE", "/models")),
             device=os.environ.get("MODEL_DEVICE", "cpu"),
         )
         app.state.scheduler = InferenceScheduler(backend)
@@ -30,11 +31,15 @@ def create_app() -> FastAPI:
             app.state.load_seconds = time.monotonic() - started
             warmup = time.monotonic()
             for operation in ("embed", "rerank"):
-                await app.state.scheduler.infer(uuid4(), InferenceRequest(
-                    operation=operation, texts=["Hello Việt Nam."],
-                    query="Việt Nam?" if operation == "rerank" else None,
-                    timeout_seconds=120,
-                ))
+                await app.state.scheduler.infer(
+                    uuid4(),
+                    InferenceRequest(
+                        operation=operation,
+                        texts=["Hello Việt Nam."],
+                        query="Việt Nam?" if operation == "rerank" else None,
+                        timeout_seconds=120,
+                    ),
+                )
             app.state.warmup_seconds = time.monotonic() - warmup
             app.state.startup_seconds = time.monotonic() - started
             yield
@@ -62,8 +67,13 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(InferenceError)
     async def inference_error(request: Request, error: InferenceError) -> JSONResponse:
-        status = {"model_busy": 429, "model_token_limit": 422, "model_cancelled": 409,
-                  "duplicate_inference_id": 409, "model_timeout": 504}.get(error.code, 503)
+        status = {
+            "model_busy": 429,
+            "model_token_limit": 422,
+            "model_cancelled": 409,
+            "duplicate_inference_id": 409,
+            "model_timeout": 504,
+        }.get(error.code, 503)
         return JSONResponse({"code": error.code}, status_code=status)
 
     @app.exception_handler(RequestValidationError)
@@ -77,16 +87,24 @@ def create_app() -> FastAPI:
     @app.get("/health/ready")
     async def ready() -> dict[str, Any]:
         import psutil  # type: ignore[import-untyped]
+
         scheduler = app.state.scheduler
-        return {"status": "ready", "pid": os.getpid(), "model_instances": 2,
-                "inference_processes": 1, "active_jobs": len(scheduler.jobs),
-                "capacity": scheduler.capacity, "fingerprint": scheduler.backend.fingerprint,
-                "runtime": scheduler.backend.runtime, "device": scheduler.backend.device,
-                "startup_seconds": app.state.startup_seconds,
-                "load_seconds": app.state.load_seconds,
-                "warmup_seconds": app.state.warmup_seconds,
-                "resources": scheduler.backend.resources(),
-                "rss_bytes": psutil.Process().memory_info().rss}
+        return {
+            "status": "ready",
+            "pid": os.getpid(),
+            "model_instances": 2,
+            "inference_processes": 1,
+            "active_jobs": len(scheduler.jobs),
+            "capacity": scheduler.capacity,
+            "fingerprint": scheduler.backend.fingerprint,
+            "runtime": scheduler.backend.runtime,
+            "device": scheduler.backend.device,
+            "startup_seconds": app.state.startup_seconds,
+            "load_seconds": app.state.load_seconds,
+            "warmup_seconds": app.state.warmup_seconds,
+            "resources": scheduler.backend.resources(),
+            "rss_bytes": psutil.Process().memory_info().rss,
+        }
 
     @app.post("/internal/infer/{request_id}")
     async def infer(request_id: UUID, payload: InferenceRequest, request: Request) -> Any:

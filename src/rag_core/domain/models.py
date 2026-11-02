@@ -21,11 +21,13 @@ class Embedding(BaseModel):
 
     @model_validator(mode="after")
     def validate_vector(self) -> "Embedding":
-        if (len(self.sparse_indices) != len(self.sparse_values)
+        if (
+            len(self.sparse_indices) != len(self.sparse_values)
             or tuple(sorted(set(self.sparse_indices))) != self.sparse_indices
             or any(i < 4 or i >= 250002 for i in self.sparse_indices)
             or any(v <= 0 for v in self.sparse_values)
-            or abs(sum(v * v for v in self.dense) - 1) > 0.01):
+            or abs(sum(v * v for v in self.dense) - 1) > 0.01
+        ):
             raise ValueError("invalid_model_vector")
         return self
 

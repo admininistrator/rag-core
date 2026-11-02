@@ -32,4 +32,6 @@ class StorageError(Exception):
 
 
 class StorageReader(Protocol):
-    def read(self, app_id: str, source: SourceObject) -> AbstractContextManager[DownloadedSource]: ...
+    def read(
+        self, app_id: str, source: SourceObject
+    ) -> AbstractContextManager[DownloadedSource]: ...

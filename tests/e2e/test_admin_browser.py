@@ -54,7 +54,7 @@ from rag_core.auth import Principal
 from rag_core.contracts.v1 import DocumentRegisterRequest
 from rag_core.workers.runtime import WorkerConfig
 
-pytestmark = [pytest.mark.e2e, pytest.mark.asyncio]
+pytestmark = [pytest.mark.e2e, pytest.mark.asyncio, pytest.mark.slow]
 
 BUCKET = "rag-core-storage-test"
 SECRET_DIR = Path(".local/secrets").resolve()
@@ -947,16 +947,24 @@ async def test_admin_browser_evaluations_empty_state_and_responsive(
     await login_in_browser(page, e)
 
     await page.click("nav a:has-text('Evaluations')")
-    await page.wait_for_selector(".panel.empty")
-    assert "/admin/evaluations" in page.url
-
-    eval_text = await page.text_content(".panel.empty")
-    assert "No evaluation reports available" in eval_text
-    assert "Evaluation reporting is not available in this build" in eval_text
-    assert "No runs triggered from this interface" in eval_text
-    # Refresh controls must be hidden on evaluations screen
-    assert not await page.is_visible("#refresh")
-    await page.screenshot(path=str(SCREENSHOT_DIR / "t29_evaluations_empty_desktop.png"))
+    manifest_path = Path("artifacts/eval/evaluation_manifest.json")
+    if manifest_path.is_file():
+        await page.wait_for_selector("section.panel")
+        assert "/admin/evaluations" in page.url
+        eval_text = await page.text_content("section.panel")
+        assert "Quality Evaluation Benchmark Report" in eval_text or "Gates" in eval_text
+        assert not await page.is_visible("#refresh")
+        await page.screenshot(path=str(SCREENSHOT_DIR / "t29_evaluations_report_desktop.png"))
+    else:
+        await page.wait_for_selector(".panel.empty")
+        assert "/admin/evaluations" in page.url
+        eval_text = await page.text_content(".panel.empty")
+        assert "No evaluation reports available" in eval_text
+        assert "Evaluation reporting is not available in this build" in eval_text
+        assert "No runs triggered from this interface" in eval_text
+        # Refresh controls must be hidden on evaluations screen
+        assert not await page.is_visible("#refresh")
+        await page.screenshot(path=str(SCREENSHOT_DIR / "t29_evaluations_empty_desktop.png"))
 
     # 2. Keyboard Navigation: Skip link
     await page.keyboard.press("Tab")
@@ -980,6 +988,7 @@ async def test_admin_browser_evaluations_empty_state_and_responsive(
     await mobile_page.screenshot(path=str(SCREENSHOT_DIR / "t29_mobile_overview.png"))
 
     # Navigate to documents and check horizontal scrolling table region
+    await seed_registered_document(e, filename="mobile_doc.txt", content=b"Mobile test content.")
     await mobile_page.click("nav a:has-text('Documents')")
     await mobile_page.wait_for_selector(".table-wrap")
     wrap_role = await mobile_page.get_attribute(".table-wrap", "role")

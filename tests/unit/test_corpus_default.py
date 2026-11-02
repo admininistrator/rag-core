@@ -105,7 +105,8 @@ def test_multiple_supporting_titles_all_map_without_including_distractors() -> N
     contents, _ = default.build_artifacts([example], "0" * 64, size=1)
     record = artifact_records(contents)[0]
     assert record["expected_documents"] == [
-        default.paragraph_id(*example["context"][0]), default.paragraph_id(*example["context"][2]),
+        default.paragraph_id(*example["context"][0]),
+        default.paragraph_id(*example["context"][2]),
     ]
     assert default.paragraph_id(*example["context"][1]) not in record["expected_documents"]
 
@@ -127,8 +128,10 @@ def test_reproducible_stratified_sampling_is_independent_of_input_order() -> Non
     assert first == second and report == same_report
     assert report["qa_count"] == 100
     assert report["selected_distribution"]["strata"] == {
-        "bridge/hard": 25, "bridge/medium": 25,
-        "comparison/hard": 25, "comparison/medium": 25,
+        "bridge/hard": 25,
+        "bridge/medium": 25,
+        "comparison/hard": 25,
+        "comparison/medium": 25,
     }
     assert len(set(report["selected_source_ids"])) == 100
     assert default.sample_records(examples, seed=43) != default.sample_records(examples)
@@ -149,7 +152,20 @@ def test_exhausted_strata_redistribute_without_duplicates() -> None:
     assert default.distribution(selected)["strata"] == {"bridge/hard": 99, "comparison/medium": 1}
 
 
-@pytest.mark.parametrize("mutation", ["answer", "duplicate_id", "missing_title", "index", "bool_index", "ambiguous_title", "empty_context", "type", "level"])
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "answer",
+        "duplicate_id",
+        "missing_title",
+        "index",
+        "bool_index",
+        "ambiguous_title",
+        "empty_context",
+        "type",
+        "level",
+    ],
+)
 def test_invalid_source_is_refused_before_materialization(tmp_path: Path, mutation: str) -> None:
     examples = [source_example(1)]
     if mutation == "answer":
@@ -186,9 +202,14 @@ def test_source_annotation_outside_sample_is_reported_without_altering_gold(tmp_
     assert parsed == examples
     assert report["selected_source_ids"] == before_report["selected_source_ids"]
     assert after[default.QA_PATH] == before[default.QA_PATH]
-    assert report["source_annotation_anomalies"] == [{
-        "source_id": original["_id"], "title": "Shared title", "sent_id": 902, "sentence_count": 2,
-    }]
+    assert report["source_annotation_anomalies"] == [
+        {
+            "source_id": original["_id"],
+            "title": "Shared title",
+            "sent_id": 902,
+            "sentence_count": 2,
+        }
+    ]
     assert report["selected_annotation_anomalies"] == []
 
 
@@ -223,14 +244,22 @@ def corpus_root(tmp_path: Path) -> Path:
     # A unit test's starting state is always synthetic and not downloaded.
     manifest = common.read_json(tmp_path / "default/manifest.json")
     manifest["sources"][0]["expected_sha256"] = hashlib.sha256(parquet_bytes()).hexdigest()
-    manifest.update(status="not_downloaded", downloaded_at=None, document_count=None,
-                    qa_count=None, artifacts=[], checksum={})
+    manifest.update(
+        status="not_downloaded",
+        downloaded_at=None,
+        document_count=None,
+        qa_count=None,
+        artifacts=[],
+        checksum={},
+    )
     common.write_json(tmp_path / "default/manifest.json", manifest)
     inventory = common.read_json(tmp_path / "source-license-inventory.json")
     inventory["datasets"][0]["sources"] = deepcopy(manifest["sources"])
     common.write_json(tmp_path / "source-license-inventory.json", inventory)
     aggregate = common.read_json(tmp_path / "manifest.json")
-    aggregate["domains"]["default"].update(status="not_downloaded", document_count=None, qa_count=None)
+    aggregate["domains"]["default"].update(
+        status="not_downloaded", document_count=None, qa_count=None
+    )
     common.write_json(tmp_path / "manifest.json", aggregate)
     return tmp_path
 
@@ -250,7 +279,9 @@ def fake_download(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
             assert destination.read_bytes() == body
         else:
             common.atomic_write(destination, [body])
-        return common.DownloadReceipt(url, checksum, len(body), None if reused else "2026-09-17T16:00:00Z", reused)
+        return common.DownloadReceipt(
+            url, checksum, len(body), None if reused else "2026-09-17T16:00:00Z", reused
+        )
 
     monkeypatch.setattr(default, "download", injected)
     return calls
@@ -272,11 +303,14 @@ def test_prepare_and_rerun_preserve_ids_content_timestamp_and_mtimes(
     assert published_hashes(corpus_root) == before
     assert times == {name: (corpus_root / name).stat().st_mtime_ns for name in before}
     assert common.read_json(corpus_root / "default/manifest.json")["downloaded_at"] == timestamp
-    assert len(fake_download) == 2 and fake_download[1]["expected_sha256"] == report["source_sha256"]
+    assert (
+        len(fake_download) == 2 and fake_download[1]["expected_sha256"] == report["source_sha256"]
+    )
     assert default.validate_default(corpus_root / "default") == report
     validate_corpus.validate_metadata(corpus_root)
     assert {path.name for path in (corpus_root / ".downloads").iterdir()} == {
-        "hf-hotpotqa-distractor-validation.parquet", "hf-hotpotqa-download.json",
+        "hf-hotpotqa-distractor-validation.parquet",
+        "hf-hotpotqa-download.json",
     }
 
 
@@ -317,9 +351,13 @@ def test_download_failure_preserves_last_good_metadata(
     assert len(list((corpus_root / ".downloads").glob("default-stage-*"))) == 1
 
 
-@pytest.mark.parametrize("failure", ["staged_validation", "new_directory", "aggregate", "interrupt"])
+@pytest.mark.parametrize(
+    "failure", ["staged_validation", "new_directory", "aggregate", "interrupt"]
+)
 def test_publication_fault_preserves_last_good_tree_and_aggregate(
-    corpus_root: Path, fake_download: list[dict[str, Any]], monkeypatch: pytest.MonkeyPatch,
+    corpus_root: Path,
+    fake_download: list[dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
     failure: str,
 ) -> None:
     before = published_hashes(corpus_root)
@@ -385,7 +423,9 @@ def test_refresh_publication_failure_preserves_existing_ready_data(
     assert default.validate_default(corpus_root / "default")["qa_count"] == 100
 
 
-@pytest.mark.parametrize("corruption", ["gold", "support", "document", "duplicate", "missing", "receipt"])
+@pytest.mark.parametrize(
+    "corruption", ["gold", "support", "document", "duplicate", "missing", "receipt"]
+)
 def test_validator_refuses_gold_content_mapping_or_artifact_drift(
     corpus_root: Path, fake_download: list[dict[str, Any]], corruption: str
 ) -> None:
@@ -397,7 +437,9 @@ def test_validator_refuses_gold_content_mapping_or_artifact_drift(
             records[0]["expected_answers"] = ["Altered synthetic answer"]
         else:
             records[0]["expected_documents"] = records[0]["context_documents"]
-        (domain / default.QA_PATH).write_bytes(b"".join((json.dumps(r) + "\n").encode() for r in records))
+        (domain / default.QA_PATH).write_bytes(
+            b"".join((json.dumps(r) + "\n").encode() for r in records)
+        )
     elif corruption == "receipt":
         manifest = common.read_json(domain / "manifest.json")
         manifest["artifacts"][0]["bytes"] += 1

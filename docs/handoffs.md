@@ -6,6 +6,30 @@ T07-A06 closure evidence: [H-T07-A06](#h-t07-a06).
 
 ## Current checkpoint
 
+- **Current 2026-11-02 / T36-A01 final acceptance closure:**
+  - **Task & Scope:** T36 (Nghiệm thu cuối và handoff sẵn sàng tích hợp) COMPLETE.
+  - **Environment:** macOS Darwin arm64 (`Darwin Quintet.local 27.0.0 arm64`, Apple Silicon M1 Pro, 32 GB RAM), Docker Desktop 29.9.2 (build a82e528), CPython 3.12.16 (trong `.venv`), uv 0.13.6. Single-task direct agent (2026-09-26 workflow).
+  - **Backlog Status:** ALL 37 TASKS COMPLETE (T00–T36). Backlog RAG Core đã hoàn tất 100% nghiệm thu kỹ thuật.
+  - **DoD-1 PASS:** Full static analysis, unit/contract suites, and isolated container suites passed with 100% success (zero skips):
+    - `uv run ruff check .` PASS (0 errors).
+    - `uv run mypy src` PASS (110 source files, 0 issues).
+    - `uv run pytest -m "not live and not slow" -q` PASS (951 passed, 53 deselected in 824.12s) với PostgreSQL, Qdrant, Redis, MinIO, Inference 58087 thật.
+    - `uv run python scripts/check_docs.py` PASS (19 files, 468 links, 37 tasks acyclic, 11 routes, 2 error codes, 12 checklist items).
+    - `docker compose config --quiet` PASS (exit code 0).
+    - `rag-core-ocr-test:t15` isolated container tests: 20 passed in 101.49s.
+    - `compose.ingestion-test.yaml` isolated Compose tests: 12 passed in 105.17s.
+    - `compose.public-test.yaml` isolated Compose tests: 6 passed in 92.14s.
+    - `test_admin_browser.py` Playwright Chromium tests: 6 passed in 42.29s.
+  - **DoD-2 PASS:** Clean environment full lifecycle verification with reference client:
+    - `uv run pytest tests/e2e/test_reference_client.py -v -s`: 8 passed in 40.16s (auth, registration idempotency, job polling, session-only queries, SSE streaming & cancel, citation resolution, session delete & retention).
+    - Fresh audit of evidence T08, T26, T29, T31, T32, T33, T34 confirms full alignment with final codebase and container configurations.
+  - **DoD-3 PASS:** All tasks verified, README and RUNBOOK reflect verified status without unproven claims, handoffs record next work as application integration (Scarlet), operational boundaries, exact commands, and completion commit `chore(T36): complete local RAG core acceptance`.
+  - **Quality Gates D1–D6:** D1 PASS (scoped paths, baseline preserved); D2 PASS (all tests, Ruff, mypy, docs check PASS); D3 PASS (all DoDs verified on real local Docker dependencies); D4 PASS (`tasks.md`, `implementation-summary.md`, `handoffs.md`, `README.md`, `RUNBOOK.md` updated); D5 PASS (strict diff/secrets review, zero leaks); D6 completion commit `chore(T36): complete local RAG core acceptance`.
+  - **Limitations & Next:**
+    - Hoàn tất toàn bộ backlog RAG Core độc lập.
+    - Bước kế tiếp: Chuyển giao và tích hợp với Scarlet / chat application theo [RUNBOOK.md §R15](../RUNBOOK.md#r15).
+    - Dừng sau task này theo đúng thỏa thuận quy trình. STOP T36, no auto-drain.
+
 - **Current 2026-10-31 / T35-A01 acceptance closure:**
   - **Task & Scope:** T35 (RUNBOOK tích hợp và client app độc lập) COMPLETE. macOS Darwin arm64 (`Darwin Quintet.local 27.0.0 arm64`, Apple Silicon M1 Pro, 32 GB RAM), Python 3.12.16 (in `.venv`), Docker Desktop 29.9.2 (build a82e528), uv 0.13.6. Direct single-task agent, no subagents.
   - **Files Implemented / Verified:** `examples/reference_client.py`, `examples/fastapi_app.py`, `examples/README.md`, `tests/e2e/test_reference_client.py`, `tests/fixtures/standalone_server.py`, `scripts/check_docs.py`. Living docs: `docs/tasks.md`, `docs/implementation-summary.md`, `docs/handoffs.md`, `README.md`, `RUNBOOK.md`.
@@ -12262,3 +12286,156 @@ uv run python scripts/export_openapi.py --check
 - **DoD-1:** Full reference client (`RagCoreReferenceClient`) verified over loopback HTTP with real test server running PostgreSQL, Qdrant, MinIO, Redis, and inference services. Zero private core imports (`ast.parse` verified). Verified authentication, registration idempotency with `Idempotency-Key`, job polling, session-only grounded queries, history conversation handling, full SSE lifecycle (`meta`, `evidence`, `answer_delta`, `done`, `error`) and mid-stream cancellation, citation resolution, and session tombstone with byte-for-byte SHA256 source retention and vector retention.
 - **DoD-2:** `scripts/check_docs.py` verifies all 11 core public routes and health probes match served OpenAPI specification, error codes match `ScopeCode` and API error definitions, operator quickstarts use documented placeholders for secrets, and the Scarlet checklist in R15 contains all 12 complete integration checkpoints without hidden architectural decisions.
 - **D1–D6:** Scoped code, test, and documentation criteria met. Ready for completion commit and authorized push to origin/main.
+
+<a id="h-t36-a01"></a>
+## Evidence T36-A01 (Nghiệm thu cuối và handoff sẵn sàng tích hợp)
+
+### 1. Environment & Diagnostics
+- **Operating System:** macOS Darwin 27.0.0 arm64 (`Darwin Quintet.local 27.0.0 Darwin Kernel Version 27.0.0 arm64`).
+- **CPU & Architecture:** Apple M1 Pro (8 cores, 32 GB unified memory, arm64).
+- **Docker Desktop:** Version 29.9.2, build a82e528. Docker VM RAM allocated: 7.748 GiB.
+- **Python / uv:** CPython 3.12.16 (in `.venv`), uv 0.13.6.
+- **Execution Mode:** Single-task direct agent (2026-09-26 workflow, no subagents).
+- **Scope & Role:** T36 (Nghiệm thu cuối và handoff sẵn sàng tích hợp) — Nghiệm thu toàn diện toàn bộ backlog T00–T36.
+
+### 2. DoD-1: Comprehensive Static Analysis, Unit/Contract & Isolated Container Verification
+All static analysis checks, unit and contract suites, and isolated container suites passed 100% without skipping:
+
+#### A. Static Analysis & Documentation Validation
+```bash
+# 1. Ruff Linting Check
+uv run ruff check .
+# Output: All checks passed!
+# Exit Code: 0
+
+# 2. Mypy Strict Type Check
+uv run mypy src
+# Output: Success: no issues found in 110 source files
+# Exit Code: 0
+
+# 3. Documentation & Anchor Validation
+uv run python scripts/check_docs.py
+# Output:
+# PASS UTF-8/nonempty Markdown: 19 files
+# PASS internal links/anchors: 468
+# PASS task fields/status/dependencies: 37 tasks, 81 edges, acyclic
+# PASS RUNBOOK alignment: 11 core routes, 2 error codes, 12 Scarlet checklist items
+# DOCUMENTATION CHECK: PASS
+# Exit Code: 0
+
+# 4. Docker Compose Configuration Validation
+docker compose config --quiet
+# Exit Code: 0
+```
+
+#### B. Main Fast Test Suite (`not live and not slow`)
+```bash
+uv run pytest -m "not live and not slow" -q
+# Target: All unit, contract, security, and fast integration tests
+# Services: PostgreSQL 17.11 (127.0.0.1:55432), Qdrant v1.19.1 (127.0.0.1:56333), Redis 8.10.1 (127.0.0.1:16379), MinIO (127.0.0.1:9000), Inference HTTP (127.0.0.1:58087)
+# Output: 951 passed, 53 deselected in 824.12s (13:44)
+# Exit Code: 0
+```
+
+#### C. Isolated Container Groups (Separate Groups with Output, No Skips)
+```bash
+# 1. Isolated OCR Container Tests (Tesseract CLI & Docling in Linux worker image with 2 CPUs, 2GB RAM, network none)
+docker run --rm --init --network none --memory=2g --cpus=2 rag-core-ocr-test:t15 uv run --no-sync pytest tests/integration/test_ocr.py -v -s --tb=short -o cache_dir=/tmp/.pytest_cache
+# Output:
+# tests/integration/test_ocr.py::test_image_phrases_and_raw_pixel_locator[.png-Doanh thu quý một đạt 120 triệu đồng.] PASSED
+# tests/integration/test_ocr.py::test_image_phrases_and_raw_pixel_locator[.jpg-First quarter revenue was 120 million VND.] PASSED
+# tests/integration/test_ocr.py::test_image_phrases_and_raw_pixel_locator[.jpeg-Doanh thu quý một đạt 120 triệu đồng.] PASSED
+# tests/integration/test_ocr.py::test_scan_pdf_en_vi_physical_pages_offsets_and_boxes PASSED
+# tests/integration/test_ocr.py::test_image_exif_dpi_preserve_raw_pixel_provenance PASSED
+# tests/integration/test_ocr.py::test_mixed_and_existing_text_layer_not_duplicated PASSED
+# tests/integration/test_ocr.py::test_searchable_scan_layer_not_ocr_again PASSED
+# tests/integration/test_ocr.py::test_status_blank_and_unreadable[.png] PASSED
+# tests/integration/test_ocr.py::test_status_blank_and_unreadable[.pdf] PASSED
+# tests/integration/test_ocr.py::test_status_partial_pdf_cannot_hide_blank_page PASSED
+# tests/integration/test_ocr.py::test_status_missing_tessdata PASSED
+# tests/integration/test_ocr.py::test_status_missing_vie_and_corrupt_tessdata PASSED
+# tests/integration/test_ocr.py::test_status_missing_engine PASSED
+# tests/integration/test_ocr.py::test_status_output_limit PASSED
+# tests/integration/test_ocr.py::test_status_corrupt_image_and_mime PASSED
+# tests/integration/test_ocr.py::test_status_pixel_limits_before_render[.png] PASSED
+# tests/integration/test_ocr.py::test_status_pixel_limits_before_render[.pdf] PASSED
+# tests/integration/test_ocr.py::test_status_cancel_timeout_reaps_real_tesseract[cancel] PASSED
+# tests/integration/test_ocr.py::test_status_cancel_timeout_reaps_real_tesseract[timeout] PASSED
+# tests/integration/test_ocr.py::test_status_disabled_ocr_explicit PASSED
+# ACTUAL worker acceptance wall=100.919s container_memory_peak_mib=844.844
+# Results: 20 passed in 101.49s (0:01:41)
+# Exit Code: 0
+
+# 2. Isolated Ingestion Pipeline Compose Tests (Dedicated Compose network: PG, Redis, Qdrant, MinIO, Inference)
+docker compose -f compose.ingestion-test.yaml run --rm ingestion-tests uv run --no-sync pytest tests/integration/test_ingestion_pipeline.py -v -s --tb=short -o cache_dir=/tmp/pytest-cache
+# Output:
+# tests/integration/test_ingestion_pipeline.py::test_scan_xlsx_text_real_celery_and_source_locators PASSED
+# tests/integration/test_ingestion_pipeline.py::test_duplicate_pending_generation_invisible PASSED
+# tests/integration/test_ingestion_pipeline.py::test_partial_qdrant_failure_retry_keeps_old_generation PASSED
+# tests/integration/test_ingestion_pipeline.py::test_changed_source_fails_without_publication PASSED
+# tests/integration/test_ingestion_pipeline.py::test_visibility_detach_delete_no_resurrection[detach] PASSED
+# tests/integration/test_ingestion_pipeline.py::test_visibility_detach_delete_no_resurrection[delete] PASSED
+# tests/integration/test_ingestion_pipeline.py::test_worker_kill_resume_and_expired_fence PASSED
+# tests/integration/test_ingestion_pipeline.py::test_incomplete_vector_manifest_never_ready PASSED
+# tests/integration/test_ingestion_pipeline.py::test_partial_pdf_refused_before_embedding PASSED
+# tests/integration/test_ingestion_pipeline.py::test_retry_budget_and_durable_outbox PASSED
+# tests/integration/test_ingestion_pipeline.py::test_pg_manifest_tamper_never_published[text] PASSED
+# tests/integration/test_ingestion_pipeline.py::test_pg_manifest_tamper_never_published[source_map] PASSED
+# Results: 12 passed in 105.17s (0:01:45)
+# Exit Code: 0
+
+# 3. Isolated Public API Compose Tests (Dedicated Compose network with real app lifecycle)
+docker compose -f compose.ingestion-test.yaml -f compose.public-test.yaml run --rm public-tests uv run --no-sync pytest tests/e2e/test_public_api.py -v -s --tb=short -o cache_dir=/tmp/pytest-cache
+# Output:
+# tests/e2e/test_public_api.py::test_complete_app_upload_history_stream_delete_retention[deepseek] PASSED
+# tests/e2e/test_public_api.py::test_complete_app_upload_history_stream_delete_retention[anthropic] PASSED
+# tests/e2e/test_public_api.py::test_ownership_idempotency_pagination_detach_and_citation PASSED
+# tests/e2e/test_public_api.py::test_public_input_insufficient_and_safe_error PASSED
+# tests/e2e/test_public_api.py::test_json_serialization_gate_shared_admission_and_disconnect PASSED
+# tests/e2e/test_public_api.py::test_standalone_cli_app_real_subprocess PASSED
+# Results: 6 passed in 92.14s (0:01:32)
+# Exit Code: 0
+
+# 4. Isolated Admin Browser Playwright Tests (Real Chromium against admin stack)
+uv run pytest tests/e2e/test_admin_browser.py -v
+# Output:
+# tests/e2e/test_admin_browser.py::test_admin_browser_login_logout_and_session_expiry PASSED
+# tests/e2e/test_admin_browser.py::test_admin_browser_overview_live_counts_and_unmeasured_sentinels PASSED
+# tests/e2e/test_admin_browser.py::test_admin_browser_documents_pagination_and_xss_safety PASSED
+# tests/e2e/test_admin_browser.py::test_admin_browser_jobs_retry_and_reindex_flow PASSED
+# tests/e2e/test_admin_browser.py::test_admin_browser_sessions_detach_tombstone_and_source_retention PASSED
+# tests/e2e/test_admin_browser.py::test_admin_browser_evaluations_empty_state_and_responsive PASSED
+# Results: 6 passed in 42.29s
+# Exit Code: 0
+```
+
+### 3. DoD-2: Sample Full Lifecycle Acceptance & Evidence Verification
+```bash
+# Reference Client E2E Verification over HTTP
+RAG_TEST_INFERENCE_URL="http://127.0.0.1:58087" INFERENCE_URL="http://127.0.0.1:58087" uv run pytest tests/e2e/test_reference_client.py -v -s --tb=short
+# Output:
+# tests/e2e/test_reference_client.py::test_no_private_core_services_imported PASSED
+# tests/e2e/test_reference_client.py::test_health_endpoints PASSED
+# tests/e2e/test_reference_client.py::test_authentication_and_authorization PASSED
+# tests/e2e/test_reference_client.py::test_source_upload_registration_and_job_polling PASSED
+# tests/e2e/test_reference_client.py::test_session_only_queries_and_history PASSED
+# tests/e2e/test_reference_client.py::test_sse_streaming_and_cancellation PASSED
+# tests/e2e/test_reference_client.py::test_citation_resolution PASSED
+# tests/e2e/test_reference_client.py::test_session_deletion_and_source_retention PASSED
+# Results: 8 passed in 40.16s
+# Exit Code: 0
+```
+- **Audit of Historical Evidence Alignment:**
+  - `T08 (Corpus Reproduction)`: SHA-256 digests and document counts verified across HotpotQA (986 docs), FinanceBench (84 10-K PDFs), and XQuAD (480 EN/VI docs).
+  - `T26 (Public API)`: 11 business operations and 2 health endpoints verified against live OpenAPI contract.
+  - `T29 (Admin Browser Acceptance)`: Playwright headless Chromium verified against live admin interface with CSRF, audit log generation, and responsive viewports.
+  - `T31 (Quality Benchmark)`: Official benchmark manifest (`artifacts/eval/evaluation_manifest.json`) and evaluation report verified with all 4 acceptance gates passing (held-out recall degradation = 0.0000 <= 0.02, citation validity = 100%, out of scope citations = 0, security isolation = 100%).
+  - `T32 (Security & Failure Recovery)`: Fault injection (Qdrant down, PG disconnect, worker crash, mid-stream disconnect) verified fail-closed and transactional rollback.
+  - `T33 (Load & Concurrency)`: Virtual user load (15–20 users) verified within local resource budgets (Docker RAM <= 10 GiB, VRAM <= 7 GiB, max queue waiters <= 20).
+  - `T34 (Backup & Restore Rehearsal)`: Point-in-time backup across 13 PG tables, Qdrant vectors, and MinIO raw blobs restored into isolated resources with 100% byte-for-byte SHA256 integrity and zero dangling vectors.
+
+### 4. DoD-3: Closure of Backlog & Ready for Application Integration
+- **Backlog Completeness:** All 37 tasks from T00 to T36 are marked COMPLETE with verifiable commit references and concrete reproduction commands.
+- **Documentation Alignment:** Living documents (`README.md`, `RUNBOOK.md`, `docs/tasks.md`, `docs/implementation-summary.md`, `docs/handoffs.md`) updated synchronously. No unverified claims or premature promises remain.
+- **Next Work:** Integration of Scarlet / Chat Application backend as detailed in [RUNBOOK.md §R15](../RUNBOOK.md#r15).
+- **Completion Commit:** `chore(T36): complete local RAG core acceptance`.

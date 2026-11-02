@@ -18,7 +18,7 @@ from tests.integration.conftest import pg_url as integration_pg_url
 from tests.integration.test_ingestion_pipeline import BUCKET, eventually, stack
 
 __all__ = ["stack"]
-pytestmark = [pytest.mark.e2e, pytest.mark.asyncio]
+pytestmark = [pytest.mark.e2e, pytest.mark.asyncio, pytest.mark.slow]
 _broker_case = 0
 
 

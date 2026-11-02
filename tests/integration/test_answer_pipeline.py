@@ -75,7 +75,7 @@ async def test_complete_composition_scoped_supported_history_languages_usage(
             and response.timings_ms.total >= response.timings_ms.generation > 0
         )
         assert generation[0]["answer_language"] == "vi"
-        assert "OLD HISTORY" not in str(generation) and "c999" not in str(generation)
+        assert "OLD HISTORY" not in str(generation) and "[c999]" not in str(generation)
         print(
             f"T24 REAL PG/Qdrant/CPU supported; {provider} synthetic wire, current source/citation/usage/history PASS"
         )

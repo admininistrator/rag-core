@@ -1,4 +1,5 @@
 """Output isolation, metadata-only checkouts and honest all-domain failures."""
+
 from __future__ import annotations
 
 import shutil
@@ -26,7 +27,11 @@ pytestmark = pytest.mark.unit
 def metadata_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     root = tmp_path / "c"
     root.mkdir()
-    for name in ["source-license-inventory.json", "manifest.json", *[f"{d}/manifest.json" for d in common.DOMAINS]]:
+    for name in [
+        "source-license-inventory.json",
+        "manifest.json",
+        *[f"{d}/manifest.json" for d in common.DOMAINS],
+    ]:
         target = root / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(common.CORPUS_ROOT / name, target)
@@ -34,7 +39,21 @@ def metadata_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return root
 
 
-@pytest.mark.parametrize("relative", ["..", "default", "scripts", ".downloads/x", ".repro", ".repro/a/b", ".repro/CON", ".repro/a:stream", ".repro/a.", ".repro/../outside"])
+@pytest.mark.parametrize(
+    "relative",
+    [
+        "..",
+        "default",
+        "scripts",
+        ".downloads/x",
+        ".repro",
+        ".repro/a/b",
+        ".repro/CON",
+        ".repro/a:stream",
+        ".repro/a.",
+        ".repro/../outside",
+    ],
+)
 def test_output_refuses_unsafe_or_protected_paths(metadata_root: Path, relative: str) -> None:
     with pytest.raises(common.CorpusError):
         roots.output_root(str(metadata_root / relative))
@@ -53,13 +72,17 @@ def test_output_rejects_links_even_inside_corpus(metadata_root: Path) -> None:
         roots.output_root(str(metadata_root / ".repro/a"))
 
 
-def test_initialize_copies_only_provenance_and_validator_never_bootstraps(metadata_root: Path) -> None:
+def test_initialize_copies_only_provenance_and_validator_never_bootstraps(
+    metadata_root: Path,
+) -> None:
     root = roots.output_root(str(metadata_root / ".repro/a"))
     assert validate_corpus.main(["--all", "--output-root", str(root)]) == 1
     assert not root.exists()
     roots.initialize_root(root)
     validate_corpus.validate_metadata(root)
-    assert (root / "source-license-inventory.json").read_bytes() == (metadata_root / "source-license-inventory.json").read_bytes()
+    assert (root / "source-license-inventory.json").read_bytes() == (
+        metadata_root / "source-license-inventory.json"
+    ).read_bytes()
     assert len(list(root.rglob("*.*"))) == 5
     for domain in common.DOMAINS:
         manifest = common.read_json(root / domain / "manifest.json")
@@ -81,7 +104,9 @@ def test_initialize_refuses_unknown_files_without_overwrite(metadata_root: Path)
 
 
 @pytest.mark.parametrize("domain", common.DOMAINS)
-def test_metadata_only_clone_retains_verified_qa_and_clears_measurements(metadata_root: Path, domain: str) -> None:
+def test_metadata_only_clone_retains_verified_qa_and_clears_measurements(
+    metadata_root: Path, domain: str
+) -> None:
     directory = metadata_root / domain
     original = common.read_json(directory / "manifest.json")
     qa = next(item for item in original["artifacts"] if item["role"] == "qa")
@@ -100,7 +125,9 @@ def test_metadata_only_clone_retains_verified_qa_and_clears_measurements(metadat
 
 
 @pytest.mark.parametrize("directory", ["raw", "documents"])
-def test_partial_payload_never_becomes_metadata_checkout(metadata_root: Path, directory: str) -> None:
+def test_partial_payload_never_becomes_metadata_checkout(
+    metadata_root: Path, directory: str
+) -> None:
     (metadata_root / "default" / directory).mkdir()
     manifest, checkout = roots.preparation_manifest(metadata_root / "default")
     assert not checkout and manifest["status"] == "ready"
@@ -108,7 +135,9 @@ def test_partial_payload_never_becomes_metadata_checkout(metadata_root: Path, di
         prepare_default.prepare_default(metadata_root)
 
 
-def test_all_domain_failure_stops_dispatch_and_never_prints_pass(metadata_root: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+def test_all_domain_failure_stops_dispatch_and_never_prints_pass(
+    metadata_root: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     called = []
 
     def first(root: Path) -> dict[str, Any]:
@@ -141,7 +170,9 @@ def test_existing_setup_lock_is_preserved(metadata_root: Path) -> None:
 def test_fingerprint_separates_timestamps_but_detects_content_and_ids(metadata_root: Path) -> None:
     for domain in common.DOMAINS:
         common.atomic_write(metadata_root / domain / "qa/eval.jsonl", [b'{"id":"qa-1"}\n'])
-    common.atomic_write(metadata_root / "bilingual/qa/paragraphs.en.jsonl", [b'{"document_id":"doc-1"}\n'])
+    common.atomic_write(
+        metadata_root / "bilingual/qa/paragraphs.en.jsonl", [b'{"document_id":"doc-1"}\n']
+    )
     before = verify_reproduction.snapshot(metadata_root)
     manifest_path = metadata_root / "bilingual/manifest.json"
     manifest = common.read_json(manifest_path)

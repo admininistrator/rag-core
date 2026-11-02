@@ -276,9 +276,7 @@ def build_artifacts(
         "page_indexing": "zero_based",
         "question_type_counts": _counts(record["question_type"] for record in records),
         "reasoning_type_counts": _counts(record["question_reasoning"] for record in records),
-        "missing_justification_count": sum(
-            record["justification"] is None for record in records
-        ),
+        "missing_justification_count": sum(record["justification"] is None for record in records),
         "unreferenced_duplicate_metadata_names": sorted(
             name for name, item in metadata.items() if "_duplicate_source_records" in item
         ),
@@ -428,7 +426,10 @@ def _publish(stage: Path, root: Path) -> None:
     proposed = stage / "document"
     current = safe_path(root, "document")
     aggregate = safe_path(root, "manifest.json", must_exist=True)
-    if _same_files(current, proposed) and aggregate.read_bytes() == (stage / "manifest.json").read_bytes():
+    if (
+        _same_files(current, proposed)
+        and aggregate.read_bytes() == (stage / "manifest.json").read_bytes()
+    ):
         return
     backup = stage / "previous-document"
     aggregate_backup = stage / "previous-aggregate.json"
@@ -498,7 +499,9 @@ def prepare_document(root: Path = CORPUS_ROOT) -> dict[str, Any]:
     try:
         descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
     except FileExistsError:
-        raise CorpusError("Document setup lock exists; inspect the active/stopped setup first") from None
+        raise CorpusError(
+            "Document setup lock exists; inspect the active/stopped setup first"
+        ) from None
     stage: Path | None = None
     succeeded = False
     try:
@@ -648,7 +651,9 @@ def prepare_document(root: Path = CORPUS_ROOT) -> dict[str, Any]:
         }
         aggregate["notes"] = AGGREGATE_NOTES
         write_json(stage / "manifest.json", aggregate)
-        shutil.copy2(root / "source-license-inventory.json", stage / "source-license-inventory.json")
+        shutil.copy2(
+            root / "source-license-inventory.json", stage / "source-license-inventory.json"
+        )
         for domain in ("default", "bilingual"):
             (stage / domain).mkdir()
             shutil.copy2(root / domain / "manifest.json", stage / domain / "manifest.json")
@@ -662,8 +667,8 @@ def prepare_document(root: Path = CORPUS_ROOT) -> dict[str, Any]:
         lock.unlink()
         if succeeded and stage is not None:
             resolved = stage.resolve(strict=True)
-            if not resolved.is_relative_to(cache.resolve(strict=True)) or not resolved.name.startswith(
-                "document-stage-"
-            ):
+            if not resolved.is_relative_to(
+                cache.resolve(strict=True)
+            ) or not resolved.name.startswith("document-stage-"):
                 raise CorpusError("Refuse to clean a staging path outside the corpus cache")
             shutil.rmtree(resolved)

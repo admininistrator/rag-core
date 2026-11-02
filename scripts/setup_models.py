@@ -29,12 +29,16 @@ def main() -> None:
         for artifact in model["files"]:
             path = folder / artifact["name"]
             if path.exists():
-                if (path.stat().st_size != artifact["bytes"]
-                    or digest_file(path, artifact["algorithm"]) != artifact["digest"]):
+                if (
+                    path.stat().st_size != artifact["bytes"]
+                    or digest_file(path, artifact["algorithm"]) != artifact["digest"]
+                ):
                     raise ValueError("existing_model_artifact_mismatch")
                 continue
-            url = (f"https://huggingface.co/{model['repo']}/resolve/"
-                   f"{model['revision']}/{artifact['name']}")
+            url = (
+                f"https://huggingface.co/{model['repo']}/resolve/"
+                f"{model['revision']}/{artifact['name']}"
+            )
             with tempfile.NamedTemporaryFile(dir=folder, delete=False) as output:
                 staged = Path(output.name)
                 try:
@@ -50,8 +54,10 @@ def main() -> None:
                     staged.unlink(missing_ok=True)
                     raise
             try:
-                if (staged.stat().st_size != artifact["bytes"]
-                    or digest_file(staged, artifact["algorithm"]) != artifact["digest"]):
+                if (
+                    staged.stat().st_size != artifact["bytes"]
+                    or digest_file(staged, artifact["algorithm"]) != artifact["digest"]
+                ):
                     raise ValueError("model_download_digest_mismatch")
                 os.replace(staged, path)
             finally:

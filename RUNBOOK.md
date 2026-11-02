@@ -1,6 +1,6 @@
 # RAG Core — Runbook vận hành và tích hợp ứng dụng
 
-> **T33 concurrency load and local resource budgets VERIFIED; verification recorded with its completion commit.** T32 isolation and fault recovery regression suite, T31 quality benchmark, T30 evaluation harness, T29 admin browser acceptance, T28 admin UI, T27 admin APIs and T26 public API/both provider gates remain verified. T34 recovery remains T34–T36. [T33 evidence](docs/handoffs.md#h-t33-a01), [T32 evidence](docs/handoffs.md#h-t32-a01), [T31 evidence](docs/handoffs.md#h-t31-a01), [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
+> **T36 local RAG core acceptance closure VERIFIED; toàn bộ backlog T00–T36 COMPLETE và sẵn sàng bàn giao tích hợp ứng dụng (Scarlet/chat app).** T35 RUNBOOK tích hợp và client app mẫu, T34 backup restore migration rehearsal, T33 concurrency load and local resource budgets, T32 isolation and fault recovery regression suite, T31 quality benchmark, T30 evaluation harness, T29 admin browser acceptance, T28 admin UI, T27 admin APIs và T26 public API/both provider gates đã được kiểm chứng hoàn toàn. [T36 evidence](docs/handoffs.md#h-t36-a01), [T35 evidence](docs/handoffs.md#h-t35-a01), [T34 evidence](docs/handoffs.md#h-t34-a01), [T33 evidence](docs/handoffs.md#h-t33-a01), [T32 evidence](docs/handoffs.md#h-t32-a01), [T31 evidence](docs/handoffs.md#h-t31-a01), [T30 evidence](docs/handoffs.md#h-t30-a01), [T29 evidence](docs/handoffs.md#h-t29-a01), [T28 evidence](docs/handoffs.md#h-t28-a01), [T27 evidence](docs/handoffs.md#h-t27-a01), [T26 live evidence](docs/handoffs.md#h-t26-a01-resumed).
 > Nguồn thiết kế: [plan.md](docs/plan.md). Trạng thái thực: [tasks.md](docs/tasks.md) và [handoffs.md](docs/handoffs.md).
 > README/RUNBOOK phải được cập nhật trong từng task, không đợi T35 mới viết.
 
@@ -42,7 +42,7 @@
 | Quality benchmark / calibration | VERIFIED real corpus retrieval & generation benchmark, all P11 gates PASS | T31 |
 | Session isolation / load / recovery | VERIFIED | T32–T34 |
 | Client tích hợp mẫu và runbook tích hợp | VERIFIED | T35 |
-| Nghiệm thu cuối và handoff | DESIGNED | T36 |
+| Nghiệm thu cuối và handoff | VERIFIED | T36 |
 
 Mỗi mục sau này ghi: task + commit reference, prerequisites, exact command/request, expected output, evidence link và limitations. Không điền PASS mẫu vào log thực thi.
 
@@ -141,7 +141,7 @@ Kết quả T01: sync tạo `.venv` bằng Python 3.12.4; quality/settings suite
 
 | Nhóm env mục tiêu | Nội dung | Task |
 | --- | --- | --- |
-| Runtime | APP_ENV, LOG_LEVEL, API_BIND/API_PORT, request timeout đã typed; body limits còn DESIGNED | T01–T02 |
+| Runtime | APP_ENV, LOG_LEVEL, API_BIND/API_PORT, request timeout đã typed; body limits VERIFIED T26 | T01–T02/T26 |
 | Metadata/broker | DATABASE_URL, REDIS_URL | T02/T10/T12 |
 | Vector/model | QDRANT_URL typed T02; T17 MODEL_CACHE/MODEL_DEVICE riêng internal service; T18 IndexProfile từ trusted model fingerprint + injected async Qdrant client, không nhận collection từ query body | T02/T17–T18 |
 | App identity | cấu hình app_id, service-key hash/reference, JWT issuer/audience/JWKS, algorithms | T09 |
@@ -437,7 +437,7 @@ uv run --no-sync pytest -q tests/integration/test_storage_reader.py --basetemp .
 
 Fixture script enables versioning only on `rag-core-storage-test`, creates separate reader/uploader IAM users and policies. Test uses unique object key, deletes only its own fixture via uploader, and checks real GET, denied prefix, old version, source change, oversized body, interrupted stream/temp cleanup, denied PUT/DELETE, redirect target not reached and source hash unchanged. [H-T11-A01](docs/handoffs.md#h-t11-a01) contains actual outputs. T12 nối reader vào registration; worker T19 đã VERIFIED; API readiness vẫn chỉ kiểm PG/Redis/Qdrant.
 
-### Upload registration T12 — service/dispatcher VERIFIED, HTTP contract DESIGNED
+### Upload registration T12 — service/dispatcher VERIFIED, HTTP contract VERIFIED (T26/T35)
 
 Luồng app bắt buộc:
 
@@ -511,7 +511,7 @@ PG/Redis/Qdrant and do not prove provider/model/ingestion readiness.
 | GET `/health/live`, `/health/ready` | health-specific responses | Mounted T02 |
 | `/v1/admin/*` | independent admin cookie/CSRF, metadata/actions | VERIFIED local T27; details R10 |
 | `/admin`, `/admin/*` | local UI shell/assets; data/actions use protected `/v1/admin` | VERIFIED local T28–T29; Playwright e2e acceptance |
-| protected `/metrics` | deferred | DESIGNED T32 |
+| protected `/metrics` | deferred | Not in backlog scope (future telemetry) |
 
 Không có route xóa object nguồn, arbitrary search hoặc user-wide query bỏ session.
 
@@ -2239,7 +2239,7 @@ part of recovery.
 <a id="r11"></a>
 ## R11. Corpus và quality evaluation
 
-**T04–T08 tooling và ba domain VERIFIED; T30 evaluation harness và protocol chống leakage VERIFIED local; T31 live quality benchmark DESIGNED.**
+**T04–T08 tooling và ba domain VERIFIED; T30 evaluation harness và protocol chống leakage VERIFIED local; T31 live quality benchmark VERIFIED local.**
 
 Prompt gốc: [Build RAG Evaluation Corpus](corpus-documents/Codex%20Prompt%20%E2%80%93%20Build%20RAG%20Evaluation%20Corpus.md).
 

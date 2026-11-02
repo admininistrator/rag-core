@@ -14,7 +14,6 @@ from uuid import UUID
 import pytest
 from PIL import Image, ImageDraw, ImageFont
 from pypdf import PdfReader, PdfWriter
-from test_text_parsers import pdf
 
 from rag_core.adapters.parsers import ParserRegistry
 from rag_core.adapters.parsers.registry import FORMATS
@@ -25,8 +24,9 @@ from rag_core.domain.documents import (
     ParserLimits,
     SourceIdentity,
 )
+from tests.integration.test_text_parsers import pdf
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.slow]
 EN = "First quarter revenue was 120 million VND."
 VI = "Doanh thu quý một đạt 120 triệu đồng."
 
@@ -344,9 +344,10 @@ def test_status_cancel_timeout_reaps_real_tesseract(tmp_path: Path, action: str)
             parse,
             path,
             cancel=cancel,
-            limits=ParserLimits(timeout_seconds=8 if action == "timeout" else 30),
+            limits=ParserLimits(timeout_seconds=15 if action == "timeout" else 30),
         )
-        while not future.done() and time.monotonic() - started < 7:
+        loop_timeout = 13 if action == "timeout" else 25
+        while not future.done() and time.monotonic() - started < loop_timeout:
             seen = tesseract_pids()
             if seen:
                 break
@@ -357,7 +358,7 @@ def test_status_cancel_timeout_reaps_real_tesseract(tmp_path: Path, action: str)
         with pytest.raises(
             ParseError, match=f"^parser_{'cancelled' if action == 'cancel' else 'timeout'}$"
         ):
-            future.result(timeout=15)
+            future.result(timeout=25)
     # A killed orphan can briefly be a zombie until PID1 reaps it; no running child.
     for pid in seen:
         state = Path(f"/proc/{pid}/stat")
